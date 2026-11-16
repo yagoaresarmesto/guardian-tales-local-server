@@ -7,7 +7,7 @@ observations have different scopes.
 ## Automated checks
 
 The suite has **59 passing tests**, including thirteen first-chapter entry/progress
-regressions, four initial knight training regressions and a mission-help tutorial
+regressions, four initial knight training regressions, a mission-help tutorial
 regression and five beginner-reward regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -104,7 +104,8 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Implement the post-Inn hero/tutorial progression and remaining equipment mutations.
+1. Reopen and verify the final saved checkpoint, then implement the visible
+   Use 10 Stamina beginner reward. See the [checkpoint and resume notes](first-phase-checkpoint.md).
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
 3. Implement later campaign phases and their progression/reward rules.
 4. Implement item/random daily rewards and the remaining inventory operations.

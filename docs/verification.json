@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 36,
+    "tests_run": 59,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -61,7 +61,7 @@
   },
   "github_workflow": {
     "configured": true,
-    "record_scope": "Local verification snapshot before initial publication; hosted results are recorded per commit on GitHub Actions.",
+    "record_scope": "Latest local checkpoint; earlier installation/prologue records retain their original scope. Hosted results are recorded per commit on GitHub Actions.",
     "runs_url": "https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml"
   },
   "gameplay_limit": "Inn main clear path, saved 50-free-gem reward and completion tutorial; optional collectibles, general hero training, later phases, equipment mutations and battle validation unfinished.",
@@ -94,7 +94,7 @@
       "After replaying the saved completion through the idempotent reward handler, backend/APK restart displayed 50 gems, 870 gold and 25 reserve stamina.",
       "Saved inventory retained shield, costume and gloves; the next observed tutorial points to hero level-up.",
       "Starting knight level-up request spent 37 experience once; APK displayed Lv.1 to Lv.2 and saved experience balance became 753.",
-      "Mission-book help tutorial 1007 acknowledgment accepted; mission reward claims remain pending.",
+      "Mission-book help tutorial 1007 acknowledgment accepted.",
       "Beginner mission 0 accepted: 300 free gems, 50 reserve stamina and three selectable summon tickets saved.",
       "Beginner mission 1 accepted: APK displayed 20 reserve stamina and 200 low awakening stones, with balances 350 gems and 95 reserve stamina."
     ],
@@ -103,6 +103,59 @@
     "first_phase_clear_path_completed": true,
     "full_campaign_completed": false,
     "training_scope": "Only starting knight level 1-to-2 tutorial; no general training retry contract claimed.",
-    "beginner_mission_scope": "IDs 0 and 1 only, in separate batches; persistent reward receipts and claim bits. Other missions and mixed batches rejected."
+    "beginner_mission_scope": "IDs 0 and 1 only, in separate batches; persistent reward receipts and claim bits. Other missions and mixed batches rejected.",
+    "laboratory_restoration": {
+      "result": "PASS",
+      "scope": "Final bounded Inn playthrough shutdown; emulator not reopened",
+      "bounded_trial_seconds": 3000,
+      "laboratory_stopped": true,
+      "original_instance_stayed_stopped": true,
+      "root_disabled": true,
+      "routing_record_inactive": true,
+      "network_isolation_restored": true,
+      "original_hosts_preferences_SDK_cache_and_trust_hashes_verified": true,
+      "listeners_closed": true,
+      "lab_forward_ports_removed": true,
+      "latest_account_retained_in_android": true,
+      "final_mission_rewards_reopened_in_APK": false
+    },
+    "implementation_commit": "192483ee762133ba1684137d1a9c565182d9ed4f",
+    "github_actions": {
+      "result": "PASS",
+      "run_id": 43938613922,
+      "url": "https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/runs/43938613922"
+    },
+    "final_pre_shutdown_state": {
+      "stage_id": 100010001,
+      "stage_flags": 7,
+      "quest_id": 27,
+      "quest_checkpoint": 4,
+      "quest_still_active": true,
+      "free_gems": 350,
+      "gold": 870,
+      "reserve_stamina": 95,
+      "unspent_experience": 753,
+      "knight_character_experience": 37,
+      "knight_level_displayed": 2,
+      "purple_coins": 13,
+      "purple_coin_total": 26,
+      "item_markers": 3,
+      "item_marker_total": 4,
+      "selectable_summon_tickets": 3,
+      "low_awakening_stones": 200
+    },
+    "next_visible_unimplemented_action": "Beginner Use 10 Stamina reward; eligible button observed, successful claim not recorded."
+  },
+  "initial_publication_automated_tests": {
+    "result": "PASS",
+    "tests_run": 36,
+    "failures": 0,
+    "errors": 0,
+    "external_network_disabled": true,
+    "network_interfaces": [
+      "lo"
+    ],
+    "python": "3.11.18",
+    "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
   }
 }
