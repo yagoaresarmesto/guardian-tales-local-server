@@ -127,12 +127,18 @@ The subsequent Use 10 Stamina beginner reward and first Collect 1 Heroes
 challenge reward also passed their APK retries. Later challenge steps and other
 mission groups remain unfinished; see the status record for the exact scope.
 
-Summons entry now supplies an empty local catalog state. The APK accepted that
-response and requested the automatic pickup-ticket exchange check. That check
-supports empty saved event-coupon maps while preserving inventory tickets; its
-APK retry and complete screen loading succeeded with inventory unchanged. Performing
-summons, converting existing event coupons and selecting characters/weapons are
-still unimplemented.
+Summons entry supplies an empty catalog by default. The optional hero-selection
+catalog supplies valid candidates and matching entry/catalog checksums. The APK
+loaded this list and registered five wishlist heroes. Only the wishlist and shop
+revision changed; its 1,000,400 gems and remaining profile were retained. If an
+earlier empty list produced the invalid `-1` placeholder, reopen the game after
+installing the catalog to discard that pending request.
+
+The automatic pickup-ticket exchange check supports empty saved event-coupon
+maps while preserving inventory tickets. Performing summons, converting existing
+event coupons, weapon selection and official promotional eligibility remain
+unimplemented. The next observed boundary is a ten-draw `/summon/select-character`
+request with cost type 3.
 
 Passive help acknowledgments now use the pinned 32-popup allowlist, including
 summons help 1003. The post-Inn world-map acknowledgment 2019 requires the saved

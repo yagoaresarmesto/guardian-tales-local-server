@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 127,
+    "tests_run": 132,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -603,5 +603,23 @@
     "stage_clears_quests_and_other_balances_preserved": true,
     "original_apk_visible_balance_confirmed": true,
     "display_confirmation_method": "User reported seeing 1,000,400 gems in the original game after entering the saved account"
+  },
+  "summon_selection_update": {
+    "date": "2026-11-17",
+    "routes": ["/summon/enter", "/summon/on-event", "/summon/set-select-character"],
+    "scope": "External local hero candidates and persistent wishlist registration; no draws, weapon selection, currency spending or inventory grants.",
+    "observed_invalid_origin_ids": [-1],
+    "prepared_local_candidate_count": 122,
+    "candidate_source": "Playable Unique-category origin definitions in the matching client's decoded hero cache, retaining service version/date fields",
+    "official_promotional_pool_or_rates_verified": false,
+    "max_selection_count": 5,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 132,
+    "catalog_checksum_retry_validation_and_rollback_checked": true,
+    "original_apk_candidate_list_confirmed_by_user": true,
+    "original_apk_saved_selection_count": 5,
+    "other_profile_digest_preserved": true,
+    "post_selection_gem_balance": 1000400,
+    "next_boundary": "Ten-draw summon/select-character request, Count 10 and SummonCostType 3"
   }
 }

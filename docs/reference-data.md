@@ -31,6 +31,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `story_catalog.json` | Configured story openings and entry | Verified stamina, local clear prerequisites and stage quest IDs |
 | `monster_catalog.json` | Defeated-monster reports in additional stages | Stable public handle indices and explicit local experience/gold rules |
 | `completion_catalog.json` | Configured clear exits after Inn | Verified exit name and local required defeated-monster indices |
+| `summon_selection_catalog.json` | Hero candidates and wishlist registration | Public hero origins and native selection-row fields for a local pool |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -127,6 +128,25 @@ Configured completion currently grants no extra items or grade gems and creates
 no grade-claim receipt. The passage's public `Rewards` and `FailRewards` are null;
 its separate grade reward has not been verified. Previously earned monster
 rewards remain saved. Inn keeps its existing verified 50-gem claim behavior.
+
+The optional summon-selection catalog contains a `characters` list. Each row has
+distinct positive `Id` and `CharacterOriginId`, `SummonCategory: "Unique"`,
+`SummonEventType: "Character"` and boolean `IsNew`. Optional `VersionFrom` and
+`SelectableFrom` map service names to version/date strings. The prepared local
+pool contains 122 playable Unique-category origin definitions from the client's
+already-decoded hero cache, retaining those service fields. It is not a recovered
+official promotion or probability table.
+
+Entry and catalog reads derive the same checksum from these rows to refresh
+cached data. `/summon/on-event` returns them in `SelectableCharacter`; promotion
+state stays empty. Without the catalog, the empty fallback remains available.
+`/summon/set-select-character` accepts exactly `RequestOriginIds`: zero through
+five distinct known origins. An empty list clears the wishlist. It requires a
+signed-in account with the prologue complete and saves only
+`UserShop.SelectedSummonCharacters`/`UserShop.Cas`, returning `UserShop`. Identical
+retries do not write another revision. Negative placeholders and unknown or
+duplicate IDs are rejected before saving. No currency, inventory or hero is
+granted or spent. Weapon selection and actual summons remain pending.
 
 ## Preservation manifest
 

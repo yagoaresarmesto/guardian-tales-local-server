@@ -1,0 +1,11 @@
+{
+  "_note": "Synthetic hero identifiers for selection-only tests.",
+  "characters": [
+    {"Id": 1, "CharacterOriginId": 101, "SummonCategory": "Unique", "SummonEventType": "Character", "IsNew": false, "VersionFrom": {}, "SelectableFrom": {}},
+    {"Id": 2, "CharacterOriginId": 102, "SummonCategory": "Unique", "SummonEventType": "Character", "IsNew": false},
+    {"Id": 3, "CharacterOriginId": 103, "SummonCategory": "Unique", "SummonEventType": "Character", "IsNew": false},
+    {"Id": 4, "CharacterOriginId": 104, "SummonCategory": "Unique", "SummonEventType": "Character", "IsNew": false},
+    {"Id": 5, "CharacterOriginId": 105, "SummonCategory": "Unique", "SummonEventType": "Character", "IsNew": false},
+    {"Id": 6, "CharacterOriginId": 106, "SummonCategory": "Unique", "SummonEventType": "Character", "IsNew": false}
+  ]
+}

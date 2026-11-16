@@ -191,7 +191,10 @@ class BootstrapSession:
         if route in LOBBY_ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
-            return lobby_response(request)
+            try:
+                return lobby_response(request, self.store.references)
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
         if route in ACCOUNT_ROUTES:
             if route == "/auth/sign-up/v2":
                 if (

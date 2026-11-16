@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **127 passing tests**, including eighteen first-chapter entry/progress
+The suite has **132 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -41,6 +41,9 @@ profile preservation, idempotent IDs, retries after spending, audit history,
 invalid input/overflow, transactional rollback, real CLI use, cross-process
 state locks and cleanup after backend startup failures. These eight also pass
 on Windows with its native file-lock implementation.
+Five hero-wishlist regressions cover catalog checksum refresh, selection,
+replacement/clearing, persistence/retries, authentication, invalid placeholders,
+catalog validation and failed-write rollback with the remaining profile retained.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -363,6 +366,24 @@ invitation-list read twice. Guild creation, applications and multiplayer remain
 unimplemented.
 
 ## Economy and preservation limits
+
+An unsupported `/summon/set-select-character` request contained
+`RequestOriginIds: [-1]`. The empty local candidate list left the native hero
+popup without a valid selection; preview/event-button handlers also logged null
+references. An optional external pool now supplies 122 playable Unique-category
+origin definitions from the matching client's already-decoded cache, retaining
+service version/date fields. Matching checksums refresh cached catalog data.
+This is a local pool, not a recovered official promotion or probability table.
+
+The new endpoint validates up to five distinct known origins and saves only the
+hero wishlist and shop revision. The game was reopened to discard the invalid
+pending request. The APK loaded the list and sent five valid updates, finishing
+with five saved heroes; the user confirmed selection worked. Normalizing only
+the wishlist and `UserShop.Cas` reproduces the pre-fix profile digest. Gems remain
+1,000,400, with all other balances, inventory, quests and clears retained.
+All 132 tests and format/lint checks pass. The next missing operation is the
+ten-draw `/summon/select-character` request with cost type 3. Actual draws and
+weapon selection remain unfinished.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

@@ -48,6 +48,7 @@ from .passes import (
 )
 from .reference import ReferenceData
 from .story import enter_story_stage, load_story_catalog, open_eligible_stages
+from .summon_selection import select_characters
 from .training import train_characters
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
 
@@ -70,6 +71,7 @@ ACCOUNT_ROUTES = (
     "/festival-pass/enter",
     "/festival-pass/claim-all",
     "/user/exchange-summon-pickup-ticket",
+    "/summon/set-select-character",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -1032,6 +1034,8 @@ class AccountStore:
         return {"OpenedStages": []}
 
     def read(self, route, request=None):
+        if route == "/summon/set-select-character":
+            return select_characters(self, request)
         if route == "/auth/fetch-account":
             return self.profile()
         if route == "/mission/get-user-mission":
