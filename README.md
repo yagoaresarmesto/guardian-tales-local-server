@@ -64,7 +64,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | World map and first phase entry | Initial chapter progress entries; Inn unlock and free reentry persist |
 | Daily attendance | External catalog required; supported asset rewards once per UTC day |
 | Resource delivery | Read-only manifest allowlist; ETags, HEAD and single byte ranges |
-| Initial story quest | Quest start and sequential early checkpoints persist |
+| Quest registration | Known chapter quests can be registered in Inn with an external catalog; early main-quest checkpoints persist; other progression pending |
 | First-phase collectibles | Purple coins, three named items and glove-chest receipts persist without duplicate grants |
 | First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |

@@ -26,6 +26,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `attendance_catalog.json` | Daily attendance reward lookup | Parsed public attendance catalog, not account state |
 | `training_catalog.json` | Knight experience targets and story caps | Parsed public experience catalog for the matching build |
 | `tutorial_catalog.json` | Known UI completion markers after Inn | Parsed public tutorial ID list for the matching build |
+| `quest_catalog.json` | Known chapter quest registration in Inn | Parsed mapping of chapter codes to quest IDs |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -53,6 +54,12 @@ integer tutorial IDs from the matching client's catalog. Built-in passive help
 remains available without it. Other configured markers require Inn's saved
 clear flag and only record UI completion; they do not run tutorial actions or
 grant gameplay rewards. The test fixture is a synthetic subset.
+
+The optional quest catalog contains `chapters`, mapping string chapter codes to
+lists of distinct positive quest IDs. Registration currently requires an active
+Inn session and preserves any existing quest state. It does not supply quest
+scripts, implement later checkpoints/rewards or open linked stages. Without the
+catalog, registration is limited to the original main quest 27.
 
 ## Preservation manifest
 

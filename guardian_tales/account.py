@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 
 from .campaign import (
     CHARGED_STAMINA,
+    FIRST_CHAPTER_CODE,
     FIRST_CLEAR_GEMS,
     FIRST_MONSTER_EXP,
     FIRST_MONSTER_GOLD,
@@ -942,25 +943,41 @@ class AccountStore:
         return {"UserProgress": progress}
 
     def start_quest(self, request):
-        """Persist the first phase's initial quest without claiming completion."""
+        """Register a known chapter quest in Inn; progression and rewards are separate."""
+        allowed = {27}
+        if (self.references.directory / "quest_catalog.json").is_file():
+            catalog = self.references.json("quest_catalog.json")
+            chapters = catalog.get("chapters") if isinstance(catalog, dict) else None
+            ids = chapters.get(str(FIRST_CHAPTER_CODE)) if isinstance(chapters, dict) else None
+            if (
+                not isinstance(ids, list)
+                or not 1 <= len(ids) <= 10000
+                or any(type(value) is not int or not 0 < value <= 0x7FFFFFFF for value in ids)
+                or len(ids) != len(set(ids))
+            ):
+                raise ValueError("Invalid external chapter quest catalog")
+            allowed.update(ids)
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
             or request["StageId"] != FIRST_STAGE_ID
             or type(request.get("QuestId")) is not int
-            or request["QuestId"] != 27
+            or request["QuestId"] not in allowed
             or request.get("StageCustom") is not None
         ):
-            raise ValueError("Only the first phase's initial quest is implemented")
+            raise ValueError(
+                "Only known chapter quests without custom start state can be registered in Inn"
+            )
         if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
             FIRST_STAGE_ID,
         ):
             raise ValueError("Start the phase before starting its quest")
         profile = self.profile()
         progress = profile["UserProgress"]
-        if not any(quest["Id"] == 27 for quest in progress["QuestProgresses"]):
+        quest_id = request["QuestId"]
+        if not any(quest["Id"] == quest_id for quest in progress["QuestProgresses"]):
             progress["QuestProgresses"].append(
-                {"Id": 27, "Grade": -1, "InnerProgress": 0, "CustomStates": {}}
+                {"Id": quest_id, "Grade": -1, "InnerProgress": 0, "CustomStates": {}}
             )
             progress["Cas"] += 1
             with self.db:

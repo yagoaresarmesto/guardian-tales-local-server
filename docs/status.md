@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **87 passing tests**, including fourteen first-chapter entry/progress
+The suite has **90 passing tests**, including fourteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -15,6 +15,8 @@ Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
 sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
 check persistent flags, the Inn prerequisite, atomic batches and invalid data.
+Three quest-catalog regressions check registration, retained progress, retries,
+active-stage/catalog validation and rollback.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -167,6 +169,15 @@ gameplay operations that need independent server rules. Unknown IDs, malformed
 catalogs and premature/mixed batches are rejected unchanged. The APK retry saved
 205, preserving 781 character experience, nine unspent experience, all other
 balances, quest/stage progress and inventory.
+
+On reentering Inn, the client collected two more purple coins and requested
+`/stage/start-quest` for quest 57, `dragon_knight`. Registration now accepts known
+chapter quests from an external catalog, currently containing 11 Chapter 1 IDs.
+An active Inn session is required. New entries start with grade -1, progress 0
+and empty custom state; retries preserve existing entries and the main quest's
+checkpoints. The response remains `OpenedStages: []`. This implements registration
+only: linked-stage openings, NPC interaction validation, side-quest progression
+and rewards remain pending. The deployed quest-57 retry is pending in this snapshot.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns

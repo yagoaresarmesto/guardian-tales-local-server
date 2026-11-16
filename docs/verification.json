@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 87,
+    "tests_run": 90,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -432,5 +432,17 @@
     "automated_tests_run": 87,
     "atomic_flags_prerequisites_restart_and_invalid_catalog_checked": true,
     "original_apk_205_retry_confirmed": true
+  },
+  "catalog_quest_registration_update": {
+    "date": "2026-11-16",
+    "route": "/stage/start-quest",
+    "scope": "Register a known Chapter 1 quest in an active Inn session without resetting existing progress. No linked-stage openings, side-quest progression or rewards.",
+    "external_chapter_quest_count": 11,
+    "observed_quest_id": 57,
+    "public_handle": "dragon_knight",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 90,
+    "registration_retry_existing_progress_and_rollback_checked": true,
+    "original_apk_57_retry_confirmed": false
   }
 }
