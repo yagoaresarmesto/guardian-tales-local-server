@@ -70,6 +70,65 @@ class StoryEntryTests(unittest.TestCase):
         self.catalog_file.write_text(json.dumps(catalog))
         self.account = GuestStore(self.db, self.references).account
 
+    def configure_discovered_stage(self):
+        catalog = json.loads(FIXTURE.read_bytes())
+        catalog["stages"]["110010005"] = {
+            "stamina": 10,
+            "requires_cleared": [],
+            "quest_ids": [57],
+            "requires_discovery": True,
+        }
+        self.catalog_file.write_text(json.dumps(catalog))
+        self.account = GuestStore(self.db, self.references).account
+
+    def test_discovered_stage_entry_preserves_quests_and_spends_its_cost_only_once(self):
+        self.configure_discovered_stage()
+        before = self.account.profile()
+        response = self.account.start_stage({"StageId": 110010005})
+        expected = json.loads(json.dumps(before))
+        assets = {a["Id"]: a for a in expected["User"]["Assets"]}
+        for asset in (assets[70006], assets[70032]):
+            asset["Amount"] -= 5
+            asset["Spent"] += 5
+        expected["User"]["Cas"] += 1
+        expected["UserProgress"]["Cas"] += 1
+        expected["UserProgress"]["LastPlayedStageId"] = 110010005
+        expected["UserProgress"]["StageStates"]["110010005"] = 3
+        self.assertEqual(self.account.profile(), expected)
+        reopened = GuestStore(self.db, self.references).account
+        self.assertEqual(reopened.start_stage({"StageId": 110010005}), response)
+        self.assertEqual(reopened.profile(), expected)
+        reopened.start_quest({"StageId": 110010005, "QuestId": 57, "StageCustom": None})
+        quests = reopened.profile()["UserProgress"]["QuestProgresses"]
+        self.assertEqual(quests[0], before["UserProgress"]["QuestProgresses"][0])
+        self.assertEqual([q["Id"] for q in quests], [27, 57])
+        with self.assertRaises(ValueError):
+            reopened.start_quest({"StageId": 110010005, "QuestId": 34, "StageCustom": None})
+
+    def test_clear_prerequisites_cannot_replace_required_map_discovery(self):
+        self.configure_discovered_stage()
+        catalog = json.loads(self.catalog_file.read_bytes())
+        catalog["stages"]["110010005"]["requires_cleared"] = [100010001]
+        self.catalog_file.write_text(json.dumps(catalog))
+        profile = self.account.profile()
+        profile["UserProgress"]["StageStates"]["100010001"] = 7
+        for state in (0, 2):
+            profile["UserProgress"]["StageStates"]["110010005"] = state
+            self.save(profile)
+            self.account = GuestStore(self.db, self.references).account
+            before = self.account.profile()
+            self.assertEqual(before["UserProgress"]["StageStates"]["110010005"], state)
+            with self.assertRaises(ValueError):
+                self.account.start_stage({"StageId": 110010005})
+            self.assertEqual(self.account.profile(), before)
+            self.assertEqual(
+                self.db.execute("SELECT stage_id FROM campaign_session").fetchall(), [(100010001,)]
+            )
+        before["UserProgress"]["StageStates"]["110010005"] = 1
+        self.save(before)
+        self.account.start_stage({"StageId": 110010005})
+        self.assertEqual(self.account.profile()["UserProgress"]["StageStates"]["110010005"], 3)
+
     def test_passage_opens_after_inn_and_spends_reserve_once_when_charge_is_empty(self):
         self.configure_passage()
         profile = self.account.profile()
@@ -206,6 +265,8 @@ class StoryEntryTests(unittest.TestCase):
             {"requires_cleared": [100010002]},
             {"requires_cleared": [True]},
             {"quest_ids": [False]},
+            {"requires_discovery": 1},
+            {"unknown_flag": True},
         ):
             catalog = json.loads(FIXTURE.read_bytes())
             catalog["stages"]["100010002"].update(patch)

@@ -22,7 +22,9 @@ def load_story_catalog(references):
             or len(key) > 10
             or int(key) > 0x7FFFFFFF
             or not isinstance(row, dict)
-            or set(row) != {"stamina", "requires_cleared", "quest_ids"}
+            or not {"stamina", "requires_cleared", "quest_ids"} <= set(row)
+            or set(row) - {"stamina", "requires_cleared", "quest_ids", "requires_discovery"}
+            or type(row.get("requires_discovery", False)) is not bool
             or type(row["stamina"]) is not int
             or not 0 <= row["stamina"] <= 10000
         ):
@@ -48,7 +50,11 @@ def open_eligible_stages(profile, catalog):
     changed = False
     for key, row in catalog.items():
         required = row["requires_cleared"]
-        if required and all(states.get(str(i), 0) & STAGE_CLEARED for i in required):
+        if (
+            not row.get("requires_discovery", False)
+            and required
+            and all(states.get(str(i), 0) & STAGE_CLEARED for i in required)
+        ):
             state = states.get(key, 0)
             if not state & STAGE_OPENED:
                 states[key] = state | STAGE_OPENED
@@ -78,6 +84,8 @@ def enter_story_stage(account, request, catalog):
     if any(not states.get(str(i), 0) & STAGE_CLEARED for i in row["requires_cleared"]):
         raise ValueError("Complete the preceding story stage before entering this one")
     state = states.get(key, 0)
+    if row.get("requires_discovery", False) and not state & STAGE_OPENED:
+        raise ValueError("Discover this stage's map before entering it")
     changed = False
     if not state & STAGE_UNLOCKED:
         assets = {a["Id"]: a for a in user["Assets"]}

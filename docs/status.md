@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **106 passing tests**, including seventeen first-chapter entry/progress
+The suite has **109 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -22,11 +22,14 @@ validation, persistence across retries/reopening and failed-write rollback.
 Mixed currency tests distinguish identical numeric keys across pickup kinds,
 check native progress bytes, retries/overlap, all 29 pickups in one batch and
 rollback of both balances and markers.
-Ten story-entry regressions cover earned openings, prerequisites, split stamina,
+Twelve story-entry regressions cover earned openings, prerequisites, split stamina,
 free reentry, session rollback, separate progress stores, catalog validation and
 active-stage main-quest handling. Passage checks cover reserve-only entry with
 zero charged stamina, insufficient total stamina and initialized chapter progress
 for configured stage IDs outside the seven main phases.
+Discovered-stage checks preserve independent progress without an entry catalog,
+require the saved map flag before entry, prevent clear-based automatic discovery,
+deduplicate the entry cost and restrict quest registration to the stage catalog.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -235,6 +238,24 @@ stage. The 106-test suite passes, and the update is deployed with the existing
 account preserved. Original-client passage and second-main-stage entry remain
 pending in this snapshot. Their battles, pickups, optional quests and clear/reward
 rules remain unfinished; entry support alone does not establish a playable clear.
+
+The next reported error occurred before any new `/stage/start-stage` request.
+Logcat identified `NullReferenceException` in `EnterStage`'s load coroutine.
+Read-only inspection of the selected entry state showed stage **110010005**
+(`substage_1_5`) with **null `SelectedStageProgress`**. This attempt selected the
+previously discovered side stage. Its public definition is tilemap
+`substage_dragon_knight`, cost 10, quest 57, standard monster level 29 and zero
+level/equipment entry requirements. The map response had omitted this ID because
+it was neither a main phase nor a configured story entry.
+
+Chapter reads now include every stage already recorded in saved `StageStates`,
+as well as configured entries, without changing flags or awarding progress.
+The optional catalog flag `requires_discovery` prevents clear prerequisites from
+revealing a map and requires its saved opened bit at entry. The prepared side
+stage uses this flag and the ordinary one-time entry transaction. No clear
+prerequisite is added for this side stage. All 109 tests pass; deployment kept the
+selected saved state unchanged. Original-client entry-screen recovery and side
+stage entry are pending. Its gameplay, quest completion and rewards are unfinished.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns

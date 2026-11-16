@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 106,
+    "tests_run": 109,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -509,5 +509,26 @@
     "deployed_existing_balances_inventory_and_quests_preserved": true,
     "original_apk_entry_confirmed": false,
     "passage_clear_path_verified": false
+  },
+  "discovered_stage_entry_update": {
+    "date": "2026-11-16",
+    "scope": "Initialize saved discovered-stage progress in chapter reads and require map discovery for configured side-stage entry. Side-stage gameplay and completion remain pending.",
+    "stage_id": 110010005,
+    "public_name": "substage_1_5",
+    "public_tilemap": "substage_dragon_knight",
+    "stamina_cost": 10,
+    "public_quest_ids": [57],
+    "public_standard_level": 29,
+    "observed_client_failure": "NullReferenceException in EnterStage load coroutine before a start-stage request; selected side stage 110010005 had null SelectedStageProgress.",
+    "contract_evidence": "Read-only selected UI state, native load coroutine's StageProgress access and matching public StageSpec.",
+    "requires_saved_discovery_flag": true,
+    "automatic_clear_based_discovery_disabled": true,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 109,
+    "discovered_progress_without_catalog_entry_retry_and_quest_ids_checked": true,
+    "deployed_selected_saved_state_unchanged": true,
+    "original_apk_entry_screen_recovery_confirmed": false,
+    "original_apk_entry_confirmed": false,
+    "side_stage_clear_path_verified": false
   }
 }

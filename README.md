@@ -61,11 +61,11 @@ snapshot. Other versions and distributions have not been validated. See the
 | Platform configuration and local guest credentials | Implemented for one local guest |
 | New account, prologue name/avatar/weapon selection | Persistent in SQLite; repeated completion is idempotent |
 | Lobby, collection, inbox and catalog reads | Initial empty responses; no social or purchase functionality |
-| World map and story entry | Catalog prerequisites, one-time stamina and free reentry; prepared catalog covers Inn, the first passage and the second main phase |
+| World map and stage entry | Catalog prerequisites, one-time stamina and free reentry; prepared catalog covers Inn, the first passage, the second main phase and one discovered side stage |
 | Daily attendance | External catalog required; supported asset rewards once per UTC day |
 | Resource delivery | Read-only manifest allowlist; ETags, HEAD and single byte ranges |
 | Quest registration | Known chapter quests can be registered in Inn with an external catalog; early main-quest checkpoints persist; other progression pending |
-| Side-stage map discovery | Verified map targets persist as discovered; entering or playing those side stages remains pending |
+| Side-stage map discovery | Verified map targets persist as discovered; configured entry can require finding the map; side-stage gameplay remains pending |
 | First-phase collectibles | Purple coins, star pieces, three named items and glove-chest receipts persist without duplicate grants; mixed currency batches are atomic |
 | First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |

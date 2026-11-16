@@ -110,6 +110,14 @@ and reopen Adventure after updating the backend so chapter progress refreshes
 the map. Entry and early shared quest handling are scaffolding; passage gameplay
 and the second main phase's clear path are not yet verified.
 
+The discovered side map `substage_1_5` is a separate stage, 110010005. Its prepared
+entry costs 10 stamina once and requires the saved discovery flag. Chapter reads
+initialize progress for discovered stages even without an entry catalog, so
+opening their entry screens does not receive a null progress object. The native
+entry-screen load previously failed on that missing object. If that screen has
+already stalled, reopen the game to rebuild its UI state. Side-stage gameplay
+and completion are still unfinished.
+
 The subsequent Use 10 Stamina beginner reward and first Collect 1 Heroes
 challenge reward also passed their APK retries. Later challenge steps and other
 mission groups remain unfinished; see the status record for the exact scope.

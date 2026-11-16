@@ -52,6 +52,24 @@ class ChapterProgressTests(unittest.TestCase):
                 self.session.handle(request("/stage/get-stage-progresses", body))
         self.assertEqual(self.store.account.profile(), before)
 
+    def test_discovered_stage_has_independent_progress_without_an_entry_catalog(self):
+        account = self.store.account
+        before = account.profile()
+        before["UserProgress"]["StageStates"]["110010005"] = 1
+        self.db.execute("UPDATE local_account SET profile=?", (json.dumps(before),))
+        self.db.commit()
+        value = account.read("/stage/get-stage-progresses", {"ChapterCode": 10001})
+        self.assertEqual(value["StageProgresses"]["110010005"], "")
+        self.assertNotIn("110010006", value["StageProgresses"])
+        self.db.execute("INSERT INTO campaign_progress VALUES(110010005,2,1,'true')")
+        self.db.commit()
+        reopened = GuestStore(self.db).account
+        value = reopened.read("/stage/get-stage-progresses", {"ChapterCode": 10001})
+        self.assertEqual(value["StageProgresses"]["110010005"], reopened.stage_progress(110010005))
+        self.assertNotEqual(value["StageProgresses"]["110010005"], "")
+        self.assertEqual(value["StageProgresses"]["100010001"], "")
+        self.assertEqual(reopened.profile(), before)
+
     def complete_prologue(self):
         self.store.account.complete_prologue(
             "lab",
