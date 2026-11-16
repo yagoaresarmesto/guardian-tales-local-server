@@ -1132,9 +1132,13 @@ class AccountStore:
             }
         if route == "/stage/get-stage-progresses":
             result = initial_stage_progresses(request)
+            catalog = load_story_catalog(self.references)
+            if catalog is not None:
+                for key in catalog:
+                    result["StageProgresses"].setdefault(key, "")
             for key in result["StageProgresses"]:
                 result["StageProgresses"][key] = self.stage_progress(int(key))
-            if load_story_catalog(self.references) is not None:
+            if catalog is not None:
                 result["UserProgress"] = self.profile()["UserProgress"]
             return result
         if route == "/guild/list-item-request":

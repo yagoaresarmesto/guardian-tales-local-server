@@ -60,6 +60,78 @@ class StoryEntryTests(unittest.TestCase):
         self.account = GuestStore(self.db, self.references).account
         return self.account.profile()
 
+    def configure_passage(self):
+        catalog = json.loads(FIXTURE.read_bytes())
+        catalog["stages"]["110011001"] = {
+            "stamina": 10,
+            "requires_cleared": [100010001],
+            "quest_ids": [],
+        }
+        self.catalog_file.write_text(json.dumps(catalog))
+        self.account = GuestStore(self.db, self.references).account
+
+    def test_passage_opens_after_inn_and_spends_reserve_once_when_charge_is_empty(self):
+        self.configure_passage()
+        profile = self.account.profile()
+        next(a for a in profile["User"]["Assets"] if a["Id"] == 70006)["Amount"] = 0
+        self.save(profile)
+        before = self.clear_first()
+        self.assertEqual(before["UserProgress"]["StageStates"]["110011001"], 1)
+        response = self.account.start_stage({"StageId": 110011001})
+        expected = json.loads(json.dumps(before))
+        reserve = next(a for a in expected["User"]["Assets"] if a["Id"] == 70032)
+        reserve["Amount"] -= 10
+        reserve["Spent"] += 10
+        expected["User"]["Cas"] += 1
+        expected["UserProgress"]["Cas"] += 1
+        expected["UserProgress"]["StageStates"]["110011001"] = 3
+        expected["UserProgress"]["LastPlayedStageId"] = 110011001
+        self.assertEqual(self.account.profile(), expected)
+        self.assertEqual(response["StageProgress"], "")
+        self.assertEqual(
+            self.db.execute("SELECT stage_id FROM campaign_session").fetchall(), [(110011001,)]
+        )
+        reopened = GuestStore(self.db, self.references).account
+        self.assertEqual(reopened.start_stage({"StageId": 110011001}), response)
+        self.assertEqual(reopened.profile(), expected)
+
+    def test_passage_prerequisite_and_insufficient_total_stamina_preserve_the_save(self):
+        self.configure_passage()
+        before = self.account.profile()
+        with self.assertRaises(ValueError):
+            self.account.start_stage({"StageId": 110011001})
+        self.assertEqual(self.account.profile(), before)
+        before = self.clear_first()
+        assets = {a["Id"]: a for a in before["User"]["Assets"]}
+        assets[70006]["Amount"], assets[70032]["Amount"] = 0, 9
+        self.save(before)
+        with self.assertRaises(ValueError):
+            self.account.start_stage({"StageId": 110011001})
+        self.assertEqual(self.account.profile(), before)
+        self.assertEqual(
+            self.db.execute("SELECT stage_id FROM campaign_session").fetchall(), [(100010001,)]
+        )
+
+    def test_chapter_progress_initializes_passage_and_keeps_saved_progress_separate(self):
+        self.configure_passage()
+        before = self.clear_first()
+        response = self.account.read("/stage/get-stage-progresses", {"ChapterCode": 10001})
+        self.assertIn("110011001", response["StageProgresses"])
+        self.assertEqual(response["StageProgresses"]["110011001"], "")
+        self.db.execute("INSERT INTO campaign_progress VALUES(100010001,2,1,'true')")
+        self.db.execute("INSERT INTO campaign_progress VALUES(110011001,3,2,'true')")
+        self.db.commit()
+        response = self.account.read("/stage/get-stage-progresses", {"ChapterCode": 10001})
+        self.assertEqual(
+            response["StageProgresses"]["110011001"], self.account.stage_progress(110011001)
+        )
+        self.assertNotEqual(
+            response["StageProgresses"]["110011001"], response["StageProgresses"]["100010001"]
+        )
+        self.assertEqual(response["StageProgresses"]["100010002"], "")
+        self.assertEqual(response["UserProgress"], before["UserProgress"])
+        self.assertEqual(self.account.profile(), before)
+
     def test_earned_opening_entry_split_stamina_and_free_reentry_survive_reopening(self):
         before = self.clear_first()
         self.assertEqual(

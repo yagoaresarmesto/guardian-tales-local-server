@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 103,
+    "tests_run": 106,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -490,5 +490,24 @@
     "saved_second_stage_opened_state": 1,
     "original_apk_entry_confirmed": false,
     "second_stage_clear_path_verified": false
+  },
+  "first_passage_entry_update": {
+    "date": "2026-11-16",
+    "scope": "Include configured passage progress in Chapter 1 map reads and prepare entry through the external story catalog. Passage gameplay and completion remain pending.",
+    "stage_id": 110011001,
+    "public_name": "passage_1_1",
+    "public_tilemap": "alt_forest_3_1",
+    "stamina_cost": 10,
+    "public_quest_ids": [],
+    "contract_evidence": "Loaded WorldMapStates names passage_1_1 as the next destination after easy_forest_1_1; matching StageSpec supplies ID/cost. Native total stamina sums charged and reserve amounts.",
+    "local_clear_prerequisite": 100010001,
+    "complete_official_route_graph_verified": false,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 106,
+    "reserve_only_entry_retries_prerequisites_and_separate_progress_checked": true,
+    "saved_passage_opened_state": 1,
+    "deployed_existing_balances_inventory_and_quests_preserved": true,
+    "original_apk_entry_confirmed": false,
+    "passage_clear_path_verified": false
   }
 }

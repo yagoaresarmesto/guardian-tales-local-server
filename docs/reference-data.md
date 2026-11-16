@@ -72,12 +72,18 @@ the target or implement its gameplay. No targets are built into the source.
 
 The optional story catalog contains `stages`, mapping string stage IDs to
 `stamina` (a nonnegative integer), `requires_cleared` (stage IDs) and `quest_ids`.
-Use only stages whose requirements have been reviewed. The prepared catalog uses
-the normal client's first two story definitions and previous-stage link; requiring
-the predecessor's saved clear flag is the local progression rule. Adding a
+Use only stages whose requirements have been reviewed. The prepared Chapter 1
+catalog includes Inn, passage 110011001 (`passage_1_1`, 10 stamina) and main stage
+100010002 (`easy_forest_1_2`, 15 stamina). The loaded world-map state identifies
+the passage as the immediate destination after Inn. Both configured later entries
+require Inn's saved clear flag as a local rule; this does not reconstruct the
+complete official route graph. Adding a
 catalog materializes earned openings in an existing save when the account store
 opens, without resetting it. Clear events also refresh these openings.
-Chapter-progress reads return the latest `UserProgress` to synchronize the map.
+Chapter-progress reads include an initialized progress entry for every configured
+stage, including passages, and return the latest `UserProgress` to synchronize
+the map. The chapter-read endpoint currently supports Chapter 1 only; keep this
+catalog limited to that chapter.
 Without this catalog, only the original Inn entry remains available. These data
 do not implement the new stage's collectibles, battles, exits or rewards.
 
