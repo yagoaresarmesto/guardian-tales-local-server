@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 67,
+    "tests_run": 68,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -299,5 +299,31 @@
       "summon_tickets": 20,
       "selectable_summon_tickets": 4
     }
+  },
+  "tutorial_acknowledgment_update": {
+    "date": "2026-11-16",
+    "automated_tests": {
+      "result": "PASS",
+      "tests_run": 68,
+      "failures": 0,
+      "errors": 0,
+      "external_network_disabled": true,
+      "network_interfaces": [
+        "lo"
+      ],
+      "python": "3.11.18",
+      "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+    },
+    "passive_help_catalog_entries": 32,
+    "passive_catalog_match_verified": true,
+    "passive_requirements": "Popup present; no start/move scene, actions or start/end conditions.",
+    "observed_summons_help_id": 1003,
+    "summons_help_retry_confirmed": true,
+    "post_inn_ids": [
+      200,
+      2019
+    ],
+    "world_map_2019_retry_confirmed": false,
+    "rewards_or_stage_unlocks_granted": false
   }
 }

@@ -285,6 +285,24 @@ class ChapterProgressTests(unittest.TestCase):
         self.assertEqual(restarted.mark_tutorial({"tutorialIds": [200]}), response)
         self.assertEqual(restarted.profile(), saved)
 
+    def test_world_map_intro_requires_inn_clear_and_preserves_other_progress(self):
+        self.complete_prologue()
+        before = self.store.account.profile()
+        with self.assertRaises(PacketError):
+            self.session.handle(request("/user/mark-tutorial", {"tutorialIds": [1003, 2019]}))
+        self.assertEqual(self.store.account.profile(), before)
+        before["UserProgress"]["StageStates"][str(FIRST_STAGE_ID)] = 7
+        self.db.execute("UPDATE local_account SET profile=?", (json.dumps(before),))
+        self.db.commit()
+        packet = self.session.handle(request("/user/mark-tutorial", {"tutorialIds": [2019, 2019]}))
+        response = read_json_body(parse_packet(encode_packet(packet)))
+        before["UserProgress"]["Tutorials"].append(2019)
+        before["UserProgress"]["Cas"] += 1
+        self.assertEqual(self.store.account.profile(), before)
+        restarted = GuestStore(self.db).account
+        self.assertEqual(restarted.mark_tutorial({"tutorialIds": [2019]}), response)
+        self.assertEqual(restarted.profile(), before)
+
     def test_unfinished_prologue_or_unsupported_stage_cannot_start(self):
         before = self.store.account.profile()
         for body in (

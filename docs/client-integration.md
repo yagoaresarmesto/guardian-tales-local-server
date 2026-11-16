@@ -109,3 +109,8 @@ supports empty saved event-coupon maps while preserving inventory tickets; its
 APK retry and complete screen loading succeeded with inventory unchanged. Performing
 summons, converting existing event coupons and selecting characters/weapons are
 still unimplemented.
+
+Passive help acknowledgments now use the pinned 32-popup allowlist, including
+summons help 1003. The post-Inn world-map acknowledgment 2019 requires the saved
+clear flag; its retry is tracked in the verification status. These flags do not
+unlock or implement the corresponding game systems.

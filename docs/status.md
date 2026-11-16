@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **67 passing tests**, including thirteen first-chapter entry/progress
+The suite has **68 passing tests**, including fourteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions and an empty event-coupon exchange regression. It covers real loopback TLS,
@@ -126,6 +126,17 @@ succeeded; the loaded summons screen showed the preserved 20
 summon tickets, four selectable tickets and 400 free gems. The next reported
 error was help tutorial acknowledgment 1003.
 
+The summons help request exposed a general missing class of acknowledgments.
+The pinned tutorial catalog contains 32 passive help popups with no start/move
+scene, actions or start/end conditions. Those exact IDs are now allowlisted in
+`tutorials.py`; unspecified IDs and progression tutorials remain rejected.
+The APK accepted help 1003 and later requested world-map acknowledgment 2019.
+That individual acknowledgment is now supported after Inn's saved clear flag,
+using the same prerequisite as 200. Tests reject premature/mixed batches, retain
+all unrelated progress and inventory, and verify retries across restart.
+Acknowledgment does not grant rewards, unlock another stage or implement the
+systems described by the help. The 2019 retry is pending in this snapshot.
+
 ## Economy and preservation limits
 
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
@@ -157,7 +168,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Implement the reported summons-help acknowledgment, then continue from the next
+1. Verify the world-map acknowledgment 2019, then continue from the next
    user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.

@@ -39,6 +39,7 @@ from .missions import (
     STAMINA_MISSION_SPEND,
 )
 from .reference import ReferenceData
+from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -759,25 +760,26 @@ class AccountStore:
         return {"User": user, "UserRecord": record}
 
     def mark_tutorial(self, request):
-        """Persist the observed Inn-clear and mission-book help tutorials."""
+        """Persist post-Inn acknowledgments and catalog-verified passive help views."""
         if (
             not isinstance(request, dict)
             or not isinstance(request.get("tutorialIds"), list)
             or not 1 <= len(request["tutorialIds"]) <= 8
             or any(
-                type(value) is not int or value not in (200, 1007)
+                type(value) is not int
+                or (value not in POST_INN_TUTORIALS and value not in PASSIVE_HELP_TUTORIALS)
                 for value in request["tutorialIds"]
             )
         ):
             raise ValueError(
-                "Only the Inn completion and mission-book help tutorials are implemented"
+                "Only post-Inn acknowledgments and the pinned passive help tutorials are implemented"
             )
         profile = self.profile()
         progress = profile["UserProgress"]
         if self.needs_prologue():
             raise ValueError("Finish local account creation before recording tutorials")
         if (
-            200 in request["tutorialIds"]
+            any(value in POST_INN_TUTORIALS for value in request["tutorialIds"])
             and not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED
         ):
             raise ValueError("Complete Inn before acknowledging its completion tutorial")

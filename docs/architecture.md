@@ -31,6 +31,7 @@ flowchart LR
 | `account.py` | SQLite profile, campaign receipts, prologue completion, migrations and attendance claims |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
+| `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |
 | `assets.py` | Separate manifest-backed HTTP resource server |
@@ -97,8 +98,11 @@ the same completion after restart returns the saved progress without another
 reward. This phase has no configured `StageSpec.Rewards` or `FailRewards`; its
 grade reward is separate. The observed post-clear tutorial ID 200 is persisted
 once and returned in `UserProgress` so the client's resource handler sees it.
-Mission-book help tutorial 1007 is also recorded once after local account
-creation, independently of campaign completion or training. Mixed tutorial
+The world-map acknowledgment 2019 also requires Inn cleared. Thirty-two passive
+help popups, including summons help 1003 and mission-book help 1007, can be
+recorded after local account creation independently of campaign or training.
+These catalog entries have no start/move scene, actions or start/end conditions.
+Only requested IDs are saved, with no system unlocks or rewards. Mixed tutorial
 batches are validated before any acknowledgment is saved.
 
 The next tutorial sends `/user/add-character-experience` with a character-ID
