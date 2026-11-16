@@ -101,6 +101,12 @@ general hero training and other progression remain unfinished. Unsupported game 
 produce the client's connection-lost dialog. See [status](status.md) for the
 precise verified scope.
 
+The optional story-entry catalog prepares stage 100010002 after Inn's saved clear
+flag. Its first entry costs 15 stamina and subsequent entries are free. Existing
+clients may need to return to the lobby and reopen Adventure so chapter progress
+refreshes the map. Entry and early shared quest handling are scaffolding; the
+second phase's full interactions and clear path are not yet verified.
+
 The subsequent Use 10 Stamina beginner reward and first Collect 1 Heroes
 challenge reward also passed their APK retries. Later challenge steps and other
 mission groups remain unfinished; see the status record for the exact scope.

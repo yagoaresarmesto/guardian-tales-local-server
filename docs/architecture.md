@@ -77,12 +77,23 @@ stages. The native client constructs a `StageProgress` per entry and accepts an
 empty string as initialized empty stores. An absent entry instead produces a null
 progress object and blocks the entry UI.
 
-Only the first story phase can start. Unlocking consumes 15 stamina, from charged
-stamina first and reserve stamina second, and saves the opened/unlocked flags.
-Retries after restart do not charge again. Quest 27 and its observed checkpoints are
+The original entry fallback covers Inn. An optional story catalog provides each
+supported stage's clear prerequisites, stamina cost and quest IDs. Eligible
+successors receive only the opened flag; the first entry consumes the configured
+stamina, from charged stamina first and reserve second, and sets the unlocked
+flag. Reentry does not charge again. The profile and active-stage switch commit
+together, so a failed write cannot leave spent stamina with the old/new session
+out of sync. Stage progress is queried by stage ID, preserving separate stores.
+Chapter reads include the latest user progress to refresh newly earned openings.
+Quest 27 and its observed early checkpoints are
 saved in `UserProgress`; neither operation marks the phase cleared. The native
 quest callbacks update their own in-memory quest objects, so their responses do
 not send a second copy of `UserProgress`.
+
+Other configured stages accept only their catalog quest IDs for registration.
+The early main-quest checkpoint handler can operate in the active configured
+stage, retaining its sequential/no-reward scope. These shared entry/quest
+operations do not implement a later stage's combat, pickups or completion rules.
 
 Purple coins, star pieces, named items and known defeated monster handles have per-stage
 receipts. Their native progress stores are encoded as version 2: a store count,

@@ -28,6 +28,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `tutorial_catalog.json` | Known UI completion markers after Inn | Parsed public tutorial ID list for the matching build |
 | `quest_catalog.json` | Known chapter quest registration in Inn | Parsed mapping of chapter codes to quest IDs |
 | `substage_catalog.json` | Side-stage map discovery in Inn | Verified map handles and target stage IDs |
+| `story_catalog.json` | Configured story openings and entry | Verified stamina, local clear prerequisites and stage quest IDs |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -68,6 +69,17 @@ Resolve these from matching client map objects and stage definitions, rather
 than assuming a naming pattern. Discovery requires an active Inn session and
 sets only the target's opened flag; it does not spend entry stamina, complete
 the target or implement its gameplay. No targets are built into the source.
+
+The optional story catalog contains `stages`, mapping string stage IDs to
+`stamina` (a nonnegative integer), `requires_cleared` (stage IDs) and `quest_ids`.
+Use only stages whose requirements have been reviewed. The prepared catalog uses
+the normal client's first two story definitions and previous-stage link; requiring
+the predecessor's saved clear flag is the local progression rule. Adding a
+catalog materializes earned openings in an existing save when the account store
+opens, without resetting it. Clear events also refresh these openings.
+Chapter-progress reads return the latest `UserProgress` to synchronize the map.
+Without this catalog, only the original Inn entry remains available. These data
+do not implement the new stage's collectibles, battles, exits or rewards.
 
 ## Preservation manifest
 

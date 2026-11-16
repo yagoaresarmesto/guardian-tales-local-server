@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 96,
+    "tests_run": 103,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -470,6 +470,25 @@
     "automated_tests_run": 96,
     "mixed_retry_native_encoding_boundaries_and_rollback_checked": true,
     "stone_board_puzzle_implemented": false,
-    "original_apk_retry_confirmed": false
+    "original_apk_retry_confirmed": true,
+    "later_saved_balances": {"purple_coins": 22, "star_pieces": 2}
+  },
+  "story_entry_catalog_update": {
+    "date": "2026-11-16",
+    "route": "/stage/start-stage",
+    "scope": "Entry scaffolding for the first two configured story stages, earned openings, independent progress and early shared main-quest handling. Later-stage gameplay and completion remain pending.",
+    "second_stage_id": 100010002,
+    "public_name": "easy_forest_1_2",
+    "public_tilemap": "alt_forest_1_2_2",
+    "stamina_cost": 15,
+    "public_previous_stage_id": 100010001,
+    "public_quest_ids": [27, 34],
+    "progression_rule": "Local clear prerequisite based on the public previous-stage relation; not a recovered official-server implementation.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 103,
+    "split_stamina_retry_session_rollback_and_separate_stores_checked": true,
+    "saved_second_stage_opened_state": 1,
+    "original_apk_entry_confirmed": false,
+    "second_stage_clear_path_verified": false
   }
 }

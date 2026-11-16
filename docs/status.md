@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **96 passing tests**, including seventeen first-chapter entry/progress
+The suite has **103 passing tests**, including seventeen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -22,6 +22,9 @@ validation, persistence across retries/reopening and failed-write rollback.
 Mixed currency tests distinguish identical numeric keys across pickup kinds,
 check native progress bytes, retries/overlap, all 29 pickups in one batch and
 rollback of both balances and markers.
+Seven story-entry regressions cover earned openings, prerequisites, split stamina,
+free reentry, session rollback, separate progress stores, catalog validation and
+active-stage main-quest handling.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -204,8 +207,25 @@ and saves all new markers and currency balances in one transaction. Each unique
 kind/key grants one unit once. Invalid mixed batches save nothing; overlapping
 retries credit only new pickups. Star-piece markers use the existing v2 progress
 encoding. The trailing `StonePieces` puzzle byte is a separate feature and stays
-unchanged. The 96-test suite passes; the deployed mixed-pickup APK retry is pending
-in this snapshot.
+unchanged. The APK accepted the mixed pickup and subsequent collections; the
+latest save contains 22 purple coins and two star pieces.
+
+The user next requested the following story phase. Public definitions identify
+stage 100010002 (`easy_forest_1_2`), tilemap `alt_forest_1_2_2`, stamina cost 15,
+quest IDs 27/34 and previous stage 100010001. The optional story catalog now
+prepares entry for these first two phases. The local rule requires the preceding
+stage's clear flag and materializes eligible openings in existing saves and at
+clear events. Inn's existing clear earned the second stage's opened state 1,
+preserving every balance, collectible and quest record.
+
+The first entry saves the unlocked flag, active session and charged/reserve
+stamina changes in one transaction; retries/reentry cost nothing further. Chapter
+reads keep each stage's own saved stores and return current user progress to
+refresh the client map. Registration uses the active stage's catalog quest IDs;
+the existing sequential main-quest checkpoints can run in the active configured
+stage. The 103-test suite passes. Original-client second-stage entry is pending
+in this snapshot; its battles, pickups, optional quests and clear/reward rules
+remain unfinished. This is entry scaffolding, not a verified second-phase clear.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns

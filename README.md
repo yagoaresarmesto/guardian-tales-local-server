@@ -61,7 +61,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Platform configuration and local guest credentials | Implemented for one local guest |
 | New account, prologue name/avatar/weapon selection | Persistent in SQLite; repeated completion is idempotent |
 | Lobby, collection, inbox and catalog reads | Initial empty responses; no social or purchase functionality |
-| World map and first phase entry | Initial chapter progress entries; Inn unlock and free reentry persist |
+| World map and story entry | Catalog prerequisites, one-time stamina and free reentry; prepared entry catalog covers Inn and the second story phase |
 | Daily attendance | External catalog required; supported asset rewards once per UTC day |
 | Resource delivery | Read-only manifest allowlist; ETags, HEAD and single byte ranges |
 | Quest registration | Known chapter quests can be registered in Inn with an external catalog; early main-quest checkpoints persist; other progression pending |
@@ -79,7 +79,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Entry returns saved state; season 41's free level-1 reward grants four festival points once; other progression and purchases pending |
 | Guild lists | Empty local recommendations and invitations, no pending application; guild creation and membership remain pending |
-| Later phases and remaining rewards | Not implemented |
+| Later phase gameplay and remaining rewards | Unfinished; entry support alone does not implement a phase's interactions or clear rules |
 | Multiplayer, guild systems and purchases | Not implemented |
 
 All connections share the same local account. Incoming provider tokens are not

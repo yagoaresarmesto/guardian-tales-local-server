@@ -48,6 +48,7 @@ from .passes import (
     FIRST_PASS_STAMINA,
 )
 from .reference import ReferenceData
+from .story import enter_story_stage, load_story_catalog, open_eligible_stages
 from .training import train_characters
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
 
@@ -218,6 +219,15 @@ class AccountStore:
         elif existing[0] != 3:
             raise ValueError("Unsupported account schema version")
         db.commit()
+        catalog = load_story_catalog(self.references)
+        if catalog and not self.needs_prologue():
+            profile = self.profile()
+            if open_eligible_stages(profile, catalog):
+                with db:
+                    db.execute(
+                        "UPDATE local_account SET profile=? WHERE id=1",
+                        (json.dumps(profile, separators=(",", ":")),),
+                    )
 
     def profile(self):
         return json.loads(
@@ -338,7 +348,10 @@ class AccountStore:
         return {"User": user, "UserRecord": profile["UserRecord"]}
 
     def start_stage(self, request):
-        """Unlock the first phase once, then allow free retries of that phase."""
+        """Enter a configured story stage, retaining the original first-phase fallback."""
+        catalog = load_story_catalog(self.references)
+        if catalog is not None:
+            return enter_story_stage(self, request, catalog)
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
@@ -577,6 +590,7 @@ class AccountStore:
                 "Amount"
             ] += FIRST_CLEAR_GEMS
             user["Cas"] += 1
+        opened_next = open_eligible_stages(profile, load_story_catalog(self.references))
         with self.db:
             if not completed:
                 self.db.execute(
@@ -589,7 +603,7 @@ class AccountStore:
                     "INSERT INTO campaign_grade_claims VALUES(?,?)",
                     (FIRST_STAGE_ID, FIRST_CLEAR_GEMS),
                 )
-            if not completed or not grade_claimed:
+            if not completed or not grade_claimed or opened_next:
                 self.db.execute(
                     "UPDATE local_account SET profile=? WHERE id=1",
                     (json.dumps(profile, separators=(",", ":")),),
@@ -954,9 +968,14 @@ class AccountStore:
         return discover_substage(self, request)
 
     def start_quest(self, request):
-        """Register a known chapter quest in Inn; progression and rewards are separate."""
+        """Register a known quest in the active stage; progression and rewards are separate."""
+        stage_id = request.get("StageId") if isinstance(request, dict) else None
+        story = load_story_catalog(self.references)
+        story_spec = story.get(str(stage_id)) if story else None
         allowed = {27}
-        if (self.references.directory / "quest_catalog.json").is_file():
+        if stage_id != FIRST_STAGE_ID and story_spec:
+            allowed = set(story_spec["quest_ids"])
+        elif (self.references.directory / "quest_catalog.json").is_file():
             catalog = self.references.json("quest_catalog.json")
             chapters = catalog.get("chapters") if isinstance(catalog, dict) else None
             ids = chapters.get(str(FIRST_CHAPTER_CODE)) if isinstance(chapters, dict) else None
@@ -971,16 +990,14 @@ class AccountStore:
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
-            or request["StageId"] != FIRST_STAGE_ID
+            or (request["StageId"] != FIRST_STAGE_ID and not story_spec)
             or type(request.get("QuestId")) is not int
             or request["QuestId"] not in allowed
             or request.get("StageCustom") is not None
         ):
-            raise ValueError(
-                "Only known chapter quests without custom start state can be registered in Inn"
-            )
+            raise ValueError("Only known stage quests without custom start state can be registered")
         if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-            FIRST_STAGE_ID,
+            stage_id,
         ):
             raise ValueError("Start the phase before starting its quest")
         profile = self.profile()
@@ -1041,11 +1058,14 @@ class AccountStore:
         return {"User": user, "DropExp": exp, "DropGold": gold}
 
     def progress_quest(self, request):
-        """Persist sequential quest checkpoints before its first catalog stage unlock."""
+        """Persist sequential main-quest checkpoints in the active configured stage."""
+        stage_id = request.get("StageId") if isinstance(request, dict) else None
+        story = load_story_catalog(self.references)
+        story_spec = story.get(str(stage_id)) if story else None
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
-            or request["StageId"] != FIRST_STAGE_ID
+            or (request["StageId"] != FIRST_STAGE_ID and not story_spec)
             or type(request.get("QuestId")) is not int
             or request["QuestId"] != 27
             or type(request.get("InnerProgress")) is not int
@@ -1054,7 +1074,7 @@ class AccountStore:
         ):
             raise ValueError("Only initial quest checkpoints without stage unlocks are implemented")
         if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-            FIRST_STAGE_ID,
+            stage_id,
         ):
             raise ValueError("Start the phase before progressing its quest")
         profile = self.profile()
@@ -1112,7 +1132,10 @@ class AccountStore:
             }
         if route == "/stage/get-stage-progresses":
             result = initial_stage_progresses(request)
-            result["StageProgresses"][str(FIRST_STAGE_ID)] = self.stage_progress(FIRST_STAGE_ID)
+            for key in result["StageProgresses"]:
+                result["StageProgresses"][key] = self.stage_progress(int(key))
+            if load_story_catalog(self.references) is not None:
+                result["UserProgress"] = self.profile()["UserProgress"]
             return result
         if route == "/guild/list-item-request":
             return {"Requests": []}

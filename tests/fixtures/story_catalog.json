@@ -1,0 +1,7 @@
+{
+  "_note": "Synthetic entry catalog for the first two story stage IDs.",
+  "stages": {
+    "100010001": {"stamina": 15, "requires_cleared": [], "quest_ids": [27, 57]},
+    "100010002": {"stamina": 15, "requires_cleared": [100010001], "quest_ids": [27, 34]}
+  }
+}
