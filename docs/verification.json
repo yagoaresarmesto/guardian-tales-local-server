@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 90,
+    "tests_run": 93,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -443,6 +443,21 @@
     "automated_test_result": "PASS",
     "automated_tests_run": 90,
     "registration_retry_existing_progress_and_rollback_checked": true,
-    "original_apk_57_retry_confirmed": false
+    "original_apk_57_retry_confirmed": true
+  },
+  "substage_discovery_update": {
+    "date": "2026-11-16",
+    "route": "/stage/interact-substage-item",
+    "scope": "Persist a verified map target's opened bit from an active Inn session. No entry stamina, clear flags, rewards or target-stage gameplay.",
+    "source_stage_id": 100010001,
+    "observed_handle": "substage_1_5",
+    "verified_target_stage_id": 110010005,
+    "contract_evidence": "Public map behavior target name, public StageData ID and native OnStageLoad/interaction coroutine; APK accepted the UserProgress response and saved the target opened flag.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 93,
+    "persistence_state_preservation_authentication_and_rollback_checked": true,
+    "original_apk_retry_confirmed": true,
+    "post_retry_target_state": 1,
+    "balances_quests_and_character_experience_preserved": true
   }
 }

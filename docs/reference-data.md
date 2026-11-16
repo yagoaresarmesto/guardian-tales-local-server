@@ -27,6 +27,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `training_catalog.json` | Knight experience targets and story caps | Parsed public experience catalog for the matching build |
 | `tutorial_catalog.json` | Known UI completion markers after Inn | Parsed public tutorial ID list for the matching build |
 | `quest_catalog.json` | Known chapter quest registration in Inn | Parsed mapping of chapter codes to quest IDs |
+| `substage_catalog.json` | Side-stage map discovery in Inn | Verified map handles and target stage IDs |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -60,6 +61,13 @@ lists of distinct positive quest IDs. Registration currently requires an active
 Inn session and preserves any existing quest state. It does not supply quest
 scripts, implement later checkpoints/rewards or open linked stages. Without the
 catalog, registration is limited to the original main quest 27.
+
+The optional side-stage catalog contains `stages`, mapping string source stage
+IDs to objects whose keys are map handles and whose values are target stage IDs.
+Resolve these from matching client map objects and stage definitions, rather
+than assuming a naming pattern. Discovery requires an active Inn session and
+sets only the target's opened flag; it does not spend entry stamina, complete
+the target or implement its gameplay. No targets are built into the source.
 
 ## Preservation manifest
 

@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **90 passing tests**, including fourteen first-chapter entry/progress
+The suite has **93 passing tests**, including fourteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -17,6 +17,8 @@ sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
 check persistent flags, the Inn prerequisite, atomic batches and invalid data.
 Three quest-catalog regressions check registration, retained progress, retries,
 active-stage/catalog validation and rollback.
+Three map-discovery regressions check preserved state, request/authentication
+validation, persistence across retries/reopening and failed-write rollback.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -177,7 +179,19 @@ An active Inn session is required. New entries start with grade -1, progress 0
 and empty custom state; retries preserve existing entries and the main quest's
 checkpoints. The response remains `OpenedStages: []`. This implements registration
 only: linked-stage openings, NPC interaction validation, side-quest progression
-and rewards remain pending. The deployed quest-57 retry is pending in this snapshot.
+and rewards remain pending. The APK accepted quest 57 registration and then
+requested `/stage/interact-substage-item` for `substage_1_5`.
+
+The public map object and stage definition confirm target 110010005. Native
+map visibility checks `UserProgress.IsStageOpened` for that target; after a
+successful interaction its coroutine hides the map and shows the discovery
+presentation. The server now resolves handles through an external map catalog,
+requires an active Inn session and saves the target's opened bit while retaining
+all existing flags and account state. Retrying causes no further write or cost.
+The response supplies current `UserProgress` to the client's resource handler.
+The APK accepted the interaction and saved target 110010005 with opened state 1,
+preserving all balances, quest progress and character experience.
+Target-stage entry, its gameplay and NPC/location validation remain unfinished.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns

@@ -32,6 +32,7 @@ from .campaign import (
     encode_stage_progress,
     initial_stage_progresses,
 )
+from .discovery import discover_substage
 from .missions import (
     BEGINNER_REWARDS,
     FIRST_HERO_CHALLENGE_GEMS,
@@ -78,6 +79,7 @@ ACCOUNT_ROUTES = (
     "/stage/beat-monsters",
     "/stage/pick-stage-item",
     "/stage/open-treasure",
+    "/stage/interact-substage-item",
     "/stage/end-stage",
     "/user/mark-tutorial",
     "/user/add-character-experience",
@@ -941,6 +943,9 @@ class AccountStore:
                     (json.dumps(profile, separators=(",", ":")),),
                 )
         return {"UserProgress": progress}
+
+    def interact_substage_item(self, request):
+        return discover_substage(self, request)
 
     def start_quest(self, request):
         """Register a known chapter quest in Inn; progression and rewards are separate."""

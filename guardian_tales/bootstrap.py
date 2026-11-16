@@ -255,6 +255,11 @@ class BootstrapSession:
                     return json_response(request, self.store.account.open_treasure(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/stage/interact-substage-item":
+                try:
+                    return json_response(request, self.store.account.interact_substage_item(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/stage/end-stage":
                 try:
                     return json_response(request, self.store.account.end_stage(body))
