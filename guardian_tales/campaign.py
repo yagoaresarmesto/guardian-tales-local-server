@@ -53,8 +53,8 @@ def encode_stage_progress(stores):
     """Encode native StageProgress v2 / CustomDataStore values.
 
     Stores contain byte-indexed booleans or signed 32-bit integers. Integer keys
-    also occupy a zero bit in the boolean bitmap. The trailing stage flag is zero
-    until its semantics have been implemented.
+    also occupy a zero bit in the boolean bitmap. The trailing StonePieces byte
+    remains zero; stone-board puzzles are not implemented yet.
     """
     if not stores:
         return ""

@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **46 passing tests**, including ten first-chapter entry/progress
+The suite has **47 passing tests**, including eleven first-chapter entry/progress
 regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -49,7 +49,11 @@ rule**, not a verified reconstruction of official server rates, multipliers or
 random drops. Reports are allowlisted and deduplicated but battles are not
 validated by the server. The remaining named items are covered by automated
 receipt tests and their public runtime configuration; only the shield has been
-picked up in this APK test so far.
+picked up in the initial APK test. A subsequent test also accepted the costume
+pickup and glove chest, showing 3/4 item markers, and advanced quest checkpoints
+3 and 4. The chest grants the public tilemap's single item 30017 and records the
+opened box separately from named pickups. Its retry returns the same inventory
+item; it does not grant another pair of gloves.
 
 The prepared laboratory's restoration checks verified its original hosts,
 preferences, SDK cache, trust listing and OUTPUT rules. The clone was stopped and

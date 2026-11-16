@@ -47,6 +47,7 @@ ACCOUNT_ROUTES = (
     "/stage/pick-stage-coins",
     "/stage/beat-monsters",
     "/stage/pick-stage-item",
+    "/stage/open-treasure",
     "/auth/check-name",
     "/auth/sign-name",
     "/auth/sign-up/v2",
@@ -392,6 +393,27 @@ class AccountStore:
             raise ValueError("Start the phase before collecting its items")
         key = request["StageItemKey"]
         index, item_id, collection = FIRST_STAGE_ITEMS[key]
+        return self._grant_campaign_item(key, 4, index, item_id, collection)
+
+    def open_treasure(self, request):
+        """Open the first phase's glove chest once; preserve its inventory receipt."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+            or request.get("TreasureBoxKey") != "mole_glove_box"
+            or request.get("StageCustom") is not None
+        ):
+            raise ValueError("Unknown first-phase treasure box")
+        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+            FIRST_STAGE_ID,
+        ):
+            raise ValueError("Start the phase before opening its treasure")
+        # The loaded TreasureBehaviour contains one ItemPlaceholder: 30017 x1.
+        value = self._grant_campaign_item("treasure:mole_glove_box", 5, 1, 30017, "ItemMiscs")
+        return {"User": value["User"], "AddedItems": [value["AddedItem"]]}
+
+    def _grant_campaign_item(self, key, category, index, item_id, collection):
         profile = self.profile()
         user = profile["User"]
         previous = self.db.execute(
@@ -414,7 +436,7 @@ class AccountStore:
                 )
                 self.db.execute(
                     "INSERT INTO campaign_progress VALUES(?,?,?,?)",
-                    (FIRST_STAGE_ID, 4, index, "true"),
+                    (FIRST_STAGE_ID, category, index, "true"),
                 )
                 self.db.execute(
                     "UPDATE local_account SET profile=? WHERE id=1",

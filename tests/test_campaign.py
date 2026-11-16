@@ -183,6 +183,30 @@ class ChapterProgressTests(unittest.TestCase):
             self.db.execute("SELECT stage_id FROM campaign_session").fetchone()[0], FIRST_STAGE_ID
         )
 
+    def test_glove_chest_requires_active_stage_and_retries_return_the_same_item(self):
+        body = {"StageId": FIRST_STAGE_ID, "TreasureBoxKey": "mole_glove_box", "StageCustom": None}
+        with self.assertRaises(PacketError):
+            self.session.handle(request("/stage/open-treasure", body))
+        self.enter_first_phase()
+        packet = self.session.handle(request("/stage/open-treasure", body))
+        result = read_json_body(parse_packet(encode_packet(packet)))
+        self.assertEqual(len(result["AddedItems"]), 1)
+        self.assertEqual(result["AddedItems"][0]["ItemId"], 30017)
+        self.assertEqual(result["User"]["ItemMiscs"], result["AddedItems"])
+        saved = self.store.account.profile()
+        restarted = GuestStore(self.db).account
+        self.assertEqual(restarted.open_treasure(body), result)
+        self.assertEqual(restarted.profile(), saved)
+        self.assertEqual(
+            self.db.execute(
+                "SELECT value FROM campaign_progress WHERE category=5 AND key=1"
+            ).fetchone(),
+            ("true",),
+        )
+        with self.assertRaises(ValueError):
+            restarted.open_treasure(body | {"TreasureBoxKey": "unknown"})
+        self.assertEqual(restarted.profile(), saved)
+
     def test_insufficient_stamina_does_not_unlock_or_create_active_session(self):
         self.complete_prologue()
         before = self.store.account.profile()

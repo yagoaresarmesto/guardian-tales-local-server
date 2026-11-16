@@ -64,7 +64,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Daily attendance | External catalog required; supported asset rewards once per UTC day |
 | Resource delivery | Read-only manifest allowlist; ETags, HEAD and single byte ranges |
 | Initial story quest | Quest start and sequential early checkpoints persist |
-| First-phase collectibles | Purple coins and three named item receipts persist without duplicate grants |
+| First-phase collectibles | Purple coins, three named items and glove-chest receipts persist without duplicate grants |
 | First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
 | Campaign completion and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |

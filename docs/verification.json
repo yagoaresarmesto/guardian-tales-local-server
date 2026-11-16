@@ -70,7 +70,7 @@
     "date": "2026-11-16",
     "automated_tests": {
       "result": "PASS",
-      "tests_run": 46,
+      "tests_run": 47,
       "failures": 0,
       "errors": 0,
       "external_network_disabled": true,
@@ -85,7 +85,9 @@
       "Inn opening scene loaded with reserve stamina reduced from 40 to 25.",
       "Quest 27 start and checkpoints 1 and 2 accepted.",
       "Five purple coins, first two defeated goblins and named shield pickup accepted.",
-      "After restarting client/backend, Inn reopened with 5/26 coins and 1/4 item markers."
+      "After restarting client/backend, Inn reopened with 5/26 coins and 1/4 item markers.",
+      "Costume pickup and glove chest accepted; item marker count reached 3/4.",
+      "Quest checkpoints 3 and 4 accepted."
     ],
     "monster_drop_rule": "Provisional local level-1 catalog row: 79 experience and 87 gold per new known handle; official rates/multipliers/random drops unverified.",
     "campaign_completed": false,

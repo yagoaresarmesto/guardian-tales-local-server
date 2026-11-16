@@ -85,7 +85,7 @@ not send a second copy of `UserProgress`.
 Purple coins, named items and known defeated monster handles have per-stage
 receipts. Their native progress stores are encoded as version 2: a store count,
 category IDs, byte-indexed boolean bitmaps, signed 32-bit integer overrides and
-a trailing stage flag. Repeated or overlapping requests do not repeat grants.
+a trailing `StonePieces` byte (currently zero). Repeated or overlapping requests do not repeat grants.
 Named item receipts retain their inventory IDs across restart. The monster drop
 rule is provisional; see [status](status.md) before relying on its economy.
 
