@@ -1,0 +1,19 @@
+# Project working instructions
+
+- Use English for code, comments, documentation and commit messages.
+- Keep this repository updated as the project advances. Finish each verified
+  logical change with a focused commit and push to the configured origin, unless
+  the user asks to keep that work local or requests a review first.
+- Fetch the current remote state before publishing. Preserve other contributors'
+  changes and use ordinary fast-forward pushes.
+- Update the relevant usage, compatibility or status documentation when behavior
+  changes. Separate inferred contracts, automated checks and actual APK results.
+- For implementation changes, run the relevant behavioral tests and required
+  format/lint checks. For documentation-only changes, check local links and the
+  staged diff; additional tests are needed only if behavior is affected.
+- Keep game binaries/content, captured bootstrap bodies, credentials, certificate
+  keys, account databases and machine-specific lab tools outside the source tree.
+- Preserve the saved local account when changing persistence or lab tooling.
+- The current compatibility baseline is Android 3.57.0, Google Play, European
+  service, with matching external content. A visible lobby or world map does not
+  establish a working campaign; Chapter 1 remains unfinished.

@@ -5,6 +5,43 @@ a separate integration task. This repository does not include an emulator image,
 APK installer, game data, extracted metadata, SDK cache, private CA, rootfs or
 machine-specific routing scripts.
 
+## Client version and content compatibility
+
+The **APK is the client**: its platform and game requests must reach the local
+server, which returns the implemented responses. The APK continues to render the
+game and run its client-side logic. Starting the Python server alone does not
+attach to an installed app or redirect its requests.
+
+| Component | Current baseline |
+|---|---|
+| Client | Guardian Tales **3.57.0 for Android** |
+| Distribution | **Google Play, European service**, package `com.kakaogames.gdts` |
+| Platform configuration | `Version=v3.57.0`, `Market=googleplay`, `AppId=422316` |
+| Game handshake | Exact ASCII `3.57.0`, padded to 16 bytes |
+| External inputs | Compatible bootstrap bodies and preserved resources from the matching client/content snapshot |
+| Original-client test | The prepared MuMu clone with the preserved EN/ES content and Japanese voice supplement |
+
+The version requirement is enforced in code. A different game handshake is
+rejected, and the platform route checks the version, market and application ID.
+Other regional distributions, APK variants, platforms and versions have not been
+validated, even if their displayed version looks similar.
+
+Keep the client and content snapshot together. The APK version alone is not
+enough: downloadable data can have its own revision, and the bootstrap catalog
+must agree with the resources available locally. Install the matching base APK
+and required splits when the preserved client uses a split installation. The
+Japanese voice supplement is part of the tested content set, not a requirement
+to select Japanese voice playback.
+
+For now, reproduce the pinned baseline rather than updating the APK or content
+independently. Supporting a newer client means reviewing its protocol, response
+contracts and content assumptions, then testing that version explicitly; changing
+a version string does not establish compatibility.
+
+The repository supplies the server source and synthetic tests. Each client setup
+must supply its own compatible game installation and content; these are not
+included in the source ZIP.
+
 ## Requirements for an APK experiment
 
 Use a disposable test instance with the compatible 3.57.0 client and its preserved

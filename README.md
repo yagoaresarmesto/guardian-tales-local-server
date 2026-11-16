@@ -46,6 +46,11 @@ also needs compatible external bootstrap data, preserved resources, routing and
 TLS trust in a dedicated test environment. See [setup](docs/setup.md) and
 [client integration](docs/client-integration.md).
 
+The pinned client baseline is **Android 3.57.0, Google Play, European service**,
+with compatible bootstrap data and preserved resources from the same content
+snapshot. Other versions and distributions have not been validated. See the
+[compatibility details](docs/client-integration.md#client-version-and-content-compatibility).
+
 ## Current scope
 
 | Component | State |

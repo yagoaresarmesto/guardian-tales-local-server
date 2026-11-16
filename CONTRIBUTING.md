@@ -4,6 +4,15 @@ This prototype currently targets one local guest and the 3.57.0 Android client.
 Start with [architecture](docs/architecture.md), [status](docs/status.md), and
 [development](docs/development.md).
 
+## Keeping the repository current
+
+Publish each verified logical advance with a focused commit and the corresponding
+documentation/status updates. Implementation changes should include relevant
+behavioral tests; documentation-only changes need link and diff checks. Keep
+experimental captures and unfinished local trials outside published source.
+Check GitHub Actions for the result of each pushed commit. Preserve the client's
+pinned compatibility baseline until another version has been explicitly tested.
+
 Keep changes focused on observed behavior. Distinguish a response shape inferred
 from native code, a captured contract, a synthetic test, and behavior actually
 accepted by the original client. Do not mark unfinished mutations successful.
