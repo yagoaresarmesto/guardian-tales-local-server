@@ -376,7 +376,21 @@
     "automated_tests_run": 76,
     "atomic_claim_retry_reopening_and_rollback_checked": true,
     "independent_pass_receipts_and_inventory_preservation_checked": true,
-    "original_apk_retry_confirmed": false,
+    "original_apk_retry_confirmed": true,
+    "post_retry_festival_points": 4,
+    "balances_and_inventory_preserved": true,
+    "next_unsupported_operation": "/guild/get-join-suggestion-list/v2",
     "paid_passes_later_levels_missions_redemption_and_rollover_implemented": false
+  },
+  "guild_suggestions_update": {
+    "date": "2026-11-16",
+    "route": "/guild/get-join-suggestion-list/v2",
+    "response": {"Guilds": [], "GuildApplyTo": null},
+    "scope": "Empty recommendations for the local account with no guild or pending application; no guild mutations or multiplayer.",
+    "contract_evidence": "Native SuggestBy request and callback reading Guilds list and nullable GuildApplyTo.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 76,
+    "existing_lobby_read_regression_passed": true,
+    "original_apk_retry_confirmed": false
   }
 }

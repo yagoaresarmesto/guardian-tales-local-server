@@ -45,6 +45,13 @@
       "LobbyVillagePrincessAlarm": 0
     }
   },
+  "/guild/get-join-suggestion-list/v2": {
+    "body_type": 1,
+    "value": {
+      "Guilds": [],
+      "GuildApplyTo": null
+    }
+  },
   "/inbox/list": {
     "body_type": 1,
     "value": {

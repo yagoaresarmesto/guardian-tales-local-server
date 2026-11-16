@@ -176,8 +176,19 @@ adding an inventory stack. The first claim assigns season 41 to an empty pass,
 sets `Claimed.Free` to 1, and saves the points and receipt atomically. Other passes,
 balances and inventory remain unchanged. Tests cover retry/reopening, strict
 scope validation, independent pass receipts, corrupt receipts and write rollback.
-The deployed claim needs its APK retry in this snapshot. Later Festival rewards,
+The APK accepted the claim and saved four points, free claim level 1 and its
+receipt, preserving all inventory stacks and balances. Later Festival rewards,
 missions, point redemption, purchases and automatic seasonal rollover remain
+unimplemented.
+
+The next unsupported request was `/guild/get-join-suggestion-list/v2`. The native
+request sends `SuggestBy`; its callback reads `Guilds` as a list and
+`GuildApplyTo` as a nullable guild. The local read now returns `Guilds: []` and
+`GuildApplyTo: null`, consistent with the single account's empty guild state.
+It adds no guild, application or membership and does not change the account.
+The existing lobby regression exercises the new response's body kind and
+unchanged saved profile. All 76 tests pass; the deployed read still needs its
+APK retry in this snapshot. Guild creation, applications and multiplayer remain
 unimplemented.
 
 ## Economy and preservation limits
@@ -211,7 +222,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Verify the Festival Pass initial reward retry, then continue from the
+1. Verify the empty guild suggestions retry, then continue from the
    next user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
