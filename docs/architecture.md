@@ -97,6 +97,13 @@ reward. This phase has no configured `StageSpec.Rewards` or `FailRewards`; its
 grade reward is separate. The observed post-clear tutorial ID 200 is persisted
 once and returned in `UserProgress` so the client's resource handler sees it.
 
+The next tutorial sends `/user/add-character-experience` with a character-ID
+dictionary of experience deltas. Only the observed starting knight's 37-point
+level 1-to-2 upgrade is supported. Its transaction subtracts the asset balance,
+updates character experience and the spending counter, and records a one-time
+training receipt. Retries return the current saved user; general repeated
+training needs a separate retry contract before it can be supported safely.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation

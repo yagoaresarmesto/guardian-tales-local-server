@@ -6,15 +6,16 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **49 passing tests**, including thirteen first-chapter entry/progress
-regressions. It covers real loopback TLS,
+The suite has **53 passing tests**, including thirteen first-chapter entry/progress
+regressions and four initial knight training regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
 chapter progress objects, atomic stamina spending, free stage retries, and initial
 quest persistence without duplicates, native stage-progress bytes, overlapping
 coin batches, monster reward retries, stable item receipts, clear-exit validation,
-first-clear gem deduplication and completion tutorial acknowledgments.
+first-clear gem deduplication, completion tutorial acknowledgments, training cost
+validation, persistent retry receipts and transaction rollback on a failed write.
 The full suite passed on Python 3.11.18 in a container with networking disabled.
 
 The suite and synthetic demo can run in a read-only Docker container with
@@ -53,8 +54,12 @@ existing lab save was credited by replaying its captured local completion throug
 that same idempotent handler after the reward was added. Restarting the backend
 and APK then displayed 50 gems, 870 gold and 25 reserve stamina in the lobby.
 The saved inventory still contained the shield, costume and gloves. The next
-observed lobby tutorial directs the player to hero level-up; that mutation is
-not yet implemented.
+lobby tutorial directed the player to hero level-up. Its captured request spends
+37 experience on the starting knight. The APK accepted the implemented response
+and displayed **Lv.1 → Lv.2**; the saved experience balance changed from 790 to
+753. Only this first tutorial upgrade is supported. Other amounts, characters
+and later training steps are rejected. Its receipt makes reconnect/restart
+retries return the saved result without spending another 37 experience.
 
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
 known monster handle: 79 experience and 87 gold. This is a provisional **local

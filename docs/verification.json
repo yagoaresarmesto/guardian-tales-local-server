@@ -64,13 +64,13 @@
     "record_scope": "Local verification snapshot before initial publication; hosted results are recorded per commit on GitHub Actions.",
     "runs_url": "https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml"
   },
-  "gameplay_limit": "Inn main clear path, saved 50-free-gem reward and completion tutorial; optional collectibles, hero level-up, later phases, equipment mutations and battle validation unfinished.",
+  "gameplay_limit": "Inn main clear path, saved 50-free-gem reward and completion tutorial; optional collectibles, general hero training, later phases, equipment mutations and battle validation unfinished.",
   "source_package_scope": "Project code, English documentation, empty templates and regression fixtures. External game/bootstrap files, local keys, account saves and machine-specific lab tools are excluded.",
   "campaign_update": {
     "date": "2026-11-16",
     "automated_tests": {
       "result": "PASS",
-      "tests_run": 49,
+      "tests_run": 53,
       "failures": 0,
       "errors": 0,
       "external_network_disabled": true,
@@ -92,11 +92,13 @@
       "World map displayed Stage cleared and the 50-gem grade reward.",
       "Completion tutorial 200 accepted.",
       "After replaying the saved completion through the idempotent reward handler, backend/APK restart displayed 50 gems, 870 gold and 25 reserve stamina.",
-      "Saved inventory retained shield, costume and gloves; the next observed tutorial points to hero level-up."
+      "Saved inventory retained shield, costume and gloves; the next observed tutorial points to hero level-up.",
+      "Starting knight level-up request spent 37 experience once; APK displayed Lv.1 to Lv.2 and saved experience balance became 753."
     ],
     "monster_drop_rule": "Provisional local level-1 catalog row: 79 experience and 87 gold per new known handle; official rates/multipliers/random drops unverified.",
     "source_only": true,
     "first_phase_clear_path_completed": true,
-    "full_campaign_completed": false
+    "full_campaign_completed": false,
+    "training_scope": "Only starting knight level 1-to-2 tutorial; no general training retry contract claimed."
   }
 }

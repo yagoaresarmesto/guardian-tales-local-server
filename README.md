@@ -68,6 +68,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | First-phase collectibles | Purple coins, three named items and glove-chest receipts persist without duplicate grants |
 | First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
+| Initial knight level-up tutorial | Level 1 to 2 for 37 experience once; general training remains pending |
 | Later phases and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |
 

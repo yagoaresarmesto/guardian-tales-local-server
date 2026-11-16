@@ -53,6 +53,7 @@ ACCOUNT_ROUTES = (
     "/stage/open-treasure",
     "/stage/end-stage",
     "/user/mark-tutorial",
+    "/user/add-character-experience",
     "/auth/check-name",
     "/auth/sign-name",
     "/auth/sign-up/v2",
@@ -131,6 +132,9 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS campaign_grade_claims (stage_id INTEGER PRIMARY KEY, gems INTEGER NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS first_knight_training (character_id INTEGER PRIMARY KEY, experience INTEGER NOT NULL)"
         )
         existing = db.execute(
             "SELECT schema_version,profile FROM local_account WHERE id=1"
@@ -549,6 +553,61 @@ class AccountStore:
             "StageProgress": self.stage_progress(FIRST_STAGE_ID),
             "AddedItems": [],
         }
+
+    def add_character_experience(self, request):
+        """Apply the observed post-Inn knight level 1-to-2 tutorial once.
+
+        Experiences contains deltas, not target totals. This narrow operation
+        deliberately rejects other amounts until general training contracts and
+        retry semantics have been implemented.
+        """
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"Experiences"}
+            or not isinstance(request["Experiences"], dict)
+            or set(request["Experiences"]) != {"1"}
+            or type(request["Experiences"]["1"]) is not int
+            or request["Experiences"]["1"] != 37
+        ):
+            raise ValueError(
+                "Only the initial knight tutorial's 37-experience upgrade is implemented"
+            )
+        profile = self.profile()
+        user, progress, record = profile["User"], profile["UserProgress"], profile["UserRecord"]
+        if (
+            self.needs_prologue()
+            or not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED
+        ):
+            raise ValueError("Complete Inn before its knight training tutorial")
+        knight = next((c for c in user["Characters"] if c["Id"] == 1), None)
+        if knight is None or knight["CharacterId"] not in (1, 2):
+            raise ValueError("The starting knight is missing")
+        trained = self.db.execute(
+            "SELECT experience FROM first_knight_training WHERE character_id=1"
+        ).fetchone()
+        if trained:
+            if trained != (37,) or knight["Experience"] < 37:
+                raise ValueError("Knight tutorial receipt does not match the saved character")
+            return {"User": user, "UserRecord": record}
+        experience = next(asset for asset in user["Assets"] if asset["Id"] == 70004)
+        if knight["Experience"] != 0 or experience["Amount"] < 37:
+            raise ValueError(
+                "The initial knight upgrade requires level 1 and 37 available experience"
+            )
+        # The pinned APK displayed 37 for this tutorial and sent that delta.
+        # It derives the displayed level from the character's Experience.
+        experience["Amount"] -= 37
+        knight["Experience"] = 37
+        record["AddCharacterExperienceAmount"] += 37
+        record["Cas"] += 1
+        user["Cas"] += 1
+        with self.db:
+            self.db.execute("INSERT INTO first_knight_training VALUES(1,37)")
+            self.db.execute(
+                "UPDATE local_account SET profile=? WHERE id=1",
+                (json.dumps(profile, separators=(",", ":")),),
+            )
+        return {"User": user, "UserRecord": record}
 
     def mark_tutorial(self, request):
         """Persist the tutorial acknowledgment observed immediately after Inn clears."""
