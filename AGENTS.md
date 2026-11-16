@@ -16,4 +16,5 @@
 - Preserve the saved local account when changing persistence or lab tooling.
 - The current compatibility baseline is Android 3.57.0, Google Play, European
   service, with matching external content. A visible lobby or world map does not
-  establish a working campaign; Chapter 1 remains unfinished.
+  establish a working campaign. Inn's clear path has been verified with the APK;
+  optional interactions and Chapter 1 beyond Inn remain unfinished.

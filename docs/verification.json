@@ -64,13 +64,13 @@
     "record_scope": "Local verification snapshot before initial publication; hosted results are recorded per commit on GitHub Actions.",
     "runs_url": "https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml"
   },
-  "gameplay_limit": "Inn entry, early quest checkpoints, purple coins, named-item receipts and provisional monster reports; stage completion, remaining collectibles, equipment mutations and battle validation unfinished.",
+  "gameplay_limit": "Inn main clear path, saved 50-free-gem reward and completion tutorial; optional collectibles, hero level-up, later phases, equipment mutations and battle validation unfinished.",
   "source_package_scope": "Project code, English documentation, empty templates and regression fixtures. External game/bootstrap files, local keys, account saves and machine-specific lab tools are excluded.",
   "campaign_update": {
     "date": "2026-11-16",
     "automated_tests": {
       "result": "PASS",
-      "tests_run": 47,
+      "tests_run": 49,
       "failures": 0,
       "errors": 0,
       "external_network_disabled": true,
@@ -87,10 +87,16 @@
       "Five purple coins, first two defeated goblins and named shield pickup accepted.",
       "After restarting client/backend, Inn reopened with 5/26 coins and 1/4 item markers.",
       "Costume pickup and glove chest accepted; item marker count reached 3/4.",
-      "Quest checkpoints 3 and 4 accepted."
+      "Quest checkpoints 3 and 4 accepted.",
+      "Inn clear exit accepted with 13/26 purple coins, ten monster reports and 3/4 item markers.",
+      "World map displayed Stage cleared and the 50-gem grade reward.",
+      "Completion tutorial 200 accepted.",
+      "After replaying the saved completion through the idempotent reward handler, backend/APK restart displayed 50 gems, 870 gold and 25 reserve stamina.",
+      "Saved inventory retained shield, costume and gloves; the next observed tutorial points to hero level-up."
     ],
     "monster_drop_rule": "Provisional local level-1 catalog row: 79 experience and 87 gold per new known handle; official rates/multipliers/random drops unverified.",
-    "campaign_completed": false,
-    "source_only": true
+    "source_only": true,
+    "first_phase_clear_path_completed": true,
+    "full_campaign_completed": false
   }
 }

@@ -89,7 +89,10 @@ guest access, prologue, saved character, lobby, and world map. On a new account,
 explicitly select a personality as well as the avatar and name. The game creates
 its temporary prologue party; the backend saves the selected knight at completion.
 
-The first story phase, Inn, can now be unlocked and entered. Initial quest
-checkpoints, purple coins and named item receipts persist. Campaign completion
-is still under development. Unsupported game operations can produce the client's
-connection-lost dialog. See [status](status.md) for the precise verified scope.
+The first story phase, Inn, can be unlocked, entered and cleared through its main
+exit. Quest checkpoints, purple coins, named pickups, the glove chest and the
+50-gem first-clear reward persist. The APK returned to the world map and reopened
+the saved account after restart. Optional collectibles, later phases, hero
+level-up and other progression remain unfinished. Unsupported game operations can
+produce the client's connection-lost dialog. See [status](status.md) for the
+precise verified scope.

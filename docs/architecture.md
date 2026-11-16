@@ -28,8 +28,8 @@ flowchart LR
 | `packet_reader.py` | Bounded frame decoding, checksums, raw LZ4 and packet parsing |
 | `platform.py` | Platform HTTPS route bodies and local endpoint configuration |
 | `bootstrap.py` | Connection sign-in state, guest identity/credentials and game API dispatch |
-| `account.py` | SQLite profile, prologue completion, schema migrations and attendance claims |
-| `campaign.py` | First chapter identifiers, stage-state flags and initial progress entries |
+| `account.py` | SQLite profile, campaign receipts, prologue completion, migrations and attendance claims |
+| `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |
 | `assets.py` | Separate manifest-backed HTTP resource server |
@@ -77,7 +77,7 @@ progress object and blocks the entry UI.
 
 Only the first story phase can start. Unlocking consumes 15 stamina, from charged
 stamina first and reserve stamina second, and saves the opened/unlocked flags.
-Retries after restart do not charge again. Quest 27 and its first checkpoint are
+Retries after restart do not charge again. Quest 27 and its observed checkpoints are
 saved in `UserProgress`; neither operation marks the phase cleared. The native
 quest callbacks update their own in-memory quest objects, so their responses do
 not send a second copy of `UserProgress`.
@@ -88,6 +88,14 @@ category IDs, byte-indexed boolean bitmaps, signed 32-bit integer overrides and
 a trailing `StonePieces` byte (currently zero). Repeated or overlapping requests do not repeat grants.
 Named item receipts retain their inventory IDs across restart. The monster drop
 rule is provisional; see [status](status.md) before relying on its economy.
+
+The first phase's clear exit requires an active stage, quest checkpoint 4 and the
+glove chest receipt. A transaction saves its cleared flag, completion telemetry
+and one 50-free-gem grade claim, then removes the active stage session. Retrying
+the same completion after restart returns the saved progress without another
+reward. This phase has no configured `StageSpec.Rewards` or `FailRewards`; its
+grade reward is separate. The observed post-clear tutorial ID 200 is persisted
+once and returned in `UserProgress` so the client's resource handler sees it.
 
 ## Resource boundaries
 

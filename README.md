@@ -2,15 +2,16 @@
 
 An experimental Python server for the **Guardian Tales 3.57.0 Android client**.
 It implements the observed game transport, local guest identity, prologue account
-creation, persistent character storage, initial lobby queries, and a read-only
-resource server.
+creation, persistent character storage, the first campaign phase's clear path,
+initial lobby queries, and a read-only resource server.
 
 **This is not a complete offline version of the game.** In the prepared test
 environment, the original APK completed the prologue, recovered the saved
 character after restart, displayed the lobby and world map, and received its
-first daily reward with Internet access blocked. The first campaign phase,
-**Inn**, now loads and its initial quest is saved. Battle results, collectibles,
-stage completion, and most game systems are unfinished.
+first daily reward with Internet access blocked. The user also played the first
+campaign phase, **Inn**, through its clear exit and returned to the world map.
+Optional collectibles, later phases, equipment changes, battle validation and
+most other game systems remain unfinished.
 
 ## Quick start
 
@@ -66,7 +67,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Initial story quest | Quest start and sequential early checkpoints persist |
 | First-phase collectibles | Purple coins, three named items and glove-chest receipts persist without duplicate grants |
 | First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
-| Campaign completion and remaining rewards | Not implemented |
+| Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
+| Later phases and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |
 
 All connections share the same local account. Incoming provider tokens are not

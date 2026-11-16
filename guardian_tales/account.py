@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 
 from .campaign import (
     CHARGED_STAMINA,
+    FIRST_CLEAR_GEMS,
     FIRST_MONSTER_EXP,
     FIRST_MONSTER_GOLD,
     FIRST_MONSTERS,
@@ -21,7 +22,9 @@ from .campaign import (
     FIRST_STAGE_ID,
     FIRST_STAGE_ITEMS,
     FIRST_STAGE_STAMINA,
+    FREE_GEMS,
     RESERVE_STAMINA,
+    STAGE_CLEARED,
     STAGE_OPENED,
     STAGE_UNLOCKED,
     encode_stage_progress,
@@ -48,6 +51,8 @@ ACCOUNT_ROUTES = (
     "/stage/beat-monsters",
     "/stage/pick-stage-item",
     "/stage/open-treasure",
+    "/stage/end-stage",
+    "/user/mark-tutorial",
     "/auth/check-name",
     "/auth/sign-name",
     "/auth/sign-up/v2",
@@ -120,6 +125,12 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS campaign_item_receipts (stage_id INTEGER NOT NULL, item_key TEXT NOT NULL, inventory_id INTEGER NOT NULL, PRIMARY KEY(stage_id,item_key))"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS campaign_completions (stage_id INTEGER PRIMARY KEY, exit_name TEXT NOT NULL, hit_count INTEGER, no_damage INTEGER)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS campaign_grade_claims (stage_id INTEGER PRIMARY KEY, gems INTEGER NOT NULL)"
         )
         existing = db.execute(
             "SELECT schema_version,profile FROM local_account WHERE id=1"
@@ -443,6 +454,124 @@ class AccountStore:
                     (json.dumps(profile, separators=(",", ":")),),
                 )
         return {"User": user, "AddedItem": item}
+
+    def end_stage(self, request):
+        """Commit the first phase's clear exit and its first-grade gem reward once."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+            or request.get("ExitName") != "exit_forest_1_2"
+            or request.get("IsClearExit") is not True
+        ):
+            raise ValueError("Only the first phase's clear exit is implemented")
+        custom = request.get("StageCustom")
+        hit_count = no_damage = None
+        if custom is not None:
+            empty = {
+                "StageId",
+                "Category",
+                "CustomValues",
+                "QuestId",
+                "QuestCustomState",
+                "ClearInTime",
+                "Score",
+                "ChallengeA",
+                "ChallengeB",
+            }
+            if (
+                not isinstance(custom, dict)
+                or set(custom) - empty - {"HitCount", "NoDamage"}
+                or any(custom.get(key) is not None for key in empty)
+                or (
+                    custom.get("HitCount") is not None
+                    and (
+                        type(custom["HitCount"]) is not int
+                        or not 0 <= custom["HitCount"] <= 1000000
+                    )
+                )
+                or (custom.get("NoDamage") is not None and type(custom["NoDamage"]) is not bool)
+            ):
+                raise ValueError("Unsupported first-phase completion custom state")
+            hit_count, no_damage = custom.get("HitCount"), custom.get("NoDamage")
+        profile = self.profile()
+        progress, user = profile["UserProgress"], profile["User"]
+        completed = self.db.execute(
+            "SELECT 1 FROM campaign_completions WHERE stage_id=?", (FIRST_STAGE_ID,)
+        ).fetchone()
+        if not completed:
+            if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+                FIRST_STAGE_ID,
+            ):
+                raise ValueError("Start the phase before completing it")
+            quest = next((q for q in progress["QuestProgresses"] if q["Id"] == 27), None)
+            glove = self.db.execute(
+                "SELECT 1 FROM campaign_item_receipts WHERE stage_id=? AND item_key=?",
+                (FIRST_STAGE_ID, "treasure:mole_glove_box"),
+            ).fetchone()
+            if quest is None or quest["InnerProgress"] < 4 or not glove:
+                raise ValueError("Complete the first phase's initial quest steps and glove chest")
+            progress["StageStates"][str(FIRST_STAGE_ID)] |= STAGE_CLEARED
+            progress["Cas"] += 1
+        grade_claimed = self.db.execute(
+            "SELECT 1 FROM campaign_grade_claims WHERE stage_id=?", (FIRST_STAGE_ID,)
+        ).fetchone()
+        if not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED:
+            raise ValueError("Completion receipt does not match the saved phase state")
+        if not grade_claimed:
+            next(asset for asset in user["Assets"] if asset["Id"] == FREE_GEMS)[
+                "Amount"
+            ] += FIRST_CLEAR_GEMS
+            user["Cas"] += 1
+        with self.db:
+            if not completed:
+                self.db.execute(
+                    "INSERT INTO campaign_completions VALUES(?,?,?,?)",
+                    (FIRST_STAGE_ID, request["ExitName"], hit_count, no_damage),
+                )
+                self.db.execute("DELETE FROM campaign_session WHERE id=1")
+            if not grade_claimed:
+                self.db.execute(
+                    "INSERT INTO campaign_grade_claims VALUES(?,?)",
+                    (FIRST_STAGE_ID, FIRST_CLEAR_GEMS),
+                )
+            if not completed or not grade_claimed:
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        # StageSpec.Rewards and FailRewards are null for this preserved phase.
+        # The separate grade reward is the 50 free gems shown on first clear.
+        return {
+            "User": user,
+            "UserProgress": progress,
+            "StageState": progress["StageStates"][str(FIRST_STAGE_ID)],
+            "StageProgress": self.stage_progress(FIRST_STAGE_ID),
+            "AddedItems": [],
+        }
+
+    def mark_tutorial(self, request):
+        """Persist the tutorial acknowledgment observed immediately after Inn clears."""
+        if (
+            not isinstance(request, dict)
+            or not isinstance(request.get("tutorialIds"), list)
+            or not 1 <= len(request["tutorialIds"]) <= 8
+            or any(type(value) is not int or value != 200 for value in request["tutorialIds"])
+        ):
+            raise ValueError("Only the first-phase completion tutorial is implemented")
+        profile = self.profile()
+        progress = profile["UserProgress"]
+        if not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED:
+            raise ValueError("Complete Inn before acknowledging its completion tutorial")
+        if 200 not in progress["Tutorials"]:
+            progress["Tutorials"].append(200)
+            progress["Cas"] += 1
+            with self.db:
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        return {"UserProgress": progress}
 
     def start_quest(self, request):
         """Persist the first phase's initial quest without claiming completion."""

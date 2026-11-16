@@ -6,14 +6,15 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **47 passing tests**, including eleven first-chapter entry/progress
+The suite has **49 passing tests**, including thirteen first-chapter entry/progress
 regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
 chapter progress objects, atomic stamina spending, free stage retries, and initial
 quest persistence without duplicates, native stage-progress bytes, overlapping
-coin batches, monster reward retries and stable item receipts.
+coin batches, monster reward retries, stable item receipts, clear-exit validation,
+first-clear gem deduplication and completion tutorial acknowledgments.
 The full suite passed on Python 3.11.18 in a container with networking disabled.
 
 The suite and synthetic demo can run in a read-only Docker container with
@@ -38,20 +39,30 @@ With compatible private inputs in a dedicated, isolated test clone:
 - After a backend/client restart, the same quest and 25 stamina were recovered;
   Inn could be entered again without another charge.
 
-The APK subsequently accepted the first two quest checkpoints, a five-purple-coin
-batch, the two initial goblin reports and the shield pickup. The database retained
-those records after another laboratory restart. The APK then reopened Inn with populated native stage progress showing 5/26 coins
-and 1/4 item markers; no completed campaign phase is claimed.
+The APK subsequently accepted quest checkpoints 1 through 4, thirteen purple
+coins, ten known monster reports, the shield and costume pickups, and the glove
+chest. An intermediate restart reopened Inn with 5/26 coins and 1/4 item markers.
+The tested path later reached 13/26 coins and 3/4 item markers, then accepted
+`exit_forest_1_2` as a clear exit. The world map displayed **Stage cleared!** and
+the 50-gem stage-grade reward. The completion tutorial acknowledgment was also
+accepted. This verifies Inn's clear path, not all optional interactions or the
+rest of Chapter 1.
+
+Completion saves the cleared flag and one receipt for the 50 free gems. The
+existing lab save was credited by replaying its captured local completion through
+that same idempotent handler after the reward was added. Restarting the backend
+and APK then displayed 50 gems, 870 gold and 25 reserve stamina in the lobby.
+The saved inventory still contained the shield, costume and gloves. The next
+observed lobby tutorial directs the player to hero level-up; that mutation is
+not yet implemented.
 
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
 known monster handle: 79 experience and 87 gold. This is a provisional **local
 rule**, not a verified reconstruction of official server rates, multipliers or
 random drops. Reports are allowlisted and deduplicated but battles are not
-validated by the server. The remaining named items are covered by automated
-receipt tests and their public runtime configuration; only the shield has been
-picked up in the initial APK test. A subsequent test also accepted the costume
-pickup and glove chest, showing 3/4 item markers, and advanced quest checkpoints
-3 and 4. The chest grants the public tilemap's single item 30017 and records the
+validated by the server. The optional sword pickup is covered by automated
+receipt tests and its public runtime configuration; it was not collected on the
+tested clear path. The chest grants the public tilemap's single item 30017 and records the
 opened box separately from named pickups. Its retry returns the same inventory
 item; it does not grant another pair of gloves.
 
@@ -74,12 +85,13 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Finish the first phase's battle, collectible, custom-state and exit contracts.
-2. Implement stage progress validation, completion and rewards.
-3. Implement remaining inventory mutations, equipment state and item/random daily rewards.
-4. Add the account's tutorial/mission progression and the systems it unlocks.
-5. Expand content/resource completeness checks where indices can be interpreted.
-6. Consider multiplayer/social modes only after the single-player state model works.
+1. Implement the post-Inn hero/tutorial progression and remaining equipment mutations.
+2. Finish Inn's optional collectible/custom-state contracts and battle validation.
+3. Implement later campaign phases and their progression/reward rules.
+4. Implement item/random daily rewards and the remaining inventory operations.
+5. Add the account's mission progression and the systems it unlocks.
+6. Expand content/resource completeness checks where indices can be interpreted.
+7. Consider multiplayer/social modes only after the single-player state model works.
 
 No completion date is implied. Several empty read endpoints are compatibility
 scaffolding; they are not implementations of the corresponding game systems.

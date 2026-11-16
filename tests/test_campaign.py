@@ -215,6 +215,75 @@ class ChapterProgressTests(unittest.TestCase):
         self.assertEqual(self.store.account.profile(), before)
         self.assertEqual(self.db.execute("SELECT count(*) FROM campaign_session").fetchone()[0], 0)
 
+    def test_clear_exit_preserves_items_and_is_idempotent_after_session_ends(self):
+        self.enter_first_phase()
+        body = {
+            "StageId": FIRST_STAGE_ID,
+            "ExitName": "exit_forest_1_2",
+            "IsClearExit": True,
+            "StageCustom": {"HitCount": 14, "NoDamage": False},
+        }
+        before = self.store.account.profile()
+        with self.assertRaises(ValueError):
+            self.store.account.end_stage(body)
+        self.assertEqual(self.store.account.profile(), before)
+        quest = {"StageId": FIRST_STAGE_ID, "QuestId": 27, "StageCustom": None}
+        self.store.account.start_quest(quest)
+        for step in range(1, 5):
+            self.store.account.progress_quest(quest | {"InnerProgress": step})
+        self.store.account.open_treasure(
+            {"StageId": FIRST_STAGE_ID, "TreasureBoxKey": "mole_glove_box", "StageCustom": None}
+        )
+        before = self.store.account.profile()
+        for changed in (
+            {"ExitName": "unknown"},
+            {"IsClearExit": 1},
+            {"StageCustom": {"HitCount": True}},
+            {"StageCustom": {"Category": 9}},
+        ):
+            with self.subTest(changed=changed), self.assertRaises(ValueError):
+                self.store.account.end_stage(body | changed)
+        self.assertEqual(self.store.account.profile(), before)
+        packet = self.session.handle(request("/stage/end-stage", body))
+        response = read_json_body(parse_packet(encode_packet(packet)))
+        self.assertEqual(response["StageState"], 7)
+        self.assertEqual(response["AddedItems"], [])
+        self.assertTrue(response["StageProgress"])
+        next(asset for asset in before["User"]["Assets"] if asset["Id"] == 70003)["Amount"] += 50
+        before["User"]["Cas"] += 1
+        self.assertEqual(self.store.account.profile()["User"], before["User"])
+        self.assertEqual(
+            self.db.execute("SELECT gems FROM campaign_grade_claims").fetchone(), (50,)
+        )
+        self.assertEqual(self.db.execute("SELECT count(*) FROM campaign_session").fetchone()[0], 0)
+        self.assertEqual(
+            self.db.execute("SELECT hit_count,no_damage FROM campaign_completions").fetchone(),
+            (14, 0),
+        )
+        restarted = GuestStore(self.db).account
+        saved = restarted.profile()
+        self.assertEqual(restarted.end_stage(body), response)
+        self.assertEqual(restarted.profile(), saved)
+
+    def test_completion_tutorial_requires_clear_and_deduplicates_across_restart(self):
+        with self.assertRaises(PacketError):
+            self.session.handle(request("/user/mark-tutorial", {"tutorialIds": [200]}))
+        profile = self.store.account.profile()
+        profile["UserProgress"]["StageStates"][str(FIRST_STAGE_ID)] = 7
+        self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        self.db.commit()
+        for values in ([True], [201], [], [200, True]):
+            with self.subTest(values=values), self.assertRaises(PacketError):
+                self.session.handle(request("/user/mark-tutorial", {"tutorialIds": values}))
+        self.assertEqual(self.store.account.profile(), profile)
+        packet = self.session.handle(request("/user/mark-tutorial", {"tutorialIds": [200, 200]}))
+        response = read_json_body(parse_packet(encode_packet(packet)))
+        self.assertEqual(response["UserProgress"]["Tutorials"], [200])
+        saved = self.store.account.profile()
+        restarted = GuestStore(self.db).account
+        self.assertEqual(restarted.mark_tutorial({"tutorialIds": [200]}), response)
+        self.assertEqual(restarted.profile(), saved)
+
     def test_unfinished_prologue_or_unsupported_stage_cannot_start(self):
         before = self.store.account.profile()
         for body in (

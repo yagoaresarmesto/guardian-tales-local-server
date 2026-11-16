@@ -241,6 +241,16 @@ class BootstrapSession:
                     return json_response(request, self.store.account.open_treasure(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/stage/end-stage":
+                try:
+                    return json_response(request, self.store.account.end_stage(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == "/user/mark-tutorial":
+                try:
+                    return json_response(request, self.store.account.mark_tutorial(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/auth/check-name":
                 name = body.get("Name") if isinstance(body, dict) else None
                 if not valid_name(name):
