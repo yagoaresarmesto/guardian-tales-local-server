@@ -52,6 +52,12 @@
       "GuildApplyTo": null
     }
   },
+  "/guild/get-invite-list": {
+    "body_type": 1,
+    "value": {
+      "Guilds": []
+    }
+  },
   "/inbox/list": {
     "body_type": 1,
     "value": {

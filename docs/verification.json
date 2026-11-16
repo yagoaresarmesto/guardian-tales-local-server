@@ -391,6 +391,18 @@
     "automated_test_result": "PASS",
     "automated_tests_run": 76,
     "existing_lobby_read_regression_passed": true,
-    "original_apk_retry_confirmed": false
+    "original_apk_retry_confirmed": true,
+    "next_unsupported_operation": "/guild/get-invite-list"
+  },
+  "guild_invitation_list_update": {
+    "date": "2026-11-16",
+    "route": "/guild/get-invite-list",
+    "response": {"Guilds": []},
+    "scope": "Empty invitation list for the isolated local account; no invitation or membership mutations.",
+    "contract_evidence": "Native parameterless request and callback storing the Guilds list before refreshing the guild notification indicator.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 76,
+    "existing_lobby_read_regression_passed": true,
+    "original_apk_retry_confirmed": true
   }
 }

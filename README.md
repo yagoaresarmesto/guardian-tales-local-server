@@ -77,7 +77,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Tutorial acknowledgments | 32 passive help popups; completion/world-map IDs 200 and 2019 require Inn cleared |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Entry returns saved state; season 41's free level-1 reward grants four festival points once; other progression and purchases pending |
-| Guild suggestions | Empty local recommendations and no pending application; guild creation and membership remain pending |
+| Guild lists | Empty local recommendations and invitations, no pending application; guild creation and membership remain pending |
 | Later phases and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |
 

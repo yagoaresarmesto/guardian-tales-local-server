@@ -187,8 +187,12 @@ request sends `SuggestBy`; its callback reads `Guilds` as a list and
 `GuildApplyTo: null`, consistent with the single account's empty guild state.
 It adds no guild, application or membership and does not change the account.
 The existing lobby regression exercises the new response's body kind and
-unchanged saved profile. All 76 tests pass; the deployed read still needs its
-APK retry in this snapshot. Guild creation, applications and multiplayer remain
+unchanged saved profile. The APK accepted the read twice before reaching
+`/guild/get-invite-list`. That parameterless read now returns `Guilds: []`, which
+its native refresh callback stores in the invitation list before updating the
+guild notification indicator. It does not create or accept an invitation or
+change guild membership. All 76 tests still pass, and the APK accepted the
+invitation-list read twice. Guild creation, applications and multiplayer remain
 unimplemented.
 
 ## Economy and preservation limits
@@ -222,8 +226,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Verify the empty guild suggestions retry, then continue from the
-   next user-reported unsupported operation. The earlier
+1. Continue from the next user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
 3. Implement later campaign phases and their progression/reward rules.
