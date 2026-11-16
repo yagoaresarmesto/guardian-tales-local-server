@@ -1,12 +1,12 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-16**. The public repository is a source-only
+Status recorded on **2026-11-17**. The public repository is a source-only
 reorganization of the working prototype. Test results and original-client
 observations have different scopes.
 
 ## Automated checks
 
-The suite has **119 passing tests**, including eighteen first-chapter entry/progress
+The suite has **127 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -36,6 +36,11 @@ catalogs, native index boundaries and rollback of rewards with defeat markers.
 Five completion-catalog regressions check clear prerequisites, exact custom-state
 validation, retained balances/quests, earned openings, persistent retry receipts,
 later active sessions, invalid catalogs and rollback of the whole completion.
+Eight administrative regressions check persistent million-gem grants, exact
+profile preservation, idempotent IDs, retries after spending, audit history,
+invalid input/overflow, transactional rollback, real CLI use, cross-process
+state locks and cleanup after backend startup failures. These eight also pass
+on Windows with its native file-lock implementation.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -358,6 +363,15 @@ invitation-list read twice. Guild creation, applications and multiplayer remain
 unimplemented.
 
 ## Economy and preservation limits
+
+The local administrative CLI can add free gems with a persistent receipt and
+operation ID. It requires the backend to be stopped, updates only the free-gem
+balance/user revision and rolls back on failure. The updated backend and command
+share an operating-system lock to prevent overlapping owners. History can be read
+without stopping the server. See [administration](administration.md). This update
+was tested against synthetic accounts; no administrative grant was applied to
+the preserved APK account, and an APK display refresh after such a grant remains
+unverified.
 
 The prepared Inn and passage monster rewards use one public level-1 `ExpsData`
 row per new known monster handle: 79 experience and 87 gold. This is a provisional **local

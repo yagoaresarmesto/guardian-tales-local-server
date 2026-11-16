@@ -1,9 +1,9 @@
 {
-  "date": "2026-11-16",
+  "date": "2026-11-17",
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 119,
+    "tests_run": 127,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -573,5 +573,21 @@
     "post_retry_stage_state": 7,
     "post_retry_balances_preserved": true,
     "post_retry_quests_preserved": true
+  },
+  "administrative_gem_grants": {
+    "date": "2026-11-17",
+    "commands": ["admin grant-gems", "admin gem-history"],
+    "scope": "Offline free-gem grants to the existing single account, atomic audit receipts, idempotent operation IDs and shared backend/administrator state-directory locking.",
+    "asset_id": 70003,
+    "tested_grant_amount": 1000000,
+    "tested_balance_before": 400,
+    "tested_balance_after": 1000400,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 127,
+    "additional_windows_administrative_tests": 8,
+    "persistence_account_response_retry_after_spending_and_conflicts_checked": true,
+    "audit_rollback_overflow_cross_process_lock_and_startup_cleanup_checked": true,
+    "preserved_apk_account_modified": false,
+    "original_apk_balance_refresh_after_admin_grant_confirmed": false
   }
 }

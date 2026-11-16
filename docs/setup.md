@@ -73,6 +73,18 @@ Back up the state database **after stopping the backend**. To try a separate new
 account, use a different data directory. Do not commit or share the database: it
 contains the local signing key and guest token as well as game state.
 
+## Grant free gems
+
+Stop the backend and use its existing data directory:
+
+```sh
+python -m guardian_tales admin grant-gems 1000000 --data-dir local/state --operation-id gems-million-001 --reason "Local testing"
+```
+
+The same operation ID cannot grant twice. Restart and reconnect to refresh the
+game's balance. See [administration](administration.md) for history, limits and
+the prepared Android laboratory's separate data-directory requirements.
+
 ## Serve preserved resources
 
 Start the CDN in a second terminal:

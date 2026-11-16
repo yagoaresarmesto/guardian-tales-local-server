@@ -17,6 +17,7 @@ from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
 from .protocol import PacketError, decode_frame, encode_wire, frame_length, make_pong
 from .reference import default_cert_dir
+from .state_lock import StateLock
 
 
 class LocalServer:
@@ -37,12 +38,19 @@ class LocalServer:
         self.active = set()
         self.http_connections = set()
         self.tasks = set()
-        self.db = sqlite3.connect(self.data_dir / "server.sqlite3")
-        self.db.execute(
-            "CREATE TABLE IF NOT EXISTS counters (name TEXT PRIMARY KEY, value INTEGER NOT NULL)"
-        )
-        self.db.commit()
-        self.guests = GuestStore(self.db, reference_dir)
+        self.state_lock = StateLock(self.data_dir).acquire()
+        try:
+            self.db = sqlite3.connect(self.data_dir / "server.sqlite3")
+            self.db.execute(
+                "CREATE TABLE IF NOT EXISTS counters (name TEXT PRIMARY KEY, value INTEGER NOT NULL)"
+            )
+            self.db.commit()
+            self.guests = GuestStore(self.db, reference_dir)
+        except BaseException:
+            if hasattr(self, "db"):
+                self.db.close()
+            self.state_lock.release()
+            raise
         self.stopping = False
 
     def bump(self, name):
@@ -307,7 +315,10 @@ class LocalServer:
             task.cancel()
         if self.tasks:
             await asyncio.gather(*list(self.tasks), return_exceptions=True)
-        self.db.close()
+        try:
+            self.db.close()
+        finally:
+            self.state_lock.release()
 
 
 async def run(args):
