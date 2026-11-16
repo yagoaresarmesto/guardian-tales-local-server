@@ -109,6 +109,11 @@ the same completion after restart returns the saved progress without another
 reward. This phase has no configured `StageSpec.Rewards` or `FailRewards`; its
 grade reward is separate. The observed post-clear tutorial ID 200 is persisted
 once and returned in `UserProgress` so the client's resource handler sees it.
+Additional configured clear exits use their own external completion catalog.
+They require saved encounter markers in an active unlocked stage and commit the
+clear receipt, telemetry, earned openings and session cleanup atomically. Retry
+does not remove a later active stage. This path preserves balances and quests;
+additional clear rewards are not inferred from Inn's grade reward.
 The world-map acknowledgment 2019 also requires Inn cleared. Thirty-two passive
 help popups, including summons help 1003 and mission-book help 1007, can be
 recorded after local account creation independently of campaign or training.

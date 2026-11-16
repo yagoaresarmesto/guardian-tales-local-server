@@ -109,7 +109,11 @@ count toward entry, including when charged stamina is zero. Return to the lobby
 and reopen Adventure after updating the backend so chapter progress refreshes
 the map. The APK has entered the passage and saved its 10-stamina unlock.
 The optional monster catalog prepares reports for its nine named enemies.
-Its completion and the second main phase's clear path are not yet verified.
+The APK accepted the observed passage encounters. An optional completion catalog
+prepares its clear exit after the seven reported enemies, preserving rewards and
+quest progress. The APK accepted the clear retry and the passage's cleared flag
+is saved. The second main phase's clear path is not yet verified; additional
+passage grade rewards remain pending.
 
 The discovered side map `substage_1_5` is a separate stage, 110010005. Its prepared
 entry costs 10 stamina once and requires the saved discovery flag. Chapter reads

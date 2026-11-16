@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **114 passing tests**, including eighteen first-chapter entry/progress
+The suite has **119 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -33,6 +33,9 @@ deduplicate the entry cost and restrict quest registration to the stage catalog.
 Five monster-catalog regressions check mixed reward rows, duplicates/overlap,
 restart, stage-local receipts, active-stage and handle validation, invalid
 catalogs, native index boundaries and rollback of rewards with defeat markers.
+Five completion-catalog regressions check clear prerequisites, exact custom-state
+validation, retained balances/quests, earned openings, persistent retry receipts,
+later active sessions, invalid catalogs and rollback of the whole completion.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -279,7 +282,24 @@ preserved the selected saved state, including the active passage and 115 reserve
 stamina. The APK accepted the retry and two further encounters, recording seven
 distinct defeats: gold is now 1,479 and unspent experience 562. The next unsupported
 operation is the passage's clear exit `/stage/end-stage`, exit `easy_forest_1_2`.
-Passage completion and the discovered side stage's gameplay remain unfinished.
+The passage's clear exit is implemented in the following update; the discovered
+side stage's gameplay remains unfinished.
+
+The reported passage clear request uses exit `easy_forest_1_2`, `IsClearExit:true`
+and nullable custom fields with HitCount 13/NoDamage false. Its public exit table
+agrees with that name; `StageSpec.Rewards` and `FailRewards` are null. The optional
+completion catalog now gates this exit on the active unlocked stage and the seven
+defeated indices on the observed path. A transaction saves the clear flag,
+telemetry, receipt and earned openings and removes the active session. Retries
+preserve later sessions and do not grant or spend assets or alter quests.
+No additional grade gems or items are granted until their rule is verified;
+no grade-claim receipt is created for this path. Inn's existing 50-gem behavior
+is unchanged. All 119 tests and format/lint checks pass. The APK accepted the
+clear retry: passage state is now **7**, with 1,479 gold, 562 unspent experience,
+400 gems, 115 reserve stamina, 22 purple coins and two star pieces preserved.
+Existing quests remain unchanged. The observed passage path is now cleared;
+second-main-stage gameplay, additional grade rewards and optional paths remain
+unfinished.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns

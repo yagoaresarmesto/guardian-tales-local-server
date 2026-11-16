@@ -10,6 +10,8 @@ environment, the original APK completed the prologue, recovered the saved
 character after restart, displayed the lobby and world map, and received its
 first daily reward with Internet access blocked. The user also played the first
 campaign phase, **Inn**, through its clear exit and returned to the world map.
+The first connecting passage's entry, observed encounters and clear exit also
+passed with the same saved account.
 Optional collectibles, later phases, equipment changes, battle validation and
 most other game systems remain unfinished.
 
@@ -69,6 +71,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | First-phase collectibles | Purple coins, star pieces, three named items and glove-chest receipts persist without duplicate grants; mixed currency batches are atomic |
 | Monster reports | Inn handles plus external stage catalogs; atomic rewards once per stage/handle, provisional local rates, no battle validation |
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
+| Configured later clear exits | External exit/encounter prerequisites, saved completion and earned openings; additional clear rewards pending |
 | Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
 | Mission book | Help acknowledgment and beginner rewards for Inn, knight level 2 and spending 10 stamina persist; other missions pending |
 | First hero collection challenge | Group 200, step 1: 50 free gems once for the saved starting knight |

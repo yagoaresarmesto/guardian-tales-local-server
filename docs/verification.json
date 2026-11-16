@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 114,
+    "tests_run": 119,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -509,7 +509,7 @@
     "deployed_existing_balances_inventory_and_quests_preserved": true,
     "original_apk_entry_confirmed": true,
     "post_entry_reserve_stamina": 115,
-    "passage_clear_path_verified": false
+    "passage_clear_path_verified": true
   },
   "discovered_stage_entry_update": {
     "date": "2026-11-16",
@@ -552,6 +552,26 @@
     "post_retry_gold": 1479,
     "post_retry_unspent_experience": 562,
     "next_boundary": "Passage end-stage clear exit easy_forest_1_2",
-    "passage_clear_path_verified": false
+    "passage_clear_path_verified": true
+  },
+  "completion_catalog_update": {
+    "date": "2026-11-16",
+    "route": "/stage/end-stage",
+    "scope": "Persist a configured clear exit after its saved encounters; preserve assets/quests, refresh earned openings and atomically close the active session. Additional grade rewards pending.",
+    "stage_id": 110011001,
+    "exit_name": "easy_forest_1_2",
+    "local_required_monster_indices": [2, 4, 5, 6, 7, 8, 9],
+    "contract_evidence": "Original-client clear request, matching public tilemap exit name and null StageSpec Rewards/FailRewards.",
+    "separate_grade_reward_verified": false,
+    "additional_assets_granted": false,
+    "grade_claim_receipt_created": false,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 119,
+    "prerequisites_retry_later_session_preservation_and_rollback_checked": true,
+    "deployed_selected_saved_state_unchanged": true,
+    "original_apk_clear_retry_confirmed": true,
+    "post_retry_stage_state": 7,
+    "post_retry_balances_preserved": true,
+    "post_retry_quests_preserved": true
   }
 }

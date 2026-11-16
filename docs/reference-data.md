@@ -30,6 +30,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `substage_catalog.json` | Side-stage map discovery in Inn | Verified map handles and target stage IDs |
 | `story_catalog.json` | Configured story openings and entry | Verified stamina, local clear prerequisites and stage quest IDs |
 | `monster_catalog.json` | Defeated-monster reports in additional stages | Stable public handle indices and explicit local experience/gold rules |
+| `completion_catalog.json` | Configured clear exits after Inn | Verified exit name and local required defeated-monster indices |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -111,6 +112,21 @@ Those values come from the public level-1 experience table; applying them here
 does not establish official monster levels, multipliers or server reward rates.
 The catalog does not implement random drops, combat validation, respawn rewards
 or stage completion. The repository includes only a synthetic test catalog.
+
+The optional completion catalog contains `stages`, mapping string stage IDs to
+`exit_name` and `required_monsters` (distinct category-10 indices, 1 through 254).
+The prepared passage definition uses exit `easy_forest_1_2` and indices
+`[2, 4, 5, 6, 7, 8, 9]`, matching the seven reported enemies on the observed path.
+These encounter prerequisites are a local rule, not recovered server logic.
+The first completion requires an active unlocked stage and all listed markers.
+One transaction saves its clear flag, hit/no-damage telemetry, completion receipt
+and earned catalog openings, then removes the active session. A retry preserves
+any later active stage and does not spend resources or change quest progress.
+
+Configured completion currently grants no extra items or grade gems and creates
+no grade-claim receipt. The passage's public `Rewards` and `FailRewards` are null;
+its separate grade reward has not been verified. Previously earned monster
+rewards remain saved. Inn keeps its existing verified 50-gem claim behavior.
 
 ## Preservation manifest
 

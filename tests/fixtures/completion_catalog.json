@@ -1,0 +1,6 @@
+{
+  "_note": "Synthetic exit and prerequisites; no clear reward is specified.",
+  "stages": {
+    "100010002": {"exit_name": "synthetic_next_exit", "required_monsters": [2, 9]}
+  }
+}

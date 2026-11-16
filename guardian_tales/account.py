@@ -28,6 +28,7 @@ from .campaign import (
     encode_stage_progress,
     initial_stage_progresses,
 )
+from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
 from .missions import (
     BEGINNER_REWARDS,
@@ -522,6 +523,8 @@ class AccountStore:
 
     def end_stage(self, request):
         """Commit the first phase's clear exit and its first-grade gem reward once."""
+        if isinstance(request, dict) and request.get("StageId") != FIRST_STAGE_ID:
+            return complete_catalog_stage(self, request)
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
@@ -530,35 +533,7 @@ class AccountStore:
             or request.get("IsClearExit") is not True
         ):
             raise ValueError("Only the first phase's clear exit is implemented")
-        custom = request.get("StageCustom")
-        hit_count = no_damage = None
-        if custom is not None:
-            empty = {
-                "StageId",
-                "Category",
-                "CustomValues",
-                "QuestId",
-                "QuestCustomState",
-                "ClearInTime",
-                "Score",
-                "ChallengeA",
-                "ChallengeB",
-            }
-            if (
-                not isinstance(custom, dict)
-                or set(custom) - empty - {"HitCount", "NoDamage"}
-                or any(custom.get(key) is not None for key in empty)
-                or (
-                    custom.get("HitCount") is not None
-                    and (
-                        type(custom["HitCount"]) is not int
-                        or not 0 <= custom["HitCount"] <= 1000000
-                    )
-                )
-                or (custom.get("NoDamage") is not None and type(custom["NoDamage"]) is not bool)
-            ):
-                raise ValueError("Unsupported first-phase completion custom state")
-            hit_count, no_damage = custom.get("HitCount"), custom.get("NoDamage")
+        hit_count, no_damage = completion_custom(request.get("StageCustom"))
         profile = self.profile()
         progress, user = profile["UserProgress"], profile["User"]
         completed = self.db.execute(
