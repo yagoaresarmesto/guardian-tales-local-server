@@ -6,14 +6,16 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **84 passing tests**, including fourteen first-chapter entry/progress
+The suite has **87 passing tests**, including fourteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
 Pass reward regressions and four initial Festival Pass reward regressions.
 Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
-sequence reuse, legacy receipts and rollback. It covers real loopback TLS,
+sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
+check persistent flags, the Inn prerequisite, atomic batches and invalid data.
+It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -154,6 +156,17 @@ using the same prerequisite as 200. Tests reject premature/mixed batches, retain
 all unrelated progress and inventory, and verify retries across restart.
 Acknowledgment does not grant rewards, unlock another stage or implement the
 systems described by the help. The saved account confirms the 2019 retry.
+
+After catalog-based leveling, the APK requested tutorial 205. The optional
+tutorial catalog now allows all 91 known IDs from the matching client to be
+recorded after Inn is cleared, while built-in passive help keeps its existing
+eligibility. Completion markers only change `UserProgress.Tutorials` and its
+revision. They do not execute the tutorial's UI actions, advance quests/stages,
+spend resources or grant rewards. This separates UI acknowledgments from the
+gameplay operations that need independent server rules. Unknown IDs, malformed
+catalogs and premature/mixed batches are rejected unchanged. The APK retry saved
+205, preserving 781 character experience, nine unspent experience, all other
+balances, quest/stage progress and inventory.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns

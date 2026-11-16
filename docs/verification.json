@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 84,
+    "tests_run": 87,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -421,5 +421,16 @@
     "forced_original_client_replay_tested": false,
     "next_boundary": "Tutorial acknowledgment 205",
     "fresh_login_replay_ambiguity": "A new application request epoch cannot identify every replay of identical deltas. The fallback only recognizes completed requests whose new target would be invalid."
+  },
+  "catalog_tutorial_update": {
+    "date": "2026-11-16",
+    "route": "/user/mark-tutorial",
+    "scope": "Store known UI completion flags after Inn; built-in passive help retains its eligibility. No tutorial actions, rewards, resource spending or quest/stage mutations.",
+    "external_catalog_known_ids": 91,
+    "observed_requested_id": 205,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 87,
+    "atomic_flags_prerequisites_restart_and_invalid_catalog_checked": true,
+    "original_apk_205_retry_confirmed": true
   }
 }

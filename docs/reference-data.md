@@ -25,6 +25,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `static_data_check.bin` | `/static-data/check-update` | Body type 1 reference body |
 | `attendance_catalog.json` | Daily attendance reward lookup | Parsed public attendance catalog, not account state |
 | `training_catalog.json` | Knight experience targets and story caps | Parsed public experience catalog for the matching build |
+| `tutorial_catalog.json` | Known UI completion markers after Inn | Parsed public tutorial ID list for the matching build |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -46,6 +47,12 @@ later rows apply when their stage has its opened flag. Resolve build-specific
 values before supplying this file. The synthetic fixture illustrates the schema
 with test thresholds; it must not be used with an APK. Without this file, only
 the original one-time knight tutorial is supported.
+
+The optional tutorial catalog contains `ids`, a list of distinct nonnegative
+integer tutorial IDs from the matching client's catalog. Built-in passive help
+remains available without it. Other configured markers require Inn's saved
+clear flag and only record UI completion; they do not run tutorial actions or
+grant gameplay rewards. The test fixture is a synthetic subset.
 
 ## Preservation manifest
 

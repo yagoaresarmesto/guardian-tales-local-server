@@ -1,13 +1,30 @@
 # SPDX-License-Identifier: Apache-2.0
 """Supported acknowledgments from the pinned 3.57.0 public tutorial catalog.
 
-Each entry has a popup, no start/move scene, no actions, and no start/end
-conditions. Recording a seen popup does not implement or unlock its game system.
+The built-in help entries have no actions or conditions. An optional external
+catalog allows other known UI acknowledgments after Inn is cleared. Recording
+a tutorial flag does not execute its actions, award rewards or advance stages.
 """
 
 # The observed Inn completion and subsequent world-map intro both require Inn's
 # saved clear flag. Acknowledging them does not advance stages or grant rewards.
 POST_INN_TUTORIALS = (200, 2019)
+
+
+def catalog_tutorial_ids(references):
+    if not (references.directory / "tutorial_catalog.json").is_file():
+        return set()
+    catalog = references.json("tutorial_catalog.json")
+    ids = catalog.get("ids") if isinstance(catalog, dict) else None
+    if (
+        not isinstance(ids, list)
+        or not 1 <= len(ids) <= 10000
+        or any(type(value) is not int or not 0 <= value <= 0x7FFFFFFF for value in ids)
+        or len(ids) != len(set(ids))
+    ):
+        raise ValueError("Invalid external tutorial catalog")
+    return set(ids)
+
 
 PASSIVE_HELP_TUTORIALS = {
     1000: "Rift",

@@ -74,7 +74,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Ad inbox initialization | Returns saved local ad state; ad playback and reward claims remain pending |
 | Summons screen entry | Empty local catalog checksum and event state; summoning remains pending |
 | Pickup-ticket exchange check | Returns empty results when both event-coupon maps are empty; inventory tickets stay unchanged |
-| Tutorial acknowledgments | 32 passive help popups; completion/world-map IDs 200 and 2019 require Inn cleared |
+| Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Entry returns saved state; season 41's free level-1 reward grants four festival points once; other progression and purchases pending |
 | Guild lists | Empty local recommendations and invitations, no pending application; guild creation and membership remain pending |

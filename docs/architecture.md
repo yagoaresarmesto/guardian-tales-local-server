@@ -105,6 +105,12 @@ These catalog entries have no start/move scene, actions or start/end conditions.
 Only requested IDs are saved, with no system unlocks or rewards. Mixed tutorial
 batches are validated before any acknowledgment is saved.
 
+An optional tutorial catalog supplies the remaining known IDs. Their completion
+markers can be stored after Inn is cleared. This records the client's UI state;
+the handler does not execute tutorial actions, award items or alter quest/stage
+state. Gameplay operations retain their own validation and persistence rules.
+Unknown IDs and malformed catalogs are rejected before flags change.
+
 The next tutorial sends `/user/add-character-experience` with a character-ID
 dictionary of experience deltas. With an external training catalog, owned knights
 without limit breaks or blessings can reach any listed level within the saved

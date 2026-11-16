@@ -48,7 +48,7 @@ from .passes import (
 )
 from .reference import ReferenceData
 from .training import train_characters
-from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS
+from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -901,26 +901,29 @@ class AccountStore:
         return {"User": user, "UserRecord": record}
 
     def mark_tutorial(self, request):
-        """Persist post-Inn acknowledgments and catalog-verified passive help views."""
+        """Persist known UI acknowledgments, keeping gameplay changes separate."""
+        allowed = (
+            set(PASSIVE_HELP_TUTORIALS)
+            | set(POST_INN_TUTORIALS)
+            | catalog_tutorial_ids(self.references)
+        )
         if (
             not isinstance(request, dict)
             or not isinstance(request.get("tutorialIds"), list)
             or not 1 <= len(request["tutorialIds"]) <= 8
             or any(
-                type(value) is not int
-                or (value not in POST_INN_TUTORIALS and value not in PASSIVE_HELP_TUTORIALS)
-                for value in request["tutorialIds"]
+                type(value) is not int or value not in allowed for value in request["tutorialIds"]
             )
         ):
             raise ValueError(
-                "Only post-Inn acknowledgments and the pinned passive help tutorials are implemented"
+                "Only tutorial IDs from the configured catalog or built-in help are supported"
             )
         profile = self.profile()
         progress = profile["UserProgress"]
         if self.needs_prologue():
             raise ValueError("Finish local account creation before recording tutorials")
         if (
-            any(value in POST_INN_TUTORIALS for value in request["tutorialIds"])
+            any(value not in PASSIVE_HELP_TUTORIALS for value in request["tutorialIds"])
             and not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED
         ):
             raise ValueError("Complete Inn before acknowledging its completion tutorial")
