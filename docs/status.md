@@ -135,7 +135,16 @@ That individual acknowledgment is now supported after Inn's saved clear flag,
 using the same prerequisite as 200. Tests reject premature/mixed batches, retain
 all unrelated progress and inventory, and verify retries across restart.
 Acknowledgment does not grant rewards, unlock another stage or implement the
-systems described by the help. The 2019 retry is pending in this snapshot.
+systems described by the help. The saved account confirms the 2019 retry.
+
+The next missing entry was the parameterless `/guardian-pass/enter`. Native
+scene callbacks refresh from global `UserGuardianPass` state; entry now returns
+that saved record without initializing a season or changing experience, pass
+type, claims, missions or balances. The account-read regression checks that
+nonempty saved progress survives entry, invalid parameters and reopening the
+store. The APK accepted entry and acknowledged Guardian Pass help 1013. Its
+next unsupported request was `/guardian-pass/claim-all`. Season progression,
+reward claims, purchases and level skipping remain unimplemented.
 
 ## Economy and preservation limits
 
@@ -168,8 +177,8 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Verify the world-map acknowledgment 2019, then continue from the next
-   user-reported unsupported operation. The earlier
+1. Implement the observed Guardian Pass claim contract, then continue from the
+   next user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
 3. Implement later campaign phases and their progression/reward rules.

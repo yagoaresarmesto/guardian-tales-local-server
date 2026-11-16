@@ -323,7 +323,20 @@
       200,
       2019
     ],
-    "world_map_2019_retry_confirmed": false,
+    "world_map_2019_retry_confirmed": true,
     "rewards_or_stage_unlocks_granted": false
+  },
+  "guardian_pass_entry_update": {
+    "date": "2026-11-16",
+    "route": "/guardian-pass/enter",
+    "scope": "Parameterless read of saved UserGuardianPass; no season initialization, progression, purchases or rewards.",
+    "contract_evidence": "Native request and scene callbacks; global saved pass record.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 68,
+    "nonempty_saved_pass_preservation_checked": true,
+    "original_apk_retry_confirmed": true,
+    "passive_help_1013_acknowledged": true,
+    "balances_and_inventory_preserved": true,
+    "next_unsupported_operation": "/guardian-pass/claim-all"
   }
 }

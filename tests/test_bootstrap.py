@@ -96,6 +96,31 @@ class BootstrapTests(unittest.TestCase):
             {"Changed": False, "Gift": False},
         )
         self.assertEqual(self.session.store.account.read("/guild/get-my-guild")["GuildMembers"], [])
+        # Reading a pass must retain saved progress, including a nonempty pass;
+        # returning the empty guest template here would reset the client's view.
+        saved = self.session.store.account.profile()
+        saved["UserGuardianPass"].update(
+            SeasonId=7,
+            Experience=123,
+            PassType=1,
+            Claimed={"Free": 2, "Gold": 1, "Platinum": 0, "ExtraExp": 0},
+            Missions={"1": 3},
+        )
+        self.db.execute("UPDATE local_account SET profile=?", (json.dumps(saved),))
+        self.db.commit()
+        route = "/guardian-pass/enter"
+        with self.assertRaises(PacketError):
+            self.session.handle(request(None, route))
+        self.session.handle(
+            request({"AuthKind": 0, "AccessToken": "test-only", "Reconnect": False})
+        )
+        for body in (None, {}):
+            response = json.loads(self.session.handle(request(body, route)).body)
+            self.assertEqual(response, {"UserGuardianPass": saved["UserGuardianPass"]})
+        with self.assertRaises(PacketError):
+            self.session.handle(request({"SeasonId": 8}, route))
+        self.assertEqual(AccountStore(self.db).read(route), response)
+        self.assertEqual(self.session.store.account.profile(), saved)
 
     def test_platform_guest_uses_local_identity_and_does_not_store_received_token(self):
         code, response = dispatch(

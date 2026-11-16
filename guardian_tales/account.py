@@ -55,6 +55,7 @@ ACCOUNT_ROUTES = (
     "/mission/claim-beginner-all",
     "/mission/claim-challenge-all",
     "/ad/init-inbox",
+    "/guardian-pass/enter",
     "/user/exchange-summon-pickup-ticket",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
@@ -908,6 +909,12 @@ class AccountStore:
             return self.profile()
         if route == "/mission/get-user-mission":
             return {"UserMission": self.profile()["UserMission"]}
+        if route == "/guardian-pass/enter":
+            if request is not None and request != {}:
+                raise ValueError("Guardian Pass entry accepts no parameters")
+            # The scene callbacks refresh from the global saved pass record.
+            # Entry alone does not initialize a season or grant pass rewards.
+            return {"UserGuardianPass": self.profile()["UserGuardianPass"]}
         if route == "/ad/init-inbox":
             if request is not None and request != {}:
                 raise ValueError("Ad inbox initialization accepts no parameters")
