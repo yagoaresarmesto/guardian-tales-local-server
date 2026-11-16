@@ -233,5 +233,24 @@
     "original_apk_retry_confirmed": true,
     "post_retry_free_gems": 400,
     "later_steps_and_all_step_route_implemented": false
+  },
+  "ad_inbox_update": {
+    "date": "2026-11-16",
+    "automated_tests": {
+      "result": "PASS",
+      "tests_run": 66,
+      "failures": 0,
+      "errors": 0,
+      "external_network_disabled": true,
+      "network_interfaces": [
+        "lo"
+      ],
+      "python": "3.11.18",
+      "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+    },
+    "route": "/ad/init-inbox",
+    "scope": "Parameterless read returning the existing UserRecord, without ad rewards or counter mutations.",
+    "original_apk_retry_confirmed": false,
+    "ad_playback_or_reward_claims_implemented": false
   }
 }

@@ -123,6 +123,11 @@ implemented for the saved one-knight account. Its transaction records step 1 and
 50 free gems together; retries reuse the original reward notice. Later steps and
 the all-step route require their own progression/retry contracts.
 
+`/ad/init-inbox` is a parameterless compatibility read. Its callbacks open the
+inbox while the global resource handler applies the returned saved `UserRecord`.
+It preserves the existing local ad state and does not create rewards or implement
+ad viewing/claims.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation

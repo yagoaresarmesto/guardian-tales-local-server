@@ -100,6 +100,13 @@ The APK retry succeeded and the saved gem balance became 400. Other challenge
 groups, later steps and the all-step claim route remain unsupported. Tests cover
 duplicates/restart, malformed batches, eligibility, receipt mismatch and rollback.
 
+The next reported boundary was `/ad/init-inbox` when opening the inbox. Its
+parameterless native request and success callbacks need the saved `UserRecord`
+ad state. The route now returns that record without changing balances, claim
+state or ad counters. This is inbox initialization only; ad playback and rewarded
+ad claims remain unsupported. The existing 66-test suite still passes; the APK
+retry result for this route is pending in this snapshot.
+
 ## Economy and preservation limits
 
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
@@ -131,8 +138,8 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Investigate the newly reported `/ad/init-inbox` operation, then continue from
-   the next user-reported unsupported operation. The earlier
+1. Verify ad inbox initialization in the APK, then continue from the next
+   user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
 3. Implement later campaign phases and their progression/reward rules.

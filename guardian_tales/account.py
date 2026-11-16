@@ -53,6 +53,7 @@ ACCOUNT_ROUTES = (
     "/mission/get-user-mission",
     "/mission/claim-beginner-all",
     "/mission/claim-challenge-all",
+    "/ad/init-inbox",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -904,6 +905,12 @@ class AccountStore:
             return self.profile()
         if route == "/mission/get-user-mission":
             return {"UserMission": self.profile()["UserMission"]}
+        if route == "/ad/init-inbox":
+            if request is not None and request != {}:
+                raise ValueError("Ad inbox initialization accepts no parameters")
+            # Native callbacks open the inbox; global resource handling consumes
+            # UserRecord. Preserve the local ad state without creating rewards.
+            return {"UserRecord": self.profile()["UserRecord"]}
         if route == "/stage/get-stage-progresses":
             result = initial_stage_progresses(request)
             result["StageProgresses"][str(FIRST_STAGE_ID)] = self.stage_progress(FIRST_STAGE_ID)
