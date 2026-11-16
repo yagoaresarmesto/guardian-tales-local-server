@@ -29,6 +29,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `quest_catalog.json` | Known chapter quest registration in Inn | Parsed mapping of chapter codes to quest IDs |
 | `substage_catalog.json` | Side-stage map discovery in Inn | Verified map handles and target stage IDs |
 | `story_catalog.json` | Configured story openings and entry | Verified stamina, local clear prerequisites and stage quest IDs |
+| `monster_catalog.json` | Defeated-monster reports in additional stages | Stable public handle indices and explicit local experience/gold rules |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -93,6 +94,23 @@ the map. The chapter-read endpoint currently supports Chapter 1 only; keep this
 catalog limited to that chapter.
 Without this catalog, only the original Inn entry remains available. These data
 do not implement the new stage's collectibles, battles, exits or rewards.
+
+The optional monster catalog contains `stages`, mapping string stage IDs to
+objects keyed by public monster handle. Each handle has exactly `index`,
+`experience` and `gold`: an index from 1 through 254, unique within the stage,
+and nonnegative integer rewards up to 1,000,000. Preserve the tilemap name-table
+indices once a save contains progress; renumbering would change defeat receipts.
+Inn retains its built-in handle definitions and provisional local rates.
+Additional stages require an explicit catalog and a matching active session.
+Only newly saved category-10 markers grant rewards; mixed batches, duplicate
+handles, overlap and retries use one transaction with the balances.
+
+The prepared catalog covers all nine named monsters in passage 110011001. It
+reuses the existing **local** rule of 79 experience and 87 gold per new handle.
+Those values come from the public level-1 experience table; applying them here
+does not establish official monster levels, multipliers or server reward rates.
+The catalog does not implement random drops, combat validation, respawn rewards
+or stage completion. The repository includes only a synthetic test catalog.
 
 ## Preservation manifest
 

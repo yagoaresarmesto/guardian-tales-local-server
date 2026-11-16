@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 109,
+    "tests_run": 114,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -505,9 +505,10 @@
     "automated_test_result": "PASS",
     "automated_tests_run": 106,
     "reserve_only_entry_retries_prerequisites_and_separate_progress_checked": true,
-    "saved_passage_opened_state": 1,
+    "saved_passage_state": 3,
     "deployed_existing_balances_inventory_and_quests_preserved": true,
-    "original_apk_entry_confirmed": false,
+    "original_apk_entry_confirmed": true,
+    "post_entry_reserve_stamina": 115,
     "passage_clear_path_verified": false
   },
   "discovered_stage_entry_update": {
@@ -530,5 +531,27 @@
     "original_apk_entry_screen_recovery_confirmed": false,
     "original_apk_entry_confirmed": false,
     "side_stage_clear_path_verified": false
+  },
+  "monster_catalog_update": {
+    "date": "2026-11-16",
+    "route": "/stage/beat-monsters",
+    "scope": "Atomic stage-local defeated-handle markers and explicit local catalog rewards; Inn retains its defaults. No battle validation or stage completion.",
+    "observed_stage_id": 110011001,
+    "observed_report_handle_count": 3,
+    "prepared_passage_handle_count": 9,
+    "contract_evidence": "Original-client defeated-monster request and the loaded passage tilemap's public monster name-table indices.",
+    "prepared_local_experience_per_handle": 79,
+    "prepared_local_gold_per_handle": 87,
+    "official_reward_rates_verified": false,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 114,
+    "batch_retry_stage_isolation_catalog_validation_and_rollback_checked": true,
+    "deployed_selected_saved_state_unchanged": true,
+    "original_apk_retry_confirmed": true,
+    "original_apk_saved_defeat_count": 7,
+    "post_retry_gold": 1479,
+    "post_retry_unspent_experience": 562,
+    "next_boundary": "Passage end-stage clear exit easy_forest_1_2",
+    "passage_clear_path_verified": false
   }
 }

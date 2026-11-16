@@ -107,8 +107,9 @@ first entries cost 10 and 15 stamina respectively; subsequent entries are free.
 Both currently require Inn's saved clear flag. Charged and reserve stamina both
 count toward entry, including when charged stamina is zero. Return to the lobby
 and reopen Adventure after updating the backend so chapter progress refreshes
-the map. Entry and early shared quest handling are scaffolding; passage gameplay
-and the second main phase's clear path are not yet verified.
+the map. The APK has entered the passage and saved its 10-stamina unlock.
+The optional monster catalog prepares reports for its nine named enemies.
+Its completion and the second main phase's clear path are not yet verified.
 
 The discovered side map `substage_1_5` is a separate stage, 110010005. Its prepared
 entry costs 10 stamina once and requires the saved discovery flag. Chapter reads

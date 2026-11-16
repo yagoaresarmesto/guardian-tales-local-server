@@ -1,0 +1,10 @@
+{
+  "_note": "Synthetic stage and reward data; not an official monster catalog.",
+  "stages": {
+    "100010002": {
+      "first_goblin_1": {"index": 1, "experience": 7, "gold": 11},
+      "synthetic_slime": {"index": 9, "experience": 0, "gold": 13},
+      "synthetic_boss": {"index": 254, "experience": 2, "gold": 17}
+    }
+  }
+}

@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **109 passing tests**, including eighteen first-chapter entry/progress
+The suite has **114 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -30,6 +30,9 @@ for configured stage IDs outside the seven main phases.
 Discovered-stage checks preserve independent progress without an entry catalog,
 require the saved map flag before entry, prevent clear-based automatic discovery,
 deduplicate the entry cost and restrict quest registration to the stage catalog.
+Five monster-catalog regressions check mixed reward rows, duplicates/overlap,
+restart, stage-local receipts, active-stage and handle validation, invalid
+catalogs, native index boundaries and rollback of rewards with defeat markers.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -234,10 +237,10 @@ stamina sums charged and reserve amounts; zero charged stamina does not block
 entry when the reserve covers the cost. No stamina transfer or grant is needed.
 Registration uses the active stage's catalog quest IDs;
 the existing sequential main-quest checkpoints can run in the active configured
-stage. The 106-test suite passes, and the update is deployed with the existing
-account preserved. Original-client passage and second-main-stage entry remain
-pending in this snapshot. Their battles, pickups, optional quests and clear/reward
-rules remain unfinished; entry support alone does not establish a playable clear.
+stage. The entry update passed 106 tests and preserved the existing account.
+The APK subsequently entered the passage and reached its first monster report,
+as recorded below. Second-main-stage entry and later clear paths remain pending;
+entry support alone does not establish a playable clear.
 
 The next reported error occurred before any new `/stage/start-stage` request.
 Logcat identified `NullReferenceException` in `EnterStage`'s load coroutine.
@@ -256,6 +259,27 @@ stage uses this flag and the ordinary one-time entry transaction. No clear
 prerequisite is added for this side stage. All 109 tests pass; deployment kept the
 selected saved state unchanged. Original-client entry-screen recovery and side
 stage entry are pending. Its gameplay, quest completion and rewards are unfinished.
+
+The APK then entered **passage 110011001** with `/stage/start-stage`, saved state
+3 (opened/unlocked), and reduced reserve stamina from 125 to **115**. The next
+failed request was `/stage/beat-monsters`, containing `battle_1_slime_big`,
+`battle_1_slime_1` and `battle_1_slime_2`. The original handler accepted only Inn.
+A read of the loaded public tilemap confirmed all **nine** named passage
+monsters and their stable indices; the passage has no named currencies/items or
+chests in those tables. This does not establish its complete runtime behavior.
+
+Monster reporting now uses an optional external stage catalog with explicit
+handle indices and local reward rows. It validates the whole batch and active
+stage before writing, then records defeat markers and credits only new handles
+in one transaction. Inn retains its existing defaults. The prepared passage
+catalog applies the existing provisional local 79-experience/87-gold rule to each
+new handle; official levels, rates, multipliers, random drops and battle
+validation remain unknown. All 114 tests, format/lint checks pass. Deployment
+preserved the selected saved state, including the active passage and 115 reserve
+stamina. The APK accepted the retry and two further encounters, recording seven
+distinct defeats: gold is now 1,479 and unspent experience 562. The next unsupported
+operation is the passage's clear exit `/stage/end-stage`, exit `easy_forest_1_2`.
+Passage completion and the discovered side stage's gameplay remain unfinished.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns
@@ -315,8 +339,8 @@ unimplemented.
 
 ## Economy and preservation limits
 
-Monster gold/experience currently uses one public level-1 `ExpsData` row per new
-known monster handle: 79 experience and 87 gold. This is a provisional **local
+The prepared Inn and passage monster rewards use one public level-1 `ExpsData`
+row per new known monster handle: 79 experience and 87 gold. This is a provisional **local
 rule**, not a verified reconstruction of official server rates, multipliers or
 random drops. Reports are allowlisted and deduplicated but battles are not
 validated by the server. The optional sword pickup is covered by automated

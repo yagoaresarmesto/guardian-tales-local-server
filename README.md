@@ -67,7 +67,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Quest registration | Known chapter quests can be registered in Inn with an external catalog; early main-quest checkpoints persist; other progression pending |
 | Side-stage map discovery | Verified map targets persist as discovered; configured entry can require finding the map; side-stage gameplay remains pending |
 | First-phase collectibles | Purple coins, star pieces, three named items and glove-chest receipts persist without duplicate grants; mixed currency batches are atomic |
-| First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
+| Monster reports | Inn handles plus external stage catalogs; atomic rewards once per stage/handle, provisional local rates, no battle validation |
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
 | Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
 | Mission book | Help acknowledgment and beginner rewards for Inn, knight level 2 and spending 10 stamina persist; other missions pending |

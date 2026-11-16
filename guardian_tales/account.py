@@ -16,9 +16,6 @@ from .campaign import (
     CHARGED_STAMINA,
     FIRST_CHAPTER_CODE,
     FIRST_CLEAR_GEMS,
-    FIRST_MONSTER_EXP,
-    FIRST_MONSTER_GOLD,
-    FIRST_MONSTERS,
     FIRST_STAGE_ID,
     FIRST_STAGE_ITEMS,
     FIRST_STAGE_PICKUPS,
@@ -39,6 +36,7 @@ from .missions import (
     FIRST_HERO_CHALLENGE_STEP,
     STAMINA_MISSION_SPEND,
 )
+from .monsters import record_defeated_monsters
 from .passes import (
     FIRST_FESTIVAL_LEVEL,
     FIRST_FESTIVAL_POINTS,
@@ -1018,44 +1016,7 @@ class AccountStore:
         return {"OpenedStages": []}
 
     def beat_monsters(self, request):
-        """Record the first encounter once using a provisional local drop rule."""
-        if (
-            not isinstance(request, dict)
-            or type(request.get("StageId")) is not int
-            or request["StageId"] != FIRST_STAGE_ID
-            or request.get("StageCustom") is not None
-            or not isinstance(request.get("MonsterHandleNames"), list)
-            or not 1 <= len(request["MonsterHandleNames"]) <= len(FIRST_MONSTERS)
-            or any(
-                not isinstance(name, str) or name not in FIRST_MONSTERS
-                for name in request["MonsterHandleNames"]
-            )
-        ):
-            raise ValueError("Only the first phase's initial monster encounter is implemented")
-        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-            FIRST_STAGE_ID,
-        ):
-            raise ValueError("Start the phase before reporting defeated monsters")
-        profile = self.profile()
-        user = profile["User"]
-        with self.db:
-            added = 0
-            for name in set(request["MonsterHandleNames"]):
-                added += self.db.execute(
-                    "INSERT OR IGNORE INTO campaign_progress VALUES(?,?,?,?)",
-                    (FIRST_STAGE_ID, 10, FIRST_MONSTERS[name], "true"),
-                ).rowcount
-            exp, gold = added * FIRST_MONSTER_EXP, added * FIRST_MONSTER_GOLD
-            if added:
-                assets = {asset["Id"]: asset for asset in user["Assets"]}
-                assets[70004]["Amount"] += exp
-                assets[70001]["Amount"] += gold
-                user["Cas"] += 1
-                self.db.execute(
-                    "UPDATE local_account SET profile=? WHERE id=1",
-                    (json.dumps(profile, separators=(",", ":")),),
-                )
-        return {"User": user, "DropExp": exp, "DropGold": gold}
+        return record_defeated_monsters(self, request)
 
     def progress_quest(self, request):
         """Persist sequential main-quest checkpoints in the active configured stage."""
