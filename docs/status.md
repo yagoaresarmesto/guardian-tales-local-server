@@ -104,8 +104,17 @@ The next reported boundary was `/ad/init-inbox` when opening the inbox. Its
 parameterless native request and success callbacks need the saved `UserRecord`
 ad state. The route now returns that record without changing balances, claim
 state or ad counters. This is inbox initialization only; ad playback and rewarded
-ad claims remain unsupported. The existing 66-test suite still passes; the APK
-retry result for this route is pending in this snapshot.
+ad claims remain unsupported. The existing 66-test suite still passes. The APK
+accepted this read and subsequently reached the summons entry request.
+
+The next missing route was the parameterless `/summon/enter`. The native scene
+loader reads `Checksum` and `IsActiveEvent`, then compares them with its loaded
+pickup catalog. Entry now returns the same checksum as the existing empty
+`/summon/on-event` catalog with inactive events. The lobby regression checks that
+the two checksums agree and that reads leave the account unchanged. This adds
+entry compatibility only; it implements no summon, exchange, selection or
+currency/ticket mutation. The successful APK entry retry is pending in this
+snapshot.
 
 ## Economy and preservation limits
 
@@ -138,7 +147,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Verify ad inbox initialization in the APK, then continue from the next
+1. Verify summons entry in the APK, then continue from the next
    user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.

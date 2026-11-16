@@ -102,3 +102,7 @@ precise verified scope.
 The subsequent Use 10 Stamina beginner reward and first Collect 1 Heroes
 challenge reward also passed their APK retries. Later challenge steps and other
 mission groups remain unfinished; see the status record for the exact scope.
+
+Summons entry now supplies an empty local catalog state. Its APK retry remains
+under verification. Performing summons, exchanging pickup tickets and selecting
+characters/weapons are still unimplemented.

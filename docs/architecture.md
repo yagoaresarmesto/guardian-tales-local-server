@@ -128,6 +128,11 @@ inbox while the global resource handler applies the returned saved `UserRecord`.
 It preserves the existing local ad state and does not create rewards or implement
 ad viewing/claims.
 
+`/summon/enter` returns the empty local pickup catalog's `Checksum` and
+`IsActiveEvent=false`. The scene loader compares these values before deciding
+whether to reload its catalog. The checksum matches `/summon/on-event`; entry
+does not modify the account or implement the actual summoning operations.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation

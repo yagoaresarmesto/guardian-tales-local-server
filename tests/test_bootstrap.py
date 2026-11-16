@@ -219,6 +219,12 @@ class BootstrapTests(unittest.TestCase):
                 self.assertEqual(type(decoded), type(READ_RESPONSES[route]["value"]))
                 if route.startswith("/shop/get-"):
                     self.assertEqual(decoded, [])
+        # The native summons loader compares this pair before reloading its
+        # catalog. Divergent checksums would keep the empty local catalog stale.
+        entry = json.loads(self.session.handle(request(None, "/summon/enter")).body)
+        catalog = json.loads(self.session.handle(request(None, "/summon/on-event")).body)
+        self.assertEqual(entry["Checksum"], catalog["Checksum"])
+        self.assertIs(entry["IsActiveEvent"], False)
         self.assertEqual(self.session.store.account.profile(), before)
 
     def test_counter_catalog_migration_preserves_completed_guest_and_inventory(self):

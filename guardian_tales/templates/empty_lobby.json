@@ -97,6 +97,13 @@
       "ChampionQualified": false
     }
   },
+  "/summon/enter": {
+    "body_type": 1,
+    "value": {
+      "Checksum": "local-empty-v1",
+      "IsActiveEvent": false
+    }
+  },
   "/summon/on-event": {
     "body_type": 1,
     "value": {
