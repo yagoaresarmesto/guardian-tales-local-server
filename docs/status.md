@@ -159,6 +159,14 @@ increased from 95 to 125, with 400 gems and all inventory stacks preserved.
 The next missing entry was `/festival-pass/enter`. Seasonal rollover, pass
 missions, later rewards, purchases and level skipping remain unimplemented.
 
+The parameterless `/festival-pass/enter` now returns the saved `UserFestivalPass`
+record. Its native scene loader and refresh callbacks consume the global record;
+the handler preserves experience, points, pass type, claims, missions, purchases
+and balances. The existing pass-read regression now checks two distinct nonempty
+pass records to catch resets or returning the wrong pass. All 72 tests pass.
+The deployed entry still needs its APK retry in this snapshot. Festival rewards,
+missions, point redemption, purchases and seasonal initialization remain pending.
+
 ## Economy and preservation limits
 
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
@@ -190,7 +198,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Implement the observed Festival Pass entry contract, then continue from the
+1. Verify the Festival Pass entry retry, then continue from the
    next user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.

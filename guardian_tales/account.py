@@ -58,6 +58,7 @@ ACCOUNT_ROUTES = (
     "/ad/init-inbox",
     "/guardian-pass/enter",
     "/guardian-pass/claim-all",
+    "/festival-pass/enter",
     "/user/exchange-summon-pickup-ticket",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
@@ -976,6 +977,11 @@ class AccountStore:
             # The scene callbacks refresh from the global saved pass record.
             # Entry alone does not initialize a season or grant pass rewards.
             return {"UserGuardianPass": self.profile()["UserGuardianPass"]}
+        if route == "/festival-pass/enter":
+            if request is not None and request != {}:
+                raise ValueError("Festival Pass entry accepts no parameters")
+            # Native scene callbacks refresh from the global saved pass record.
+            return {"UserFestivalPass": self.profile()["UserFestivalPass"]}
         if route == "/ad/init-inbox":
             if request is not None and request != {}:
                 raise ValueError("Ad inbox initialization accepts no parameters")

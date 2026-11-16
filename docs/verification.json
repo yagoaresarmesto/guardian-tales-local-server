@@ -354,5 +354,15 @@
     "inventory_preserved": true,
     "next_unsupported_operation": "/festival-pass/enter",
     "paid_passes_later_levels_missions_and_rollover_implemented": false
+  },
+  "festival_pass_entry_update": {
+    "date": "2026-11-16",
+    "route": "/festival-pass/enter",
+    "scope": "Parameterless read of saved UserFestivalPass; no seasonal initialization, progression, rewards, point redemption or purchases.",
+    "contract_evidence": "Native parameterless request, scene loader and refresh callbacks using the global saved pass record.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 72,
+    "distinct_nonempty_pass_preservation_checked": true,
+    "original_apk_retry_confirmed": false
   }
 }

@@ -106,20 +106,35 @@ class BootstrapTests(unittest.TestCase):
             Claimed={"Free": 2, "Gold": 1, "Platinum": 0, "ExtraExp": 0},
             Missions={"1": 3},
         )
+        saved["UserFestivalPass"].update(
+            SeasonId=9,
+            Experience=321,
+            Point=45,
+            PassType=2,
+            Claimed={"Free": 3, "Gold": 2, "Platinum": 1, "ExtraExp": 0},
+            Missions={"2": 4},
+            Purchase={"1": 2},
+        )
         self.db.execute("UPDATE local_account SET profile=?", (json.dumps(saved),))
         self.db.commit()
-        route = "/guardian-pass/enter"
-        with self.assertRaises(PacketError):
-            self.session.handle(request(None, route))
+        entries = {
+            "/guardian-pass/enter": "UserGuardianPass",
+            "/festival-pass/enter": "UserFestivalPass",
+        }
+        for route in entries:
+            with self.subTest(route=route), self.assertRaises(PacketError):
+                self.session.handle(request(None, route))
         self.session.handle(
             request({"AuthKind": 0, "AccessToken": "test-only", "Reconnect": False})
         )
-        for body in (None, {}):
-            response = json.loads(self.session.handle(request(body, route)).body)
-            self.assertEqual(response, {"UserGuardianPass": saved["UserGuardianPass"]})
-        with self.assertRaises(PacketError):
-            self.session.handle(request({"SeasonId": 8}, route))
-        self.assertEqual(AccountStore(self.db).read(route), response)
+        for route, field in entries.items():
+            with self.subTest(route=route):
+                for body in (None, {}):
+                    response = json.loads(self.session.handle(request(body, route)).body)
+                    self.assertEqual(response, {field: saved[field]})
+                with self.assertRaises(PacketError):
+                    self.session.handle(request({"SeasonId": 8}, route))
+                self.assertEqual(AccountStore(self.db).read(route), response)
         self.assertEqual(self.session.store.account.profile(), saved)
 
     def test_platform_guest_uses_local_identity_and_does_not_store_received_token(self):
