@@ -261,6 +261,11 @@ class BootstrapSession:
                     return json_response(request, self.store.account.claim_beginner_missions(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/mission/claim-challenge-all":
+                try:
+                    return json_response(request, self.store.account.claim_challenge_missions(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/auth/check-name":
                 name = body.get("Name") if isinstance(body, dict) else None
                 if not valid_name(name):

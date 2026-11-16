@@ -6,9 +6,10 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **62 passing tests**, including thirteen first-chapter entry/progress
+The suite has **66 passing tests**, including thirteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
-regression and eight beginner-reward regressions. It covers real loopback TLS,
+regression, eight beginner-reward regressions and four first-hero challenge
+regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -88,8 +89,16 @@ table. Mission 9 sets bit 9 of `GuideClaimed`, extending the byte array while
 preserving the prior claims. Shared ticket stacks and frozen reward notices
 retain their inventory IDs across retries. Tests cover the spending threshold,
 split charged/reserve spending, malformed/mixed batches, restart and rollback.
-The fix is deployed in the prepared lab; its successful APK retry is not yet
-recorded in this verification snapshot.
+The APK retry succeeded. The saved inventory now contains 20 summon tickets and
+four selectable summon tickets; the prior gem/stamina balances were preserved.
+
+The next request was `/mission/claim-challenge-all` for group 200, **Collect 1
+Heroes**. Its first public step grants 50 free gems for collecting one hero.
+The server now supports that first step for the one-knight local account,
+records `ChallengeClaimed["200"] = 1` and saves a separate challenge receipt.
+The APK retry succeeded and the saved gem balance became 400. Other challenge
+groups, later steps and the all-step claim route remain unsupported. Tests cover
+duplicates/restart, malformed batches, eligibility, receipt mismatch and rollback.
 
 ## Economy and preservation limits
 
@@ -122,8 +131,8 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Verify the deployed stamina-mission fix in the APK, then continue from the
-   next user-reported unsupported operation. The earlier
+1. Investigate the newly reported `/ad/init-inbox` operation, then continue from
+   the next user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
 3. Implement later campaign phases and their progression/reward rules.

@@ -117,6 +117,12 @@ the base64 `GuideClaimed` bit array and a frozen reward receipt. A retry reuses
 the original item IDs and reward notice while returning current account state.
 Other missions and mixed batches remain unsupported.
 
+The first collect-hero challenge uses a separate `(group_id, step)` reward
+receipt and the integer `ChallengeClaimed` map. Only group 200's first step is
+implemented for the saved one-knight account. Its transaction records step 1 and
+50 free gems together; retries reuse the original reward notice. Later steps and
+the all-step route require their own progression/retry contracts.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation

@@ -31,7 +31,13 @@ from .campaign import (
     encode_stage_progress,
     initial_stage_progresses,
 )
-from .missions import BEGINNER_REWARDS, STAMINA_MISSION_SPEND
+from .missions import (
+    BEGINNER_REWARDS,
+    FIRST_HERO_CHALLENGE_GEMS,
+    FIRST_HERO_CHALLENGE_GROUP,
+    FIRST_HERO_CHALLENGE_STEP,
+    STAMINA_MISSION_SPEND,
+)
 from .reference import ReferenceData
 
 ACCOUNT_ROUTES = (
@@ -46,6 +52,7 @@ ACCOUNT_ROUTES = (
     "/friend2/has-changes",
     "/mission/get-user-mission",
     "/mission/claim-beginner-all",
+    "/mission/claim-challenge-all",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -141,6 +148,9 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS beginner_mission_claims (mission_id INTEGER PRIMARY KEY, rewards TEXT NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS challenge_mission_claims (group_id INTEGER NOT NULL, step INTEGER NOT NULL, rewards TEXT NOT NULL, PRIMARY KEY(group_id,step))"
         )
         existing = db.execute(
             "SELECT schema_version,profile FROM local_account WHERE id=1"
@@ -633,6 +643,57 @@ class AccountStore:
         with self.db:
             self.db.execute(
                 "INSERT INTO beginner_mission_claims VALUES(?,?)", (mission_id, json.dumps(rewards))
+            )
+            self.db.execute(
+                "UPDATE local_account SET profile=? WHERE id=1",
+                (json.dumps(profile, separators=(",", ":")),),
+            )
+        return {"User": user, "UserMission": mission, "AddedItems": rewards}
+
+    def claim_challenge_missions(self, request):
+        """Grant only the one-knight account's first collect-hero challenge step."""
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"missionIds"}
+            or not isinstance(request["missionIds"], list)
+            or not 1 <= len(request["missionIds"]) <= 32
+            or any(
+                type(value) is not int or value != FIRST_HERO_CHALLENGE_GROUP
+                for value in request["missionIds"]
+            )
+        ):
+            raise ValueError("Only collect-hero challenge group 200's first step is implemented")
+        profile = self.profile()
+        user, mission = profile["User"], profile["UserMission"]
+        if (
+            self.needs_prologue()
+            or len(user["Characters"]) != 1
+            or user["Characters"][0]["CharacterId"] not in (1, 2)
+        ):
+            raise ValueError("This challenge supports only the saved starting knight")
+        key = str(FIRST_HERO_CHALLENGE_GROUP)
+        step = mission["ChallengeClaimed"].get(key, 0)
+        if type(step) is not int or step not in (0, FIRST_HERO_CHALLENGE_STEP):
+            raise ValueError("Later collect-hero challenge steps are not implemented")
+        claimed = self.db.execute(
+            "SELECT rewards FROM challenge_mission_claims WHERE group_id=? AND step=?",
+            (FIRST_HERO_CHALLENGE_GROUP, FIRST_HERO_CHALLENGE_STEP),
+        ).fetchone()
+        if bool(claimed) != (step == FIRST_HERO_CHALLENGE_STEP):
+            raise ValueError("Challenge receipt does not match saved claim progress")
+        if claimed:
+            return {"User": user, "UserMission": mission, "AddedItems": json.loads(claimed[0])}
+        next(a for a in user["Assets"] if a["Id"] == FREE_GEMS)[
+            "Amount"
+        ] += FIRST_HERO_CHALLENGE_GEMS
+        mission["ChallengeClaimed"][key] = FIRST_HERO_CHALLENGE_STEP
+        mission["Cas"] += 1
+        user["Cas"] += 1
+        rewards = [{"Id": 0, "ItemId": FREE_GEMS, "Amount": FIRST_HERO_CHALLENGE_GEMS}]
+        with self.db:
+            self.db.execute(
+                "INSERT INTO challenge_mission_claims VALUES(?,?,?)",
+                (FIRST_HERO_CHALLENGE_GROUP, FIRST_HERO_CHALLENGE_STEP, json.dumps(rewards)),
             )
             self.db.execute(
                 "UPDATE local_account SET profile=? WHERE id=1",

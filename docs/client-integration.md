@@ -99,5 +99,6 @@ general hero training and other progression remain unfinished. Unsupported game 
 produce the client's connection-lost dialog. See [status](status.md) for the
 precise verified scope.
 
-The subsequent Use 10 Stamina beginner reward is implemented and covered by
-automated checks. Its APK retry result is tracked separately in the status record.
+The subsequent Use 10 Stamina beginner reward and first Collect 1 Heroes
+challenge reward also passed their APK retries. Later challenge steps and other
+mission groups remain unfinished; see the status record for the exact scope.
