@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 68,
+    "tests_run": 72,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -338,5 +338,21 @@
     "passive_help_1013_acknowledged": true,
     "balances_and_inventory_preserved": true,
     "next_unsupported_operation": "/guardian-pass/claim-all"
+  },
+  "guardian_pass_first_reward_update": {
+    "date": "2026-11-16",
+    "route": "/guardian-pass/claim-all",
+    "scope": "Only the free level-1 reward of pinned local season 58 at zero experience. An empty pass is initialized on its first claim; no automatic rollover.",
+    "contract_evidence": "Parameterless native request, AddedItems callback, native level getter, displayed season and its public reward catalog.",
+    "reward": {"item_id": 70032, "amount": 30},
+    "automated_test_result": "PASS",
+    "automated_tests_run": 72,
+    "atomic_claim_retry_reopening_and_rollback_checked": true,
+    "original_apk_retry_confirmed": true,
+    "post_retry_reserve_stamina": 125,
+    "post_retry_free_gems": 400,
+    "inventory_preserved": true,
+    "next_unsupported_operation": "/festival-pass/enter",
+    "paid_passes_later_levels_missions_and_rollover_implemented": false
   }
 }

@@ -6,10 +6,11 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **68 passing tests**, including fourteen first-chapter entry/progress
+The suite has **72 passing tests**, including fourteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
-regressions and an empty event-coupon exchange regression. It covers real loopback TLS,
+regressions, an empty event-coupon exchange regression and four initial Guardian
+Pass reward regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -143,8 +144,20 @@ that saved record without initializing a season or changing experience, pass
 type, claims, missions or balances. The account-read regression checks that
 nonempty saved progress survives entry, invalid parameters and reopening the
 store. The APK accepted entry and acknowledged Guardian Pass help 1013. Its
-next unsupported request was `/guardian-pass/claim-all`. Season progression,
-reward claims, purchases and level skipping remain unimplemented.
+next unsupported request was `/guardian-pass/claim-all`.
+
+That parameterless claim now supports only the free level-1 reward of pinned
+season 58. The client's displayed season and public reward catalog confirm 30
+reserve stamina (70032); the native level getter returns level 1 for zero
+experience. The first claim assigns season 58 to an empty pass, sets `Claimed.Free`
+to 1 and saves the stamina, pass state and frozen reward receipt in one SQLite
+transaction. Retrying after reopening the store returns the same notice without
+granting again. Other seasons, paid passes, later progress, inconsistent receipts
+and request parameters are rejected unchanged. A failed profile write rolls back
+the receipt and reward together. The APK accepted the claim: reserve stamina
+increased from 95 to 125, with 400 gems and all inventory stacks preserved.
+The next missing entry was `/festival-pass/enter`. Seasonal rollover, pass
+missions, later rewards, purchases and level skipping remain unimplemented.
 
 ## Economy and preservation limits
 
@@ -177,7 +190,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Implement the observed Guardian Pass claim contract, then continue from the
+1. Implement the observed Festival Pass entry contract, then continue from the
    next user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.

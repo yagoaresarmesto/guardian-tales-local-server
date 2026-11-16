@@ -38,6 +38,7 @@ from .missions import (
     FIRST_HERO_CHALLENGE_STEP,
     STAMINA_MISSION_SPEND,
 )
+from .passes import FIRST_PASS_LEVEL, FIRST_PASS_SEASON, FIRST_PASS_STAMINA
 from .reference import ReferenceData
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS
 
@@ -56,6 +57,7 @@ ACCOUNT_ROUTES = (
     "/mission/claim-challenge-all",
     "/ad/init-inbox",
     "/guardian-pass/enter",
+    "/guardian-pass/claim-all",
     "/user/exchange-summon-pickup-ticket",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
@@ -155,6 +157,9 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS challenge_mission_claims (group_id INTEGER NOT NULL, step INTEGER NOT NULL, rewards TEXT NOT NULL, PRIMARY KEY(group_id,step))"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS guardian_pass_claims (season_id INTEGER NOT NULL, level INTEGER NOT NULL, rewards TEXT NOT NULL, PRIMARY KEY(season_id,level))"
         )
         existing = db.execute(
             "SELECT schema_version,profile FROM local_account WHERE id=1"
@@ -704,6 +709,62 @@ class AccountStore:
                 (json.dumps(profile, separators=(",", ":")),),
             )
         return {"User": user, "UserMission": mission, "AddedItems": rewards}
+
+    def claim_guardian_pass(self, request):
+        """Grant only season 58's free level-1 reward, with atomic retry receipts."""
+        if request is not None and request != {}:
+            raise ValueError("Guardian Pass reward claim accepts no parameters")
+        profile = self.profile()
+        user, guardian_pass = profile["User"], profile["UserGuardianPass"]
+        season = guardian_pass["SeasonId"]
+        claimed = guardian_pass["Claimed"]
+        if (
+            self.needs_prologue()
+            or type(season) is not int
+            or season not in (0, FIRST_PASS_SEASON)
+            or type(guardian_pass["Experience"]) is not int
+            or guardian_pass["Experience"] != 0
+            or type(guardian_pass["PassType"]) is not int
+            or guardian_pass["PassType"] != 0
+            or guardian_pass.get("PurchasedGoldPass", False) is not False
+            or guardian_pass.get("FreeRewardClaimedList", [])
+            or guardian_pass.get("GoldRewardClaimedList", [])
+            or guardian_pass["Missions"]
+            or set(claimed) != {"Free", "Gold", "Platinum", "ExtraExp"}
+            or any(type(value) is not int for value in claimed.values())
+            or claimed["Free"] not in (0, FIRST_PASS_LEVEL)
+            or any(claimed[key] != 0 for key in ("Gold", "Platinum", "ExtraExp"))
+        ):
+            raise ValueError(
+                "Only the initial free level-1 reward of local season 58 is implemented"
+            )
+        rewards = [{"Id": 0, "ItemId": RESERVE_STAMINA, "Amount": FIRST_PASS_STAMINA}]
+        receipt = self.db.execute(
+            "SELECT rewards FROM guardian_pass_claims WHERE season_id=? AND level=?",
+            (FIRST_PASS_SEASON, FIRST_PASS_LEVEL),
+        ).fetchone()
+        if bool(receipt) != (claimed["Free"] == FIRST_PASS_LEVEL) or (
+            receipt and (season != FIRST_PASS_SEASON or json.loads(receipt[0]) != rewards)
+        ):
+            raise ValueError("Guardian Pass receipt does not match saved claim progress")
+        if not receipt:
+            next(a for a in user["Assets"] if a["Id"] == RESERVE_STAMINA)[
+                "Amount"
+            ] += FIRST_PASS_STAMINA
+            guardian_pass["SeasonId"] = FIRST_PASS_SEASON
+            claimed["Free"] = FIRST_PASS_LEVEL
+            guardian_pass["Cas"] += 1
+            user["Cas"] += 1
+            with self.db:
+                self.db.execute(
+                    "INSERT INTO guardian_pass_claims VALUES(?,?,?)",
+                    (FIRST_PASS_SEASON, FIRST_PASS_LEVEL, json.dumps(rewards)),
+                )
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        return {"User": user, "UserGuardianPass": guardian_pass, "AddedItems": rewards}
 
     def add_character_experience(self, request):
         """Apply the observed post-Inn knight level 1-to-2 tutorial once.
