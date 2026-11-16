@@ -78,4 +78,5 @@ The prepared laboratory subsequently applied the command to the existing APK
 test account on 2026-11-17, changing 400 free gems to **1,000,400**. The audit
 receipt persisted, and the rest of the saved profile matched its previous digest
 after excluding the gem amount and user revision. The backend then restarted
-with the same database. Original-client display confirmation is pending.
+with the same database. The user then confirmed that the original game displayed
+**1,000,400 gems** after entering the saved account.

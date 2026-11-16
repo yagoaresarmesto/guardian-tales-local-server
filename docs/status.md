@@ -373,8 +373,9 @@ After the synthetic checks, the prepared lab applied the million-gem command to
 its existing saved account: **400 -> 1,000,400**. The audit receipt persisted, and
 the remaining profile matched its previous digest with gem amount/User.Cas
 excluded. The backend restarted on the same database with stage clears, quests,
-inventory and other balances retained. An APK display refresh after this grant
-remains unverified.
+inventory and other balances retained. The user confirmed that the original APK
+displayed **1,000,400 gems** after login. This is a user-reported display check;
+no automated screenshot or game-input control was used.
 
 The prepared Inn and passage monster rewards use one public level-1 `ExpsData`
 row per new known monster handle: 79 experience and 87 gold. This is a provisional **local
