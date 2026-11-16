@@ -76,7 +76,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Pickup-ticket exchange check | Returns empty results when both event-coupon maps are empty; inventory tickets stay unchanged |
 | Tutorial acknowledgments | 32 passive help popups; completion/world-map IDs 200 and 2019 require Inn cleared |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
-| Festival Pass entry | Returns saved pass state; rewards, progression and purchases remain pending |
+| Festival Pass | Entry returns saved state; season 41's free level-1 reward grants four festival points once; other progression and purchases pending |
 | Later phases and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |
 

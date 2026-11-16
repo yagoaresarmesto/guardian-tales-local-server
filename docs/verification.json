@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 72,
+    "tests_run": 76,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -363,6 +363,20 @@
     "automated_test_result": "PASS",
     "automated_tests_run": 72,
     "distinct_nonempty_pass_preservation_checked": true,
-    "original_apk_retry_confirmed": false
+    "original_apk_retry_confirmed": true,
+    "next_unsupported_operation": "/festival-pass/claim-all"
+  },
+  "festival_pass_first_reward_update": {
+    "date": "2026-11-16",
+    "route": "/festival-pass/claim-all",
+    "scope": "Only the free level-1 reward of pinned local season 41 at zero experience. The first claim initializes an empty pass; no automatic rollover.",
+    "contract_evidence": "Native parameterless request, AddedPoint/AddedItems callback, free-lane coin selection, displayed season and public reward set 1.",
+    "reward": {"festival_points": 4, "display_item_id": 21484, "inventory_items": []},
+    "automated_test_result": "PASS",
+    "automated_tests_run": 76,
+    "atomic_claim_retry_reopening_and_rollback_checked": true,
+    "independent_pass_receipts_and_inventory_preservation_checked": true,
+    "original_apk_retry_confirmed": false,
+    "paid_passes_later_levels_missions_redemption_and_rollover_implemented": false
   }
 }

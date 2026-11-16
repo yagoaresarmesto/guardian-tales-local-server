@@ -6,11 +6,12 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **72 passing tests**, including fourteen first-chapter entry/progress
+The suite has **76 passing tests**, including fourteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
-Pass reward regressions. It covers real loopback TLS,
+Pass reward regressions and four initial Festival Pass reward regressions.
+It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -164,8 +165,20 @@ record. Its native scene loader and refresh callbacks consume the global record;
 the handler preserves experience, points, pass type, claims, missions, purchases
 and balances. The existing pass-read regression now checks two distinct nonempty
 pass records to catch resets or returning the wrong pass. All 72 tests pass.
-The deployed entry still needs its APK retry in this snapshot. Festival rewards,
-missions, point redemption, purchases and seasonal initialization remain pending.
+The APK accepted entry and next requested `/festival-pass/claim-all`.
+
+That parameterless claim now supports only season 41's free level-1 reward.
+The displayed season selects reward set 1: four festival points, no free inventory
+items. Native UI code selects `CoinRewards[0]` for the free lane and consumes
+`AddedPoint` separately from `AddedItems`. The points are stored in
+`UserFestivalPass.Point`; coin item 21484 is used for their reward notice, without
+adding an inventory stack. The first claim assigns season 41 to an empty pass,
+sets `Claimed.Free` to 1, and saves the points and receipt atomically. Other passes,
+balances and inventory remain unchanged. Tests cover retry/reopening, strict
+scope validation, independent pass receipts, corrupt receipts and write rollback.
+The deployed claim needs its APK retry in this snapshot. Later Festival rewards,
+missions, point redemption, purchases and automatic seasonal rollover remain
+unimplemented.
 
 ## Economy and preservation limits
 
@@ -198,7 +211,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Verify the Festival Pass entry retry, then continue from the
+1. Verify the Festival Pass initial reward retry, then continue from the
    next user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
