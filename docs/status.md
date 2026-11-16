@@ -368,10 +368,13 @@ The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem
 balance/user revision and rolls back on failure. The updated backend and command
 share an operating-system lock to prevent overlapping owners. History can be read
-without stopping the server. See [administration](administration.md). This update
-was tested against synthetic accounts; no administrative grant was applied to
-the preserved APK account, and an APK display refresh after such a grant remains
-unverified.
+without stopping the server. See [administration](administration.md).
+After the synthetic checks, the prepared lab applied the million-gem command to
+its existing saved account: **400 -> 1,000,400**. The audit receipt persisted, and
+the remaining profile matched its previous digest with gem amount/User.Cas
+excluded. The backend restarted on the same database with stage clears, quests,
+inventory and other balances retained. An APK display refresh after this grant
+remains unverified.
 
 The prepared Inn and passage monster rewards use one public level-1 `ExpsData`
 row per new known monster handle: 79 experience and 87 gold. This is a provisional **local

@@ -587,7 +587,20 @@
     "additional_windows_administrative_tests": 8,
     "persistence_account_response_retry_after_spending_and_conflicts_checked": true,
     "audit_rollback_overflow_cross_process_lock_and_startup_cleanup_checked": true,
-    "preserved_apk_account_modified": false,
+    "preserved_apk_account_modified": true,
     "original_apk_balance_refresh_after_admin_grant_confirmed": false
+  },
+  "prepared_lab_gem_grant": {
+    "date": "2026-11-17",
+    "amount": 1000000,
+    "balance_before": 400,
+    "balance_after": 1000400,
+    "operation_id": "gems-million-20261117-001",
+    "grant_applied_while_backend_stopped": true,
+    "audit_receipt_read_after_backend_restart": true,
+    "other_saved_profile_digest_preserved": true,
+    "only_gem_amount_and_user_revision_changed": true,
+    "stage_clears_quests_and_other_balances_preserved": true,
+    "original_apk_visible_balance_confirmed": false
   }
 }

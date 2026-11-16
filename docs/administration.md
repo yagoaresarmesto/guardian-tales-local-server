@@ -72,5 +72,10 @@ missing, such as summons or unimplemented shop operations.
 Automated checks cover a million-gem grant, persistence, account responses,
 retries after spending, conflicting IDs, invalid input, overflow, rollback,
 cross-process locking and backend lock release after startup errors. The new
-administrative tests pass on Windows and in the isolated Linux suite. No grant
-has been applied to the preserved APK test account during this implementation.
+administrative tests pass on Windows and in the isolated Linux suite.
+
+The prepared laboratory subsequently applied the command to the existing APK
+test account on 2026-11-17, changing 400 free gems to **1,000,400**. The audit
+receipt persisted, and the rest of the saved profile matched its previous digest
+after excluding the gem amount and user revision. The backend then restarted
+with the same database. Original-client display confirmation is pending.
