@@ -1,0 +1,39 @@
+[
+  {
+    "path": [
+      "User",
+      "GarageTicket"
+    ],
+    "type": 1
+  },
+  {
+    "path": [
+      "User",
+      "StaminaGemChargeTicket"
+    ],
+    "type": 9
+  },
+  {
+    "path": [
+      "User",
+      "StageBoostTicket"
+    ],
+    "type": 10
+  },
+  {
+    "path": [
+      "UserClaimedReward",
+      "Ad",
+      "Inbox",
+      "Ticket"
+    ],
+    "type": 21
+  },
+  {
+    "path": [
+      "UserMerch",
+      "Ticket"
+    ],
+    "type": 7
+  }
+]

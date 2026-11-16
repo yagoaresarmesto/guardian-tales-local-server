@@ -1,0 +1,852 @@
+{
+  "User": {
+    "Id": 1,
+    "Name": "Local",
+    "HashTag": "00001",
+    "Assets": [
+      {
+        "Id": 70001,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70002,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70003,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70004,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70005,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70006,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70007,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70008,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70009,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70010,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70011,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70012,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70013,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70014,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70015,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70016,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70017,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70018,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70019,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70020,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70021,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70022,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70023,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70024,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70025,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70026,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70027,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70028,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70029,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70030,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70031,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70032,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70033,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 70034,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71001,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71002,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71003,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71004,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71005,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71006,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71007,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71008,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71009,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71010,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71011,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71012,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71013,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71014,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71015,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71016,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71017,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71018,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71019,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 71020,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 73001,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 73002,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 73004,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 76001,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 76002,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 76003,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 76004,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 76005,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 76006,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 77001,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 77002,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 77003,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      },
+      {
+        "Id": 77004,
+        "Amount": 0,
+        "Spent": 0,
+        "MaxAdj": 0,
+        "NextCharge": null
+      }
+    ],
+    "ItemWeapons": [],
+    "ItemStackables": [],
+    "ItemMiscs": [],
+    "ItemIdCounter": 0,
+    "Characters": [],
+    "CharacterIdCounter": 0,
+    "Party": {
+      "Id": 0,
+      "Characters": []
+    },
+    "VoiceType": 0,
+    "RepresentativeCharacterId": 0,
+    "LastAttendanceDate": "2000-01-01T00:00:00+00:00",
+    "MonthlyLoginCount": 0,
+    "GarageTicket": {
+      "Type": 1,
+      "PlayCount": 0,
+      "RefillCount": 0,
+      "NextCharge": null,
+      "NextDailyReset": "2000-01-01T00:00:00+00:00",
+      "PlayLimitUpgradeExpireTime": null
+    },
+    "StaminaGemChargeTicket": {
+      "Type": 9,
+      "PlayCount": 0,
+      "RefillCount": 0,
+      "NextCharge": null,
+      "NextDailyReset": "2000-01-01T00:00:00+00:00",
+      "PlayLimitUpgradeExpireTime": null
+    },
+    "StageBoostTicket": {
+      "Type": 10,
+      "PlayCount": 0,
+      "RefillCount": 0,
+      "NextCharge": null,
+      "NextDailyReset": "2000-01-01T00:00:00+00:00",
+      "PlayLimitUpgradeExpireTime": null
+    },
+    "Options": {
+      "HeavenHold": [],
+      "ItemCollection": [],
+      "HeroCollection": [],
+      "GuardianLevel": [],
+      "AccountBuffs": {},
+      "UserMigrationVersion": 0,
+      "GuardianMastery": {
+        "GuardianMasterySkill": {},
+        "SkillNextResetTime": "2000-01-01T00:00:00+00:00"
+      }
+    },
+    "InvenLimitAdj": 0,
+    "Unlocked": {
+      "MaxLevel": {
+        "Character": 1,
+        "Weapon": 1
+      }
+    },
+    "TrainingSlots": {},
+    "GuardianExperience": 0,
+    "MaterialExchangeLimiters": [],
+    "MaterialEvolveLimiters": [],
+    "FrameId": 0,
+    "SelectedPresetId": {
+      "Rift": 0,
+      "EventRift": 0,
+      "InfiniteTower": 0,
+      "Tower": 0,
+      "ColosseumAttack": 0,
+      "GuildRaidAndConquest": 0,
+      "SingleRaid": 0,
+      "Expedition": 0,
+      "Arena": 0,
+      "DeathMatch": 0,
+      "ChampionArena": 0,
+      "GuildPunchKing": 0,
+      "FriendlyArena": 0,
+      "FriendlyDeathMatch": 0,
+      "ScareCrow": 0,
+      "RogueChess": 0,
+      "UnexploredExpedition": 0
+    },
+    "GuardianMasteryLevel": 0,
+    "Cas": 0
+  },
+  "UserClaimedReward": {
+    "UserId": 1,
+    "OneActPlay": "",
+    "ChapterProgress": [],
+    "UnlockFeature": "",
+    "SnsFollower": "",
+    "Survey": null,
+    "RetentionEvent": {},
+    "Ad": {
+      "Inbox": {
+        "Rewards": [],
+        "Date": "2000-01-01T00:00:00+00:00",
+        "Ticket": {
+          "Type": 21,
+          "PlayCount": 0,
+          "RefillCount": 0,
+          "NextCharge": null,
+          "NextDailyReset": null,
+          "PlayLimitUpgradeExpireTime": null
+        }
+      },
+      "Counters": {}
+    },
+    "ClaimedRewardsGuardianLevels": [],
+    "Cas": 0
+  },
+  "UserEvent": {
+    "UserId": 1,
+    "LiveEvents": {},
+    "RoadmapEvents": {},
+    "AttendanceEvents": {},
+    "GiantGachaMachineEvents": {},
+    "BingoEvents": {},
+    "TurntableEvents": {},
+    "MarbleEvents": {},
+    "WebEvents": {},
+    "VisitorEvents": {},
+    "QuizEvents": {},
+    "HeroGrowthEvents": {},
+    "SlimeJuiceEvents": {},
+    "SummonFestivalEvents": {},
+    "ReturnEvent": null,
+    "Cas": 0
+  },
+  "UserExpedition": {
+    "UserId": 1,
+    "Collectibles": [],
+    "SpecialCollectiblesPlay": "",
+    "AreaProgresses": [],
+    "StageStates": [],
+    "Cas": 0
+  },
+  "UserGuardianPass": {
+    "UserId": 1,
+    "SeasonId": 0,
+    "Experience": 0,
+    "FreeRewardClaimedList": [],
+    "GoldRewardClaimedList": [],
+    "PurchasedGoldPass": false,
+    "PassType": 0,
+    "Claimed": {
+      "Free": 0,
+      "Gold": 0,
+      "Platinum": 0,
+      "ExtraExp": 0
+    },
+    "Missions": {},
+    "Cas": 0
+  },
+  "UserMerch": {
+    "UserId": 1,
+    "CraftSlots": [],
+    "SlotLimitAdj": 0,
+    "SuperCostumeBonusCount": 0,
+    "UniqueMerchBonusCounts": {},
+    "Parties": [],
+    "Ticket": {
+      "Type": 7,
+      "PlayCount": 0,
+      "RefillCount": 0,
+      "NextCharge": null,
+      "NextDailyReset": null,
+      "PlayLimitUpgradeExpireTime": null
+    },
+    "WorldExploreProgresses": {},
+    "Cas": 0
+  },
+  "UserMission": {
+    "UserId": 1,
+    "GuideClaimed": "",
+    "ChallengeClaimed": {},
+    "Daily": {
+      "Date": "2000-01-01T00:00:00+00:00",
+      "Scores": 0,
+      "Rewarded": 0,
+      "Counters": {}
+    },
+    "Event": {},
+    "Compass": {
+      "StepClaimed": 0,
+      "MissionClaimed": ""
+    },
+    "Cas": 0
+  },
+  "UserProgress": {
+    "UserId": 1,
+    "Followers": [],
+    "StageStates": {},
+    "LastPlayedStageId": 0,
+    "QuestProgresses": [],
+    "Tutorials": [],
+    "TowerInfinity": {
+      "Floor": 0,
+      "Formation": {
+        "Id": 0,
+        "Positions": []
+      }
+    },
+    "Towers": {},
+    "RiftEvolveStoneRewards": {},
+    "KnightTraining": null,
+    "Cas": 0
+  },
+  "UserRecord": {
+    "UserId": 1,
+    "SummonWeaponCount": 0,
+    "SummonCharacterCount": 0,
+    "AddCharacterExperienceAmount": 0,
+    "EvolveCharacterCount": 0,
+    "EnhanceWeaponCount": 0,
+    "LimitBreakCharacterCount": 0,
+    "LimitBreakWeaponCount": 0,
+    "EvolveWeaponCount": {},
+    "ComposeWeaponCount": {},
+    "CraftMerchCount": 0,
+    "EnhanceMerchCount": 0,
+    "EvolveMerchCount": {},
+    "BuyLobbyShopItemCount": 0,
+    "BuyHeavenHoldShopItemCount": 0,
+    "HeavenHoldBuildCount": 0,
+    "HeavenHoldUpgradeCount": 0,
+    "RiftClearCount": {},
+    "GarageClearCount": 0,
+    "CoopVictoryCount": {},
+    "CoopStartCount": {},
+    "ItemIdCount": 0,
+    "LoginDayCount": 0,
+    "MarketPurchaseCount": 0,
+    "ArenaTrophy": 0,
+    "ArenaRank": 0,
+    "ColosseumTrophy": 0,
+    "ColosseumRank": 0,
+    "KamazonLandClear": {},
+    "WorldExploreClearCount": 0,
+    "GuildContentStartCount": {},
+    "Expedition": {
+      "RelicChangeBaseOptions": 0,
+      "RelicCount": {},
+      "RelicApply": 0,
+      "RelicInherited": 0,
+      "PlantSeed": 0,
+      "Harvest": 0,
+      "BuyShopItemCount": 0,
+      "UseBait": 0,
+      "SellFish": 0,
+      "ReleaseFish": 0
+    },
+    "Misc": {
+      "SingleRaidBossLevel": 0,
+      "AddFriendCount": 0,
+      "FriendAccept": 0,
+      "PastureMonsterSummonCount": 0,
+      "PastureMonsterTotalAffinity": 0,
+      "PastureMonsterFeedCount": 0,
+      "PastureMonsterAffinityCount": 0,
+      "DecomposeJewelCount": 0,
+      "InlaidCount": 0,
+      "AttachJewelCount": 0,
+      "DetachJewelCount": 0,
+      "UpgradeJewelCount": 0,
+      "BlessCharacterCount": 0,
+      "ChampionArenaHighestRank": 0,
+      "ChampionArenaHighestTrophy": 0,
+      "DeathMatchHighestRank": 0,
+      "DeathMatchHighestTrophy": 0,
+      "PunchKingPrevPersonalTotalScore": 0,
+      "EngraveWeaponCount": 0,
+      "ComplaintClear": 0,
+      "MythCharacterCount": 0,
+      "UpperGarageCount": 0,
+      "OptionChanged": 0
+    },
+    "Cas": 0
+  },
+  "UserShop": {
+    "UserId": 1,
+    "Purchase": {},
+    "PurchaseDaily": {},
+    "PurchaseWeekly": {},
+    "PurchaseBiweekly": {},
+    "PurchaseMonthly": {},
+    "NextPurchasedCountResetTime": {
+      "Daily": "2000-01-01T00:00:00+00:00",
+      "Weekly": "2000-01-01T00:00:00+00:00",
+      "Monthly": "2000-01-01T00:00:00+00:00",
+      "Biweekly": "2000-01-01T00:00:00+00:00"
+    },
+    "LastDiscountSummonCharacter": {},
+    "LastDiscountSummonWeapon": {},
+    "SurprisePackages": {},
+    "SubscribeItems": {},
+    "SummonCeilingCountForCharacter": 0,
+    "SummonCeilingCountForWeapon": 0,
+    "SummonFreeEvent": {
+      "Id": 0,
+      "UsedCount": 0
+    },
+    "SummonPaidGemEvent": {
+      "Id": 0,
+      "UsedHeroCount": 0,
+      "UsedWeaponCount": 0
+    },
+    "PurchaseLimit": {
+      "UserAge": 0,
+      "Date": 0,
+      "SumJpy": 0
+    },
+    "SummonPickUpTickets": {},
+    "SelectedSummonCharacters": [],
+    "SelectedSummonWeapons": [],
+    "CollaborationPickUpTickets": {},
+    "StartDashSummon": {
+      "State": 0,
+      "SeasonId": 0,
+      "ExpireTime": "2000-01-01T00:00:00+00:00",
+      "Ceiling": false,
+      "Count": 0,
+      "ClaimedReward": 0
+    },
+    "SummonPaidGemStepUpEvents": {},
+    "DiscountSummonPackage": null,
+    "Cas": 0
+  },
+  "UserWorldClearPass": {
+    "UserId": 1,
+    "FreeRewardClaimedList": [],
+    "GoldRewardClaimedList": [],
+    "PurchasedGoldPass": [],
+    "SelectedCustomSlots": [],
+    "Cas": 0
+  },
+  "UserAchievement": {
+    "UserId": 1,
+    "ASId": 0,
+    "Points": 0,
+    "Rewarded": 0,
+    "LastChecked": "2000-01-01T00:00:00+00:00",
+    "Missions": {},
+    "Trophies": [],
+    "Cas": 0
+  },
+  "UserFriend": {
+    "UserId": 1,
+    "Enabled": false,
+    "AllowRequest": false,
+    "LastChecked": "2000-01-01T00:00:00+00:00",
+    "GiftDate": "2000-01-01T00:00:00+00:00",
+    "GiftCount": 0,
+    "NumFriends": 0,
+    "NumRequests": 0,
+    "Cas": 0
+  },
+  "UserFestivalPass": {
+    "UserId": 1,
+    "SeasonId": 0,
+    "Experience": 0,
+    "Point": 0,
+    "PassType": 0,
+    "Claimed": {
+      "Free": 0,
+      "Gold": 0,
+      "Platinum": 0,
+      "ExtraExp": 0
+    },
+    "Missions": {},
+    "Purchase": {},
+    "Cas": 0
+  },
+  "GuildMember": null,
+  "PurpleCoins": {},
+  "StarPieces": {}
+}

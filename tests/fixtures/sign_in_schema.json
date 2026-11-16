@@ -1,0 +1,5 @@
+{
+  "GuildMember":"null","ServerTime":"string","StartOfDay":"string",
+  "TimeWarpSpan":"null","UserId":"integer","Uuid":"string",
+  "NeedPrologue":"boolean","CreatedAt":"string","Playtime":"integer","LastSignIn":"string"
+}

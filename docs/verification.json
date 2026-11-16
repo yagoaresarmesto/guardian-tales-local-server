@@ -1,0 +1,69 @@
+{
+  "date": "2026-11-16",
+  "license": "Apache-2.0",
+  "automated_tests": {
+    "result": "PASS",
+    "tests_run": 36,
+    "failures": 0,
+    "errors": 0,
+    "external_network_disabled": true,
+    "network_interfaces": [
+      "lo"
+    ],
+    "python": "3.11.18",
+    "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+  },
+  "synthetic_demo": {
+    "result": "PASS",
+    "external_network_disabled": true,
+    "api_pongs": 3,
+    "stable_local_identity": true,
+    "tls": "TLSv1.3",
+    "original_client_exercised": false
+  },
+  "package_installation": {
+    "result": "PASS",
+    "wheel": "guardian_tales_local_server-0.1.0-py3-none-any.whl",
+    "runtime_dependencies": [],
+    "built_from_clean_copy": true,
+    "installed_demo_passed": true,
+    "console_entry_point_passed": true,
+    "templates_included": true,
+    "license_and_notice_included": true,
+    "private_inputs_excluded": true
+  },
+  "post_refactor_prepared_lab": {
+    "result": "PASS",
+    "scope": "Prepared VM2 launch, local guest cache reuse and automatic restoration",
+    "bounded_trial_seconds": 100,
+    "local_character_reopened_in_APK": true,
+    "storage_stamina_still_40_in_APK": true,
+    "laboratory_stopped": true,
+    "original_instance_stayed_stopped": true,
+    "root_disabled": true,
+    "routing_record_inactive": true,
+    "network_isolation_restored": true,
+    "original_hosts_preferences_SDK_cache_and_trust_hashes_verified": true,
+    "listeners_closed": true,
+    "lab_forward_ports_removed": true
+  },
+  "repository_content_check": {
+    "result": "PASS",
+    "scope": "Targeted reference-account identifier contamination check",
+    "account_specific_values_checked": 4,
+    "matching_package_files": 0,
+    "matched_paths": [],
+    "runtime_databases_in_package": false
+  },
+  "style_checks": {
+    "black": "PASS",
+    "ruff": "PASS"
+  },
+  "github_workflow": {
+    "configured": true,
+    "record_scope": "Local verification snapshot before initial publication; hosted results are recorded per commit on GitHub Actions.",
+    "runs_url": "https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml"
+  },
+  "gameplay_limit": "Saved prologue character, lobby and world map; first campaign chapter remains locked.",
+  "source_package_scope": "Project code, English documentation, empty templates and regression fixtures. External game/bootstrap files, local keys, account saves and machine-specific lab tools are excluded."
+}

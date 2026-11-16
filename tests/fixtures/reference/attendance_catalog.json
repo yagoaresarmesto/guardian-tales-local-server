@@ -1,0 +1,45 @@
+{
+  "scope": "Synthetic regression fixture; not the game attendance catalog",
+  "origin_group": 1,
+  "active_group": 3,
+  "groups": {
+    "3": [
+      {
+        "Day": 1,
+        "Rewards": [
+          {
+            "ItemId": 70032,
+            "Amount": 40
+          }
+        ]
+      },
+      {
+        "Day": 2,
+        "Rewards": [
+          {
+            "ItemId": 70004,
+            "Amount": 200000
+          }
+        ]
+      },
+      {
+        "Day": 3,
+        "Rewards": [
+          {
+            "ItemId": 70001,
+            "Amount": 150000
+          }
+        ]
+      },
+      {
+        "Day": 4,
+        "Rewards": [
+          {
+            "ItemId": 999000000,
+            "Amount": 1
+          }
+        ]
+      }
+    ]
+  }
+}

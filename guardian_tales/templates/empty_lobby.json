@@ -1,0 +1,162 @@
+{
+  "/lobby-village/enter": {
+    "body_type": 1,
+    "value": {
+      "User": {},
+      "UserLobbyVillage": {
+        "UserId": 1,
+        "IsMigrate": false,
+        "Manufacture": [],
+        "Buildings": [],
+        "VillagerIds": [],
+        "LastHarvestTime": {
+          "SoulPoint": 0,
+          "Gold": 0
+        },
+        "NextGiftTime": "2000-01-01T00:00:00+00:00",
+        "NextShopRefreshTime": "2000-01-01T00:00:00+00:00",
+        "SaleProductIds": [],
+        "PurchasedShopItemCount": {},
+        "BaseCampParties": [],
+        "WorkerUsingCount": 0,
+        "VillagerSummonCount": 0,
+        "Airship": {
+          "NextVisitTime": 0,
+          "NextSuperSoulPoint": false
+        },
+        "UnlockBuildings": [],
+        "SettlerIds": [],
+        "Complaints": [],
+        "ServicePoint": 0,
+        "ServicePointRewardStep": 0,
+        "ComplaintDailyResetTime": "2000-01-01T00:00:00+00:00",
+        "RefuseCount": {
+          "Type": 0,
+          "PlayCount": 0,
+          "RefillCount": 0,
+          "NextCharge": null,
+          "NextDailyReset": null,
+          "PlayLimitUpgradeExpireTime": null
+        },
+        "Dispatches": [],
+        "Cas": 0
+      },
+      "UserClaimed": {},
+      "LobbyVillagePrincessAlarm": 0
+    }
+  },
+  "/inbox/list": {
+    "body_type": 1,
+    "value": {
+      "InboxItems": []
+    }
+  },
+  "/inbox/check-scheduled-inbox": {
+    "body_type": 1,
+    "value": {
+      "UserClaimedReward": {},
+      "AddedInboxItems": null
+    }
+  },
+  "/preset/get-presets": {
+    "body_type": 1,
+    "value": {
+      "UserPartyPreset2": {
+        "Presets": [],
+        "Cas": 0
+      },
+      "UserMultiPartyPreset": {
+        "Presets": [],
+        "Cas": 0
+      },
+      "UserCharacterListPreset": {
+        "Presets": [],
+        "Cas": 0
+      },
+      "CoopExpeditionSlots": {}
+    }
+  },
+  "/content-book/recommend": {
+    "body_type": 1,
+    "value": {
+      "TowerInfinityFloor": 0,
+      "RogueChessFloor": 0,
+      "RogueChessSweepCount": 0,
+      "CoopExpeditionDailyRandomMatchRewardCount": 0,
+      "CoopExpeditionWeeklyRandomMatchRewardCount": 0,
+      "CoopExpeditionWeeklyClearRewardTotalCount": 0,
+      "ColosseumPlayCount": 0,
+      "ColosseumNextCharge": null,
+      "GuildRaidPlayCount": 0,
+      "GuildRaid2PlayCount": 0,
+      "GuildMeteorPickAxeCount": 0,
+      "GuildPunchKingScore": 0,
+      "ArenaPlayCount": 0,
+      "ChampionArenaPlayCount": 0,
+      "DeathMatchPlayCount": 0,
+      "ChampionQualified": false
+    }
+  },
+  "/summon/on-event": {
+    "body_type": 1,
+    "value": {
+      "PickUpSeason": {},
+      "PickUpCharacter": {},
+      "PickUpWeapon": {},
+      "FreeSummonEvent": null,
+      "PaidGemSummonEvent": null,
+      "SelectableSummonEvent": null,
+      "RotationSeason": [],
+      "RotationCharacter": [],
+      "RotationWeapon": [],
+      "SelectableCharacter": [],
+      "SelectableWeapon": [],
+      "StartDashSeason": [],
+      "StartDashCharacter": [],
+      "StartDashRewards": [],
+      "PaidGemStepUpEventSeason": [],
+      "PaidGemStepUpEventCharacter": [],
+      "PaidGemStepUpEventReward": [],
+      "Checksum": "local-empty-v1"
+    }
+  },
+  "/shop/enter": {
+    "body_type": 1,
+    "value": {
+      "UserShop": {},
+      "NeedUpdate": true,
+      "RandomSetCostumeData": {
+        "Today": "2000-01-01T00:00:00+00:00",
+        "SalesIds": [],
+        "CheckSum": ""
+      }
+    }
+  },
+  "/shop/get-sales-lobbyshop": {
+    "body_type": 2,
+    "value": []
+  },
+  "/shop/get-sales-costume-collection-items": {
+    "body_type": 2,
+    "value": []
+  },
+  "/shop/get-random-set-costume": {
+    "body_type": 2,
+    "value": []
+  },
+  "/content-book/kamazon-red-dot": {
+    "body_type": 1,
+    "value": {
+      "KamazonEventPoint": 0,
+      "KamazonTicket": 0
+    }
+  },
+  "/content-book/unexplored-expedition-red-dot": {
+    "body_type": 1,
+    "value": {
+      "SeasonClaimed": false,
+      "SeasonId": 0,
+      "PlayEarnedEventCoin": 0
+    }
+  }
+}

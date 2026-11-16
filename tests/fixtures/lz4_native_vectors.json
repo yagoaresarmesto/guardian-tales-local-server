@@ -1,0 +1,30 @@
+{
+  "source": "python-lz4 4.4.5 native block compressor; synthetic inputs only",
+  "vectors": [
+    {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "compressed_base64": "AA=="
+    },
+    {
+      "bytes": 5,
+      "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+      "compressed_base64": "UGhlbGxv"
+    },
+    {
+      "bytes": 10000,
+      "sha256": "85757d9ef5868bb53472a6be8d81d1e3c398546b69b107141ad336053c40cb54",
+      "compressed_base64": "H0EBAP///////////////////////////////////////////////////x5QQUFBQUE="
+    },
+    {
+      "bytes": 8000,
+      "sha256": "83805816e31e9877530284f1bd807f4b7e8dc610afacbf0ca0eceebd0e29afa7",
+      "compressed_base64": "/wVndWFyZGlhbi1sb2NhbC1vbmx5LRQA/////////////////////////////////////////zNQb25seS0="
+    },
+    {
+      "bytes": 5120,
+      "sha256": "4345361085c730756d843f13849c50a996fe2f1fac3a7ac05fb063bb743a423e",
+      "compressed_base64": "//EAAQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyAhIiMkJSYnKCkqKywtLi8wMTIzNDU2Nzg5Ojs8PT4/QEFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaW1xdXl9gYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpucnZ6foKGio6SlpqeoqaqrrK2ur7CxsrO0tba3uLm6u7y9vr/AwcLDxMXGx8jJysvMzc7P0NHS09TV1tfY2drb3N3e3+Dh4uPk5ebn6Onq6+zt7u/w8fLz9PX29/j5+vv8/f7/AAH////////////////////////6UPv8/f7/"
+    }
+  ]
+}

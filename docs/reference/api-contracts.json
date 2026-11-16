@@ -1,0 +1,5504 @@
+{
+  "client_version": "3.57.0",
+  "date": "2026-11-16",
+  "scope": "One reference startup and title-to-lobby observation on the official service; schemas only.",
+  "limitations": [
+    "Observed presence does not establish required fields.",
+    "Only first five array items sampled; nested schemas stop at depth seven.",
+    "Dynamic/unverified keys replaced; account values excluded.",
+    "The official-service lobby observation is not a successful local-server lobby test."
+  ],
+  "transport_roles": {
+    "10100": "TLS binary game protocol",
+    "10500": "HTTPS KongPub platform"
+  },
+  "platform_routes_from_static_client": [
+    "/app-info",
+    "/game/maintenance",
+    "/kong/sign-in",
+    "/kong/sign-up"
+  ],
+  "platform_implemented": true,
+  "observed_game_response_routes": 26,
+  "routes": [
+    {
+      "route": "/auth/get-server-info",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "ServerTime": {
+            "type": "string"
+          },
+          "StartOfDay": {
+            "type": "string"
+          },
+          "InMaintenance": {
+            "type": "boolean"
+          },
+          "ServerInfo": {
+            "type": "object",
+            "observed_properties": {
+              "PatchServer": {
+                "type": "null"
+              },
+              "<dynamic-or-unverified-key>": {
+                "type": "boolean"
+              }
+            }
+          },
+          "Mode": {
+            "type": "integer"
+          },
+          "Build": {
+            "type": "integer"
+          },
+          "Region": {
+            "type": "integer"
+          },
+          "World": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "route": "/announcement/all",
+      "response_packet_type": 1,
+      "response_body_type": 2,
+      "outer_lz4": false,
+      "inner_body_lz4": true,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "array",
+        "observed_item_schemas": []
+      }
+    },
+    {
+      "route": "/auth/sign-in",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "GuildMember": {
+            "type": "null"
+          },
+          "ServerTime": {
+            "type": "string"
+          },
+          "StartOfDay": {
+            "type": "string"
+          },
+          "TimeWarpSpan": {
+            "type": "null"
+          },
+          "UserId": {
+            "type": "integer"
+          },
+          "Uuid": {
+            "type": "string"
+          },
+          "NeedPrologue": {
+            "type": "boolean"
+          },
+          "CreatedAt": {
+            "type": "string"
+          },
+          "Playtime": {
+            "type": "integer"
+          },
+          "LastSignIn": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "route": "/static-data/in-app-product-ids",
+      "response_packet_type": 1,
+      "response_body_type": 2,
+      "outer_lz4": false,
+      "inner_body_lz4": true,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "Consumables": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "string"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "route": "/static-data/resource-url",
+      "response_packet_type": 1,
+      "response_body_type": 2,
+      "outer_lz4": false,
+      "inner_body_lz4": true,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "array",
+        "observed_item_schemas": [
+          {
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "route": "/static-data/get",
+      "response_packet_type": 1,
+      "response_body_type": 2,
+      "outer_lz4": false,
+      "inner_body_lz4": true,
+      "implemented_in_local_server": true,
+      "encoding_note": "Body-level LZ4 yields a non-JSON static-data checksum response; served from the preserved baseline."
+    },
+    {
+      "route": "/auth/fetch-account",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": true,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "User": {
+            "type": "object",
+            "observed_properties": {
+              "Id": {
+                "type": "integer"
+              },
+              "Name": {
+                "type": "string"
+              },
+              "HashTag": {
+                "type": "string"
+              },
+              "Assets": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      },
+                      "Spent": {
+                        "type": "integer"
+                      },
+                      "MaxAdj": {
+                        "type": "integer"
+                      },
+                      "NextCharge": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                ]
+              },
+              "ItemWeapons": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "ItemId": {
+                        "type": "integer"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "EvolveProgress": {
+                        "type": "integer"
+                      },
+                      "Options": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "OptionId": {
+                                "type": "integer"
+                              },
+                              "Level": {
+                                "type": "integer"
+                              },
+                              "Locked": {
+                                "type": "boolean"
+                              },
+                              "OptionSource": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "RelicOptions": {
+                        "type": "null"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Locked": {
+                        "type": "boolean"
+                      },
+                      "JewelSlots": {
+                        "type": "null"
+                      },
+                      "EngraveOptions": {
+                        "type": "null"
+                      },
+                      "EngraveCeiling": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "ItemId": {
+                        "type": "integer"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "EvolveProgress": {
+                        "type": "integer"
+                      },
+                      "Options": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "OptionId": {
+                                "type": "integer"
+                              },
+                              "Level": {
+                                "type": "integer"
+                              },
+                              "Locked": {
+                                "type": "boolean"
+                              },
+                              "OptionSource": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "RelicOptions": {
+                        "type": "null"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Locked": {
+                        "type": "boolean"
+                      },
+                      "JewelSlots": {
+                        "type": "null"
+                      },
+                      "EngraveOptions": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "OptionId": {
+                                "type": "integer"
+                              },
+                              "Level": {
+                                "type": "integer"
+                              },
+                              "Locked": {
+                                "type": "boolean"
+                              },
+                              "OptionSource": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "EngraveCeiling": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "ItemStackables": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "ItemId": {
+                        "type": "integer"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "EvolveProgress": {
+                        "type": "integer"
+                      },
+                      "Options": {
+                        "type": "null"
+                      },
+                      "RelicOptions": {
+                        "type": "null"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Locked": {
+                        "type": "boolean"
+                      },
+                      "JewelSlots": {
+                        "type": "null"
+                      },
+                      "EngraveOptions": {
+                        "type": "null"
+                      },
+                      "EngraveCeiling": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "ItemMiscs": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "ItemId": {
+                        "type": "integer"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "EvolveProgress": {
+                        "type": "integer"
+                      },
+                      "Options": {
+                        "type": "null"
+                      },
+                      "RelicOptions": {
+                        "type": "null"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Locked": {
+                        "type": "boolean"
+                      },
+                      "JewelSlots": {
+                        "type": "null"
+                      },
+                      "EngraveOptions": {
+                        "type": "null"
+                      },
+                      "EngraveCeiling": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "<dynamic-or-unverified-key>": {
+                "type": "integer"
+              },
+              "Characters": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Weapon1": {
+                        "type": "integer"
+                      },
+                      "Weapon2": {
+                        "type": "null"
+                      },
+                      "Accessory1": {
+                        "type": "null"
+                      },
+                      "Costume": {
+                        "type": "integer"
+                      },
+                      "Orb1": {
+                        "type": "integer"
+                      },
+                      "Orb2": {
+                        "type": "integer"
+                      },
+                      "Merch": {
+                        "type": "null"
+                      },
+                      "Relic": {
+                        "type": "null"
+                      },
+                      "EquipCostumes": {
+                        "type": "object",
+                        "observed_properties": {
+                          "<dynamic-or-unverified-key>": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "AwakeningTree": {
+                        "type": "string"
+                      },
+                      "Knowledge": {
+                        "type": "integer"
+                      },
+                      "RankUpgrade": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "null"
+                      },
+                      "BlessLevel": {
+                        "type": "integer"
+                      },
+                      "AwakeningTreeGold": {
+                        "type": "integer"
+                      },
+                      "Flag": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Weapon1": {
+                        "type": "integer"
+                      },
+                      "Weapon2": {
+                        "type": "null"
+                      },
+                      "Accessory1": {
+                        "type": "null"
+                      },
+                      "Costume": {
+                        "type": "integer"
+                      },
+                      "Orb1": {
+                        "type": "null"
+                      },
+                      "Orb2": {
+                        "type": "null"
+                      },
+                      "Merch": {
+                        "type": "null"
+                      },
+                      "Relic": {
+                        "type": "null"
+                      },
+                      "EquipCostumes": {
+                        "type": "null"
+                      },
+                      "AwakeningTree": {
+                        "type": "string"
+                      },
+                      "Knowledge": {
+                        "type": "integer"
+                      },
+                      "RankUpgrade": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "null"
+                      },
+                      "BlessLevel": {
+                        "type": "integer"
+                      },
+                      "AwakeningTreeGold": {
+                        "type": "integer"
+                      },
+                      "Flag": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Weapon1": {
+                        "type": "integer"
+                      },
+                      "Weapon2": {
+                        "type": "null"
+                      },
+                      "Accessory1": {
+                        "type": "null"
+                      },
+                      "Costume": {
+                        "type": "integer"
+                      },
+                      "Orb1": {
+                        "type": "null"
+                      },
+                      "Orb2": {
+                        "type": "null"
+                      },
+                      "Merch": {
+                        "type": "null"
+                      },
+                      "Relic": {
+                        "type": "null"
+                      },
+                      "EquipCostumes": {
+                        "type": "object",
+                        "observed_properties": {
+                          "<dynamic-or-unverified-key>": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "AwakeningTree": {
+                        "type": "string"
+                      },
+                      "Knowledge": {
+                        "type": "integer"
+                      },
+                      "RankUpgrade": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "null"
+                      },
+                      "BlessLevel": {
+                        "type": "integer"
+                      },
+                      "AwakeningTreeGold": {
+                        "type": "integer"
+                      },
+                      "Flag": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "Experience": {
+                        "type": "integer"
+                      },
+                      "LimitBreaks": {
+                        "type": "integer"
+                      },
+                      "Weapon1": {
+                        "type": "integer"
+                      },
+                      "Weapon2": {
+                        "type": "null"
+                      },
+                      "Accessory1": {
+                        "type": "null"
+                      },
+                      "Costume": {
+                        "type": "integer"
+                      },
+                      "Orb1": {
+                        "type": "null"
+                      },
+                      "Orb2": {
+                        "type": "null"
+                      },
+                      "Merch": {
+                        "type": "null"
+                      },
+                      "Relic": {
+                        "type": "null"
+                      },
+                      "EquipCostumes": {
+                        "type": "null"
+                      },
+                      "AwakeningTree": {
+                        "type": "null"
+                      },
+                      "Knowledge": {
+                        "type": "integer"
+                      },
+                      "RankUpgrade": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "null"
+                      },
+                      "BlessLevel": {
+                        "type": "integer"
+                      },
+                      "AwakeningTreeGold": {
+                        "type": "integer"
+                      },
+                      "Flag": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Party": {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "Characters": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                }
+              },
+              "VoiceType": {
+                "type": "integer"
+              },
+              "RepresentativeCharacterId": {
+                "type": "integer"
+              },
+              "LastAttendanceDate": {
+                "type": "string"
+              },
+              "MonthlyLoginCount": {
+                "type": "integer"
+              },
+              "GarageTicket": {
+                "type": "object",
+                "observed_properties": {
+                  "Type": {
+                    "type": "integer"
+                  },
+                  "PlayCount": {
+                    "type": "integer"
+                  },
+                  "RefillCount": {
+                    "type": "integer"
+                  },
+                  "NextCharge": {
+                    "type": "null"
+                  },
+                  "NextDailyReset": {
+                    "type": "string"
+                  },
+                  "PlayLimitUpgradeExpireTime": {
+                    "type": "null"
+                  }
+                }
+              },
+              "StaminaGemChargeTicket": {
+                "type": "object",
+                "observed_properties": {
+                  "Type": {
+                    "type": "integer"
+                  },
+                  "PlayCount": {
+                    "type": "integer"
+                  },
+                  "RefillCount": {
+                    "type": "integer"
+                  },
+                  "NextCharge": {
+                    "type": "null"
+                  },
+                  "NextDailyReset": {
+                    "type": "string"
+                  },
+                  "PlayLimitUpgradeExpireTime": {
+                    "type": "null"
+                  }
+                }
+              },
+              "StageBoostTicket": {
+                "type": "object",
+                "observed_properties": {
+                  "Type": {
+                    "type": "integer"
+                  },
+                  "PlayCount": {
+                    "type": "integer"
+                  },
+                  "RefillCount": {
+                    "type": "integer"
+                  },
+                  "NextCharge": {
+                    "type": "null"
+                  },
+                  "NextDailyReset": {
+                    "type": "string"
+                  },
+                  "PlayLimitUpgradeExpireTime": {
+                    "type": "null"
+                  }
+                }
+              },
+              "Options": {
+                "type": "object",
+                "observed_properties": {
+                  "HeavenHold": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "object",
+                        "observed_properties": {
+                          "OptionId": {
+                            "type": "integer"
+                          },
+                          "Level": {
+                            "type": "integer"
+                          },
+                          "Locked": {
+                            "type": "boolean"
+                          },
+                          "OptionSource": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "ItemCollection": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "object",
+                        "observed_properties": {
+                          "OptionId": {
+                            "type": "integer"
+                          },
+                          "Level": {
+                            "type": "integer"
+                          },
+                          "Locked": {
+                            "type": "boolean"
+                          },
+                          "OptionSource": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "HeroCollection": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "object",
+                        "observed_properties": {
+                          "OptionId": {
+                            "type": "integer"
+                          },
+                          "Level": {
+                            "type": "integer"
+                          },
+                          "Locked": {
+                            "type": "boolean"
+                          },
+                          "OptionSource": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "GuardianLevel": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "object",
+                        "observed_properties": {
+                          "OptionId": {
+                            "type": "integer"
+                          },
+                          "Level": {
+                            "type": "integer"
+                          },
+                          "Locked": {
+                            "type": "boolean"
+                          },
+                          "OptionSource": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "AccountBuffs": {
+                    "type": "object",
+                    "observed_properties": {
+                      "AdBypass": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  },
+                  "GuardianMastery": {
+                    "type": "object",
+                    "observed_properties": {
+                      "GuardianMasterySkill": {
+                        "type": "object",
+                        "observed_properties": {
+                          "<dynamic-or-unverified-key>": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "SkillNextResetTime": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "InvenLimitAdj": {
+                "type": "integer"
+              },
+              "Unlocked": {
+                "type": "object",
+                "observed_properties": {
+                  "MaxLevel": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Character": {
+                        "type": "integer"
+                      },
+                      "Weapon": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              },
+              "TrainingSlots": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "ItemId": {
+                        "type": "integer"
+                      },
+                      "NextReactivateTime": {
+                        "type": "string"
+                      },
+                      "IsEvolve": {
+                        "type": "boolean"
+                      },
+                      "IsAwakening": {
+                        "type": "boolean"
+                      },
+                      "IsLimitBreak": {
+                        "type": "boolean"
+                      },
+                      "IsWeaponOption": {
+                        "type": "boolean"
+                      },
+                      "IsEvolveOnly": {
+                        "type": "boolean"
+                      },
+                      "IsLevel": {
+                        "type": "boolean"
+                      },
+                      "IsBlessing": {
+                        "type": "boolean"
+                      },
+                      "IsEngraving": {
+                        "type": "boolean"
+                      },
+                      "IsMyth": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              },
+              "GuardianExperience": {
+                "type": "integer"
+              },
+              "MaterialExchangeLimiters": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "NextResetTime": {
+                        "type": "null"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "NextResetTime": {
+                        "type": "string"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "MaterialEvolveLimiters": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "NextResetTime": {
+                        "type": "string"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "NextResetTime": {
+                        "type": "null"
+                      },
+                      "Amount": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "FrameId": {
+                "type": "integer"
+              },
+              "SelectedPresetId": {
+                "type": "object",
+                "observed_properties": {
+                  "Rift": {
+                    "type": "integer"
+                  },
+                  "EventRift": {
+                    "type": "integer"
+                  },
+                  "InfiniteTower": {
+                    "type": "integer"
+                  },
+                  "Tower": {
+                    "type": "integer"
+                  },
+                  "ColosseumAttack": {
+                    "type": "integer"
+                  },
+                  "GuildRaidAndConquest": {
+                    "type": "integer"
+                  },
+                  "SingleRaid": {
+                    "type": "integer"
+                  },
+                  "Expedition": {
+                    "type": "integer"
+                  },
+                  "Arena": {
+                    "type": "integer"
+                  },
+                  "DeathMatch": {
+                    "type": "integer"
+                  },
+                  "ChampionArena": {
+                    "type": "integer"
+                  },
+                  "GuildPunchKing": {
+                    "type": "integer"
+                  },
+                  "FriendlyArena": {
+                    "type": "integer"
+                  },
+                  "FriendlyDeathMatch": {
+                    "type": "integer"
+                  },
+                  "ScareCrow": {
+                    "type": "integer"
+                  },
+                  "RogueChess": {
+                    "type": "integer"
+                  },
+                  "UnexploredExpedition": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "GuardianMasteryLevel": {
+                "type": "integer"
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserClaimedReward": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "OneActPlay": {
+                "type": "string"
+              },
+              "ChapterProgress": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "UnlockFeature": {
+                "type": "string"
+              },
+              "SnsFollower": {
+                "type": "string"
+              },
+              "Survey": {
+                "type": "null"
+              },
+              "<dynamic-or-unverified-key>": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "string"
+                  }
+                }
+              },
+              "Ad": {
+                "type": "object",
+                "observed_properties": {
+                  "Inbox": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Rewards": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "ItemId": {
+                                "type": "integer"
+                              },
+                              "CharacterId": {
+                                "type": "integer"
+                              },
+                              "Amount": {
+                                "type": "integer"
+                              },
+                              "Level": {
+                                "type": "integer"
+                              },
+                              "EventId": {
+                                "type": "null"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "Date": {
+                        "type": "string"
+                      },
+                      "Ticket": {
+                        "type": "object",
+                        "observed_properties": {
+                          "Type": {
+                            "type": "integer"
+                          },
+                          "PlayCount": {
+                            "type": "integer"
+                          },
+                          "RefillCount": {
+                            "type": "integer"
+                          },
+                          "NextCharge": {
+                            "type": "null"
+                          },
+                          "NextDailyReset": {
+                            "type": "null"
+                          },
+                          "PlayLimitUpgradeExpireTime": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Counters": {
+                    "type": "object",
+                    "observed_properties": {
+                      "<dynamic-or-unverified-key>": {
+                        "type": "object",
+                        "observed_properties": {
+                          "Type": {
+                            "type": "integer"
+                          },
+                          "PlayCount": {
+                            "type": "integer"
+                          },
+                          "RefillCount": {
+                            "type": "integer"
+                          },
+                          "NextCharge": {
+                            "type": "null"
+                          },
+                          "NextDailyReset": {
+                            "type": "null"
+                          },
+                          "PlayLimitUpgradeExpireTime": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "ClaimedRewardsGuardianLevels": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserEvent": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "LiveEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "RoadmapEvents": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Points": {
+                        "type": "integer"
+                      },
+                      "ClaimedRewardNodeIds": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "integer"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "AttendanceEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "GiantGachaMachineEvents": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Coin": {
+                        "type": "integer"
+                      },
+                      "Capsule": {
+                        "type": "integer"
+                      },
+                      "PurchasedGiveawayCount": {
+                        "type": "object",
+                        "observed_properties": {
+                          "<dynamic-or-unverified-key>": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "BingoEvents": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Coin": {
+                        "type": "integer"
+                      },
+                      "Round": {
+                        "type": "integer"
+                      },
+                      "CellNumbers": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "integer"
+                          }
+                        ]
+                      },
+                      "MarkedIndices": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "integer"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "TurntableEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "MarbleEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "WebEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "VisitorEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "QuizEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "HeroGrowthEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "SlimeJuiceEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "SummonFestivalEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "ReturnEvent": {
+                "type": "null"
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserExpedition": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "Collectibles": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "SpecialCollectiblesPlay": {
+                "type": "string"
+              },
+              "AreaProgresses": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Grade": {
+                        "type": "integer"
+                      },
+                      "DistrictRewards": {
+                        "type": "object",
+                        "observed_properties": {
+                          "<dynamic-or-unverified-key>": {
+                            "type": "array",
+                            "observed_item_schemas": [
+                              {
+                                "type": "integer"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              "StageStates": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "StageState": {
+                        "type": "integer"
+                      },
+                      "MaxScore": {
+                        "type": "integer"
+                      },
+                      "NumCleared": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserGuardianPass": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "SeasonId": {
+                "type": "integer"
+              },
+              "Experience": {
+                "type": "integer"
+              },
+              "FreeRewardClaimedList": {
+                "type": "array",
+                "observed_item_schemas": []
+              },
+              "GoldRewardClaimedList": {
+                "type": "array",
+                "observed_item_schemas": []
+              },
+              "PurchasedGoldPass": {
+                "type": "boolean"
+              },
+              "PassType": {
+                "type": "integer"
+              },
+              "Claimed": {
+                "type": "object",
+                "observed_properties": {
+                  "Free": {
+                    "type": "integer"
+                  },
+                  "Gold": {
+                    "type": "integer"
+                  },
+                  "Platinum": {
+                    "type": "integer"
+                  },
+                  "ExtraExp": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Missions": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Value": {
+                        "type": "integer"
+                      },
+                      "Rewarded": {
+                        "type": "boolean"
+                      },
+                      "RewardedIds": {
+                        "type": "array",
+                        "observed_item_schemas": []
+                      },
+                      "ExpireAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserMerch": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "CraftSlots": {
+                "type": "array",
+                "observed_item_schemas": []
+              },
+              "SlotLimitAdj": {
+                "type": "integer"
+              },
+              "SuperCostumeBonusCount": {
+                "type": "integer"
+              },
+              "UniqueMerchBonusCounts": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "BonusCount": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              },
+              "Parties": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "integer"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "Ticket": {
+                "type": "object",
+                "observed_properties": {
+                  "Type": {
+                    "type": "integer"
+                  },
+                  "PlayCount": {
+                    "type": "integer"
+                  },
+                  "RefillCount": {
+                    "type": "integer"
+                  },
+                  "NextCharge": {
+                    "type": "null"
+                  },
+                  "NextDailyReset": {
+                    "type": "null"
+                  },
+                  "PlayLimitUpgradeExpireTime": {
+                    "type": "null"
+                  }
+                }
+              },
+              "WorldExploreProgresses": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "TreasureIds": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "Cleared": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserMission": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "GuideClaimed": {
+                "type": "string"
+              },
+              "ChallengeClaimed": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Daily": {
+                "type": "object",
+                "observed_properties": {
+                  "Date": {
+                    "type": "string"
+                  },
+                  "Scores": {
+                    "type": "integer"
+                  },
+                  "Rewarded": {
+                    "type": "integer"
+                  },
+                  "Counters": {
+                    "type": "object",
+                    "observed_properties": {
+                      "<dynamic-or-unverified-key>": {
+                        "type": "object",
+                        "observed_properties": {
+                          "Id": {
+                            "type": "integer"
+                          },
+                          "Value": {
+                            "type": "integer"
+                          },
+                          "Rewarded": {
+                            "type": "boolean"
+                          },
+                          "RewardedIds": {
+                            "type": "null"
+                          },
+                          "ExpireAt": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "Event": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Value": {
+                        "type": "integer"
+                      },
+                      "Rewarded": {
+                        "type": "boolean"
+                      },
+                      "RewardedIds": {
+                        "type": "array",
+                        "observed_item_schemas": []
+                      },
+                      "ExpireAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "Compass": {
+                "type": "object",
+                "observed_properties": {
+                  "StepClaimed": {
+                    "type": "integer"
+                  },
+                  "MissionClaimed": {
+                    "type": "string"
+                  }
+                }
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserProgress": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "Followers": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "StageStates": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "LastPlayedStageId": {
+                "type": "integer"
+              },
+              "QuestProgresses": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Grade": {
+                        "type": "integer"
+                      },
+                      "InnerProgress": {
+                        "type": "integer"
+                      },
+                      "CustomStates": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Tutorials": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "TowerInfinity": {
+                "type": "object",
+                "observed_properties": {
+                  "Floor": {
+                    "type": "integer"
+                  },
+                  "Formation": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Positions": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "integer"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              },
+              "Towers": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Floor": {
+                        "type": "integer"
+                      },
+                      "Unlocked": {
+                        "type": "boolean"
+                      },
+                      "Cleared": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              },
+              "RiftEvolveStoneRewards": {
+                "type": "object",
+                "observed_properties": {
+                  "MythIce": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "MythFire": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "MythNone": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "EvolveIce": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "MythEarth": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "MythLight": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "EvolveFire": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "EvolveNone": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "EvolveEarth": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "EvolveLight": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "MythDarkness": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "EvolveDarkness": {
+                    "type": "object",
+                    "observed_properties": {
+                      "UniqueStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              },
+              "KnightTraining": {
+                "type": "null"
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserRecord": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "SummonWeaponCount": {
+                "type": "integer"
+              },
+              "SummonCharacterCount": {
+                "type": "integer"
+              },
+              "AddCharacterExperienceAmount": {
+                "type": "integer"
+              },
+              "EvolveCharacterCount": {
+                "type": "integer"
+              },
+              "EnhanceWeaponCount": {
+                "type": "integer"
+              },
+              "LimitBreakCharacterCount": {
+                "type": "integer"
+              },
+              "LimitBreakWeaponCount": {
+                "type": "integer"
+              },
+              "EvolveWeaponCount": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "ComposeWeaponCount": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "CraftMerchCount": {
+                "type": "integer"
+              },
+              "EnhanceMerchCount": {
+                "type": "integer"
+              },
+              "EvolveMerchCount": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "BuyLobbyShopItemCount": {
+                "type": "integer"
+              },
+              "BuyHeavenHoldShopItemCount": {
+                "type": "integer"
+              },
+              "HeavenHoldBuildCount": {
+                "type": "integer"
+              },
+              "HeavenHoldUpgradeCount": {
+                "type": "integer"
+              },
+              "RiftClearCount": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "GarageClearCount": {
+                "type": "integer"
+              },
+              "CoopVictoryCount": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "CoopStartCount": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "ItemIdCount": {
+                "type": "integer"
+              },
+              "LoginDayCount": {
+                "type": "integer"
+              },
+              "MarketPurchaseCount": {
+                "type": "integer"
+              },
+              "ArenaTrophy": {
+                "type": "integer"
+              },
+              "ArenaRank": {
+                "type": "integer"
+              },
+              "ColosseumTrophy": {
+                "type": "integer"
+              },
+              "ColosseumRank": {
+                "type": "integer"
+              },
+              "KamazonLandClear": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "WorldExploreClearCount": {
+                "type": "integer"
+              },
+              "GuildContentStartCount": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Expedition": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  },
+                  "RelicCount": {
+                    "type": "object",
+                    "observed_properties": {
+                      "<dynamic-or-unverified-key>": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "RelicApply": {
+                    "type": "integer"
+                  },
+                  "RelicInherited": {
+                    "type": "integer"
+                  },
+                  "PlantSeed": {
+                    "type": "integer"
+                  },
+                  "Harvest": {
+                    "type": "integer"
+                  },
+                  "BuyShopItemCount": {
+                    "type": "integer"
+                  },
+                  "UseBait": {
+                    "type": "integer"
+                  },
+                  "SellFish": {
+                    "type": "integer"
+                  },
+                  "ReleaseFish": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Misc": {
+                "type": "object",
+                "observed_properties": {
+                  "SingleRaidBossLevel": {
+                    "type": "integer"
+                  },
+                  "AddFriendCount": {
+                    "type": "integer"
+                  },
+                  "FriendAccept": {
+                    "type": "integer"
+                  },
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  },
+                  "DecomposeJewelCount": {
+                    "type": "integer"
+                  },
+                  "InlaidCount": {
+                    "type": "integer"
+                  },
+                  "AttachJewelCount": {
+                    "type": "integer"
+                  },
+                  "UpgradeJewelCount": {
+                    "type": "integer"
+                  },
+                  "BlessCharacterCount": {
+                    "type": "integer"
+                  },
+                  "ChampionArenaHighestRank": {
+                    "type": "integer"
+                  },
+                  "ChampionArenaHighestTrophy": {
+                    "type": "integer"
+                  },
+                  "DeathMatchHighestRank": {
+                    "type": "integer"
+                  },
+                  "DeathMatchHighestTrophy": {
+                    "type": "integer"
+                  },
+                  "EngraveWeaponCount": {
+                    "type": "integer"
+                  },
+                  "ComplaintClear": {
+                    "type": "integer"
+                  },
+                  "MythCharacterCount": {
+                    "type": "integer"
+                  },
+                  "UpperGarageCount": {
+                    "type": "integer"
+                  },
+                  "OptionChanged": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserShop": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "Purchase": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "PurchaseDaily": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "PurchaseWeekly": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "PurchaseBiweekly": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "PurchaseMonthly": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "NextPurchasedCountResetTime": {
+                "type": "object",
+                "observed_properties": {
+                  "Daily": {
+                    "type": "string"
+                  },
+                  "Weekly": {
+                    "type": "string"
+                  },
+                  "Monthly": {
+                    "type": "string"
+                  },
+                  "Biweekly": {
+                    "type": "string"
+                  }
+                }
+              },
+              "LastDiscountSummonCharacter": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "string"
+                  }
+                }
+              },
+              "LastDiscountSummonWeapon": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "string"
+                  }
+                }
+              },
+              "SurprisePackages": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Count": {
+                        "type": "integer"
+                      },
+                      "SalesTimeTo": {
+                        "type": "string"
+                      },
+                      "ShopItemId": {
+                        "type": "integer"
+                      },
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "EvolveStoneId": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              },
+              "SubscribeItems": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "SummonCeilingCountForCharacter": {
+                "type": "integer"
+              },
+              "SummonCeilingCountForWeapon": {
+                "type": "integer"
+              },
+              "SummonFreeEvent": {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "UsedCount": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SummonPaidGemEvent": {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "UsedHeroCount": {
+                    "type": "integer"
+                  },
+                  "UsedWeaponCount": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "PurchaseLimit": {
+                "type": "object",
+                "observed_properties": {
+                  "UserAge": {
+                    "type": "integer"
+                  },
+                  "Date": {
+                    "type": "integer"
+                  },
+                  "SumJpy": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SummonPickUpTickets": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SelectedSummonCharacters": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "SelectedSummonWeapons": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "CollaborationPickUpTickets": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "StartDashSummon": {
+                "type": "object",
+                "observed_properties": {
+                  "State": {
+                    "type": "integer"
+                  },
+                  "SeasonId": {
+                    "type": "integer"
+                  },
+                  "ExpireTime": {
+                    "type": "string"
+                  },
+                  "Ceiling": {
+                    "type": "boolean"
+                  },
+                  "Count": {
+                    "type": "integer"
+                  },
+                  "ClaimedReward": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SummonPaidGemStepUpEvents": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "DiscountSummonPackage": {
+                "type": "null"
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserWorldClearPass": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "FreeRewardClaimedList": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "GoldRewardClaimedList": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "PurchasedGoldPass": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "SelectedCustomSlots": {
+                "type": "array",
+                "observed_item_schemas": []
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserAchievement": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "ASId": {
+                "type": "integer"
+              },
+              "Points": {
+                "type": "integer"
+              },
+              "Rewarded": {
+                "type": "integer"
+              },
+              "LastChecked": {
+                "type": "string"
+              },
+              "Missions": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "Trophies": {
+                "type": "array",
+                "observed_item_schemas": []
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserFriend": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "Enabled": {
+                "type": "boolean"
+              },
+              "AllowRequest": {
+                "type": "boolean"
+              },
+              "LastChecked": {
+                "type": "string"
+              },
+              "GiftDate": {
+                "type": "string"
+              },
+              "GiftCount": {
+                "type": "integer"
+              },
+              "<dynamic-or-unverified-key>": {
+                "type": "integer"
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserFestivalPass": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "SeasonId": {
+                "type": "integer"
+              },
+              "Experience": {
+                "type": "integer"
+              },
+              "Point": {
+                "type": "integer"
+              },
+              "PassType": {
+                "type": "integer"
+              },
+              "Claimed": {
+                "type": "object",
+                "observed_properties": {
+                  "Free": {
+                    "type": "integer"
+                  },
+                  "Gold": {
+                    "type": "integer"
+                  },
+                  "Platinum": {
+                    "type": "integer"
+                  },
+                  "ExtraExp": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Missions": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Value": {
+                        "type": "integer"
+                      },
+                      "Rewarded": {
+                        "type": "boolean"
+                      },
+                      "RewardedIds": {
+                        "type": "array",
+                        "observed_item_schemas": []
+                      },
+                      "ExpireAt": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "Purchase": {
+                "type": "object",
+                "observed_properties": {
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "GuildMember": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "GuildId": {
+                "type": "integer"
+              },
+              "Type": {
+                "type": "integer"
+              },
+              "TypeAt": {
+                "type": "string"
+              },
+              "JoinAt": {
+                "type": "string"
+              },
+              "LastActiveAt": {
+                "type": "string"
+              },
+              "LastAttendanceAt": {
+                "type": "string"
+              },
+              "AttendanceCount": {
+                "type": "integer"
+              },
+              "Name": {
+                "type": "string"
+              },
+              "GuardianExperience": {
+                "type": "integer"
+              },
+              "GuardianMasteryLevel": {
+                "type": "integer"
+              },
+              "UserRecords": {
+                "type": "object",
+                "observed_properties": {
+                  "ScarecrowBasic": {
+                    "type": "integer"
+                  },
+                  "ScarecrowFire": {
+                    "type": "integer"
+                  },
+                  "ScarecrowIce": {
+                    "type": "integer"
+                  },
+                  "ScarecrowEarth": {
+                    "type": "integer"
+                  },
+                  "ScarecrowLight": {
+                    "type": "integer"
+                  },
+                  "ScarecrowDark": {
+                    "type": "integer"
+                  },
+                  "JoinMessage": {
+                    "type": "null"
+                  }
+                }
+              },
+              "CrystalPoint": {
+                "type": "integer"
+              },
+              "Avatar": {
+                "type": "object",
+                "observed_properties": {
+                  "CharacterId": {
+                    "type": "integer"
+                  },
+                  "SuperCostumeId": {
+                    "type": "integer"
+                  },
+                  "FrameId": {
+                    "type": "integer"
+                  },
+                  "SpriteRank": {
+                    "type": "null"
+                  }
+                }
+              },
+              "Achievement": {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "Points": {
+                    "type": "integer"
+                  },
+                  "Rewarded": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "HashTag": {
+                "type": "string"
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "PurpleCoins": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "object",
+                "observed_properties": {
+                  "Total": {
+                    "type": "integer"
+                  },
+                  "Current": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          "StarPieces": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "object",
+                "observed_properties": {
+                  "Total": {
+                    "type": "integer"
+                  },
+                  "Current": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "route": "/guild/list-item-request",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": true,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "Requests": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "GuildId": {
+                    "type": "integer"
+                  },
+                  "UserId": {
+                    "type": "integer"
+                  },
+                  "ItemId": {
+                    "type": "integer"
+                  },
+                  "Requested": {
+                    "type": "integer"
+                  },
+                  "Received": {
+                    "type": "integer"
+                  },
+                  "DateCreated": {
+                    "type": "string"
+                  },
+                  "Detail": {
+                    "type": "object",
+                    "observed_properties": {
+                      "<dynamic-or-unverified-key>": {
+                        "type": "object",
+                        "observed_properties": {
+                          "Name": {
+                            "type": "string"
+                          },
+                          "HashTag": {
+                            "type": "string"
+                          },
+                          "Total": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Avatar": {
+                    "type": "object",
+                    "observed_properties": {
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "SuperCostumeId": {
+                        "type": "integer"
+                      },
+                      "FrameId": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "Name": {
+                    "type": "string"
+                  },
+                  "HashTag": {
+                    "type": "string"
+                  },
+                  "Cas": {
+                    "type": "null"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "GuildId": {
+                    "type": "integer"
+                  },
+                  "UserId": {
+                    "type": "integer"
+                  },
+                  "ItemId": {
+                    "type": "integer"
+                  },
+                  "Requested": {
+                    "type": "integer"
+                  },
+                  "Received": {
+                    "type": "integer"
+                  },
+                  "DateCreated": {
+                    "type": "string"
+                  },
+                  "Detail": {
+                    "type": "null"
+                  },
+                  "Avatar": {
+                    "type": "object",
+                    "observed_properties": {
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "SuperCostumeId": {
+                        "type": "integer"
+                      },
+                      "FrameId": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "Name": {
+                    "type": "string"
+                  },
+                  "HashTag": {
+                    "type": "string"
+                  },
+                  "Cas": {
+                    "type": "null"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "GuildId": {
+                    "type": "integer"
+                  },
+                  "UserId": {
+                    "type": "integer"
+                  },
+                  "ItemId": {
+                    "type": "integer"
+                  },
+                  "Requested": {
+                    "type": "integer"
+                  },
+                  "Received": {
+                    "type": "integer"
+                  },
+                  "DateCreated": {
+                    "type": "string"
+                  },
+                  "Detail": {
+                    "type": "object",
+                    "observed_properties": {
+                      "<dynamic-or-unverified-key>": {
+                        "type": "object",
+                        "observed_properties": {
+                          "Name": {
+                            "type": "string"
+                          },
+                          "HashTag": {
+                            "type": "string"
+                          },
+                          "Total": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "Avatar": {
+                    "type": "object",
+                    "observed_properties": {
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "SuperCostumeId": {
+                        "type": "integer"
+                      },
+                      "FrameId": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "Name": {
+                    "type": "string"
+                  },
+                  "HashTag": {
+                    "type": "string"
+                  },
+                  "Cas": {
+                    "type": "null"
+                  }
+                }
+              }
+            ]
+          },
+          "ItemsSent": {
+            "type": "object",
+            "observed_properties": {
+              "Sent": {
+                "type": "array",
+                "observed_item_schemas": []
+              }
+            }
+          },
+          "LastRequestedTime": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "route": "/guild/get-my-guild",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": true,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "Hash": {
+            "type": "integer"
+          },
+          "Guild": {
+            "type": "object",
+            "observed_properties": {
+              "Id": {
+                "type": "integer"
+              },
+              "CreatedAt": {
+                "type": "string"
+              },
+              "Name": {
+                "type": "string"
+              },
+              "Emblem": {
+                "type": "integer"
+              },
+              "IsPublic": {
+                "type": "boolean"
+              },
+              "Introduce": {
+                "type": "string"
+              },
+              "Notice": {
+                "type": "string"
+              },
+              "MasterName": {
+                "type": "string"
+              },
+              "MemberCount": {
+                "type": "integer"
+              },
+              "ApplicantCount": {
+                "type": "integer"
+              },
+              "IsApplicable": {
+                "type": "boolean"
+              },
+              "Notices": {
+                "type": "object",
+                "observed_properties": {
+                  "Notice": {
+                    "type": "array",
+                    "observed_item_schemas": []
+                  },
+                  "RepresentativeNotice": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Achievement": {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "Points": {
+                    "type": "integer"
+                  },
+                  "<dynamic-or-unverified-key>": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "GuildMember": {
+            "type": "object",
+            "observed_properties": {}
+          },
+          "GuildMembers": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "UserId": {
+                    "type": "integer"
+                  },
+                  "GuildId": {
+                    "type": "integer"
+                  },
+                  "Type": {
+                    "type": "integer"
+                  },
+                  "TypeAt": {
+                    "type": "string"
+                  },
+                  "JoinAt": {
+                    "type": "string"
+                  },
+                  "LastActiveAt": {
+                    "type": "string"
+                  },
+                  "LastAttendanceAt": {
+                    "type": "string"
+                  },
+                  "AttendanceCount": {
+                    "type": "integer"
+                  },
+                  "Name": {
+                    "type": "string"
+                  },
+                  "GuardianExperience": {
+                    "type": "integer"
+                  },
+                  "GuardianMasteryLevel": {
+                    "type": "integer"
+                  },
+                  "UserRecords": {
+                    "type": "object",
+                    "observed_properties": {
+                      "ScarecrowBasic": {
+                        "type": "integer"
+                      },
+                      "ScarecrowFire": {
+                        "type": "integer"
+                      },
+                      "ScarecrowIce": {
+                        "type": "integer"
+                      },
+                      "ScarecrowEarth": {
+                        "type": "integer"
+                      },
+                      "ScarecrowLight": {
+                        "type": "integer"
+                      },
+                      "ScarecrowDark": {
+                        "type": "integer"
+                      },
+                      "JoinMessage": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "CrystalPoint": {
+                    "type": "integer"
+                  },
+                  "Avatar": {
+                    "type": "object",
+                    "observed_properties": {
+                      "CharacterId": {
+                        "type": "integer"
+                      },
+                      "SuperCostumeId": {
+                        "type": "integer"
+                      },
+                      "FrameId": {
+                        "type": "integer"
+                      },
+                      "SpriteRank": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "Achievement": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Points": {
+                        "type": "integer"
+                      },
+                      "Rewarded": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "HashTag": {
+                    "type": "string"
+                  },
+                  "Cas": {
+                    "type": "null"
+                  }
+                }
+              }
+            ]
+          },
+          "Applicants": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "DismissedMasterName": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "route": "/chat/guild-history/v2",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "History": {
+            "type": "array",
+            "observed_item_schemas": []
+          }
+        }
+      }
+    },
+    {
+      "route": "/collection/list-all",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": true,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "ItemCollections": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "integer"
+              }
+            }
+          },
+          "CustomCollections": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "ItemMastery": {
+            "type": "object",
+            "observed_properties": {
+              "OnehandSword": {
+                "type": "integer"
+              },
+              "TwohandSword": {
+                "type": "integer"
+              },
+              "AssaultRifle": {
+                "type": "integer"
+              },
+              "Bow": {
+                "type": "integer"
+              },
+              "Basket": {
+                "type": "integer"
+              },
+              "Staff": {
+                "type": "integer"
+              },
+              "Gauntlet": {
+                "type": "integer"
+              },
+              "Shield": {
+                "type": "integer"
+              },
+              "Claw": {
+                "type": "integer"
+              },
+              "Accessory": {
+                "type": "integer"
+              },
+              "HeroCostume": {
+                "type": "integer"
+              },
+              "SuperCostume": {
+                "type": "integer"
+              },
+              "Orb": {
+                "type": "integer"
+              },
+              "Jewel": {
+                "type": "integer"
+              },
+              "EquipCostume": {
+                "type": "integer"
+              },
+              "Merch": {
+                "type": "integer"
+              },
+              "Relic": {
+                "type": "integer"
+              }
+            }
+          },
+          "NewItems": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "NewCustomCollections": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "NewItemMastery": {
+            "type": "array",
+            "observed_item_schemas": []
+          }
+        }
+      }
+    },
+    {
+      "route": "/pasture/collection-all",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "PastureMonsterCollections": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "integer"
+              }
+            }
+          },
+          "NewPastureMonsters": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "MaxPastureMonsters": {
+            "type": "array",
+            "observed_item_schemas": []
+          }
+        }
+      }
+    },
+    {
+      "route": "/friend2/has-changes",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "Changed": {
+            "type": "boolean"
+          },
+          "Gift": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "route": "/lobby-village/enter",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": true,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "User": {
+            "type": "object",
+            "observed_properties": {}
+          },
+          "UserLobbyVillage": {
+            "type": "object",
+            "observed_properties": {
+              "UserId": {
+                "type": "integer"
+              },
+              "IsMigrate": {
+                "type": "boolean"
+              },
+              "Manufacture": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Type": {
+                        "type": "integer"
+                      },
+                      "Level": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Buildings": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "SpecId": {
+                        "type": "integer"
+                      },
+                      "Status": {
+                        "type": "integer"
+                      },
+                      "EndTime": {
+                        "type": "integer"
+                      },
+                      "AssetIdx": {
+                        "type": "integer"
+                      },
+                      "DeployVillagers": {
+                        "type": "null"
+                      },
+                      "DeployHeroes": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                ]
+              },
+              "VillagerIds": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "LastHarvestTime": {
+                "type": "object",
+                "observed_properties": {
+                  "SoulPoint": {
+                    "type": "integer"
+                  },
+                  "Gold": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "NextGiftTime": {
+                "type": "string"
+              },
+              "NextShopRefreshTime": {
+                "type": "string"
+              },
+              "SaleProductIds": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "PurchasedShopItemCount": {
+                "type": "object",
+                "observed_properties": {}
+              },
+              "BaseCampParties": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "integer"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "WorkerUsingCount": {
+                "type": "integer"
+              },
+              "VillagerSummonCount": {
+                "type": "integer"
+              },
+              "Airship": {
+                "type": "object",
+                "observed_properties": {
+                  "NextVisitTime": {
+                    "type": "integer"
+                  },
+                  "NextSuperSoulPoint": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "UnlockBuildings": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "SettlerIds": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "Complaints": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "SpecId": {
+                        "type": "integer"
+                      },
+                      "Status": {
+                        "type": "integer"
+                      },
+                      "Interaction": {
+                        "type": "object",
+                        "observed_properties": {}
+                      }
+                    }
+                  }
+                ]
+              },
+              "ServicePoint": {
+                "type": "integer"
+              },
+              "ServicePointRewardStep": {
+                "type": "integer"
+              },
+              "ComplaintDailyResetTime": {
+                "type": "string"
+              },
+              "RefuseCount": {
+                "type": "object",
+                "observed_properties": {
+                  "Type": {
+                    "type": "integer"
+                  },
+                  "PlayCount": {
+                    "type": "integer"
+                  },
+                  "RefillCount": {
+                    "type": "integer"
+                  },
+                  "NextCharge": {
+                    "type": "null"
+                  },
+                  "NextDailyReset": {
+                    "type": "null"
+                  },
+                  "PlayLimitUpgradeExpireTime": {
+                    "type": "null"
+                  }
+                }
+              },
+              "Dispatches": {
+                "type": "array",
+                "observed_item_schemas": []
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "<dynamic-or-unverified-key>": {
+            "type": "object",
+            "observed_properties": {}
+          },
+          "LobbyVillagePrincessAlarm": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "route": "/static-data/check-update",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "UpToDate": {
+            "type": "boolean"
+          },
+          "Checksum": {
+            "type": "string"
+          },
+          "QuitGameWhenStaticDataUpdateNeeded": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "route": "/inbox/list",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "InboxItems": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "UserId": {
+                    "type": "integer"
+                  },
+                  "CreatedAt": {
+                    "type": "string"
+                  },
+                  "ExpireAt": {
+                    "type": "string"
+                  },
+                  "SenderId": {
+                    "type": "integer"
+                  },
+                  "SenderName": {
+                    "type": "string"
+                  },
+                  "Title": {
+                    "type": "object",
+                    "observed_properties": {
+                      "<dynamic-or-unverified-key>": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "Message": {
+                    "type": "object",
+                    "observed_properties": {
+                      "<dynamic-or-unverified-key>": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "Items": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "object",
+                        "observed_properties": {
+                          "ItemId": {
+                            "type": "integer"
+                          },
+                          "CharacterId": {
+                            "type": "integer"
+                          },
+                          "Amount": {
+                            "type": "integer"
+                          },
+                          "Level": {
+                            "type": "integer"
+                          },
+                          "EventId": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "ShopItemId": {
+                    "type": "integer"
+                  },
+                  "<dynamic-or-unverified-key>": {
+                    "type": "null"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "route": "/inbox/check-scheduled-inbox",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "UserClaimedReward": {
+            "type": "object",
+            "observed_properties": {}
+          },
+          "AddedInboxItems": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "route": "/preset/get-presets",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": true,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "UserPartyPreset2": {
+            "type": "object",
+            "observed_properties": {
+              "Presets": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Name": {
+                        "type": "string"
+                      },
+                      "Order": {
+                        "type": "integer"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Name": {
+                        "type": "string"
+                      },
+                      "Order": {
+                        "type": "integer"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "null"
+                              },
+                              "Orb1": {
+                                "type": "null"
+                              },
+                              "Orb2": {
+                                "type": "null"
+                              },
+                              "Merch": {
+                                "type": "null"
+                              },
+                              "Relic": {
+                                "type": "null"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "integer"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Name": {
+                        "type": "string"
+                      },
+                      "Order": {
+                        "type": "integer"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "integer"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Name": {
+                        "type": "string"
+                      },
+                      "Order": {
+                        "type": "integer"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "integer"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                ]
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserMultiPartyPreset": {
+            "type": "object",
+            "observed_properties": {
+              "Presets": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Name": {
+                        "type": "string"
+                      },
+                      "Parties": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Name": {
+                                "type": "string"
+                              },
+                              "Order": {
+                                "type": "integer"
+                              },
+                              "Characters": {
+                                "type": "array",
+                                "observed_item_schemas": [
+                                  {
+                                    "type": "object"
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "Order": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "UserCharacterListPreset": {
+            "type": "object",
+            "observed_properties": {
+              "Presets": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Name": {
+                        "type": "string"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "null"
+                              },
+                              "Orb1": {
+                                "type": "null"
+                              },
+                              "Orb2": {
+                                "type": "null"
+                              },
+                              "Merch": {
+                                "type": "null"
+                              },
+                              "Relic": {
+                                "type": "null"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "null"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "null"
+                              },
+                              "Orb1": {
+                                "type": "null"
+                              },
+                              "Orb2": {
+                                "type": "null"
+                              },
+                              "Merch": {
+                                "type": "null"
+                              },
+                              "Relic": {
+                                "type": "null"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "Order": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Name": {
+                        "type": "string"
+                      },
+                      "Characters": {
+                        "type": "array",
+                        "observed_item_schemas": [
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "null"
+                              },
+                              "Orb2": {
+                                "type": "null"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "null"
+                              },
+                              "Accessory": {
+                                "type": "integer"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "observed_properties": {
+                              "Id": {
+                                "type": "integer"
+                              },
+                              "Weapon1": {
+                                "type": "integer"
+                              },
+                              "Weapon2": {
+                                "type": "integer"
+                              },
+                              "Accessory": {
+                                "type": "null"
+                              },
+                              "Orb1": {
+                                "type": "integer"
+                              },
+                              "Orb2": {
+                                "type": "integer"
+                              },
+                              "Merch": {
+                                "type": "integer"
+                              },
+                              "Relic": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "Order": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                ]
+              },
+              "Cas": {
+                "type": "integer"
+              }
+            }
+          },
+          "<dynamic-or-unverified-key>": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "Healer": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Weapon1": {
+                        "type": "integer"
+                      },
+                      "Weapon2": {
+                        "type": "null"
+                      },
+                      "Accessory": {
+                        "type": "integer"
+                      },
+                      "Orb1": {
+                        "type": "integer"
+                      },
+                      "Orb2": {
+                        "type": "integer"
+                      },
+                      "Merch": {
+                        "type": "integer"
+                      },
+                      "Relic": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "Dealer": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Weapon1": {
+                        "type": "integer"
+                      },
+                      "Weapon2": {
+                        "type": "null"
+                      },
+                      "Accessory": {
+                        "type": "integer"
+                      },
+                      "Orb1": {
+                        "type": "integer"
+                      },
+                      "Orb2": {
+                        "type": "integer"
+                      },
+                      "Merch": {
+                        "type": "integer"
+                      },
+                      "Relic": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "Tanker": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "Weapon1": {
+                        "type": "integer"
+                      },
+                      "Weapon2": {
+                        "type": "integer"
+                      },
+                      "Accessory": {
+                        "type": "integer"
+                      },
+                      "Orb1": {
+                        "type": "integer"
+                      },
+                      "Orb2": {
+                        "type": "integer"
+                      },
+                      "Merch": {
+                        "type": "integer"
+                      },
+                      "Relic": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "route": "/content-book/recommend",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "TowerInfinityFloor": {
+            "type": "integer"
+          },
+          "RogueChessFloor": {
+            "type": "integer"
+          },
+          "RogueChessSweepCount": {
+            "type": "integer"
+          },
+          "CoopExpeditionDailyRandomMatchRewardCount": {
+            "type": "integer"
+          },
+          "CoopExpeditionWeeklyRandomMatchRewardCount": {
+            "type": "integer"
+          },
+          "CoopExpeditionWeeklyClearRewardTotalCount": {
+            "type": "integer"
+          },
+          "ColosseumPlayCount": {
+            "type": "integer"
+          },
+          "ColosseumNextCharge": {
+            "type": "null"
+          },
+          "GuildRaidPlayCount": {
+            "type": "integer"
+          },
+          "GuildRaid2PlayCount": {
+            "type": "integer"
+          },
+          "GuildMeteorPickAxeCount": {
+            "type": "integer"
+          },
+          "GuildPunchKingScore": {
+            "type": "integer"
+          },
+          "ArenaPlayCount": {
+            "type": "integer"
+          },
+          "ChampionArenaPlayCount": {
+            "type": "integer"
+          },
+          "DeathMatchPlayCount": {
+            "type": "integer"
+          },
+          "ChampionQualified": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    {
+      "route": "/summon/on-event",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": true,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "PickUpSeason": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "From": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "string"
+                      },
+                      "Switch": {
+                        "type": "string"
+                      },
+                      "BiliBili": {
+                        "type": "string"
+                      },
+                      "KakaoKorea": {
+                        "type": "string"
+                      },
+                      "KakaoGlobal": {
+                        "type": "string"
+                      },
+                      "Test": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "To": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "string"
+                      },
+                      "Switch": {
+                        "type": "string"
+                      },
+                      "BiliBili": {
+                        "type": "string"
+                      },
+                      "KakaoKorea": {
+                        "type": "string"
+                      },
+                      "KakaoGlobal": {
+                        "type": "string"
+                      },
+                      "Test": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "CollaborationId": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          "PickUpCharacter": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "CharacterOriginId": {
+                        "type": "integer"
+                      },
+                      "SummonCategory": {
+                        "type": "integer"
+                      },
+                      "SeasonId": {
+                        "type": "integer"
+                      },
+                      "SummonEventType": {
+                        "type": "integer"
+                      },
+                      "ChangeWeight": {
+                        "type": "number"
+                      },
+                      "IsNew": {
+                        "type": "boolean"
+                      },
+                      "BannerFilename": {
+                        "type": "null"
+                      },
+                      "MediaFilename": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "PickUpWeapon": {
+            "type": "object",
+            "observed_properties": {
+              "<dynamic-or-unverified-key>": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "object",
+                    "observed_properties": {
+                      "ItemId": {
+                        "type": "integer"
+                      },
+                      "SummonCategory": {
+                        "type": "integer"
+                      },
+                      "SeasonId": {
+                        "type": "integer"
+                      },
+                      "SummonEventType": {
+                        "type": "integer"
+                      },
+                      "ChangeWeight": {
+                        "type": "number"
+                      },
+                      "IsNew": {
+                        "type": "boolean"
+                      },
+                      "BannerFilename": {
+                        "type": "null"
+                      },
+                      "MediaFilename": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "FreeSummonEvent": {
+            "type": "null"
+          },
+          "PaidGemSummonEvent": {
+            "type": "null"
+          },
+          "SelectableSummonEvent": {
+            "type": "null"
+          },
+          "<dynamic-or-unverified-key>": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "SelectableCharacter": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "SummonCategory": {
+                    "type": "integer"
+                  },
+                  "SummonEventType": {
+                    "type": "integer"
+                  },
+                  "CharacterOriginId": {
+                    "type": "integer"
+                  },
+                  "IsNew": {
+                    "type": "boolean"
+                  },
+                  "VersionFrom": {
+                    "type": "object",
+                    "observed_properties": {}
+                  },
+                  "SelectableFrom": {
+                    "type": "object",
+                    "observed_properties": {}
+                  }
+                }
+              }
+            ]
+          },
+          "SelectableWeapon": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "SummonCategory": {
+                    "type": "integer"
+                  },
+                  "SummonEventType": {
+                    "type": "integer"
+                  },
+                  "ItemId": {
+                    "type": "integer"
+                  },
+                  "IsNew": {
+                    "type": "boolean"
+                  },
+                  "VersionFrom": {
+                    "type": "object",
+                    "observed_properties": {}
+                  },
+                  "SelectableFrom": {
+                    "type": "object",
+                    "observed_properties": {}
+                  }
+                }
+              }
+            ]
+          },
+          "StartDashSeason": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "ValidUserCreatedDate": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "string"
+                      },
+                      "Switch": {
+                        "type": "string"
+                      },
+                      "BiliBili": {
+                        "type": "string"
+                      },
+                      "KakaoKorea": {
+                        "type": "string"
+                      },
+                      "KakaoGlobal": {
+                        "type": "string"
+                      },
+                      "Test": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "ExpirationDays": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Default": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "Id": {
+                    "type": "integer"
+                  },
+                  "From": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "string"
+                      },
+                      "Switch": {
+                        "type": "string"
+                      },
+                      "BiliBili": {
+                        "type": "string"
+                      },
+                      "KakaoKorea": {
+                        "type": "string"
+                      },
+                      "KakaoGlobal": {
+                        "type": "string"
+                      },
+                      "Test": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "To": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "string"
+                      },
+                      "Switch": {
+                        "type": "string"
+                      },
+                      "BiliBili": {
+                        "type": "string"
+                      },
+                      "KakaoKorea": {
+                        "type": "string"
+                      },
+                      "KakaoGlobal": {
+                        "type": "string"
+                      },
+                      "Test": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "CollaborationId": {
+                    "type": "integer"
+                  }
+                }
+              }
+            ]
+          },
+          "StartDashCharacter": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "SeasonId": {
+                    "type": "integer"
+                  },
+                  "SummonEventType": {
+                    "type": "integer"
+                  },
+                  "SummonCategory": {
+                    "type": "integer"
+                  },
+                  "CharacterOriginIds": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  },
+                  "VideoPaths": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "StartDashRewards": {
+            "type": "array",
+            "observed_item_schemas": [
+              {
+                "type": "object",
+                "observed_properties": {
+                  "SeasonId": {
+                    "type": "integer"
+                  },
+                  "Count": {
+                    "type": "integer"
+                  },
+                  "Rewards": {
+                    "type": "array",
+                    "observed_item_schemas": [
+                      {
+                        "type": "object",
+                        "observed_properties": {
+                          "ItemId": {
+                            "type": "integer"
+                          },
+                          "CharacterId": {
+                            "type": "integer"
+                          },
+                          "Amount": {
+                            "type": "integer"
+                          },
+                          "Level": {
+                            "type": "integer"
+                          },
+                          "EventId": {
+                            "type": "null"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          },
+          "PaidGemStepUpEventSeason": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "PaidGemStepUpEventCharacter": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "PaidGemStepUpEventReward": {
+            "type": "array",
+            "observed_item_schemas": []
+          },
+          "Checksum": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "route": "/shop/enter",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "UserShop": {
+            "type": "object",
+            "observed_properties": {}
+          },
+          "NeedUpdate": {
+            "type": "boolean"
+          },
+          "RandomSetCostumeData": {
+            "type": "object",
+            "observed_properties": {
+              "Today": {
+                "type": "string"
+              },
+              "SalesIds": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "CheckSum": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "route": "/shop/get-sales-lobbyshop",
+      "response_packet_type": 1,
+      "response_body_type": 2,
+      "outer_lz4": false,
+      "inner_body_lz4": true,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "array",
+        "observed_item_schemas": [
+          {
+            "type": "object",
+            "observed_properties": {
+              "GroupId": {
+                "type": "integer"
+              },
+              "SortNum": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "integer"
+                  },
+                  "Switch": {
+                    "type": "integer"
+                  },
+                  "Default": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SpriteName": {
+                "type": "null"
+              },
+              "SpriteScale": {
+                "type": "null"
+              },
+              "PackageId": {
+                "type": "integer"
+              },
+              "SubscribeId": {
+                "type": "integer"
+              },
+              "PurchasablePeriod": {
+                "type": "integer"
+              },
+              "SoldoutHide": {
+                "type": "boolean"
+              },
+              "HideTimer": {
+                "type": "boolean"
+              },
+              "PurchasableLimitCount": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "integer"
+                  },
+                  "Switch": {
+                    "type": "integer"
+                  },
+                  "Default": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SalesTimeFrom": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "null"
+                  },
+                  "Switch": {
+                    "type": "null"
+                  },
+                  "BiliBili": {
+                    "type": "null"
+                  },
+                  "KakaoKorea": {
+                    "type": "null"
+                  },
+                  "KakaoGlobal": {
+                    "type": "null"
+                  },
+                  "Test": {
+                    "type": "null"
+                  }
+                }
+              },
+              "SalesTimeTo": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "null"
+                  },
+                  "Switch": {
+                    "type": "null"
+                  },
+                  "BiliBili": {
+                    "type": "null"
+                  },
+                  "KakaoKorea": {
+                    "type": "null"
+                  },
+                  "KakaoGlobal": {
+                    "type": "null"
+                  },
+                  "Test": {
+                    "type": "null"
+                  }
+                }
+              },
+              "ProductId": {
+                "type": "object",
+                "observed_properties": {
+                  "AppleStore": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "null"
+                      },
+                      "BiliBili": {
+                        "type": "null"
+                      },
+                      "KakaoKorea": {
+                        "type": "null"
+                      },
+                      "KakaoGlobal": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "GooglePlay": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "null"
+                      },
+                      "BiliBili": {
+                        "type": "null"
+                      },
+                      "KakaoKorea": {
+                        "type": "null"
+                      },
+                      "KakaoGlobal": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                }
+              },
+              "Package": {
+                "type": "null"
+              },
+              "SubscribeItems": {
+                "type": "null"
+              },
+              "VersionFrom": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "null"
+                  },
+                  "Switch": {
+                    "type": "null"
+                  },
+                  "BiliBili": {
+                    "type": "null"
+                  },
+                  "KakaoKorea": {
+                    "type": "null"
+                  },
+                  "KakaoGlobal": {
+                    "type": "null"
+                  }
+                }
+              },
+              "RequirementId": {
+                "type": "integer"
+              },
+              "PurchaseGroup": {
+                "type": "integer"
+              },
+              "StepFactor": {
+                "type": "integer"
+              },
+              "ExpeditionGrades": {
+                "type": "null"
+              },
+              "DreamSpiritStoneBonus": {
+                "type": "integer"
+              },
+              "Id": {
+                "type": "integer"
+              },
+              "Category": {
+                "type": "string"
+              },
+              "SubCategory": {
+                "type": "string"
+              },
+              "Currency": {
+                "type": "integer"
+              },
+              "Prices": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "Description": {
+                "type": "null"
+              },
+              "PurpleCoinId": {
+                "type": "integer"
+              },
+              "SeasonCoinId": {
+                "type": "integer"
+              },
+              "OpenedChapterId": {
+                "type": "integer"
+              },
+              "ClearedStageId": {
+                "type": "integer"
+              },
+              "CollaborationId": {
+                "type": "integer"
+              },
+              "Name": {
+                "type": "string"
+              },
+              "DisplayName": {
+                "type": "null"
+              },
+              "ItemId": {
+                "type": "integer"
+              },
+              "CharacterId": {
+                "type": "integer"
+              },
+              "Amount": {
+                "type": "integer"
+              },
+              "Level": {
+                "type": "integer"
+              },
+              "EventId": {
+                "type": "null"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "observed_properties": {
+              "GroupId": {
+                "type": "integer"
+              },
+              "SortNum": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "integer"
+                  },
+                  "Switch": {
+                    "type": "integer"
+                  },
+                  "Default": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SpriteName": {
+                "type": "null"
+              },
+              "SpriteScale": {
+                "type": "null"
+              },
+              "PackageId": {
+                "type": "integer"
+              },
+              "SubscribeId": {
+                "type": "integer"
+              },
+              "PurchasablePeriod": {
+                "type": "integer"
+              },
+              "SoldoutHide": {
+                "type": "boolean"
+              },
+              "HideTimer": {
+                "type": "boolean"
+              },
+              "PurchasableLimitCount": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "integer"
+                  },
+                  "Switch": {
+                    "type": "integer"
+                  },
+                  "Default": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "SalesTimeFrom": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "null"
+                  },
+                  "Switch": {
+                    "type": "string"
+                  },
+                  "BiliBili": {
+                    "type": "null"
+                  },
+                  "KakaoKorea": {
+                    "type": "null"
+                  },
+                  "KakaoGlobal": {
+                    "type": "null"
+                  },
+                  "Test": {
+                    "type": "null"
+                  }
+                }
+              },
+              "SalesTimeTo": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "null"
+                  },
+                  "Switch": {
+                    "type": "null"
+                  },
+                  "BiliBili": {
+                    "type": "null"
+                  },
+                  "KakaoKorea": {
+                    "type": "null"
+                  },
+                  "KakaoGlobal": {
+                    "type": "null"
+                  },
+                  "Test": {
+                    "type": "null"
+                  }
+                }
+              },
+              "ProductId": {
+                "type": "object",
+                "observed_properties": {
+                  "AppleStore": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "null"
+                      },
+                      "BiliBili": {
+                        "type": "null"
+                      },
+                      "KakaoKorea": {
+                        "type": "null"
+                      },
+                      "KakaoGlobal": {
+                        "type": "null"
+                      }
+                    }
+                  },
+                  "GooglePlay": {
+                    "type": "object",
+                    "observed_properties": {
+                      "Kong": {
+                        "type": "null"
+                      },
+                      "BiliBili": {
+                        "type": "null"
+                      },
+                      "KakaoKorea": {
+                        "type": "null"
+                      },
+                      "KakaoGlobal": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                }
+              },
+              "Package": {
+                "type": "null"
+              },
+              "SubscribeItems": {
+                "type": "null"
+              },
+              "VersionFrom": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "null"
+                  },
+                  "Switch": {
+                    "type": "string"
+                  },
+                  "BiliBili": {
+                    "type": "null"
+                  },
+                  "KakaoKorea": {
+                    "type": "null"
+                  },
+                  "KakaoGlobal": {
+                    "type": "null"
+                  }
+                }
+              },
+              "RequirementId": {
+                "type": "integer"
+              },
+              "PurchaseGroup": {
+                "type": "integer"
+              },
+              "StepFactor": {
+                "type": "integer"
+              },
+              "ExpeditionGrades": {
+                "type": "null"
+              },
+              "DreamSpiritStoneBonus": {
+                "type": "integer"
+              },
+              "Id": {
+                "type": "integer"
+              },
+              "Category": {
+                "type": "string"
+              },
+              "SubCategory": {
+                "type": "string"
+              },
+              "Currency": {
+                "type": "integer"
+              },
+              "Prices": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "Description": {
+                "type": "null"
+              },
+              "PurpleCoinId": {
+                "type": "integer"
+              },
+              "SeasonCoinId": {
+                "type": "integer"
+              },
+              "OpenedChapterId": {
+                "type": "integer"
+              },
+              "ClearedStageId": {
+                "type": "integer"
+              },
+              "CollaborationId": {
+                "type": "integer"
+              },
+              "Name": {
+                "type": "string"
+              },
+              "DisplayName": {
+                "type": "null"
+              },
+              "ItemId": {
+                "type": "integer"
+              },
+              "CharacterId": {
+                "type": "integer"
+              },
+              "Amount": {
+                "type": "integer"
+              },
+              "Level": {
+                "type": "integer"
+              },
+              "EventId": {
+                "type": "null"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "route": "/shop/get-sales-costume-collection-items",
+      "response_packet_type": 1,
+      "response_body_type": 2,
+      "outer_lz4": false,
+      "inner_body_lz4": true,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "array",
+        "observed_item_schemas": []
+      }
+    },
+    {
+      "route": "/shop/get-random-set-costume",
+      "response_packet_type": 1,
+      "response_body_type": 2,
+      "outer_lz4": false,
+      "inner_body_lz4": true,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "array",
+        "observed_item_schemas": [
+          {
+            "type": "object",
+            "observed_properties": {
+              "Id": {
+                "type": "integer"
+              },
+              "KnowledgeCollectionId": {
+                "type": "integer"
+              },
+              "Prices": {
+                "type": "array",
+                "observed_item_schemas": [
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "ValueFactor": {
+                "type": "integer"
+              },
+              "SortNum": {
+                "type": "object",
+                "observed_properties": {
+                  "Kong": {
+                    "type": "integer"
+                  },
+                  "Switch": {
+                    "type": "integer"
+                  },
+                  "Default": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "route": "/content-book/kamazon-red-dot",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "KamazonEventPoint": {
+            "type": "integer"
+          },
+          "KamazonTicket": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    {
+      "route": "/content-book/unexplored-expedition-red-dot",
+      "response_packet_type": 1,
+      "response_body_type": 1,
+      "outer_lz4": false,
+      "inner_body_lz4": false,
+      "implemented_in_local_server": true,
+      "observed_response_schema": {
+        "type": "object",
+        "observed_properties": {
+          "SeasonClaimed": {
+            "type": "boolean"
+          },
+          "SeasonId": {
+            "type": "integer"
+          },
+          "PlayEarnedEventCoin": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  ]
+}
