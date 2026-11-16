@@ -227,6 +227,40 @@ class BootstrapTests(unittest.TestCase):
         self.assertIs(entry["IsActiveEvent"], False)
         self.assertEqual(self.session.store.account.profile(), before)
 
+    def test_empty_event_exchange_preserves_inventory_and_refuses_existing_coupons(self):
+        route = "/user/exchange-summon-pickup-ticket"
+        self.session.handle(
+            request({"AuthKind": 0, "AccessToken": "test-only", "Reconnect": False})
+        )
+        before = self.session.store.account.profile()
+        before["User"]["ItemStackables"] = [
+            {"Id": 1, "ItemId": 110007, "Amount": 20},
+            {"Id": 2, "ItemId": 110015, "Amount": 4},
+        ]
+        before["User"]["ItemIdCounter"] = 2
+        self.db.execute("UPDATE local_account SET profile=?", (json.dumps(before),))
+        self.db.commit()
+        for body in (None, {}):
+            response = json.loads(self.session.handle(request(body, route)).body)
+            self.assertEqual(
+                response,
+                {
+                    "UserShop": before["UserShop"],
+                    "ExchangeSummonPickUpTickets": {},
+                    "ExchangeCollaborationPickUpTickets": {},
+                },
+            )
+            self.assertEqual(self.session.store.account.profile(), before)
+        self.assertEqual(AccountStore(self.db).read(route), response)
+        for field in ("SummonPickUpTickets", "CollaborationPickUpTickets"):
+            existing = json.loads(json.dumps(before))
+            existing["UserShop"][field] = {"1": 1}
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(existing),))
+            self.db.commit()
+            with self.assertRaises(PacketError):
+                self.session.handle(request(None, route))
+            self.assertEqual(self.session.store.account.profile(), existing)
+
     def test_counter_catalog_migration_preserves_completed_guest_and_inventory(self):
         store = self.session.store.account
         info = {

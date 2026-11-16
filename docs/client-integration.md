@@ -103,6 +103,9 @@ The subsequent Use 10 Stamina beginner reward and first Collect 1 Heroes
 challenge reward also passed their APK retries. Later challenge steps and other
 mission groups remain unfinished; see the status record for the exact scope.
 
-Summons entry now supplies an empty local catalog state. Its APK retry remains
-under verification. Performing summons, exchanging pickup tickets and selecting
-characters/weapons are still unimplemented.
+Summons entry now supplies an empty local catalog state. The APK accepted that
+response and requested the automatic pickup-ticket exchange check. That check
+supports empty saved event-coupon maps while preserving inventory tickets; its
+APK retry and complete screen loading succeeded with inventory unchanged. Performing
+summons, converting existing event coupons and selecting characters/weapons are
+still unimplemented.

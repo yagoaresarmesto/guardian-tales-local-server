@@ -6,10 +6,10 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **66 passing tests**, including thirteen first-chapter entry/progress
+The suite has **67 passing tests**, including thirteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
-regressions. It covers real loopback TLS,
+regressions and an empty event-coupon exchange regression. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -113,8 +113,18 @@ pickup catalog. Entry now returns the same checksum as the existing empty
 `/summon/on-event` catalog with inactive events. The lobby regression checks that
 the two checksums agree and that reads leave the account unchanged. This adds
 entry compatibility only; it implements no summon, exchange, selection or
-currency/ticket mutation. The successful APK entry retry is pending in this
-snapshot.
+currency/ticket mutation. The APK accepted entry and then called
+`/user/exchange-summon-pickup-ticket` during scene loading.
+
+That parameterless check now returns two empty exchange dictionaries and the
+saved `UserShop` when its regular/collaboration event-coupon maps are both empty.
+It preserves regular and selectable inventory tickets, balances and counters.
+Nonempty event-coupon maps are rejected unchanged because their conversion rules
+remain unimplemented. The new regression covers preserved ticket stacks,
+restart and refusal to process existing event coupons. The APK retry
+succeeded; the loaded summons screen showed the preserved 20
+summon tickets, four selectable tickets and 400 free gems. The next reported
+error was help tutorial acknowledgment 1003.
 
 ## Economy and preservation limits
 
@@ -147,7 +157,7 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Verify summons entry in the APK, then continue from the next
+1. Implement the reported summons-help acknowledgment, then continue from the next
    user-reported unsupported operation. The earlier
    [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.

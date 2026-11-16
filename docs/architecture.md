@@ -133,6 +133,12 @@ ad viewing/claims.
 whether to reload its catalog. The checksum matches `/summon/on-event`; entry
 does not modify the account or implement the actual summoning operations.
 
+The automatic `/user/exchange-summon-pickup-ticket` check supports an empty
+saved pair of event-coupon maps only. It returns `UserShop` plus empty
+`ExchangeSummonPickUpTickets` and `ExchangeCollaborationPickUpTickets` dictionaries.
+Regular/selectable inventory tickets are a separate resource and remain intact.
+Existing event coupons are rejected until their conversion rules are implemented.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation

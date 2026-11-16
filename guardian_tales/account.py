@@ -54,6 +54,7 @@ ACCOUNT_ROUTES = (
     "/mission/claim-beginner-all",
     "/mission/claim-challenge-all",
     "/ad/init-inbox",
+    "/user/exchange-summon-pickup-ticket",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -911,6 +912,19 @@ class AccountStore:
             # Native callbacks open the inbox; global resource handling consumes
             # UserRecord. Preserve the local ad state without creating rewards.
             return {"UserRecord": self.profile()["UserRecord"]}
+        if route == "/user/exchange-summon-pickup-ticket":
+            if request is not None and request != {}:
+                raise ValueError("Pickup ticket exchange accepts no parameters")
+            shop = self.profile()["UserShop"]
+            if shop["SummonPickUpTickets"] or shop["CollaborationPickUpTickets"]:
+                raise ValueError("Exchange of existing event pickup tickets is not implemented")
+            # These event coupon maps differ from regular/selectable inventory
+            # tickets. No exchange is needed when both saved maps are empty.
+            return {
+                "UserShop": shop,
+                "ExchangeSummonPickUpTickets": {},
+                "ExchangeCollaborationPickUpTickets": {},
+            }
         if route == "/stage/get-stage-progresses":
             result = initial_stage_progresses(request)
             result["StageProgresses"][str(FIRST_STAGE_ID)] = self.stage_progress(FIRST_STAGE_ID)

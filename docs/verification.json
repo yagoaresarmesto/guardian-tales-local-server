@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 66,
+    "tests_run": 67,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -274,6 +274,30 @@
     },
     "scope": "Read-only entry with the existing empty local pickup catalog. No summoning or ticket/currency mutation.",
     "catalog_checksum_regression_passed": true,
-    "original_apk_retry_confirmed": false
+    "original_apk_retry_confirmed": true,
+    "summons_screen_load_confirmed": true
+  },
+  "pickup_exchange_update": {
+    "date": "2026-11-16",
+    "automated_tests": {
+      "result": "PASS",
+      "tests_run": 67,
+      "failures": 0,
+      "errors": 0,
+      "external_network_disabled": true,
+      "network_interfaces": [
+        "lo"
+      ],
+      "python": "3.11.18",
+      "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+    },
+    "route": "/user/exchange-summon-pickup-ticket",
+    "scope": "No exchange when both saved event-coupon maps are empty. Existing coupons are rejected unchanged. Regular/selectable inventory tickets are preserved.",
+    "original_apk_retry_confirmed": true,
+    "converts_existing_coupons": false,
+    "post_retry_inventory": {
+      "summon_tickets": 20,
+      "selectable_summon_tickets": 4
+    }
   }
 }

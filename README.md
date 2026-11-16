@@ -73,6 +73,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | First hero collection challenge | Group 200, step 1: 50 free gems once for the saved starting knight |
 | Ad inbox initialization | Returns saved local ad state; ad playback and reward claims remain pending |
 | Summons screen entry | Empty local catalog checksum and event state; summoning remains pending |
+| Pickup-ticket exchange check | Returns empty results when both event-coupon maps are empty; inventory tickets stay unchanged |
 | Later phases and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |
 
