@@ -98,3 +98,6 @@ rewards for Inn and knight level 2. Optional collectibles, later phases,
 general hero training and other progression remain unfinished. Unsupported game operations can
 produce the client's connection-lost dialog. See [status](status.md) for the
 precise verified scope.
+
+The subsequent Use 10 Stamina beginner reward is implemented and covered by
+automated checks. Its APK retry result is tracked separately in the status record.

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""The Inn beginner mission grants its whole reward once, including its ticket stack."""
+"""Supported beginner missions grant complete rewards once, including shared stacks."""
 
 import base64
 import json
@@ -130,3 +130,67 @@ class InnMissionTests(unittest.TestCase):
             GuestStore(self.db).account.claim_beginner_missions({"missionIds": [1]}), response
         )
         self.assertEqual(self.account.profile(), saved)
+
+    def test_stamina_reward_uses_spent_counters_and_survives_restart(self):
+        self.profile["UserProgress"]["StageStates"] = {}
+        self.profile["User"]["ItemStackables"] = [{"Id": 42, "ItemId": 110015, "Amount": 3}]
+        self.profile["User"]["ItemIdCounter"] = 42
+        self.profile["UserMission"]["GuideClaimed"] = base64.b64encode(b"\x80\x04").decode()
+        for asset in self.profile["User"]["Assets"]:
+            if asset["Id"] in (70006, 70032):
+                asset["Amount"] = 5 if asset["Id"] == 70006 else 10
+        self.save()
+        with self.assertRaises(PacketError):
+            self.claim([9])
+        self.assertEqual(self.account.profile(), self.profile)
+        self.account.start_stage({"StageId": 100010001})
+        before = self.account.profile()
+        response = self.claim([9, 9])
+        saved = self.account.profile()
+        self.assertEqual(base64.b64decode(saved["UserMission"]["GuideClaimed"]), b"\x80\x06")
+        self.assertEqual(
+            [(i["ItemId"], i["Amount"]) for i in response["AddedItems"]],
+            [(110007, 20), (110015, 1)],
+        )
+        self.assertEqual(
+            {i["ItemId"]: (i["Id"], i["Amount"]) for i in saved["User"]["ItemStackables"]},
+            {110015: (42, 4), 110007: (43, 20)},
+        )
+        self.assertEqual(saved["User"]["Assets"], before["User"]["Assets"])
+        self.assertEqual(saved["UserProgress"], before["UserProgress"])
+        self.assertEqual(
+            GuestStore(self.db).account.claim_beginner_missions({"missionIds": [9]}), response
+        )
+        self.assertEqual(self.account.profile(), saved)
+
+    def test_stamina_threshold_and_unsupported_batches_do_not_change_profile(self):
+        charged = next(a for a in self.profile["User"]["Assets"] if a["Id"] == 70006)
+        charged["Spent"] = 9
+        self.save()
+        with self.assertRaises(PacketError):
+            self.claim([9])
+        self.assertEqual(self.account.profile(), self.profile)
+        charged["Spent"] = 10
+        self.save()
+        for ids in ([9, 0], [9, True], [10], [[9]]):
+            with self.subTest(ids=ids), self.assertRaises(PacketError):
+                self.claim(ids)
+        self.assertEqual(self.account.profile(), self.profile)
+        self.claim([9])
+        self.assertEqual(
+            self.db.execute("SELECT mission_id FROM beginner_mission_claims").fetchall(), [(9,)]
+        )
+
+    def test_stamina_reward_write_failure_rolls_back_both_stacks_and_claim(self):
+        next(a for a in self.profile["User"]["Assets"] if a["Id"] == 70032)["Spent"] = 10
+        self.save()
+        self.db.execute(
+            "CREATE TRIGGER reject_stamina BEFORE UPDATE ON local_account BEGIN SELECT RAISE(ABORT, 'test'); END"
+        )
+        self.db.commit()
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.claim([9])
+        self.assertEqual(self.account.profile(), self.profile)
+        self.assertEqual(
+            self.db.execute("SELECT count(*) FROM beginner_mission_claims").fetchone(), (0,)
+        )

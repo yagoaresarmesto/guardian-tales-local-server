@@ -30,6 +30,7 @@ flowchart LR
 | `bootstrap.py` | Connection sign-in state, guest identity/credentials and game API dispatch |
 | `account.py` | SQLite profile, campaign receipts, prologue completion, migrations and attendance claims |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
+| `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |
 | `assets.py` | Separate manifest-backed HTTP resource server |
@@ -107,9 +108,11 @@ updates character experience and the spending counter, and records a one-time
 training receipt. Retries return the current saved user; general repeated
 training needs a separate retry contract before it can be supported safely.
 
-Beginner mission claims currently accept only Inn (0) or knight level 2 (1), one
+Beginner mission claims currently accept Inn (0), knight level 2 (1) or spending
+ten stamina (9), one
 distinct mission per batch. Prerequisites are checked against saved clear/training
-state. The transaction updates asset balances, shared ticket/material inventory,
+state or the sum of charged/reserve `Spent` counters. The transaction updates
+asset balances, shared ticket/material inventory,
 the base64 `GuideClaimed` bit array and a frozen reward receipt. A retry reuses
 the original item IDs and reward notice while returning current account state.
 Other missions and mixed batches remain unsupported.

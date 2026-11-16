@@ -6,9 +6,9 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **59 passing tests**, including thirteen first-chapter entry/progress
+The suite has **62 passing tests**, including thirteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
-regression and five beginner-reward regressions. It covers real loopback TLS,
+regression and eight beginner-reward regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -75,6 +75,24 @@ reward receipts persist together with balances and shared inventory stacks.
 Retries grant nothing further. Only these two missions in separate batches are
 implemented; other missions and mixed claim batches are rejected atomically.
 
+## Subsequent stamina-mission fix
+
+The resumed client reported `/mission/claim-beginner-all` with `missionIds: [9]`
+from the **Use 10 Stamina** reward. Its public catalog requires ten spent stamina
+and grants 20 summon tickets (110007) and one selectable summon ticket (110015).
+The native `UsedStamina` getter sums the charged and reserve assets' `Spent`
+fields; the server now checks those saved counters before granting this reward.
+
+Missions 0, 1 and 9 share the same transactional handler and existing receipt
+table. Mission 9 sets bit 9 of `GuideClaimed`, extending the byte array while
+preserving the prior claims. Shared ticket stacks and frozen reward notices
+retain their inventory IDs across retries. Tests cover the spending threshold,
+split charged/reserve spending, malformed/mixed batches, restart and rollback.
+The fix is deployed in the prepared lab; its successful APK retry is not yet
+recorded in this verification snapshot.
+
+## Economy and preservation limits
+
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
 known monster handle: 79 experience and 87 gold. This is a provisional **local
 rule**, not a verified reconstruction of official server rates, multipliers or
@@ -104,8 +122,9 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Reopen and verify the final saved checkpoint, then implement the visible
-   Use 10 Stamina beginner reward. See the [checkpoint and resume notes](first-phase-checkpoint.md).
+1. Verify the deployed stamina-mission fix in the APK, then continue from the
+   next user-reported unsupported operation. The earlier
+   [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 2. Finish Inn's optional collectible/custom-state contracts and battle validation.
 3. Implement later campaign phases and their progression/reward rules.
 4. Implement item/random daily rewards and the remaining inventory operations.

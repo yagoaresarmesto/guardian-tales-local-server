@@ -1,5 +1,8 @@
 # Inn checkpoint — 2026-11-16
 
+This is the historical Inn-clear checkpoint. Later fixes and current test counts
+are recorded in [verification status](status.md).
+
 The unmodified Android 3.57.0 Google Play European client completed **Inn's main
 clear path** against the local services with emulator Internet egress blocked.
 This is the first campaign phase, not the whole first chapter. The prepared
