@@ -24,6 +24,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `static_data_get.bin` | `/static-data/get` | Body type 2; version/checksum bootstrap body |
 | `static_data_check.bin` | `/static-data/check-update` | Body type 1 reference body |
 | `attendance_catalog.json` | Daily attendance reward lookup | Parsed public attendance catalog, not account state |
+| `training_catalog.json` | Knight experience targets and story caps | Parsed public experience catalog for the matching build |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -37,6 +38,14 @@ The attendance reader expects `origin_group`, `active_group`, and `groups`, wher
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.
 `tests/fixtures/reference/attendance_catalog.json` illustrates that structure with
 synthetic test rows. It is intentionally not a complete monthly catalog.
+
+The optional training catalog contains `experience_by_level`, an increasing
+integer array whose index 0 is level 1's zero experience, and `caps`, ordered
+objects containing `opened_stage_id` and `max_level`. The first cap is the default;
+later rows apply when their stage has its opened flag. Resolve build-specific
+values before supplying this file. The synthetic fixture illustrates the schema
+with test thresholds; it must not be used with an APK. Without this file, only
+the original one-time knight tutorial is supported.
 
 ## Preservation manifest
 

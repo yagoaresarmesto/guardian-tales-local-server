@@ -1,0 +1,8 @@
+{
+  "_note": "Synthetic thresholds for validation; not a usable game catalog.",
+  "experience_by_level": [0, 37, 100, 200, 350, 550, 800],
+  "caps": [
+    {"opened_stage_id": 0, "max_level": 4},
+    {"opened_stage_id": 100020001, "max_level": 6}
+  ]
+}

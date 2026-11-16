@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 76,
+    "tests_run": 84,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -404,5 +404,22 @@
     "automated_tests_run": 76,
     "existing_lobby_read_regression_passed": true,
     "original_apk_retry_confirmed": true
+  },
+  "catalog_training_update": {
+    "date": "2026-11-16",
+    "route": "/user/add-character-experience",
+    "scope": "Catalog level targets and story caps for owned knights without limit breaks or blessings. Atomic batches; costs are not individually allowlisted.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 84,
+    "request_epoch_sequence_reconnect_and_rollback_checked": true,
+    "original_apk_costs_accepted": [74, 111, 559],
+    "post_retry_character_experience": 781,
+    "post_retry_unspent_experience": 9,
+    "observed_reconnect_flag": true,
+    "pending_training_sequence": 105,
+    "reconnect_sign_in_sequence": 108,
+    "forced_original_client_replay_tested": false,
+    "next_boundary": "Tutorial acknowledgment 205",
+    "fresh_login_replay_ambiguity": "A new application request epoch cannot identify every replay of identical deltas. The fallback only recognizes completed requests whose new target would be invalid."
   }
 }

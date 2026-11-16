@@ -47,6 +47,7 @@ from .passes import (
     FIRST_PASS_STAMINA,
 )
 from .reference import ReferenceData
+from .training import train_characters
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS
 
 ACCOUNT_ROUTES = (
@@ -160,6 +161,9 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS first_knight_training (character_id INTEGER PRIMARY KEY, experience INTEGER NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS character_training_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, targets TEXT NOT NULL)"
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS beginner_mission_claims (mission_id INTEGER PRIMARY KEY, rewards TEXT NOT NULL)"
@@ -836,7 +840,12 @@ class AccountStore:
             "AddedPoint": FIRST_FESTIVAL_POINTS,
         }
 
-    def add_character_experience(self, request):
+    def add_character_experience(self, request, operation_id=None):
+        if (self.references.directory / "training_catalog.json").is_file():
+            return train_characters(self, request, operation_id)
+        return self._initial_knight_training(request)
+
+    def _initial_knight_training(self, request):
         """Apply the observed post-Inn knight level 1-to-2 tutorial once.
 
         Experiences contains deltas, not target totals. This narrow operation

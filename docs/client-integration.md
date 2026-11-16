@@ -93,7 +93,9 @@ The first story phase, Inn, can be unlocked, entered and cleared through its mai
 exit. Quest checkpoints, purple coins, named pickups, the glove chest and the
 50-gem first-clear reward persist. The APK returned to the world map and reopened
 the saved account after restart. The initial knight level 1-to-2 tutorial also
-works for its observed 37-experience cost. The mission book accepts the beginner
+works for its observed 37-experience cost. With the matching external training
+catalog, later knight level-ups and multi-level spending also work; the APK
+accepted subsequent costs of 74, 111 and 559 experience. The mission book accepts the beginner
 rewards for Inn and knight level 2. Optional collectibles, later phases,
 general hero training and other progression remain unfinished. Unsupported game operations can
 produce the client's connection-lost dialog. See [status](status.md) for the

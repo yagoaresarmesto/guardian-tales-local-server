@@ -62,7 +62,7 @@ class LocalServer:
             starter_profile_implemented=True,
             first_phase_entry_implemented=True,
             first_phase_clear_implemented=True,
-            knight_training_scope="initial_level_1_to_2_tutorial_only",
+            knight_training_scope="catalog_levels_and_story_cap_for_unmodified_knights; initial_tutorial_fallback_without_catalog",
             campaign_scope="inn_clear_path; optional_interactions_and_later_phases_pending",
             full_game_implemented=False,
             prologue_selection_saved=not self.guests.account.needs_prologue(),

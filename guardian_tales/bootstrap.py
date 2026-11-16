@@ -57,7 +57,19 @@ class GuestStore:
             "INSERT OR IGNORE INTO guest(id,uuid,created_at) VALUES(1,?,?)",
             (str(uuid.uuid4()), utc_now()),
         )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS client_request_state (id INTEGER PRIMARY KEY CHECK(id=1), epoch TEXT NOT NULL)"
+        )
+        db.execute("INSERT OR IGNORE INTO client_request_state VALUES(1,?)", (str(uuid.uuid4()),))
         db.commit()
+
+    def request_epoch(self, reconnect):
+        with self.db:
+            if not reconnect:
+                self.db.execute(
+                    "UPDATE client_request_state SET epoch=? WHERE id=1", (str(uuid.uuid4()),)
+                )
+        return self.db.execute("SELECT epoch FROM client_request_state WHERE id=1").fetchone()[0]
 
     def platform_credentials(self):
         """Generate this server's own guest token; never copy official tokens."""
@@ -160,6 +172,7 @@ class BootstrapSession:
     def __init__(self, store):
         self.store = store
         self.signed_in = False
+        self.request_epoch = None
 
     def handle(self, request):
         if (
@@ -198,6 +211,7 @@ class BootstrapSession:
                 # Fresh signup precedes API sign-in. ServerTimeHandler and
                 # MyUserKeyHandler consume the same keys as the sign-in response.
                 self.signed_in = True
+                self.request_epoch = self.store.request_epoch(False)
                 return json_response(request, self.store.sign_in())
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
@@ -253,7 +267,11 @@ class BootstrapSession:
                     raise PacketError(str(exc)) from exc
             if route == "/user/add-character-experience":
                 try:
-                    return json_response(request, self.store.account.add_character_experience(body))
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.add_character_experience(body, operation_id)
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/mission/claim-beginner-all":
@@ -353,5 +371,6 @@ class BootstrapSession:
             # AccessToken is deliberately not retained. All connections in this
             # local development instance use the same isolated guest identity.
             value = self.store.sign_in()
+            self.request_epoch = self.store.request_epoch(body["Reconnect"])
             self.signed_in = True
         return json_response(request, value)

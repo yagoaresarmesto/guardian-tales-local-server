@@ -106,11 +106,19 @@ Only requested IDs are saved, with no system unlocks or rewards. Mixed tutorial
 batches are validated before any acknowledgment is saved.
 
 The next tutorial sends `/user/add-character-experience` with a character-ID
-dictionary of experience deltas. Only the observed starting knight's 37-point
-level 1-to-2 upgrade is supported. Its transaction subtracts the asset balance,
-updates character experience and the spending counter, and records a one-time
-training receipt. Retries return the current saved user; general repeated
-training needs a separate retry contract before it can be supported safely.
+dictionary of experience deltas. With an external training catalog, owned knights
+without limit breaks or blessings can reach any listed level within the saved
+story cap. Batches share one experience balance and are validated before any
+mutation. One transaction saves the character totals, balance, spending counter
+and request receipt. Costs are data, not individual allowlisted amounts.
+
+Request receipts use the packet sequence ID within a persisted client request
+epoch. `Reconnect: true` retains that epoch; a fresh sign-in starts another, so
+a new request can legitimately spend the same amount or reuse a sequence ID.
+Replays return current state without spending again. After a fresh session, a
+matching completed request is recognized only when its proposed new target is
+invalid; this cannot infer every ambiguous replay across a fresh client launch.
+Without the catalog, the original one-time 37-point tutorial remains available.
 
 Beginner mission claims currently accept Inn (0), knight level 2 (1) or spending
 ten stamina (9), one

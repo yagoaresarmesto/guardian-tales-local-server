@@ -6,12 +6,14 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **76 passing tests**, including fourteen first-chapter entry/progress
+The suite has **84 passing tests**, including fourteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
 Pass reward regressions and four initial Festival Pass reward regressions.
-It covers real loopback TLS,
+Eight additional catalog-training regressions cover variable costs, multi-level
+targets, batches, story caps, shared balances, request identity, reconnect,
+sequence reuse, legacy receipts and rollback. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -61,9 +63,23 @@ The saved inventory still contained the shield, costume and gloves. The next
 lobby tutorial directed the player to hero level-up. Its captured request spends
 37 experience on the starting knight. The APK accepted the implemented response
 and displayed **Lv.1 → Lv.2**; the saved experience balance changed from 790 to
-753. Only this first tutorial upgrade is supported. Other amounts, characters
-and later training steps are rejected. Its receipt makes reconnect/restart
-retries return the saved result without spending another 37 experience.
+753. This initial tutorial remains the fallback when the external training
+catalog is absent. Its receipt preserves older saves without charging again.
+
+The subsequent 74-point request exposed that tutorial-only limit. Training now
+uses the matching external experience catalog and story caps, with atomic batch
+validation and request receipts independent of the amount spent. The native
+popup computes a target's total experience minus the current character total.
+The APK accepted 74, 111 and 559 points in succession, taking the knight from 37
+to 781 accumulated experience and the unspent balance from 753 to 9. The last
+request crossed several levels. The observed reconnect used `Reconnect: true`
+and retained pending request sequence 105 while sign-in used sequence 108.
+The supplied normal-build catalog has 220 thresholds and a base cap of 99.
+Support covers owned knights without limit breaks/blessings; other hero types
+and advanced level-cap modifiers remain pending. Request identity relies on the
+client's reconnect flag and sequence IDs; arbitrary identical requests replayed
+after a fresh application login can be ambiguous. No original-client replay of
+a completed training request was forced during this playtest.
 
 Opening the mission book then requested tutorial 1007, whose public configuration
 names the `MissionAchievements` help popup. Its acknowledgment is now saved and
