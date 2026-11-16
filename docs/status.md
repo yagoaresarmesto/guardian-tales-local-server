@@ -6,8 +6,9 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **53 passing tests**, including thirteen first-chapter entry/progress
-regressions and four initial knight training regressions. It covers real loopback TLS,
+The suite has **54 passing tests**, including thirteen first-chapter entry/progress
+regressions, four initial knight training regressions and a mission-help tutorial
+regression. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -60,6 +61,11 @@ and displayed **Lv.1 → Lv.2**; the saved experience balance changed from 790 t
 753. Only this first tutorial upgrade is supported. Other amounts, characters
 and later training steps are rejected. Its receipt makes reconnect/restart
 retries return the saved result without spending another 37 experience.
+
+Opening the mission book then requested tutorial 1007, whose public configuration
+names the `MissionAchievements` help popup. Its acknowledgment is now saved and
+the APK's retry passed. It is independent of training; this adds no mission
+rewards or claims.
 
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
 known monster handle: 79 experience and 87 gold. This is a provisional **local

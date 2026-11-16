@@ -266,6 +266,7 @@ class ChapterProgressTests(unittest.TestCase):
         self.assertEqual(restarted.profile(), saved)
 
     def test_completion_tutorial_requires_clear_and_deduplicates_across_restart(self):
+        self.complete_prologue()
         with self.assertRaises(PacketError):
             self.session.handle(request("/user/mark-tutorial", {"tutorialIds": [200]}))
         profile = self.store.account.profile()

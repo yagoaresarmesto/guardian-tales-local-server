@@ -96,6 +96,9 @@ the same completion after restart returns the saved progress without another
 reward. This phase has no configured `StageSpec.Rewards` or `FailRewards`; its
 grade reward is separate. The observed post-clear tutorial ID 200 is persisted
 once and returned in `UserProgress` so the client's resource handler sees it.
+Mission-book help tutorial 1007 is also recorded once after local account
+creation, independently of campaign completion or training. Mixed tutorial
+batches are validated before any acknowledgment is saved.
 
 The next tutorial sends `/user/add-character-experience` with a character-ID
 dictionary of experience deltas. Only the observed starting knight's 37-point

@@ -610,20 +610,34 @@ class AccountStore:
         return {"User": user, "UserRecord": record}
 
     def mark_tutorial(self, request):
-        """Persist the tutorial acknowledgment observed immediately after Inn clears."""
+        """Persist the observed Inn-clear and mission-book help tutorials."""
         if (
             not isinstance(request, dict)
             or not isinstance(request.get("tutorialIds"), list)
             or not 1 <= len(request["tutorialIds"]) <= 8
-            or any(type(value) is not int or value != 200 for value in request["tutorialIds"])
+            or any(
+                type(value) is not int or value not in (200, 1007)
+                for value in request["tutorialIds"]
+            )
         ):
-            raise ValueError("Only the first-phase completion tutorial is implemented")
+            raise ValueError(
+                "Only the Inn completion and mission-book help tutorials are implemented"
+            )
         profile = self.profile()
         progress = profile["UserProgress"]
-        if not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED:
+        if self.needs_prologue():
+            raise ValueError("Finish local account creation before recording tutorials")
+        if (
+            200 in request["tutorialIds"]
+            and not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED
+        ):
             raise ValueError("Complete Inn before acknowledging its completion tutorial")
-        if 200 not in progress["Tutorials"]:
-            progress["Tutorials"].append(200)
+        changed = False
+        for tutorial in request["tutorialIds"]:
+            if tutorial not in progress["Tutorials"]:
+                progress["Tutorials"].append(tutorial)
+                changed = True
+        if changed:
             progress["Cas"] += 1
             with self.db:
                 self.db.execute(

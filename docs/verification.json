@@ -70,7 +70,7 @@
     "date": "2026-11-16",
     "automated_tests": {
       "result": "PASS",
-      "tests_run": 53,
+      "tests_run": 54,
       "failures": 0,
       "errors": 0,
       "external_network_disabled": true,
@@ -93,7 +93,8 @@
       "Completion tutorial 200 accepted.",
       "After replaying the saved completion through the idempotent reward handler, backend/APK restart displayed 50 gems, 870 gold and 25 reserve stamina.",
       "Saved inventory retained shield, costume and gloves; the next observed tutorial points to hero level-up.",
-      "Starting knight level-up request spent 37 experience once; APK displayed Lv.1 to Lv.2 and saved experience balance became 753."
+      "Starting knight level-up request spent 37 experience once; APK displayed Lv.1 to Lv.2 and saved experience balance became 753.",
+      "Mission-book help tutorial 1007 acknowledgment accepted; mission reward claims remain pending."
     ],
     "monster_drop_rule": "Provisional local level-1 catalog row: 79 experience and 87 gold per new known handle; official rates/multipliers/random drops unverified.",
     "source_only": true,

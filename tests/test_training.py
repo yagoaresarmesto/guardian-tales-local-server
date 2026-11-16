@@ -115,3 +115,17 @@ class FirstKnightTrainingTests(unittest.TestCase):
         self.assertEqual(
             self.db.execute("SELECT count(*) FROM first_knight_training").fetchone(), (0,)
         )
+
+    def test_mission_help_tutorial_is_independent_and_batches_are_atomic(self):
+        account = self.store.account
+        self.profile["UserProgress"]["StageStates"] = {}
+        self.save_profile()
+        with self.assertRaises(ValueError):
+            account.mark_tutorial({"tutorialIds": [1007, 200]})
+        self.assertEqual(account.profile(), self.profile)
+        response = account.mark_tutorial({"tutorialIds": [1007, 1007]})
+        self.assertEqual(response["UserProgress"]["Tutorials"], [1007])
+        saved = account.profile()
+        restarted = GuestStore(self.db).account
+        self.assertEqual(restarted.mark_tutorial({"tutorialIds": [1007]}), response)
+        self.assertEqual(restarted.profile(), saved)
