@@ -6,9 +6,9 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **54 passing tests**, including thirteen first-chapter entry/progress
+The suite has **59 passing tests**, including thirteen first-chapter entry/progress
 regressions, four initial knight training regressions and a mission-help tutorial
-regression. It covers real loopback TLS,
+regression and five beginner-reward regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
 migrations, daily reward retry handling, manifest-backed resource reads, empty
@@ -64,8 +64,16 @@ retries return the saved result without spending another 37 experience.
 
 Opening the mission book then requested tutorial 1007, whose public configuration
 names the `MissionAchievements` help popup. Its acknowledgment is now saved and
-the APK's retry passed. It is independent of training; this adds no mission
-rewards or claims.
+the APK's retry passed. It is independent of training.
+
+The mission book's beginner claims for Inn (ID 0) and knight level 2 (ID 1) now
+work. The pinned public catalog gives mission 0 three selectable summon tickets,
+300 free gems and 50 reserve stamina; mission 1 gives 20 reserve stamina and
+200 low awakening stones. The APK accepted both requests, displayed the second
+reward notice, and showed 350 gems and 95 reserve stamina. Claim flags and frozen
+reward receipts persist together with balances and shared inventory stacks.
+Retries grant nothing further. Only these two missions in separate batches are
+implemented; other missions and mixed claim batches are rejected atomically.
 
 Monster gold/experience currently uses one public level-1 `ExpsData` row per new
 known monster handle: 79 experience and 87 gold. This is a provisional **local

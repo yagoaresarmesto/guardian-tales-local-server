@@ -69,7 +69,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
 | Initial knight level-up tutorial | Level 1 to 2 for 37 experience once; general training remains pending |
-| Mission-book help | Initial help acknowledgment persists; mission rewards remain pending |
+| Mission book | Help acknowledgment and beginner rewards for Inn and knight level 2 persist; other missions pending |
 | Later phases and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |
 

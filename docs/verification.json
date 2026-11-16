@@ -70,7 +70,7 @@
     "date": "2026-11-16",
     "automated_tests": {
       "result": "PASS",
-      "tests_run": 54,
+      "tests_run": 59,
       "failures": 0,
       "errors": 0,
       "external_network_disabled": true,
@@ -94,12 +94,15 @@
       "After replaying the saved completion through the idempotent reward handler, backend/APK restart displayed 50 gems, 870 gold and 25 reserve stamina.",
       "Saved inventory retained shield, costume and gloves; the next observed tutorial points to hero level-up.",
       "Starting knight level-up request spent 37 experience once; APK displayed Lv.1 to Lv.2 and saved experience balance became 753.",
-      "Mission-book help tutorial 1007 acknowledgment accepted; mission reward claims remain pending."
+      "Mission-book help tutorial 1007 acknowledgment accepted; mission reward claims remain pending.",
+      "Beginner mission 0 accepted: 300 free gems, 50 reserve stamina and three selectable summon tickets saved.",
+      "Beginner mission 1 accepted: APK displayed 20 reserve stamina and 200 low awakening stones, with balances 350 gems and 95 reserve stamina."
     ],
     "monster_drop_rule": "Provisional local level-1 catalog row: 79 experience and 87 gold per new known handle; official rates/multipliers/random drops unverified.",
     "source_only": true,
     "first_phase_clear_path_completed": true,
     "full_campaign_completed": false,
-    "training_scope": "Only starting knight level 1-to-2 tutorial; no general training retry contract claimed."
+    "training_scope": "Only starting knight level 1-to-2 tutorial; no general training retry contract claimed.",
+    "beginner_mission_scope": "IDs 0 and 1 only, in separate batches; persistent reward receipts and claim bits. Other missions and mixed batches rejected."
   }
 }

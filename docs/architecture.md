@@ -107,6 +107,13 @@ updates character experience and the spending counter, and records a one-time
 training receipt. Retries return the current saved user; general repeated
 training needs a separate retry contract before it can be supported safely.
 
+Beginner mission claims currently accept only Inn (0) or knight level 2 (1), one
+distinct mission per batch. Prerequisites are checked against saved clear/training
+state. The transaction updates asset balances, shared ticket/material inventory,
+the base64 `GuideClaimed` bit array and a frozen reward receipt. A retry reuses
+the original item IDs and reward notice while returning current account state.
+Other missions and mixed batches remain unsupported.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation
