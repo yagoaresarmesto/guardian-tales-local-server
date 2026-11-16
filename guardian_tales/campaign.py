@@ -17,6 +17,11 @@ CHARGED_STAMINA = 70006
 RESERVE_STAMINA = 70032
 FIRST_PURPLE_COIN = 71001
 FIRST_PURPLE_COIN_KEYS = range(1, 27)
+# Native StageProgress uses separate stores for purple coins (2) and star pieces (3).
+FIRST_STAGE_PICKUPS = {
+    FIRST_PURPLE_COIN: (2, FIRST_PURPLE_COIN_KEYS),
+    70005: (3, range(1, 4)),
+}
 # Public first-phase monster handles, in their tilemap name-table order.
 FIRST_MONSTERS = {
     name: index

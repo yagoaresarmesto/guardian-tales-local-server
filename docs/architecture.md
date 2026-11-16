@@ -84,7 +84,7 @@ saved in `UserProgress`; neither operation marks the phase cleared. The native
 quest callbacks update their own in-memory quest objects, so their responses do
 not send a second copy of `UserProgress`.
 
-Purple coins, named items and known defeated monster handles have per-stage
+Purple coins, star pieces, named items and known defeated monster handles have per-stage
 receipts. Their native progress stores are encoded as version 2: a store count,
 category IDs, byte-indexed boolean bitmaps, signed 32-bit integer overrides and
 a trailing `StonePieces` byte (currently zero). Repeated or overlapping requests do not repeat grants.

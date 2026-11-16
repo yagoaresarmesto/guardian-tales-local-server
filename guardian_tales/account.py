@@ -19,10 +19,9 @@ from .campaign import (
     FIRST_MONSTER_EXP,
     FIRST_MONSTER_GOLD,
     FIRST_MONSTERS,
-    FIRST_PURPLE_COIN,
-    FIRST_PURPLE_COIN_KEYS,
     FIRST_STAGE_ID,
     FIRST_STAGE_ITEMS,
+    FIRST_STAGE_PICKUPS,
     FIRST_STAGE_STAMINA,
     FREE_GEMS,
     RESERVE_STAMINA,
@@ -389,28 +388,31 @@ class AccountStore:
         return encode_stage_progress(stores)
 
     def pick_stage_coins(self, request):
-        """Collect first-phase purple coins once per public tilemap key."""
+        """Collect known stage currencies atomically, once per kind and tilemap key."""
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
             or request["StageId"] != FIRST_STAGE_ID
             or request.get("StageCustom") is not None
             or not isinstance(request.get("Items"), list)
-            or not 1 <= len(request["Items"]) <= len(FIRST_PURPLE_COIN_KEYS)
+            or not 1
+            <= len(request["Items"])
+            <= sum(len(keys) for _, keys in FIRST_STAGE_PICKUPS.values())
         ):
             raise ValueError("Malformed first-phase coin request")
-        keys = set()
+        pickups = set()
         for item in request["Items"]:
             if (
                 not isinstance(item, dict)
                 or set(item) != {"Id", "ItemId"}
                 or type(item["Id"]) is not int
-                or item["Id"] not in FIRST_PURPLE_COIN_KEYS
                 or type(item["ItemId"]) is not int
-                or item["ItemId"] != FIRST_PURPLE_COIN
             ):
-                raise ValueError("Unknown first-phase purple coin")
-            keys.add(item["Id"])
+                raise ValueError("Malformed first-phase collectible")
+            spec = FIRST_STAGE_PICKUPS.get(item["ItemId"])
+            if spec is None or item["Id"] not in spec[1]:
+                raise ValueError("Unknown first-phase collectible")
+            pickups.add((spec[0], item["Id"], item["ItemId"]))
         if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
             FIRST_STAGE_ID,
         ):
@@ -418,16 +420,20 @@ class AccountStore:
         profile = self.profile()
         user = profile["User"]
         with self.db:
-            added = 0
-            for key in keys:
-                added += self.db.execute(
+            added = {}
+            for category, key, item_id in sorted(pickups):
+                inserted = self.db.execute(
                     "INSERT OR IGNORE INTO campaign_progress VALUES(?,?,?,?)",
-                    (FIRST_STAGE_ID, 2, key, "true"),
+                    (FIRST_STAGE_ID, category, key, "true"),
                 ).rowcount
+                if inserted:
+                    added[item_id] = added.get(item_id, 0) + 1
             if added:
-                next(asset for asset in user["Assets"] if asset["Id"] == FIRST_PURPLE_COIN)[
-                    "Amount"
-                ] += added
+                assets = {asset["Id"]: asset for asset in user["Assets"]}
+                for item_id, amount in added.items():
+                    if item_id not in assets:
+                        raise ValueError("The saved account is missing a collectible asset")
+                    assets[item_id]["Amount"] += amount
                 user["Cas"] += 1
                 self.db.execute(
                     "UPDATE local_account SET profile=? WHERE id=1",

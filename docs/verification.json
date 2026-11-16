@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 93,
+    "tests_run": 96,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -459,5 +459,17 @@
     "original_apk_retry_confirmed": true,
     "post_retry_target_state": 1,
     "balances_quests_and_character_experience_preserved": true
+  },
+  "mixed_stage_pickups_update": {
+    "date": "2026-11-16",
+    "route": "/stage/pick-stage-coins",
+    "scope": "All 26 known Inn purple coins and three star pieces, separately deduplicated and atomically credited even in mixed batches.",
+    "observed_mixed_items": [{"Id": 13, "ItemId": 71001}, {"Id": 1, "ItemId": 70005}, {"Id": 14, "ItemId": 71001}],
+    "contract_evidence": "Public tilemap star-piece name table and native HasStarPiece overloads using progress store 3; purple coins use store 2.",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 96,
+    "mixed_retry_native_encoding_boundaries_and_rollback_checked": true,
+    "stone_board_puzzle_implemented": false,
+    "original_apk_retry_confirmed": false
   }
 }

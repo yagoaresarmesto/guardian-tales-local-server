@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **93 passing tests**, including fourteen first-chapter entry/progress
+The suite has **96 passing tests**, including seventeen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -19,6 +19,9 @@ Three quest-catalog regressions check registration, retained progress, retries,
 active-stage/catalog validation and rollback.
 Three map-discovery regressions check preserved state, request/authentication
 validation, persistence across retries/reopening and failed-write rollback.
+Mixed currency tests distinguish identical numeric keys across pickup kinds,
+check native progress bytes, retries/overlap, all 29 pickups in one batch and
+rollback of both balances and markers.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -192,6 +195,17 @@ The response supplies current `UserProgress` to the client's resource handler.
 The APK accepted the interaction and saved target 110010005 with opened state 1,
 preserving all balances, quest progress and character experience.
 Target-stage entry, its gameplay and NPC/location validation remain unfinished.
+
+The next collection request mixed purple keys 13 and 14 with star-piece key 1
+(asset 70005). The public Inn tilemap names three star pieces; the native
+`HasStarPiece` overloads read progress store 3, separate from purple store 2.
+The pickup handler now validates each item against its kind's complete key range
+and saves all new markers and currency balances in one transaction. Each unique
+kind/key grants one unit once. Invalid mixed batches save nothing; overlapping
+retries credit only new pickups. Star-piece markers use the existing v2 progress
+encoding. The trailing `StonePieces` puzzle byte is a separate feature and stays
+unchanged. The 96-test suite passes; the deployed mixed-pickup APK retry is pending
+in this snapshot.
 
 The next missing entry was the parameterless `/guardian-pass/enter`. Native
 scene callbacks refresh from global `UserGuardianPass` state; entry now returns

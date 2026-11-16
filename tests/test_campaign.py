@@ -111,6 +111,94 @@ class ChapterProgressTests(unittest.TestCase):
         self.assertEqual(reopened.profile(), saved)
         self.assertEqual(self.db.execute("SELECT count(*) FROM campaign_progress").fetchone()[0], 6)
 
+    def test_mixed_coins_and_star_pieces_persist_with_distinct_keys(self):
+        self.enter_first_phase()
+        before = self.store.account.profile()
+        body = {
+            "StageId": FIRST_STAGE_ID,
+            "StageCustom": None,
+            "Items": [
+                {"Id": 13, "ItemId": 71001},
+                {"Id": 1, "ItemId": 70005},
+                {"Id": 14, "ItemId": 71001},
+                {"Id": 1, "ItemId": 71001},
+                {"Id": 1, "ItemId": 70005},
+            ],
+        }
+        self.session.handle(request("/stage/pick-stage-coins", body))
+        expected = json.loads(json.dumps(before))
+        assets = {a["Id"]: a for a in expected["User"]["Assets"]}
+        assets[70005]["Amount"] += 1
+        assets[71001]["Amount"] += 3
+        expected["User"]["Cas"] += 1
+        self.assertEqual(self.store.account.profile(), expected)
+        wire = self.store.account.stage_progress(FIRST_STAGE_ID)
+        self.assertEqual(
+            base64.b64decode(wire), bytes.fromhex("02 02 02 0f 02 60 00 03 02 02 00 00")
+        )
+        reopened = GuestStore(self.db).account
+        reopened.pick_stage_coins(body)
+        self.assertEqual(reopened.profile(), expected)
+        self.assertEqual(reopened.stage_progress(FIRST_STAGE_ID), wire)
+        reopened.pick_stage_coins(
+            body
+            | {
+                "Items": [
+                    {"Id": 1, "ItemId": 70005},
+                    {"Id": 2, "ItemId": 70005},
+                    {"Id": 14, "ItemId": 71001},
+                    {"Id": 15, "ItemId": 71001},
+                ]
+            }
+        )
+        assets = {a["Id"]: a for a in reopened.profile()["User"]["Assets"]}
+        self.assertEqual((assets[70005]["Amount"], assets[71001]["Amount"]), (2, 4))
+
+    def test_invalid_mixed_batches_are_atomic_and_all_collectibles_fit_one_batch(self):
+        self.enter_first_phase()
+        before = self.store.account.profile()
+        body = {"StageId": FIRST_STAGE_ID, "StageCustom": None}
+        for bad in (
+            {"Id": 0, "ItemId": 70005},
+            {"Id": 4, "ItemId": 70005},
+            {"Id": True, "ItemId": 70005},
+            {"Id": 1, "ItemId": True},
+            {"Id": 1, "ItemId": 70001},
+            {"Id": 1, "ItemId": 70005, "Amount": 99},
+        ):
+            with self.subTest(bad=bad), self.assertRaises(ValueError):
+                self.store.account.pick_stage_coins(
+                    body | {"Items": [{"Id": 1, "ItemId": 71001}, bad]}
+                )
+        self.assertEqual(self.store.account.profile(), before)
+        self.assertEqual(self.db.execute("SELECT count(*) FROM campaign_progress").fetchone(), (0,))
+        items = [{"Id": key, "ItemId": 71001} for key in range(1, 27)]
+        items += [{"Id": key, "ItemId": 70005} for key in range(1, 4)]
+        response = self.store.account.pick_stage_coins(body | {"Items": items})
+        assets = {a["Id"]: a for a in response["User"]["Assets"]}
+        self.assertEqual((assets[71001]["Amount"], assets[70005]["Amount"]), (26, 3))
+        self.assertEqual(
+            self.db.execute("SELECT count(*) FROM campaign_progress").fetchone(), (29,)
+        )
+
+    def test_failed_mixed_pickup_write_rolls_back_both_currencies_and_markers(self):
+        self.enter_first_phase()
+        before = self.store.account.profile()
+        self.db.execute(
+            "CREATE TRIGGER reject_pickups BEFORE UPDATE ON local_account BEGIN SELECT RAISE(ABORT, 'test'); END"
+        )
+        self.db.commit()
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.store.account.pick_stage_coins(
+                {
+                    "StageId": FIRST_STAGE_ID,
+                    "StageCustom": None,
+                    "Items": [{"Id": 1, "ItemId": 71001}, {"Id": 1, "ItemId": 70005}],
+                }
+            )
+        self.assertEqual(self.store.account.profile(), before)
+        self.assertEqual(self.db.execute("SELECT count(*) FROM campaign_progress").fetchone(), (0,))
+
     def test_native_progress_integer_and_boolean_boundary_layout(self):
         wire = encode_stage_progress({9: {0: True, 8: -2}})
         self.assertEqual(
