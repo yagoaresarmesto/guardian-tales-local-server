@@ -206,6 +206,36 @@ class BootstrapSession:
                     return json_response(request, self.store.account.claim_attendance())
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/stage/start-stage":
+                try:
+                    return json_response(request, self.store.account.start_stage(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == "/stage/start-quest":
+                try:
+                    return json_response(request, self.store.account.start_quest(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == "/stage/progress-quest":
+                try:
+                    return json_response(request, self.store.account.progress_quest(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == "/stage/pick-stage-coins":
+                try:
+                    return json_response(request, self.store.account.pick_stage_coins(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == "/stage/beat-monsters":
+                try:
+                    return json_response(request, self.store.account.beat_monsters(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == "/stage/pick-stage-item":
+                try:
+                    return json_response(request, self.store.account.pick_stage_item(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/auth/check-name":
                 name = body.get("Name") if isinstance(body, dict) else None
                 if not valid_name(name):
@@ -232,7 +262,11 @@ class BootstrapSession:
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
                 return json_response(request, value)
-            return json_response(request, self.store.account.read(route))
+            try:
+                value = self.store.account.read(route, body)
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
+            return json_response(request, value)
         if route in STATIC_SEEDS:
             filename, kind = STATIC_SEEDS[route]
             try:

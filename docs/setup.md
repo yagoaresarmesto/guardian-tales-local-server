@@ -113,7 +113,7 @@ are relative to your working directory, not the installed package directory.
 | Windows TLS traffic receives a substituted certificate | The prepared lab uses an Android-local backend; the isolated Docker demo can test the code separately |
 | Static-data request disconnects | Required bootstrap file is absent; configure `--reference-dir` |
 | Resource request returns 404 | Check the root, manifest entry and actual file; manifest membership alone does not create files |
-| World map loads but Chapter 1 is locked | This is the current implementation boundary |
+| Inn disconnects during an unsupported action | First-phase entry works; later campaign contracts are still being implemented |
 | Daily attendance disconnects on an item reward | Inventory/random-item rewards are not implemented; no claim is recorded |
 
 Run `python -m guardian_tales COMMAND --help` for each command's options.

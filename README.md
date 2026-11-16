@@ -8,8 +8,9 @@ resource server.
 **This is not a complete offline version of the game.** In the prepared test
 environment, the original APK completed the prologue, recovered the saved
 character after restart, displayed the lobby and world map, and received its
-first daily reward with Internet access blocked. **Chapter 1 remains locked.**
-Campaign entry, battle results, progression, and most game systems are unfinished.
+first daily reward with Internet access blocked. The first campaign phase,
+**Inn**, now loads and its initial quest is saved. Battle results, collectibles,
+stage completion, and most game systems are unfinished.
 
 ## Quick start
 
@@ -59,10 +60,13 @@ snapshot. Other versions and distributions have not been validated. See the
 | Platform configuration and local guest credentials | Implemented for one local guest |
 | New account, prologue name/avatar/weapon selection | Persistent in SQLite; repeated completion is idempotent |
 | Lobby, collection, inbox and catalog reads | Initial empty responses; no social or purchase functionality |
-| World map progress query | Empty initial progress; no chapter unlock rules |
+| World map and first phase entry | Initial chapter progress entries; Inn unlock and free reentry persist |
 | Daily attendance | External catalog required; supported asset rewards once per UTC day |
 | Resource delivery | Read-only manifest allowlist; ETags, HEAD and single byte ranges |
-| Campaign phases, battle validation and stage rewards | Not implemented |
+| Initial story quest | Quest start and sequential early checkpoints persist |
+| First-phase collectibles | Purple coins and three named item receipts persist without duplicate grants |
+| First-phase monster reports | Known handles persist; provisional level-1 gold/experience rule, no battle validation |
+| Campaign completion and remaining rewards | Not implemented |
 | Multiplayer, guild systems and purchases | Not implemented |
 
 All connections share the same local account. Incoming provider tokens are not

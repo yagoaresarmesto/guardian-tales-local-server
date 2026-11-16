@@ -6,11 +6,14 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **36 passing tests**, including the 34 original behavioral/protocol
-regressions and two external-reference boundary tests. It covers real loopback TLS,
+The suite has **46 passing tests**, including ten first-chapter entry/progress
+regressions. It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
-migrations, daily reward retry handling, and manifest-backed resource reads.
+migrations, daily reward retry handling, manifest-backed resource reads, empty
+chapter progress objects, atomic stamina spending, free stage retries, and initial
+quest persistence without duplicates, native stage-progress bytes, overlapping
+coin batches, monster reward retries and stable item receipts.
 The full suite passed on Python 3.11.18 in a container with networking disabled.
 
 The suite and synthetic demo can run in a read-only Docker container with
@@ -28,8 +31,25 @@ With compatible private inputs in a dedicated, isolated test clone:
 - The lobby and Adventure/world map were displayed.
 - The first attendance reward added 40 reserve stamina; the saved amount remained
   40 after reopening the account.
-- The initial campaign chapter stayed locked. No first campaign phase or battle
-  completion was demonstrated.
+- The first phase's entry screen displayed Inn, monster level 1 and a 15-stamina
+  unlock cost. Empty per-stage progress entries fixed the earlier map transition.
+- Unlocking loaded Inn and its opening conversation and saved quest 27. The
+  displayed reserve stamina changed from 40 to 25.
+- After a backend/client restart, the same quest and 25 stamina were recovered;
+  Inn could be entered again without another charge.
+
+The APK subsequently accepted the first two quest checkpoints, a five-purple-coin
+batch, the two initial goblin reports and the shield pickup. The database retained
+those records after another laboratory restart. The APK then reopened Inn with populated native stage progress showing 5/26 coins
+and 1/4 item markers; no completed campaign phase is claimed.
+
+Monster gold/experience currently uses one public level-1 `ExpsData` row per new
+known monster handle: 79 experience and 87 gold. This is a provisional **local
+rule**, not a verified reconstruction of official server rates, multipliers or
+random drops. Reports are allowlisted and deduplicated but battles are not
+validated by the server. The remaining named items are covered by automated
+receipt tests and their public runtime configuration; only the shield has been
+picked up in this APK test so far.
 
 The prepared laboratory's restoration checks verified its original hosts,
 preferences, SDK cache, trust listing and OUTPUT rules. The clone was stopped and
@@ -50,8 +70,8 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Determine and implement correct initial chapter unlock state and phase entry.
-2. Implement battle start/result contracts, progress validation and stage rewards.
+1. Finish the first phase's battle, collectible, custom-state and exit contracts.
+2. Implement stage progress validation, completion and rewards.
 3. Implement remaining inventory mutations, equipment state and item/random daily rewards.
 4. Add the account's tutorial/mission progression and the systems it unlocks.
 5. Expand content/resource completeness checks where indices can be interpreted.

@@ -64,6 +64,31 @@
     "record_scope": "Local verification snapshot before initial publication; hosted results are recorded per commit on GitHub Actions.",
     "runs_url": "https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml"
   },
-  "gameplay_limit": "Saved prologue character, lobby and world map; first campaign chapter remains locked.",
-  "source_package_scope": "Project code, English documentation, empty templates and regression fixtures. External game/bootstrap files, local keys, account saves and machine-specific lab tools are excluded."
+  "gameplay_limit": "Inn entry, early quest checkpoints, purple coins, named-item receipts and provisional monster reports; stage completion, remaining collectibles, equipment mutations and battle validation unfinished.",
+  "source_package_scope": "Project code, English documentation, empty templates and regression fixtures. External game/bootstrap files, local keys, account saves and machine-specific lab tools are excluded.",
+  "campaign_update": {
+    "date": "2026-11-16",
+    "automated_tests": {
+      "result": "PASS",
+      "tests_run": 46,
+      "failures": 0,
+      "errors": 0,
+      "external_network_disabled": true,
+      "network_interfaces": [
+        "lo"
+      ],
+      "python": "3.11.18",
+      "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+    },
+    "original_apk_observations": [
+      "Inn entry screen and initial 15-stamina unlock accepted.",
+      "Inn opening scene loaded with reserve stamina reduced from 40 to 25.",
+      "Quest 27 start and checkpoints 1 and 2 accepted.",
+      "Five purple coins, first two defeated goblins and named shield pickup accepted.",
+      "After restarting client/backend, Inn reopened with 5/26 coins and 1/4 item markers."
+    ],
+    "monster_drop_rule": "Provisional local level-1 catalog row: 79 experience and 87 gold per new known handle; official rates/multipliers/random drops unverified.",
+    "campaign_completed": false,
+    "source_only": true
+  }
 }

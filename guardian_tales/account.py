@@ -11,6 +11,22 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+from .campaign import (
+    CHARGED_STAMINA,
+    FIRST_MONSTER_EXP,
+    FIRST_MONSTER_GOLD,
+    FIRST_MONSTERS,
+    FIRST_PURPLE_COIN,
+    FIRST_PURPLE_COIN_KEYS,
+    FIRST_STAGE_ID,
+    FIRST_STAGE_ITEMS,
+    FIRST_STAGE_STAMINA,
+    RESERVE_STAMINA,
+    STAGE_OPENED,
+    STAGE_UNLOCKED,
+    encode_stage_progress,
+    initial_stage_progresses,
+)
 from .reference import ReferenceData
 
 ACCOUNT_ROUTES = (
@@ -25,6 +41,12 @@ ACCOUNT_ROUTES = (
     "/friend2/has-changes",
     "/mission/get-user-mission",
     "/stage/get-stage-progresses",
+    "/stage/start-stage",
+    "/stage/start-quest",
+    "/stage/progress-quest",
+    "/stage/pick-stage-coins",
+    "/stage/beat-monsters",
+    "/stage/pick-stage-item",
     "/auth/check-name",
     "/auth/sign-name",
     "/auth/sign-up/v2",
@@ -58,6 +80,24 @@ def valid_prologue_info(info):
     )
 
 
+def inventory_item(inventory_id, item_id):
+    """Construct the common persistent inventory shape with default options."""
+    return dict(
+        Id=inventory_id,
+        ItemId=item_id,
+        Amount=1,
+        Experience=0,
+        EvolveProgress=0,
+        Options=None,
+        RelicOptions=None,
+        LimitBreaks=0,
+        Locked=False,
+        JewelSlots=None,
+        EngraveOptions=None,
+        EngraveCeiling=0,
+    )
+
+
 class AccountStore:
     def __init__(self, db, reference_dir=None):
         self.db = db
@@ -70,6 +110,15 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS attendance_claims (day TEXT PRIMARY KEY, attendance_count INTEGER NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS campaign_session (id INTEGER PRIMARY KEY CHECK(id=1), stage_id INTEGER NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS campaign_progress (stage_id INTEGER NOT NULL, category INTEGER NOT NULL, key INTEGER NOT NULL, value TEXT NOT NULL, PRIMARY KEY(stage_id,category,key))"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS campaign_item_receipts (stage_id INTEGER NOT NULL, item_key TEXT NOT NULL, inventory_id INTEGER NOT NULL, PRIMARY KEY(stage_id,item_key))"
         )
         existing = db.execute(
             "SELECT schema_version,profile FROM local_account WHERE id=1"
@@ -135,22 +184,7 @@ class AccountStore:
         for spec in (info["Weapon1ItemId"], info["Weapon2ItemId"]):
             slots.append(len(weapons) + 1 if spec else None)
             if spec:
-                weapons.append(
-                    dict(
-                        Id=len(weapons) + 1,
-                        ItemId=spec,
-                        Amount=1,
-                        Experience=0,
-                        EvolveProgress=0,
-                        Options=None,
-                        RelicOptions=None,
-                        LimitBreaks=0,
-                        Locked=False,
-                        JewelSlots=None,
-                        EngraveOptions=None,
-                        EngraveCeiling=0,
-                    )
-                )
+                weapons.append(inventory_item(len(weapons) + 1, spec))
         # CharacterSpecId.KnightFemale=1, KnightMale=2 in this client. These
         # public catalog IDs were verified from its initialized static fields.
         knight = dict(
@@ -244,13 +278,265 @@ class AccountStore:
             )
         return {"User": user, "UserRecord": profile["UserRecord"]}
 
-    def read(self, route):
+    def start_stage(self, request):
+        """Unlock the first phase once, then allow free retries of that phase."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+        ):
+            raise ValueError("Stage entry is implemented only for the first story phase")
+        if self.needs_prologue():
+            raise ValueError("Complete the local prologue before entering a story phase")
+        profile = self.profile()
+        user, progress = profile["User"], profile["UserProgress"]
+        state = progress["StageStates"].get(str(FIRST_STAGE_ID), 0)
+        if not state & STAGE_UNLOCKED:
+            assets = {asset["Id"]: asset for asset in user["Assets"]}
+            charged, reserve = assets[CHARGED_STAMINA], assets[RESERVE_STAMINA]
+            if charged["Amount"] + reserve["Amount"] < FIRST_STAGE_STAMINA:
+                raise ValueError("Not enough stamina to unlock the first story phase")
+            from_charge = min(charged["Amount"], FIRST_STAGE_STAMINA)
+            from_reserve = FIRST_STAGE_STAMINA - from_charge
+            for asset, amount in ((charged, from_charge), (reserve, from_reserve)):
+                asset["Amount"] -= amount
+                asset["Spent"] += amount
+            progress["StageStates"][str(FIRST_STAGE_ID)] = state | STAGE_OPENED | STAGE_UNLOCKED
+            progress["LastPlayedStageId"] = FIRST_STAGE_ID
+            progress["Cas"] += 1
+            user["Cas"] += 1
+        with self.db:
+            self.db.execute(
+                "INSERT INTO campaign_session VALUES(1,?) ON CONFLICT(id) DO UPDATE SET stage_id=excluded.stage_id",
+                (FIRST_STAGE_ID,),
+            )
+            self.db.execute(
+                "UPDATE local_account SET profile=? WHERE id=1",
+                (json.dumps(profile, separators=(",", ":")),),
+            )
+        return {
+            "User": user,
+            "UserProgress": progress,
+            "StageProgress": self.stage_progress(FIRST_STAGE_ID),
+        }
+
+    def stage_progress(self, stage_id):
+        stores = {}
+        for category, key, value in self.db.execute(
+            "SELECT category,key,value FROM campaign_progress WHERE stage_id=?", (stage_id,)
+        ):
+            stores.setdefault(category, {})[key] = json.loads(value)
+        return encode_stage_progress(stores)
+
+    def pick_stage_coins(self, request):
+        """Collect first-phase purple coins once per public tilemap key."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+            or request.get("StageCustom") is not None
+            or not isinstance(request.get("Items"), list)
+            or not 1 <= len(request["Items"]) <= len(FIRST_PURPLE_COIN_KEYS)
+        ):
+            raise ValueError("Malformed first-phase coin request")
+        keys = set()
+        for item in request["Items"]:
+            if (
+                not isinstance(item, dict)
+                or set(item) != {"Id", "ItemId"}
+                or type(item["Id"]) is not int
+                or item["Id"] not in FIRST_PURPLE_COIN_KEYS
+                or type(item["ItemId"]) is not int
+                or item["ItemId"] != FIRST_PURPLE_COIN
+            ):
+                raise ValueError("Unknown first-phase purple coin")
+            keys.add(item["Id"])
+        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+            FIRST_STAGE_ID,
+        ):
+            raise ValueError("Start the phase before collecting its coins")
+        profile = self.profile()
+        user = profile["User"]
+        with self.db:
+            added = 0
+            for key in keys:
+                added += self.db.execute(
+                    "INSERT OR IGNORE INTO campaign_progress VALUES(?,?,?,?)",
+                    (FIRST_STAGE_ID, 2, key, "true"),
+                ).rowcount
+            if added:
+                next(asset for asset in user["Assets"] if asset["Id"] == FIRST_PURPLE_COIN)[
+                    "Amount"
+                ] += added
+                user["Cas"] += 1
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        return {"User": user}
+
+    def pick_stage_item(self, request):
+        """Grant each named first-phase item once and return its stable inventory ID."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+            or not isinstance(request.get("StageItemKey"), str)
+            or request["StageItemKey"] not in FIRST_STAGE_ITEMS
+            or request.get("StageCustom") is not None
+        ):
+            raise ValueError("Unknown first-phase item")
+        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+            FIRST_STAGE_ID,
+        ):
+            raise ValueError("Start the phase before collecting its items")
+        key = request["StageItemKey"]
+        index, item_id, collection = FIRST_STAGE_ITEMS[key]
+        profile = self.profile()
+        user = profile["User"]
+        previous = self.db.execute(
+            "SELECT inventory_id FROM campaign_item_receipts WHERE stage_id=? AND item_key=?",
+            (FIRST_STAGE_ID, key),
+        ).fetchone()
+        if previous:
+            item = next((item for item in user[collection] if item["Id"] == previous[0]), None)
+            if item is None or item["ItemId"] != item_id:
+                raise ValueError("Saved stage item receipt does not match the inventory")
+        else:
+            user["ItemIdCounter"] += 1
+            item = inventory_item(user["ItemIdCounter"], item_id)
+            user[collection].append(item)
+            user["Cas"] += 1
+            with self.db:
+                self.db.execute(
+                    "INSERT INTO campaign_item_receipts VALUES(?,?,?)",
+                    (FIRST_STAGE_ID, key, item["Id"]),
+                )
+                self.db.execute(
+                    "INSERT INTO campaign_progress VALUES(?,?,?,?)",
+                    (FIRST_STAGE_ID, 4, index, "true"),
+                )
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        return {"User": user, "AddedItem": item}
+
+    def start_quest(self, request):
+        """Persist the first phase's initial quest without claiming completion."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+            or type(request.get("QuestId")) is not int
+            or request["QuestId"] != 27
+            or request.get("StageCustom") is not None
+        ):
+            raise ValueError("Only the first phase's initial quest is implemented")
+        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+            FIRST_STAGE_ID,
+        ):
+            raise ValueError("Start the phase before starting its quest")
+        profile = self.profile()
+        progress = profile["UserProgress"]
+        if not any(quest["Id"] == 27 for quest in progress["QuestProgresses"]):
+            progress["QuestProgresses"].append(
+                {"Id": 27, "Grade": -1, "InnerProgress": 0, "CustomStates": {}}
+            )
+            progress["Cas"] += 1
+            with self.db:
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        # The native success callback adds its own QuestProgress instance.
+        # Returning UserProgress here would add the same quest twice in memory.
+        return {"OpenedStages": []}
+
+    def beat_monsters(self, request):
+        """Record the first encounter once using a provisional local drop rule."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+            or request.get("StageCustom") is not None
+            or not isinstance(request.get("MonsterHandleNames"), list)
+            or not 1 <= len(request["MonsterHandleNames"]) <= len(FIRST_MONSTERS)
+            or any(
+                not isinstance(name, str) or name not in FIRST_MONSTERS
+                for name in request["MonsterHandleNames"]
+            )
+        ):
+            raise ValueError("Only the first phase's initial monster encounter is implemented")
+        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+            FIRST_STAGE_ID,
+        ):
+            raise ValueError("Start the phase before reporting defeated monsters")
+        profile = self.profile()
+        user = profile["User"]
+        with self.db:
+            added = 0
+            for name in set(request["MonsterHandleNames"]):
+                added += self.db.execute(
+                    "INSERT OR IGNORE INTO campaign_progress VALUES(?,?,?,?)",
+                    (FIRST_STAGE_ID, 10, FIRST_MONSTERS[name], "true"),
+                ).rowcount
+            exp, gold = added * FIRST_MONSTER_EXP, added * FIRST_MONSTER_GOLD
+            if added:
+                assets = {asset["Id"]: asset for asset in user["Assets"]}
+                assets[70004]["Amount"] += exp
+                assets[70001]["Amount"] += gold
+                user["Cas"] += 1
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        return {"User": user, "DropExp": exp, "DropGold": gold}
+
+    def progress_quest(self, request):
+        """Persist sequential quest checkpoints before its first catalog stage unlock."""
+        if (
+            not isinstance(request, dict)
+            or type(request.get("StageId")) is not int
+            or request["StageId"] != FIRST_STAGE_ID
+            or type(request.get("QuestId")) is not int
+            or request["QuestId"] != 27
+            or type(request.get("InnerProgress")) is not int
+            or not 1 <= request["InnerProgress"] <= 12
+            or request.get("StageCustom") is not None
+        ):
+            raise ValueError("Only initial quest checkpoints without stage unlocks are implemented")
+        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+            FIRST_STAGE_ID,
+        ):
+            raise ValueError("Start the phase before progressing its quest")
+        profile = self.profile()
+        progress = profile["UserProgress"]
+        quest = next((quest for quest in progress["QuestProgresses"] if quest["Id"] == 27), None)
+        if quest is None:
+            raise ValueError("Start the quest before progressing it")
+        checkpoint = request["InnerProgress"]
+        if checkpoint > quest["InnerProgress"] + 1:
+            raise ValueError("Quest checkpoints must advance sequentially")
+        if checkpoint > quest["InnerProgress"]:
+            quest["InnerProgress"] = checkpoint
+            progress["Cas"] += 1
+            with self.db:
+                self.db.execute(
+                    "UPDATE local_account SET profile=? WHERE id=1",
+                    (json.dumps(profile, separators=(",", ":")),),
+                )
+        return {"OpenedStages": []}
+
+    def read(self, route, request=None):
         if route == "/auth/fetch-account":
             return self.profile()
         if route == "/mission/get-user-mission":
             return {"UserMission": self.profile()["UserMission"]}
         if route == "/stage/get-stage-progresses":
-            return {"StageProgresses": {}}
+            result = initial_stage_progresses(request)
+            result["StageProgresses"][str(FIRST_STAGE_ID)] = self.stage_progress(FIRST_STAGE_ID)
+            return result
         if route == "/guild/list-item-request":
             return {"Requests": []}
         if route == "/guild/get-my-guild":

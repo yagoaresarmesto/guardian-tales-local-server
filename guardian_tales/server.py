@@ -60,6 +60,8 @@ class LocalServer:
             local_guest_sign_in_implemented=True,
             authentication_scope="single_local_guest_only; no_official_credential_validation",
             starter_profile_implemented=True,
+            first_phase_entry_implemented=True,
+            campaign_scope="first_story_phase_entry_and_initial_quest_checkpoint",
             full_game_implemented=False,
             prologue_selection_saved=not self.guests.account.needs_prologue(),
             game_state_implemented=False,
@@ -77,7 +79,7 @@ class LocalServer:
                 *PLATFORM_ROUTES,
             ],
             pending=[
-                "first_chapter_unlock_and_stage_entry",
+                "first_phase_battles_collectibles_and_completion",
                 "campaign_progression_and_rewards",
                 "game_rules",
             ],

@@ -89,6 +89,7 @@ guest access, prologue, saved character, lobby, and world map. On a new account,
 explicitly select a personality as well as the avatar and name. The game creates
 its temporary prologue party; the backend saves the selected knight at completion.
 
-The map's first chapter currently stays locked. Do not treat the map being visible
-as a working campaign. Unsupported game operations can produce the client's
+The first story phase, Inn, can now be unlocked and entered. Initial quest
+checkpoints, purple coins and named item receipts persist. Campaign completion
+is still under development. Unsupported game operations can produce the client's
 connection-lost dialog. See [status](status.md) for the precise verified scope.

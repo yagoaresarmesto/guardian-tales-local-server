@@ -29,6 +29,7 @@ flowchart LR
 | `platform.py` | Platform HTTPS route bodies and local endpoint configuration |
 | `bootstrap.py` | Connection sign-in state, guest identity/credentials and game API dispatch |
 | `account.py` | SQLite profile, prologue completion, schema migrations and attendance claims |
+| `campaign.py` | First chapter identifiers, stage-state flags and initial progress entries |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |
 | `assets.py` | Separate manifest-backed HTTP resource server |
@@ -52,7 +53,7 @@ interoperability mechanism, not multiuser authentication or authorization.
 ## Persistence
 
 The backend owns one SQLite connection on the asyncio event-loop thread. Profile
-JSON, prologue selection, local identity/secrets, attendance claims and diagnostic
+JSON, prologue selection, local identity/secrets, attendance claims, the active campaign stage and diagnostic
 counters are stored in separate tables. Successful mutations use transactions.
 Known schema migrations repair only the specific older prototype state they
 recognize; unknown legacy edits are not silently overwritten.
@@ -69,8 +70,24 @@ Unknown platform routes return HTTP 503. The client can show a connection error
 at these boundaries. Initial empty read responses do not imply working shops,
 guilds, summoning, missions, progression or battle validation.
 
-The world-map handler currently returns an empty `StageProgresses` dictionary.
-Chapter unlock and phase entry state still need implementation.
+The first chapter query returns an empty progress string for each of its seven
+stages. The native client constructs a `StageProgress` per entry and accepts an
+empty string as initialized empty stores. An absent entry instead produces a null
+progress object and blocks the entry UI.
+
+Only the first story phase can start. Unlocking consumes 15 stamina, from charged
+stamina first and reserve stamina second, and saves the opened/unlocked flags.
+Retries after restart do not charge again. Quest 27 and its first checkpoint are
+saved in `UserProgress`; neither operation marks the phase cleared. The native
+quest callbacks update their own in-memory quest objects, so their responses do
+not send a second copy of `UserProgress`.
+
+Purple coins, named items and known defeated monster handles have per-stage
+receipts. Their native progress stores are encoded as version 2: a store count,
+category IDs, byte-indexed boolean bitmaps, signed 32-bit integer overrides and
+a trailing stage flag. Repeated or overlapping requests do not repeat grants.
+Named item receipts retain their inventory IDs across restart. The monster drop
+rule is provisional; see [status](status.md) before relying on its economy.
 
 ## Resource boundaries
 
