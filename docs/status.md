@@ -1,12 +1,16 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-17**. The public source tree reorganizes the working
+Status recorded on **2026-11-18**. The public source tree reorganizes the working
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
 ## Automated checks
 
-The suite has **311 passing tests**. Ten Orbital preset-delete regressions cover
+The suite has **321 passing tests**. Ten Orbital preset-creation regressions cover
+applying a new team, empty definitions, catalogs/slot bounds/native order,
+ownership, retries across deletion/recreation and catalog removal, reopening,
+authentication, revisions and rollback.
+Ten Orbital preset-delete regressions cover
 selected/nonselected and last-team removal, preserved data/seeds, dependent
 operation rejection, retries/reopening, strict schema/authentication/scope,
 ambiguous IDs, empty teams, revisions and atomic rollback.
@@ -933,11 +937,17 @@ selection/revision changes, with unrelated profile fields, captured seed, summon
 receipts and earlier selection receipts intact. The next error was deletion at
 `/preset/delete-preset`. It now removes one existing Orbital definition atomically
 with a retry receipt, clearing only that mode's selection if necessary. Current
-reads retain removal across reconnects; deleted teams cannot be selected, edited
-or used for phase entry. Full responses refresh the client's preset dictionary.
-All 311 isolated tests pass. Private pre-delete hashes were recorded without an
-account mutation. Backend reload and the APK delete retry remain pending;
-creation/reordering, other modes and saved Orbital battle progression remain
-unsupported.
+reads retain removal across reconnects; deleted teams cannot be selected or used
+for entry until explicitly recreated. Full responses refresh the client's preset
+dictionary. The APK deletion succeeded: remaining definitions, expected revisions,
+selection and receipt matched the removal, with unrelated profile data and prior
+receipts intact. The next error was Apply using `/preset/set-presets` for a missing
+ID with native empty order 999 and `SetSelected=true`. Creation now requires the
+matching optional slot-count catalog and validates owned heroes/gear before
+atomically saving and selecting the team. New order is appended locally; other
+teams retain their order. Old save/delete retries preserve later recreations.
+All 321 isolated tests pass. The pending request passed on a temporary in-memory
+DB copy without changing the saved account. Backend reload and the APK Apply retry
+remain pending; reordering, other modes and saved Orbital progression are unfinished.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

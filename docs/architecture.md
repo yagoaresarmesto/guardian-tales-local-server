@@ -242,8 +242,8 @@ and `User.Cas`, then stores a session-epoch/sequence request receipt. No-op choi
 leave the revision intact; retries return current `User` without undoing later
 choices. Reusing a request identity for another ID rejects, and a failed receipt
 write rolls back the profile update. Preset definitions, current party, character
-progression/equipment and inventory remain unchanged. Creation, other modes and
-formation/result writes are separate unsupported contracts; editing/deletion
+progression/equipment and inventory remain unchanged. Other modes and
+formation/result writes are separate unsupported contracts; editing/creation/deletion
 are described below.
 The original response was not captured. The APK selection subsequently succeeded;
 its saved receipt, pointer and revision matched, with unrelated state preserved.
@@ -286,8 +286,22 @@ selection to the client. The group, optional profile update and
 `preset_delete_requests` receipt commit atomically. Replays return current state;
 new requests for missing/ambiguous IDs reject. Full `UserPartyPreset2.Presets`
 replaces the client's dictionary, as established by native model inspection.
-The original official response was not captured; APK deletion retry is pending.
-Creation, reordering, other modes and Orbital result writes remain unsupported.
+The original official response was not captured. The APK deletion subsequently
+succeeded. Its receipt and group/profile revisions
+matched, with remaining definitions, unrelated profile data and earlier receipts
+unchanged.
+
+The Apply button also sends `/preset/set-presets` with `SetSelected=true`. An
+observed pending request targeted an unsaved ID with `Order=999`, matching the
+native empty-slot builder. A missing definition now requires a matching external
+`orbital_preset_catalog.json` and a valid unused slot within its count. Native
+`PresetCountS3` lookup gives five Orbital slots in the prepared data. The local
+ordering policy appends after the highest saved Orbital order, retaining other
+teams. Creation, optional selection and the existing edit receipt commit together.
+Old save retries cannot resurrect a deleted team; old delete retries cannot remove
+a recreated team. Validation of the observed pending request passed against an
+in-memory database copy without changing the saved account. APK Apply retry is
+pending. Reordering, other modes and Orbital result writes remain unsupported.
 
 ## Resource boundaries
 

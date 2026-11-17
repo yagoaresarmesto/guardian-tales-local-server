@@ -51,7 +51,7 @@ from .passes import (
 )
 from .presets import create_tables as create_preset_tables
 from .presets import delete_existing as delete_existing_preset
-from .presets import save_existing as save_existing_preset
+from .presets import save_party as save_party_preset
 from .presets import set_selected as set_selected_preset
 from .reference import ReferenceData
 from .snapshots import create_tables as create_snapshot_tables
@@ -983,7 +983,7 @@ class AccountStore:
         return set_selected_preset(self, request, operation_id)
 
     def save_party_preset(self, request, operation_id):
-        return save_existing_preset(self, request, operation_id)
+        return save_party_preset(self, request, operation_id)
 
     def delete_party_preset(self, request, operation_id):
         return delete_existing_preset(self, request, operation_id)

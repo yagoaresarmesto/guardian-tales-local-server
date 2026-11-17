@@ -19,7 +19,7 @@ from tests.test_snapshots import synthetic_snapshot
 ROUTE = "/preset/set-presets"
 
 
-class PresetEditTests(unittest.TestCase):
+class PresetFixture:
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(dir=os.environ.get("GT_TEST_TMP"))
         self.root = Path(self.temporary.name)
@@ -84,12 +84,14 @@ class PresetEditTests(unittest.TestCase):
         ]
         return {"PartyPreset": preset, "SetSelected": selected}
 
-    def reject_without_writes(self, body):
+    def reject_without_writes(self, body, route=ROUTE):
         before = list(self.db.iterdump())
         with self.assertRaises(PacketError):
-            self.call(body)
+            self.call(body, route)
         self.assertEqual(list(self.db.iterdump()), before)
 
+
+class PresetEditTests(PresetFixture, unittest.TestCase):
     def test_edit_changes_one_team_and_preserves_profile_captured_seed_and_other_reads(self):
         profile = self.store.account.profile()
         source = self.source.read_bytes()

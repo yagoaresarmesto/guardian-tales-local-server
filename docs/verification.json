@@ -1,9 +1,9 @@
 {
-  "date": "2026-11-17",
+  "date": "2026-11-18",
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 311,
+    "tests_run": 321,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1795,7 +1795,7 @@
       "summon_receipts_unchanged": true,
       "earlier_selection_receipts_preserved": true
     },
-    "creating_reordering_other_modes_and_battle_results_implemented": false
+    "reordering_other_modes_and_battle_results_implemented": false
   },
   "orbital_preset_delete": {
     "date": "2026-11-17",
@@ -1811,7 +1811,6 @@
     "group_optional_selection_and_retry_receipt_atomic": true,
     "retries_return_current_state_without_resurrection_or_reverting_later_changes": true,
     "missing_or_ambiguous_ids_rejected_for_new_operations": true,
-    "deleted_team_cannot_be_selected_edited_or_used_for_entry": true,
     "captured_seed_owned_heroes_equipment_and_inventory_preserved": true,
     "new_regressions": 10,
     "focused_windows_checks": 46,
@@ -1844,8 +1843,91 @@
     "private_pre_delete_hashes_recorded": true,
     "real_account_mutated_during_checks": false,
     "original_official_response_captured": false,
+    "running_backend_reloaded": true,
+    "post_fix_apk_delete": {
+      "result": "PASS",
+      "successful_delete_receipts": 1,
+      "remaining_definitions_unchanged": true,
+      "group_revision_matches_deletions": true,
+      "selection_matches_deletion": true,
+      "account_revision_matches_deletion": true,
+      "unrelated_profile_unchanged": true,
+      "captured_seed_unchanged": true,
+      "preset_selection_requests_unchanged": true,
+      "preset_edit_requests_unchanged": true,
+      "character_summon_requests_unchanged": true
+    },
+    "deleted_team_cannot_be_selected_or_entered_until_recreated": true,
+    "reordering_other_modes_and_battle_results_implemented": false
+  },
+  "orbital_preset_creation_and_apply": {
+    "date": "2026-11-18",
+    "observed_failure_route": "/preset/set-presets",
+    "owner_reported_trigger": "probably applying a preset",
+    "pending_request_read_only_inspection": {
+      "definition_exists": false,
+      "native_empty_order": 999,
+      "set_selected": true,
+      "character_count": 4,
+      "raw_request_stored": false
+    },
+    "native_empty_slot_list_builder_order_and_apply_callback_inspected": true,
+    "native_mode_count_lookup": "PresetCountS3[InfiniteTower - 1]",
+    "prepared_matching_public_slot_count": 5,
+    "optional_external_catalog": "orbital_preset_catalog.json",
+    "new_slot_bounds": "[400, 400 + count)",
+    "scope": "Create one unused configured Orbital slot; optionally select in the same transaction",
+    "local_order_policy": "Append after the highest saved Orbital order; preserve existing teams and order",
+    "same_edit_name_member_and_equipment_validation": true,
+    "empty_new_team_requires_nonselected_save": true,
+    "group_optional_selection_and_existing_edit_receipt_atomic": true,
+    "old_save_retries_do_not_resurrect_deleted_definitions": true,
+    "old_delete_retries_do_not_remove_recreated_definitions": true,
+    "new_regressions": 10,
+    "focused_windows_checks": 56,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 321,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 321,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_pending_request_detached_validation": {
+      "result": "PASS",
+      "pending_request_creates_and_selects_an_unused_slot": true,
+      "native_empty_order_observed": true,
+      "owned_members_and_equipment_validated": true,
+      "existing_definitions_preserved": true,
+      "only_selection_and_account_revision_changed": true,
+      "group_revision_incremented_once": true,
+      "response_matches_current_state": true,
+      "real_account_mutated_during_check": false,
+      "request_body_stored": false
+    },
+    "private_pre_apply_hashes_recorded": true,
+    "real_account_mutated_during_checks": false,
+    "original_official_response_captured": false,
     "running_backend_reloaded": false,
-    "post_fix_apk_delete": "pending",
-    "creating_reordering_other_modes_and_battle_results_implemented": false
+    "post_fix_apk_apply": "pending",
+    "reordering_other_modes_and_battle_results_implemented": false
   }
 }

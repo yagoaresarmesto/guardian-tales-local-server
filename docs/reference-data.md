@@ -47,6 +47,7 @@ not fetch missing bootstrap files from an official service.
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 | `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
 | `stamina_regen_catalog.json` | Natural stamina recharge | Matching client, base charged-stamina maximum and interval in minutes |
+| `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -80,6 +81,23 @@ and equipment ownership checks are shared with the phase-loading trial.
 gear references. Current definitions are kept in SQLite separately from the
 captured startup seed and are used by subsequent preserved reads and entry.
 It requires no additional public catalog and does not modify owned inventory.
+
+Creating a missing definition through `/preset/set-presets` additionally requires
+`orbital_preset_catalog.json` with the same pinned `client` object and integer
+`count` in `[1,100]`. The file is limited to 4 KiB. The inspected `PresetCount`
+helper indexes `PresetCountS3` by mode minus one; the matching constants give
+Orbital five slots, IDs `[400,405)`. The native list builds missing IDs within
+that range and `CreateEmptyPartyPreset` assigns `Order=999`. A populated empty
+slot can be saved and selected together by the Apply button.
+
+The handler accepts that native empty order for a new ID and appends its saved
+order after the highest existing Orbital order, preserving all other definitions.
+That ordering is an explicit local policy; no official creation response was
+captured. Creation uses the existing name/member/equipment validation and atomic
+group/selection/receipt transaction. Retries use current state, even after delete
+and recreation. Missing catalogs disable only new definitions, not existing edits
+or known receipt replays. The prepared catalog stays external and is additional
+to the previously published 19-reference-file pack.
 
 The optional `stamina_regen_catalog.json` contains `client` with the same pinned
 version/code/region object, `base_max` and `interval_minutes`. The prepared

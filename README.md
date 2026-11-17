@@ -103,7 +103,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Orbital phase loading trial | APK loading and owner-confirmed defeat return; no saved-state changes or end request observed; victory/rewards pending |
 | Orbital preset selection | Captured owned party choice saved in APK; atomic choice and retry receipts |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
-| Orbital preset deletion | Removes one saved team atomically; clears its selection when needed; APK retry pending |
+| Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
+| Orbital preset creation/application | Saves and optionally selects an unused configured slot atomically; APK apply retry pending |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |

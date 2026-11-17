@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Manage existing Orbital presets without changing owned heroes or gear."""
+"""Manage Orbital presets without changing owned heroes or gear."""
 
 import json
 
-from .snapshots import preserved_read
+from .snapshots import CLIENT, preserved_read
 
 GEAR_FIELDS = ("Weapon1", "Weapon2", "Accessory", "Orb1", "Orb2", "Merch", "Relic")
 MAX_REVISION = 0x7FFFFFFFFFFFFFFF
@@ -128,7 +128,51 @@ def set_selected(account, body, operation_id):
     return {"User": user}
 
 
-def save_existing(account, body, operation_id):
+def new_definition(references, group, incoming):
+    path = references.directory / "orbital_preset_catalog.json"
+    if not path.is_file() or path.stat().st_size > 4096:
+        raise ValueError("Creating an Orbital preset requires a matching external catalog")
+    catalog = references.json(path.name)
+    if (
+        not isinstance(catalog, dict)
+        or set(catalog) != {"client", "count"}
+        or catalog["client"] != CLIENT
+        or not integer(catalog["count"], 1)
+        or catalog["count"] > 100
+    ):
+        raise ValueError("Invalid Orbital preset catalog")
+    count = catalog["count"]
+    # The native list builds missing slots from the mode's base ID and uses
+    # Order=999 for an unsaved definition. Existing teams keep their order.
+    if (
+        not 400 <= incoming["Id"] < 400 + count
+        or type(incoming["Order"]) is not int
+        or incoming["Order"] != 999
+    ):
+        raise ValueError("Create an unused configured Orbital slot with native empty order")
+    teams = [
+        row
+        for row in group["Presets"]
+        if isinstance(row, dict) and integer(row.get("Id")) and 400 <= row["Id"] < 500
+    ]
+    if (
+        len(teams) >= count
+        or len({row["Id"] for row in teams}) != len(teams)
+        or any(
+            not 400 <= row["Id"] < 400 + count
+            or not integer(row.get("Order"))
+            or row["Order"] >= 999
+            for row in teams
+        )
+    ):
+        raise ValueError("Invalid saved Orbital slot count or order")
+    order = max((row["Order"] for row in teams), default=-1) + 1
+    if order >= 999:
+        raise ValueError("No supported order remains for a new Orbital preset")
+    return {"Id": incoming["Id"], "Order": order}
+
+
+def save_party(account, body, operation_id):
     if (
         not isinstance(body, dict)
         or set(body) != {"PartyPreset", "SetSelected"}
@@ -141,7 +185,7 @@ def save_existing(account, body, operation_id):
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError("Save one existing Orbital party preset with a Boolean SetSelected")
+        raise ValueError("Save one Orbital party preset with a Boolean SetSelected")
     encoded = json.dumps(body, sort_keys=True, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_edit_requests WHERE operation_id=?", (operation_id,)
@@ -158,10 +202,13 @@ def save_existing(account, body, operation_id):
         for i, p in enumerate(group["Presets"])
         if isinstance(p, dict) and p.get("Id") == incoming["Id"]
     ]
-    if len(matches) != 1:
-        raise ValueError("Editing requires one existing unambiguous Orbital preset")
-    index = matches[0]
-    original = group["Presets"][index]
+    if len(matches) > 1:
+        raise ValueError("Saving requires an unambiguous Orbital preset")
+    creating = not matches
+    index = matches[0] if matches else len(group["Presets"])
+    original = (
+        new_definition(account.references, group, incoming) if creating else group["Presets"][index]
+    )
     name = incoming["Name"]
     try:
         valid_name = (
@@ -175,7 +222,8 @@ def save_existing(account, body, operation_id):
         not valid_name
         or type(incoming["Order"]) is not int
         or type(original.get("Order")) is not int
-        or incoming["Order"] != original.get("Order")
+        or not creating
+        and incoming["Order"] != original.get("Order")
     ):
         raise ValueError("Invalid preset name or unsupported preset reordering")
     characters = incoming["Characters"]
@@ -206,7 +254,10 @@ def save_existing(account, body, operation_id):
     ):
         raise ValueError("Invalid preset group revision")
     if changed:
-        group["Presets"][index] = edited
+        if creating:
+            group["Presets"].append(edited)
+        else:
+            group["Presets"][index] = edited
         group["Cas"] += 1
     selected_changed = (
         choose_orbital(profile["User"], edited["Id"]) if body["SetSelected"] else False

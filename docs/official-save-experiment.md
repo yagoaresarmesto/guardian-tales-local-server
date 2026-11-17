@@ -106,7 +106,8 @@ atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
 controllers. Preset selection changes only the chosen captured Orbital preset
 and the account revision, with its own atomic retry receipts. Editing an existing
-Orbital preset saves its definition separately from the captured seed. Deletion
+Orbital preset saves its definition separately from the captured seed; a matching
+slot-count catalog also permits creating a missing definition. Deletion
 removes one existing Orbital definition and clears its selection if necessary. Natural stamina
 recharge advances the saved timer and charged balance up to its configured cap.
 Other mutations
@@ -369,8 +370,9 @@ The mutation now updates one existing Orbital preset in `[400,500)`. It accepts
 up to four distinct owned characters and owned equipment, retaining the existing
 order and all other teams. Names are bounded to 64 UTF-16 units with control and
 invalid surrogate characters rejected. A nonselected team can be saved empty;
-empty teams cannot be selected or used for entry. Unsupported fields, new IDs,
-other modes, reordering and invalid references reject without partial changes.
+empty teams cannot be selected or used for entry. Unsupported fields, other
+modes, reordering and invalid references reject without partial changes. New IDs
+require the separate creation contract described below.
 
 Current preset definitions are stored separately from the immutable captured
 startup reads. `/preset/get-presets`, selection and phase entry use this current
@@ -390,7 +392,7 @@ through the native serialized shape without changes. No real team was edited by
 that check. After reload, one APK save succeeded and its receipt reproduced the
 current group and optional selection/revision changes. Unrelated profile fields,
 the captured seed, summon receipts and earlier selection receipts were unchanged.
-The next error was the separate delete endpoint. Creating, reordering, other
+The next error was the separate delete endpoint. Reordering, other
 modes and Orbital battle results remain unsupported.
 
 ## Deleting an existing Orbital preset
@@ -413,17 +415,50 @@ the immutable captured seed are retained.
 The current group, optional selection change and session/sequence deletion receipt
 commit together. Replays return current state without restoring deleted presets
 or reverting later edits and choices. A new request for a missing or ambiguous ID
-rejects. Current reads and reconnects retain the deletion; selection, editing and
-stage entry cannot use the removed definition.
+rejects. Current reads and reconnects retain the deletion; selection and stage
+entry cannot use it until the slot is explicitly recreated.
 
 Ten new regressions cover selected/nonselected deletion, preserved unrelated
 data and seeds, dependent-operation rejection, retries after edits/selections,
 reopening/new epochs, the last team, strict schema/authentication/scope, empty
 teams, ambiguous IDs, revision limits and rollback. All 311 isolated tests pass
 on Python 3.11 and 3.13 without external networking. Private pre-delete hashes
-were recorded without changing the account. Backend reload and the APK retry
-remain pending. Preset creation/reordering, other modes and saved Orbital battle
-results remain unsupported.
+were recorded without changing the account. After reload, one APK deletion
+succeeded. Remaining definitions and their order matched the pre-delete hashes;
+group revision, optional selection/account revision and the receipt matched the
+removal. Unrelated profile data, captured seed and earlier selection/edit/summon
+receipts were unchanged. The next error came while applying an unsaved slot.
+
+## Applying or creating an unused Orbital slot
+
+The rejected request was `/preset/set-presets`, rather than a separate Apply
+endpoint. Read-only inspection of the pending request found a missing definition,
+native empty `Order=999`, four members and `SetSelected=true`. The existing-only
+handler rejected creation. Native `SetPresetList` builds empty IDs from the mode
+base and slot count; `CreateEmptyPartyPreset` sets order 999. `PresetCount` indexes
+the matching `PresetCountS3` constants by mode minus one, giving five Orbital
+slots. The Apply builder sends the edited party and true selection flag, and its
+success callback exits the editor. No official creation response was captured.
+
+New definitions now require the matching external slot-count catalog, an unused
+configured ID and the native empty order. Existing edits retain their order.
+The local creation policy assigns the next order after the highest saved Orbital
+order, leaving other teams untouched. Names, distinct owned heroes and gear have
+the same validation as edits. Empty definitions can be saved without selection;
+applying or entering an empty team still rejects. Group, optional selection and
+the existing edit receipt commit together. Old save/delete retries return current
+state across removal/recreation rather than affecting a later incarnation.
+
+Ten new regressions cover creation/application and entry, empty teams, optional
+catalogs and replay after catalog removal, invalid catalogs/IDs/orders, ownership,
+retries across deletion/recreation, reopening/new logins, authentication, revision
+limits and rollback. All 321 tests pass on Python 3.11 and 3.13 without external
+networking. The actual pending request passed against a temporary in-memory DB
+copy, changing only the intended group and selection fields. The real account
+was unchanged; only structural evidence and pre-apply hashes were recorded.
+The optional five-slot catalog was derived from the already imported static data.
+Backend reload and the APK Apply retry remain pending. Reordering, other modes
+and saved Orbital battle progression remain unsupported.
 
 ## Host readiness before the APK check
 
