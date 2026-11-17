@@ -819,3 +819,13 @@ The earlier [Inn checkpoint](first-phase-checkpoint.md) remains a historical rec
 
 No completion date is implied. Several empty read endpoints are compatibility
 scaffolding; they are not implementations of the corresponding game systems.
+
+## Experimental official-account preservation
+
+On 2026-11-17, the separate `experiment/official-save-import` branch recorded a
+private observation of an owner's matching 3.57.0 client. The account fetch,
+separate collection/preset/village/pasture reads and one chapter's encoded stage
+progress were retained with authentication fields excluded. Input integrity and
+inventory-reference checks passed. No official-account importer or APK run
+against an imported local database has been verified. See the
+[experiment boundaries and remaining work](official-save-experiment.md).
