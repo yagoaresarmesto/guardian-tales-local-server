@@ -219,9 +219,28 @@ and unsupported tower mutations. All 269 tests pass on Python 3.11 and 3.13 with
 external networking disabled. A private read-only check matched the captured
 tower object and retained the complete profile and existing draw receipts.
 
-The original entry response was not captured. Backend reload and the APK retry
-remain pending. Ranking, formation edits, battles, floor advancement and rewards
-are not implemented by this read.
+The original entry response was not captured. After the backend reload, health
+recorded a successful entry, and the owner proceeded to the ranking screen. A
+private full-profile and draw-receipt comparison still matched the pre-deployment
+state. Formation edits, battles, floor advancement and rewards are not implemented
+by this read.
+
+## Empty local tower ranking
+
+Opening the ranking screen next failed at `/tower-infinity/get-rankings`. The
+native builder sends no body; `Tower1000Client` reads the response's `Rankings`
+list, and the ranking overlay uses its count. The new authenticated read returns
+`{"Rankings":[]}` as an explicit empty local leaderboard. It does not copy official
+ranking entries, infer a personal rank from the saved floor or grant rewards.
+Null and empty request bodies are accepted; other parameters reject.
+
+One new regression verifies repeated empty-list reads and unchanged complete
+database state for both fresh and imported accounts. Existing authentication and
+malformed-request checks also cover the route. All 270 tests pass on Python 3.11
+and 3.13 without external networking. A private read-only check confirmed the
+empty response and unchanged account/draw receipts. Backend reload and the APK
+ranking retry remain pending; the original ranking response was not captured.
+The separate `/tower-infinity/get-my-ranking` route is still unsupported.
 
 ## Host readiness before the APK check
 

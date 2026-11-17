@@ -6,7 +6,10 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **269 passing tests**. Three infinite-tower entry regressions cover
+The suite has **270 passing tests**. An empty tower-ranking regression covers
+repeated fresh/imported reads and unchanged database state; authentication and
+request-shape guards also cover the ranking read. Three infinite-tower entry
+regressions cover
 legacy formations, signed/current imported progress and invalid-state rejection;
 authentication, parameter and mutation guards also cover the tower entry.
 Four contents-book prerequisite regressions
@@ -878,8 +881,12 @@ and the saved one/ten draw receipts were retained. Individual tabs and mode
 gameplay remain outside this verification. The next error was the unimplemented
 `/tower-infinity/enter` read. Its handler now returns the captured floor and legacy
 formation under the native callback's top-level `TowerInfinity` key without
-changing progress. Private read checks and 269 isolated tests pass; backend reload
-and the APK retry are pending. Tower battles, formation edits and rewards remain
+changing progress. The APK subsequently completed entry and reached the ranking
+query; a private check confirmed unchanged full profile and draw receipts.
+Opening rankings then failed at `/tower-infinity/get-rankings`. It now returns an
+empty local `Rankings` list without inferring official entries or a personal rank.
+Private read checks and all 270 isolated tests pass; backend reload and the APK
+ranking retry are pending. Tower battles, formation edits and rewards remain
 unsupported.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

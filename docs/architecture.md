@@ -206,9 +206,18 @@ client's progress before transitioning. The handler returns the current saved
 `UserProgress.TowerInfinity` object under that exact key, retaining signed floors
 and legacy `Formation` without migrating presets. Missing or invalid saved floor
 data is rejected without repair. It performs no writes, floor advancement or
-rewards. Formation changes, rankings and stage start/end remain unsupported.
+rewards. Formation changes and stage start/end remain unsupported.
 The request builder, callback and legacy formation fallback were inspected
-statically; the original response was not captured. APK retry is pending.
+statically; the original response was not captured. The APK subsequently completed
+entry and reached the ranking query with the full saved profile unchanged.
+
+`/tower-infinity/get-rankings` is an authenticated, parameterless read returning
+`{"Rankings":[]}`. Its native callback reads that exact key, and the list view
+uses the list's count. An empty array is therefore required rather than a missing
+or null list. This is an empty local leaderboard with no copied official entries,
+invented self-rank, rewards or database writes. Unexpected parameters reject.
+The separate personal-ranking query remains unsupported. APK ranking retry is
+pending; this contract comes from static client inspection and synthetic checks.
 
 ## Resource boundaries
 

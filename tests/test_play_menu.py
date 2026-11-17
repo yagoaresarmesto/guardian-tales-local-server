@@ -99,6 +99,7 @@ class PlayMenuTests(unittest.TestCase):
             ("/coop-expedition/enter", {"IsPartial": False}),
             ("/rift/enter", None),
             ("/tower-infinity/enter", None),
+            ("/tower-infinity/get-rankings", None),
         ):
             with self.assertRaises(PacketError):
                 self.call(route, body)
@@ -119,6 +120,7 @@ class PlayMenuTests(unittest.TestCase):
             ),
             "/rift/enter": ([], False, 0, {"Claim": True}, {"IsPartial": False}),
             "/tower-infinity/enter": ([], False, 0, {"Floor": 1}, {"Claim": True}),
+            "/tower-infinity/get-rankings": ([], False, 0, {"Page": 1}, {"UserId": 9400}),
         }
         for route, bodies in malformed.items():
             for body in bodies:
@@ -144,14 +146,33 @@ class PlayMenuTests(unittest.TestCase):
             ("/tower-infinity/save-formation", {}),
             ("/tower-infinity/start-stage", {}),
             ("/tower-infinity/end-stage", {}),
+            ("/tower-infinity/get-my-ranking", {}),
         ):
             with self.subTest(route=route), self.assertRaises(PacketError):
                 self.call(route, body)
         self.assertEqual(list(self.db.iterdump()), before)
         self.assertEqual(
             set(PLAY_MENU_ROUTES),
-            {"/coop-expedition/enter", "/rift/enter", "/tower-infinity/enter"},
+            {
+                "/coop-expedition/enter",
+                "/rift/enter",
+                "/tower-infinity/enter",
+                "/tower-infinity/get-rankings",
+            },
         )
+
+    def test_tower_rankings_are_empty_reads_for_fresh_and_imported_accounts(self):
+        for imported in (False, True):
+            with self.subTest(imported=imported):
+                if imported:
+                    self.install_import()
+                self.login()
+                before = list(self.db.iterdump())
+                for body in (None, {}, None):
+                    self.assertEqual(
+                        self.call("/tower-infinity/get-rankings", body), {"Rankings": []}
+                    )
+                self.assertEqual(list(self.db.iterdump()), before)
 
     def test_tower_entry_returns_legacy_formation_without_migration_or_writes(self):
         self.login()

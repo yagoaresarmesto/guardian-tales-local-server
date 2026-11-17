@@ -98,7 +98,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Local hero draws | One/ten draws with configured probabilities, free gems or either controller type; new heroes, duplicate crystals, mileage and persistent retry receipts |
 | Pickup-ticket exchange check | Preserves imported event-coupon counters without conversion; empty fresh guests supported; redemption/expiration pending |
 | Play-menu prerequisites | Read-only cooperative placeholder with captured presets and saved rift settings; both APK reads succeeded after reconnect; mode gameplay unfinished |
-| Infinite-tower entry | Returns the saved floor and formation without changing progress; APK retry pending; battles and rewards unfinished |
+| Infinite-tower entry | Returns the saved floor and formation without changing progress; APK entry observed; battles and rewards unfinished |
+| Infinite-tower rankings | Empty local leaderboard list; no official rank or player entries inferred; APK retry pending |
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Initial free points, local shop availability and configured asset/stackable/individual item redemptions; sticker packs and other progression pending |

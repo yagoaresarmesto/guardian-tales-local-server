@@ -3,10 +3,21 @@
 
 from .snapshots import preserved_read
 
-PLAY_MENU_ROUTES = ("/coop-expedition/enter", "/rift/enter", "/tower-infinity/enter")
+PLAY_MENU_ROUTES = (
+    "/coop-expedition/enter",
+    "/rift/enter",
+    "/tower-infinity/enter",
+    "/tower-infinity/get-rankings",
+)
 
 
 def read(store, route, body):
+    if route == "/tower-infinity/get-rankings":
+        if body not in (None, {}):
+            raise ValueError("Infinite tower rankings accept no parameters")
+        # The offline server has no shared leaderboard. The native callback
+        # and list view require a non-null Rankings list, including when empty.
+        return {"Rankings": []}
     if route == "/tower-infinity/enter":
         if body not in (None, {}):
             raise ValueError("Infinite tower entry accepts no parameters")
