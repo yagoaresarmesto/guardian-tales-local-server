@@ -1174,6 +1174,28 @@
     "network_mutations_enabled": false,
     "campaign_entry_enabled_for_imported_account": false,
     "apk_tested_against_imported_database": false,
-    "scope": "Input integrity, isolated regressions and private protocol-level checks; not an end-to-end APK result or a complete server export"
+    "scope": "Input integrity, isolated regressions and private protocol-level checks; not an end-to-end APK result or a complete server export",
+    "host_preflight": {
+      "result": "PASS",
+      "verified_api_hostname_tls": true,
+      "verified_auth_hostname_tls": true,
+      "cdn_index_head": "PASS",
+      "manifest_resource_files": 15915,
+      "tls": "TLSv1.3",
+      "pongs": 3,
+      "imported_profile_unchanged": true,
+      "emulator_routing_changed": false,
+      "apk_exercised": false,
+      "nonfatal_windows_connection_close_warning_observed": true,
+      "host_services_stopped_after_check": true
+    },
+    "fresh_clone_content_import": {
+      "result": "PASS",
+      "content_id": "gt357-eu-20261116",
+      "resource_files": 15915,
+      "reference_files": 19,
+      "scope": "Imported data hashes; APK routing, TLS trust and gameplay are separate",
+      "published_manifest_matched_saved_download": true
+    }
   }
 }

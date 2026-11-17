@@ -106,6 +106,20 @@ confirmed profile equality after reopening, local sign-in identity, completed
 prologue state and the preserved startup replies. This is distinct from an APK
 result or a claim of complete account preservation.
 
+## Host readiness before the APK check
+
+The fresh Windows clone imported the public Release content successfully: all
+15,915 resources and 19 reference files passed the importer checks. The saved
+download manifest matched the manifest fetched from the published Release.
+Client hostname certificates were generated locally. A temporary host-only run
+verified the API/auth hostname certificates, the CDN index response and three
+TLS 1.3 Pongs while retaining the imported profile unchanged. The host services
+were then stopped; emulator routing was not changed by this check.
+
+A Windows Proactor connection-close callback logged `WinError 10054` during that
+preliminary check. The certificate checks, keepalives and cleanup completed; this
+warning is not evidence of a failed APK session, and no APK result is claimed.
+
 Use synthetic accounts for regression fixtures. Real profiles, captured response
 bodies, identifiers, credentials and resource files remain private. The supported
 fresh-local-account workflow continues to be described in the
