@@ -32,6 +32,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `monster_catalog.json` | Defeated-monster reports in additional stages | Stable public handle indices and explicit local experience/gold rules |
 | `completion_catalog.json` | Configured clear exits after Inn | Verified exit name and local required defeated-monster indices |
 | `summon_selection_catalog.json` | Hero candidates and wishlist registration | Public hero origins and native selection-row fields for a local pool |
+| `summon_draw_catalog.json` | Local hero draw costs, pools and duplicate rewards | Explicit local category weights, matching hero definitions and currency identifiers |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -146,7 +147,35 @@ signed-in account with the prologue complete and saves only
 `UserShop.SelectedSummonCharacters`/`UserShop.Cas`, returning `UserShop`. Identical
 retries do not write another revision. Negative placeholders and unknown or
 duplicate IDs are rejected before saving. No currency, inventory or hero is
-granted or spent. Weapon selection and actual summons remain pending.
+granted or spent. Weapon selection remains pending. Hero draws use the separate
+optional draw catalog described below.
+
+The draw catalog's exact shape is shown by the [synthetic fixture](../tests/fixtures/summon_draw_catalog.json).
+`heroes` maps origin IDs to native `rank` and `category` (`Normal`, `Story`,
+`Unique`); `origin_by_spec` maps evolved spec IDs back to those origins.
+`category_weights` and `duplicate_crystals` contain positive integers for all
+three categories. `gem_costs` contains keys `1` and `10`. The remaining fields
+identify ordinary/selectable tickets, hero crystals and mileage. No game catalog
+or official probabilities are included in the repository.
+
+The prepared pool contains 175 matching base definitions. Its **local** category
+weights are Normal 75, Story 20 and Unique 5; heroes within a category are uniform,
+and Unique results use the five saved wishlist origins. These are explicit local
+testing rules, not verified official rates or guarantees. Public client constants
+provide costs of 300/2,700 free gems and duplicate rewards of 1/8/50 hero crystals.
+Ordinary controllers are item 110007, selectable controllers 110015, hero crystals
+asset 70009 and mileage asset 70014. Supported cost types are 0 (free gems),
+3 (ordinary controllers) and 5 (selectable controllers), for one or ten draws.
+Controllers cost one per result; the local rule credits one mileage per result.
+
+One transaction saves the payment, newly owned level-one heroes, duplicate
+crystals, mileage, summon counter and frozen result receipt. A repeated request
+in the same client epoch returns those results with the current player state;
+it does not charge again or recreate heroes. Reconnect keeps the epoch; a fresh
+login starts a new one. Identical stale deltas across a fresh login remain
+ambiguous without an independent client operation ID. Pity, official promotions,
+paid/discount/free-event currencies, weapon draws and general hero training remain
+unfinished. The local draw route is `/summon/select-character`.
 
 ## Preservation manifest
 

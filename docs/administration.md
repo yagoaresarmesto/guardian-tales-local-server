@@ -66,8 +66,8 @@ grant; they do not change when gems are spent later. The grant command's separat
   contain the operation details, not credentials or a copied player profile.
 
 The CLI is a local administration tool. It does not expose an administrative
-network endpoint. Having gems does not implement spending routes that are still
-missing, such as summons or unimplemented shop operations.
+network endpoint. The configured local hero-draw route can spend free gems.
+Shop purchases, paid events and weapon draws remain unfinished.
 
 Automated checks cover a million-gem grant, persistence, account responses,
 retries after spending, conflicting IDs, invalid input, overflow, rollback,

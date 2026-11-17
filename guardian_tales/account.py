@@ -28,6 +28,7 @@ from .campaign import (
     encode_stage_progress,
     initial_stage_progresses,
 )
+from .characters import new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
 from .missions import (
@@ -48,6 +49,7 @@ from .passes import (
 )
 from .reference import ReferenceData
 from .story import enter_story_stage, load_story_catalog, open_eligible_stages
+from .summon_draw import draw_characters
 from .summon_selection import select_characters
 from .training import train_characters
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
@@ -72,6 +74,7 @@ ACCOUNT_ROUTES = (
     "/festival-pass/claim-all",
     "/user/exchange-summon-pickup-ticket",
     "/summon/set-select-character",
+    "/summon/select-character",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -170,6 +173,9 @@ class AccountStore:
             "CREATE TABLE IF NOT EXISTS character_training_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, targets TEXT NOT NULL)"
         )
         db.execute(
+            "CREATE TABLE IF NOT EXISTS character_summon_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, results TEXT NOT NULL, created_at TEXT NOT NULL)"
+        )
+        db.execute(
             "CREATE TABLE IF NOT EXISTS beginner_mission_claims (mission_id INTEGER PRIMARY KEY, rewards TEXT NOT NULL)"
         )
         db.execute(
@@ -257,28 +263,7 @@ class AccountStore:
                 weapons.append(inventory_item(len(weapons) + 1, spec))
         # CharacterSpecId.KnightFemale=1, KnightMale=2 in this client. These
         # public catalog IDs were verified from its initialized static fields.
-        knight = dict(
-            Id=1,
-            CharacterId=2 if info["IsMale"] else 1,
-            Experience=0,
-            LimitBreaks=0,
-            Weapon1=slots[0],
-            Weapon2=slots[1],
-            Accessory1=None,
-            Costume=None,
-            Orb1=None,
-            Orb2=None,
-            Merch=None,
-            Relic=None,
-            EquipCostumes={},
-            AwakeningTree="",
-            Knowledge=0,
-            RankUpgrade=0,
-            SpriteRank=None,
-            BlessLevel=0,
-            AwakeningTreeGold=0,
-            Flag=0,
-        )
+        knight = new_character(1, 2 if info["IsMale"] else 1, slots[0], slots[1])
         user.update(
             Name=name,
             VoiceType=info["VoiceType"],
@@ -1032,6 +1017,9 @@ class AccountStore:
                     (json.dumps(profile, separators=(",", ":")),),
                 )
         return {"OpenedStages": []}
+
+    def draw_summon_characters(self, request, operation_id):
+        return draw_characters(self, request, operation_id)
 
     def read(self, route, request=None):
         if route == "/summon/set-select-character":

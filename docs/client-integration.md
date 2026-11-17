@@ -135,10 +135,14 @@ earlier empty list produced the invalid `-1` placeholder, reopen the game after
 installing the catalog to discard that pending request.
 
 The automatic pickup-ticket exchange check supports empty saved event-coupon
-maps while preserving inventory tickets. Performing summons, converting existing
-event coupons, weapon selection and official promotional eligibility remain
-unimplemented. The next observed boundary is a ten-draw `/summon/select-character`
-request with cost type 3.
+maps while preserving inventory tickets. With an explicit local draw catalog,
+one/ten hero draws can spend free gems (cost type 0), ordinary controllers (3)
+or selectable controllers (5). The APK completed two ten-draw controller batches
+and one ten-draw gem batch, retaining the resulting heroes and rewards. The
+subsequent four single draws used type 5 and also succeeded.
+Reconnect reuses frozen results without a second charge. Probabilities are local
+configuration; official promotions, pity, paid events, weapon selection/draws
+and general hero training remain unfinished.
 
 Passive help acknowledgments now use the pinned 32-popup allowlist, including
 summons help 1003. The post-Inn world-map acknowledgment 2019 requires the saved

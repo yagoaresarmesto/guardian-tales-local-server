@@ -1,0 +1,16 @@
+{
+  "heroes": {
+    "101": {"rank": 2, "category": "Unique"}, "102": {"rank": 2, "category": "Unique"},
+    "103": {"rank": 2, "category": "Unique"}, "104": {"rank": 2, "category": "Unique"},
+    "105": {"rank": 2, "category": "Unique"}, "106": {"rank": 2, "category": "Unique"},
+    "201": {"rank": 1, "category": "Story"}, "301": {"rank": 0, "category": "Normal"}
+  },
+  "origin_by_spec": {"101": 101, "102": 102, "103": 103, "104": 104, "105": 105, "106": 106, "201": 201, "301": 301, "401": 101},
+  "category_weights": {"Normal": 75, "Story": 20, "Unique": 5},
+  "duplicate_crystals": {"Normal": 1, "Story": 8, "Unique": 50},
+  "gem_costs": {"1": 300, "10": 2700},
+  "ticket_item_id": 110007,
+  "selectable_ticket_item_id": 110015,
+  "hero_crystal_asset_id": 70009,
+  "mileage_asset_id": 70014
+}

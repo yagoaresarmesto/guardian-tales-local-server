@@ -78,7 +78,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | First hero collection challenge | Group 200, step 1: 50 free gems once for the saved starting knight |
 | Ad inbox initialization | Returns saved local ad state; ad playback and reward claims remain pending |
 | Summons screen entry | Optional local hero candidate catalog with matching checksums; empty fallback without external data |
-| Hero wishlist | Up to five distinct catalog heroes persist without spending currency or granting inventory; actual summons remain pending |
+| Hero wishlist | Up to five distinct catalog heroes persist without spending currency or granting inventory |
+| Local hero draws | One/ten draws with configured probabilities, free gems or either controller type; new heroes, duplicate crystals, mileage and persistent retry receipts |
 | Pickup-ticket exchange check | Returns empty results when both event-coupon maps are empty; inventory tickets stay unchanged |
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |

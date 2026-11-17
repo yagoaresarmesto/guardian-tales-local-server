@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **132 passing tests**, including eighteen first-chapter entry/progress
+The suite has **142 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -44,6 +44,10 @@ on Windows with its native file-lock implementation.
 Five hero-wishlist regressions cover catalog checksum refresh, selection,
 replacement/clearing, persistence/retries, authentication, invalid placeholders,
 catalog validation and failed-write rollback with the remaining profile retained.
+Ten draw regressions check one/ten costs, both controller kinds, split stacks,
+new heroes, evolved-origin duplicate conversion, crystals/mileage, frozen retry
+results, current-state preservation, reconnect/fresh epochs, authentication,
+invalid catalogs/balances, overflow and rollback of payment with the receipt.
 It covers real loopback TLS,
 fragmented and pipelined frames, malformed input, local platform credentials,
 account persistence across restart, prologue completion idempotency, restricted
@@ -381,9 +385,33 @@ pending request. The APK loaded the list and sent five valid updates, finishing
 with five saved heroes; the user confirmed selection worked. Normalizing only
 the wishlist and `UserShop.Cas` reproduces the pre-fix profile digest. Gems remain
 1,000,400, with all other balances, inventory, quests and clears retained.
-All 132 tests and format/lint checks pass. The next missing operation is the
-ten-draw `/summon/select-character` request with cost type 3. Actual draws and
-weapon selection remain unfinished.
+The wishlist update passed 132 tests. Its next boundary was the ten-draw
+`/summon/select-character` request with cost type 3.
+
+Local hero draws now use an explicit external catalog and stable client
+epoch/sequence receipts. Supported requests are one or ten results with cost
+types 0 (free gems), 3 (ordinary controllers) and 5 (selectable controllers).
+Matching public constants supply the 300/2,700 gem costs and duplicate conversion
+values 1/8/50. The prepared pool has 175 base definitions with **local** category
+weights 75/20/5 for Normal/Story/Unique; Unique draws use the five saved wishlist
+origins. These rates, mileage credit and pool rules do not reconstruct official
+server probabilities, guarantees, promotions or pity.
+
+Payment, new owned heroes, duplicate crystals, mileage, summon count and frozen
+results commit together. Reconnect returns the existing results and current
+profile without another payment. A fresh login starts a new request epoch;
+cross-login stale replay ambiguity remains. Party/equipment, prior hero progress,
+quests and stage clears are preserved. New heroes start at level one without
+equipment; general hero training is still pending.
+
+The APK completed three ten-draw batches: 20 ordinary controllers and 2,700 gems
+were spent, leaving 997,700 gems, 24 owned heroes, 105 hero crystals and 30 mileage.
+The subsequent single-draw request used type 5, which now consumes its separate
+110015 controller stack. Four single draws succeeded: the saved total is now
+34 with seven receipts, 107 hero crystals and 34 mileage; gems remain 997,700.
+All 142 tests and format/lint checks pass. The next boundary is a batch of seven
+beginner mission claims. Weapon draws, paid/discount/free-event currencies, official pity
+and remaining game systems are unfinished.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem
