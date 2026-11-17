@@ -218,6 +218,15 @@ class BootstrapSession:
                 return json_response(request, self.store.sign_in())
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
+            if route == "/festival-pass/redeem-point-rewards":
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.redeem_festival_points(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/collection/claim-hero-knowledge-all":
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)

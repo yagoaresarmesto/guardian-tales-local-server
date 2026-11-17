@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **188 passing tests**, including eighteen first-chapter entry/progress
+The suite has **202 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -23,6 +23,10 @@ catalogs, balance overflow, contiguous receipts and transaction rollback.
 Thirteen initial hero-knowledge regressions cover owned inventory IDs, batches
 with/without rewards, preserved flags, mixed old/new claims, persisted retries,
 unsupported progression, catalog/receipt validation, authentication and rollback.
+Six Festival shop checks cover read-only availability, purchase limits, owned
+persistent items, empty-season reads, data validation and authentication. Eight
+redemption regressions cover point costs, quantities, assets/stacks, limits,
+receipt/reconnect behavior, invalid requests, overflow and atomic rollback.
 Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
 sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
@@ -490,6 +494,23 @@ their other reported fields. The user also made 20 further draws before the
 state inspection, adding six heroes and changing controller/crystal/mileage
 state, so this was not an isolated full-profile comparison of the knowledge
 operation. Unrelated profile preservation is covered by the automated tests.
+
+Opening the Festival shop next required `/festival-pass/check-not-redeemable`.
+Static inspection established a parameterless request and a `NotRedeemable`
+integer list consumed by the popup's exclusion set. A matching external catalog
+now computes **local** exclusions from purchase limits and configured owned
+persistent rewards. Its prepared 42-item set has 23 costume/frame ownership
+rules. Complete official exclusion behavior is unverified. The APK accepted the
+availability reply; the complete saved profile remained unchanged across that
+read and the next unsupported purchase attempt.
+
+That purchase was `/festival-pass/redeem-point-rewards` with
+`shopItemId: 304, amount: 1`: one point for three relic-option change tickets
+(110009). The new handler commits point spending, purchase count, asset/stackable
+delivery and a frozen request receipt together. Other delivery kinds remain
+unsupported. All 202 tests and Black/Ruff checks pass; deployment preserved the
+complete profile with four Festival points. The actual APK redemption retry is
+pending.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

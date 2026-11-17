@@ -1,0 +1,9 @@
+{
+  "season_id": 91,
+  "items": {
+    "11": {"limit": 1, "owned_misc_ids": [12001], "price": 2, "rewards": [{"item_id": 70003, "amount": 5, "storage": "asset"}]},
+    "12": {"limit": 2, "owned_misc_ids": [], "price": 1, "rewards": [{"item_id": 110009, "amount": 3, "storage": "stackable"}]},
+    "13": {"limit": 0, "owned_misc_ids": [], "price": 1, "rewards": [{"item_id": 70004, "amount": 7, "storage": "asset"}]},
+    "14": {"limit": 1, "owned_misc_ids": [12002, 12003], "price": 2, "rewards": [{"item_id": 12002, "amount": 1, "storage": "unsupported"}]}
+  }
+}

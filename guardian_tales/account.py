@@ -32,6 +32,7 @@ from .challenges import claim_challenges
 from .characters import new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
+from .festival_shop import check_not_redeemable, redeem_points
 from .hero_knowledge import claim_hero_knowledge
 from .items import inventory_item
 from .missions import (
@@ -76,6 +77,8 @@ ACCOUNT_ROUTES = (
     "/guardian-pass/claim-all",
     "/festival-pass/enter",
     "/festival-pass/claim-all",
+    "/festival-pass/check-not-redeemable",
+    "/festival-pass/redeem-point-rewards",
     "/user/exchange-summon-pickup-ticket",
     "/user/charge-stamina-by-gem",
     "/summon/set-select-character",
@@ -185,6 +188,9 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS festival_pass_claims (season_id INTEGER NOT NULL, level INTEGER NOT NULL, points INTEGER NOT NULL, PRIMARY KEY(season_id,level))"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS festival_shop_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, rewards TEXT NOT NULL, purchase TEXT NOT NULL)"
         )
         existing = db.execute(
             "SELECT schema_version,profile FROM local_account WHERE id=1"
@@ -958,7 +964,12 @@ class AccountStore:
     def claim_hero_knowledge(self, request, operation_id):
         return claim_hero_knowledge(self, request, operation_id)
 
+    def redeem_festival_points(self, request, operation_id):
+        return redeem_points(self, request, operation_id)
+
     def read(self, route, request=None):
+        if route == "/festival-pass/check-not-redeemable":
+            return check_not_redeemable(self, request)
         if route == "/summon/set-select-character":
             return select_characters(self, request)
         if route == "/auth/fetch-account":

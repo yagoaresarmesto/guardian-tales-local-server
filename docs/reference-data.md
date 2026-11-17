@@ -37,6 +37,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `stamina_purchase_catalog.json` | Free-gem purchases of stored stamina | Matching public amount, price tiers, storage ceiling and type-9 daily limit |
 | `challenge_mission_catalog.json` | Hero collection/draw challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
 | `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
+| `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -323,6 +324,50 @@ counter specification. The local handler rejects a batch that would exceed the
 storage ceiling rather than truncating it. Exact official overflow behavior is
 unverified. Paid gems, automatic stamina regeneration and counter upgrades are
 outside this operation's scope.
+
+## Festival shop availability and point redemption
+
+The external `festival_shop_catalog.json` contains `season_id` and an `items`
+object keyed by positive decimal shop IDs. Each item has `price`, `limit`,
+`owned_misc_ids` and `rewards`; the [synthetic fixture](../tests/fixtures/festival_shop_catalog.json)
+shows the shape. A zero limit means unlimited redemptions. Each reward has
+positive `item_id`/`amount` and `storage` equal to `asset`, `stackable` or
+`unsupported`. Unsupported delivery types can remain in the availability catalog
+but cannot be redeemed by this implementation.
+
+`/festival-pass/check-not-redeemable` accepts no parameters (or an empty object)
+and returns `{"NotRedeemable": [shop_ids]}`. The client loads these integers into
+its shop exclusion set. The **local policy** excludes items whose saved purchase
+count reaches their configured limit or whose configured persistent reward is
+already present in `User.ItemMiscs`. Point affordability is a separate UI/payment
+check. This query changes no profile, points, inventory or receipts. A completely
+empty season-zero state can use the catalog for this read without initialization;
+other season mismatches or unknown history fail rather than silently resetting.
+
+The prepared season-41 catalog contains shop set 2's 42 items. Ownership rules
+cover its 22 costumes and one portrait frame. Complete official server exclusion
+rules, including other cosmetic subsystems, are unverified; these are explicit
+local rules derived from matching public item types and the local inventory model.
+
+`/festival-pass/redeem-point-rewards` accepts exactly `shopItemId` and `amount`,
+where amount is the number of exchanges. One transaction spends
+`price * amount` Festival points, updates `UserFestivalPass.Purchase`, grants the
+multiplied rewards and records a request receipt. Asset rewards require an
+existing asset; stackable rewards merge or receive a new inventory ID. The
+response contains `User`, `UserFestivalPass` and `AddedItems`, as consumed by the
+native purchase routine. Other asset spending counters are unchanged.
+
+The prepared simple deliveries cover shop IDs 210, 301, 302, 304 and 305.
+Item 304 costs one point for three item-110009 relic-option change tickets.
+Merch equipment, individual hammers and cosmetic/progression delivery remain
+unsupported and reject without point spending. Missing data, ownership/limit
+conflicts, insufficient points and overflow reject the entire purchase.
+
+Reconnect retries return frozen reward notices with current player/pass state
+without another charge or grant. Changing the request under a saved operation
+ID fails; existing receipts survive catalog removal. Fresh-login stale-request
+ambiguity has the same limits as other epoch-based mutating operations. The
+catalog does not initialize, rotate or migrate a progressed season.
 
 ## Preservation manifest
 

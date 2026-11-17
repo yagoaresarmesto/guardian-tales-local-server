@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 188,
+    "tests_run": 202,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -764,5 +764,31 @@
     "other_profile_preservation_checked_by_automated_tests": true,
     "concurrent_hero_draws_before_state_inspection": 20,
     "live_full_profile_comparison_isolated": false
+  },
+  "festival_shop_update": {
+    "date": "2026-11-17",
+    "routes": ["/festival-pass/check-not-redeemable", "/festival-pass/redeem-point-rewards"],
+    "availability_response_key": "NotRedeemable",
+    "availability_policy": "Explicit local purchase-limit and persistent-item ownership exclusions; full official rules unverified.",
+    "prepared_season_id": 41,
+    "prepared_shop_set": 2,
+    "prepared_catalog_items": 42,
+    "prepared_persistent_ownership_rules": 23,
+    "prepared_simple_delivery_shop_ids": [210, 301, 302, 304, 305],
+    "scope": "Read-only availability and atomic point redemption into existing assets or ordinary stackables; other deliveries unsupported.",
+    "observed_redemption_request": {"shopItemId": 304, "amount": 1},
+    "expected_point_cost": 1,
+    "expected_reward_item_id": 110009,
+    "expected_reward_amount": 3,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 202,
+    "additional_availability_regressions": 6,
+    "additional_redemption_regressions": 8,
+    "cost_quantity_stock_ownership_retry_auth_overflow_and_rollback_checked": true,
+    "original_apk_availability_query_accepted": true,
+    "original_apk_availability_interval_profile_unchanged": true,
+    "profile_unchanged_across_redemption_deployment": true,
+    "pre_retry_festival_points": 4,
+    "original_apk_redemption_confirmed": false
   }
 }

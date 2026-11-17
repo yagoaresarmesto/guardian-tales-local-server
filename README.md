@@ -85,7 +85,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Pickup-ticket exchange check | Returns empty results when both event-coupon maps are empty; inventory tickets stay unchanged |
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
-| Festival Pass | Entry returns saved state; season 41's free level-1 reward grants four festival points once; other progression and purchases pending |
+| Festival Pass | Initial free points, local shop availability and configured asset/stackable point redemptions; other progression and reward delivery pending |
 | Guild lists | Empty local recommendations and invitations, no pending application; guild creation and membership remain pending |
 | Later phase gameplay and remaining rewards | Unfinished; entry support alone does not implement a phase's interactions or clear rules |
 | Multiplayer, guild systems and purchases | Not implemented |

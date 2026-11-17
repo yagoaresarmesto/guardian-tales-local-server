@@ -36,6 +36,7 @@ flowchart LR
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
+| `festival_shop.py` | Local shop exclusions, catalog point prices and atomic asset/stackable redemptions |
 | `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |
