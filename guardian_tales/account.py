@@ -47,6 +47,7 @@ from .passes import (
     FIRST_PASS_STAMINA,
 )
 from .reference import ReferenceData
+from .stamina_purchase import purchase_stamina
 from .story import enter_story_stage, load_story_catalog, open_eligible_stages
 from .summon_draw import draw_characters
 from .summon_selection import select_characters
@@ -72,6 +73,7 @@ ACCOUNT_ROUTES = (
     "/festival-pass/enter",
     "/festival-pass/claim-all",
     "/user/exchange-summon-pickup-ticket",
+    "/user/charge-stamina-by-gem",
     "/summon/set-select-character",
     "/summon/select-character",
     "/stage/get-stage-progresses",
@@ -155,6 +157,9 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS character_summon_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, results TEXT NOT NULL, created_at TEXT NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS stamina_gem_purchase_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, purchase TEXT NOT NULL, created_at TEXT NOT NULL)"
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS beginner_mission_claims (mission_id INTEGER PRIMARY KEY, rewards TEXT NOT NULL)"
@@ -924,6 +929,9 @@ class AccountStore:
 
     def draw_summon_characters(self, request, operation_id):
         return draw_characters(self, request, operation_id)
+
+    def purchase_stamina(self, request, operation_id, now=None):
+        return purchase_stamina(self, request, operation_id, now)
 
     def read(self, route, request=None):
         if route == "/summon/set-select-character":

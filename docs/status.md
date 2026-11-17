@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **150 passing tests**, including eighteen first-chapter entry/progress
+The suite has **162 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -14,6 +14,9 @@ Pass reward regressions and four initial Festival Pass reward regressions.
 Eight additional beginner-batch regressions cover shared stacks, high claim-bit
 indices, mixed old/new receipts, spent-reward retries, eligibility, invalid
 catalogs, authentication, overflow and transaction rollback.
+Twelve stamina-purchase regressions cover tiered batches, free-gem spending,
+storage/quota limits, UTC resets, receipt persistence after reopening/spending,
+catalog validation, authentication/reconnect and failed-write rollback.
 Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
 sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
@@ -429,6 +432,24 @@ All 150 tests and Black/Ruff checks pass. Other beginner condition types, weapon
 draws, paid/discount/free-event currencies, official pity and remaining game
 systems are unfinished.
 
+The next unsupported request was `/user/charge-stamina-by-gem` with `Count: 1`.
+The handler now uses a matching external price/limit catalog, saves free-gem
+spending and stored stamina with the type-9 daily purchase count, and writes a
+receipt in the same transaction. The native price routine sums successive tiers
+from the used count; the public counter permits 20 charges daily. The prepared
+values are 50 stamina per charge, prices beginning at 100 gems and a 3,000 storage
+ceiling. UTC midnight is an explicit local reset rule; cap-crossing batches are
+rejected, and paid-gem payment is unsupported.
+
+All 162 tests, Black and Ruff pass. Deployment preserved the complete saved
+profile before the pending APK retry: 997,700 gems and 115 stored stamina.
+The APK then submitted four purchases with counts 1, 1, 2 and 16. All four
+receipts saved, spending 8,000 gems for 1,000 stored stamina and reaching the
+20-charge daily quota. Gems became 989,700 and stored stamina 1,115; other
+reported balances, heroes, inventory, quests, stages, passes and prior receipts
+were preserved. The client proceeded to `/mission/claim-challenge-all-step`
+for groups 200 and 206, which is the next unsupported operation.
+
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem
 balance/user revision and rolls back on failure. The updated backend and command
@@ -473,11 +494,13 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 Use the [API inventory and implementation plan](implementation-plan.md) to
 implement coherent systems independently of manual failures. The initial static
-scan found 710 distinct route literals across 62 systems; the server registers
-58 game routes, of which 57 appear in that scan. Registration includes partial
+scan found 710 distinct route literals across 62 systems; at source commit
+`d248371` the server registered 58 game routes, of which 57 appeared in that scan.
+Registration includes partial
 handlers and empty reads and does not measure game completion. Eight send
 methods require further route resolution. This documentation-only planning
-update does not change the tested server or saved account.
+update itself did not change the tested server or saved account. Subsequent
+features are recorded above; the inventory's dispatch fields remain a snapshot.
 
 1. Review unresolved routes and request/response contracts; extend automated
    cross-system scenarios using synthetic guests and temporary databases.

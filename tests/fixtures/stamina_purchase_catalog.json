@@ -1,0 +1,6 @@
+{
+  "amount_per_charge": 7,
+  "gem_prices": [5, 9],
+  "max_storage": 100,
+  "daily_limit": 4
+}

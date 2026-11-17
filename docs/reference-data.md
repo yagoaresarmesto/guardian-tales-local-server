@@ -34,6 +34,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `summon_selection_catalog.json` | Hero candidates and wishlist registration | Public hero origins and native selection-row fields for a local pool |
 | `summon_draw_catalog.json` | Local hero draw costs, pools and duplicate rewards | Explicit local category weights, matching hero definitions and currency identifiers |
 | `beginner_mission_catalog.json` | Hero-draw beginner milestones | Public mission IDs, required draw counts and supported asset/stackable rewards |
+| `stamina_purchase_catalog.json` | Free-gem purchases of stored stamina | Matching public amount, price tiers, storage ceiling and type-9 daily limit |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -214,6 +215,43 @@ catalog, only the three built-in missions are supported.
 The prepared private catalog has 11 hero-draw milestones from the matching
 client's public mission data, with thresholds between 1 and 50. This covers one
 mission type; other beginner conditions remain unfinished.
+
+## Gem stamina purchases
+
+`/user/charge-stamina-by-gem` requires an external
+`stamina_purchase_catalog.json` with exactly four fields. The
+[synthetic fixture](../tests/fixtures/stamina_purchase_catalog.json) illustrates
+the shape: positive integer `amount_per_charge`, `max_storage` and `daily_limit`,
+plus a nonempty `gem_prices` list of positive integers. These inputs are public
+configuration, not account state.
+
+The request is exactly `{"Count": positive_integer}`. Prices start at the saved
+type-9 `User.StaminaGemChargeTicket.PlayCount`; a batch sums consecutive price
+tiers and repeats the last price if the configured limit exceeds the price list.
+The saved counter resets at the next UTC midnight. This matches this local
+server's `StartOfDay` configuration; other service reset schedules are unsupported.
+
+One transaction deducts free gems (asset 70003), increments their `Spent` total,
+adds stored stamina (70032), advances the daily counter and saves an operation
+receipt. The reply contains the current `User`; the native success consumer
+constructs its reward notice from the requested count and public charge amount.
+Other profile sections and stamina `Spent` remain unchanged.
+
+Reconnect retries in the same request epoch reuse the receipt and current user
+state. They do not recharge gems or restore stamina consumed after purchase.
+The same receipt also remains stable after a daily reset or catalog removal.
+A changed count under an existing operation ID is rejected. A fresh login starts
+a new epoch; ambiguous stale requests across fresh logins have the same limitation
+as existing draw/training receipts.
+
+The prepared catalog provides 50 stored stamina per charge, a storage ceiling of
+3,000 and 20 purchases per day. Prices are 100 for each of the first two charges,
+then 200, 300 and 400 for successive pairs, followed by 500 for the remaining
+charges. These values come from the matching client's constants and type-9
+counter specification. The local handler rejects a batch that would exceed the
+storage ceiling rather than truncating it. Exact official overflow behavior is
+unverified. Paid gems, automatic stamina regeneration and counter upgrades are
+outside this operation's scope.
 
 ## Preservation manifest
 

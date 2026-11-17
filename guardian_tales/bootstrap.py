@@ -218,6 +218,15 @@ class BootstrapSession:
                 return json_response(request, self.store.sign_in())
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
+            if route == "/user/charge-stamina-by-gem":
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.purchase_stamina(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/summon/select-character":
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
