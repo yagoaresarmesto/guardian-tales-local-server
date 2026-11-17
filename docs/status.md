@@ -623,7 +623,10 @@ tutorial. The native client downloaded and extracted the package: all 11,874
 entries are present with matching sizes, and three selected bundle/script/tilemap
 files also match their preserved SHA-256 hashes. These generated inputs and
 machine-specific preparation tools are not distributed by the repository. The
-full clean-account tutorial and subsequent gameplay remain unverified.
+user subsequently completed the clean account's prologue without further errors.
+The backend confirms the prologue selection is saved and one persistent character
+exists; no campaign stage has yet been entered on this new account. Subsequent
+gameplay and restart recovery for this specific installation remain unverified.
 
 The user reached the choice between playing the tutorial with or without
 background downloads, then reported a connection error. The server had a
@@ -641,8 +644,9 @@ diagnostic wrapper: it attempted to parse binary keepalives as JSON. The wrapper
 now observes API requests only and passes keepalives unchanged. A direct check
 reproduced the old failure; the corrected wrapper and three live TLS Ping/Pong
 exchanges passed. This is a laboratory-tool correction, separate from the public
-idle timeout change. Client retry after this fix is pending; no player state or
-downloaded content was reset.
+idle timeout change. The client retry passed, subsequent client keepalives were
+observed, and the user completed the prologue. No player state or downloaded
+content was reset.
 
 ## Prioritized implementation work
 

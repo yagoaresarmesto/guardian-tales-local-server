@@ -851,7 +851,8 @@
     "initial_local_test_ZIP_entries": 11874,
     "initial_ZIP_download_extraction_verified": true,
     "fresh_guest_access_verified": true,
-    "playable_startup_verified": false
+    "playable_startup_verified": true,
+    "playable_startup_scope": "Clean guest through completed prologue; later gameplay and restart recovery pending"
   },
   "idle_game_connection_update": {
     "automated_result": "PASS",
@@ -861,7 +862,7 @@
     "incomplete_header_deadline_verified": true,
     "shutdown_of_idle_game_connection_verified": true,
     "deployment_preserved_complete_new_profile": true,
-    "APK_menu_download_retry_verified": false
+    "APK_menu_download_retry_verified": true
   },
   "clean_initial_package_and_keepalive_observation": {
     "APK_initial_ZIP_transfer_observed": true,
@@ -871,6 +872,15 @@
     "private_observer_valid_ping_regression_passed": true,
     "live_TLS_keepalive_requests_passed": 3,
     "private_observer_fix_changes_public_server_code": false,
-    "client_retry_after_observer_fix_verified": false
+    "client_retry_after_observer_fix_verified": true
+  },
+  "clean_client_prologue_completion": {
+    "user_confirmed_completion": true,
+    "backend_prologue_selection_saved": true,
+    "persistent_character_count": 1,
+    "client_keepalives_after_observer_fix_observed": true,
+    "campaign_entry_on_this_account_verified": false,
+    "restart_recovery_on_this_account_verified": false,
+    "observation_read_only": true
   }
 }

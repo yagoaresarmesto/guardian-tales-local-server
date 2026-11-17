@@ -96,6 +96,12 @@ setups need a complete matching initial table response in addition to the CDN
 resources; copying only that earlier response is insufficient. See the
 [clean installation findings](status.md#clean-installation-experiment).
 
+With the complete matching external inputs supplied, the separate clean-client
+experiment has now passed local guest access, initial resource download and
+extraction, and user-confirmed prologue completion with one saved character.
+This establishes that path in the prepared clean laboratory. The repository
+still does not distribute the game data or recreate its machine-specific setup.
+
 With the compatible private inputs and routing, the observed sequence is local
 guest access, prologue, saved character, lobby, and world map. On a new account,
 explicitly select a personality as well as the avatar and name. The game creates
