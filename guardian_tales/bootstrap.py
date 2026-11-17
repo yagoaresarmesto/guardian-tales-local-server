@@ -275,6 +275,11 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/user/charge-stamina":
+                try:
+                    return json_response(request, self.store.account.charge_stamina(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/user/charge-stamina-by-gem":
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)

@@ -244,7 +244,20 @@ choices. Reusing a request identity for another ID rejects, and a failed receipt
 write rolls back the profile update. Preset definitions, current party, character
 progression/equipment and inventory remain unchanged. Creating/editing presets,
 other modes and formation/result writes are separate unsupported contracts.
-The original response was not captured; the APK selection retry is pending.
+The original response was not captured. The APK selection subsequently succeeded;
+its saved receipt, pointer and revision matched, with unrelated state preserved.
+
+The following `/user/charge-stamina` failure was a separate parameterless natural
+recharge request. Its local policy mirrors the native client arithmetic: below
+`MaxStaminaDefault + MaxAdj`, credit due ticks from `NextCharge` at the configured
+minute interval, clamp the balance and advance the saved anchor by elapsed ticks.
+One transaction stores the charged amount, next anchor and incremented account
+revision. The persisted anchor makes repeated requests idempotent for already
+credited ticks, while later requests can earn newly elapsed ticks. Future/null
+anchors and full/over-cap balances are no-ops. Seven-digit .NET fractions are
+preserved without granting an early tick. The response returns current `User`;
+reserve stamina, spending, gems, purchase counters and presets remain unchanged.
+The original official response was not captured; APK recharge retry is pending.
 
 ## Resource boundaries
 

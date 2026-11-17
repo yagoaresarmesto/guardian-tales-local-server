@@ -98,13 +98,16 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Three mutations are now enabled: `/summon/set-select-character`,
-`/summon/select-character` and `/preset/set-selected-preset`. The summon routes
+Four mutations are now enabled: `/summon/set-select-character`,
+`/summon/select-character`, `/preset/set-selected-preset` and
+`/user/charge-stamina`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
 controllers. Preset selection changes only the chosen captured Orbital preset
-and the account revision, with its own atomic retry receipts. Other mutations
+and the account revision, with its own atomic retry receipts. Natural stamina
+recharge advances the saved timer and charged balance up to its configured cap.
+Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
 
@@ -309,9 +312,42 @@ reopening/reconnect, scope/authentication, invalid or unowned presets, revision
 overflow and rollback on receipt failure. All 283 tests pass on Python 3.11 and
 3.13 without external networking. Private read-only checks resolved the captured
 Orbital options and retained the real profile and draw receipts; no selection was
-applied to the real account by those checks. Backend reload and the APK selection
-retry remain pending. Creating, editing, deleting and reordering presets, other
+applied to the real account by those checks. After reload, the APK selection
+request succeeded and one receipt was saved. A private check matched the selected
+pointer and revision to that receipt; all unrelated profile data and preserved
+preset definitions were unchanged. The subsequent failure was a separate
+`/user/charge-stamina` request. Creating, editing, deleting and reordering presets, other
 modes' selections and Orbital formation/result writes remain unsupported.
+
+## Natural stamina recharge
+
+The automatic `/user/charge-stamina` request has no parameters. Static inspection
+of `ChargeStaminaLocal`, `Asset.GetMaximum` and native field offsets establishes
+the charged asset, saved `NextCharge` anchor, `MaxStaminaDefault + MaxAdj` cap and
+`StaminaChargeInterval` in minutes. Matching public constants are 63 and 10 minutes;
+the account's adjustment stays private. The original official response was not
+captured. The implementation mirrors the inspected client calculation as its
+explicit local recharge policy.
+
+While below the cap with a due saved anchor, the handler credits one unit per
+elapsed tick, starting at the anchor, and advances that anchor by the same number
+of intervals. It clamps the balance and increments `User.Cas` once. The amount
+and anchor are committed together, so retries or reopening cannot credit an old
+tick twice. Future/null anchors and balances already at or above the cap remain
+unchanged; entry does not invent a new anchor or reduce over-cap balances.
+Seven-digit .NET fractional seconds retain their final digit without charging
+early at a microsecond boundary. Reserve stamina, historical spending, gems,
+purchase counters and all other state remain untouched.
+
+Eight new regressions cover exact tick boundaries, timezone/fractional precision,
+cap adjustments, catch-up/reopening, no-op states, malformed assets/timers/clocks,
+authentication/parameters, invalid catalogs and rollback on failed writes.
+All 291 tests pass on Python 3.11 and 3.13 without external networking. A private
+calculation on detached account data accepted the saved timer and changed only
+the intended fields; it did not write to the real account. The optional recharge
+catalog was extracted from the matching imported constants and is additional to
+the older Release pack. Backend reload and the APK recharge retry remain pending.
+Gem purchases and reserve-stamina transfers are separate operations.
 
 ## Host readiness before the APK check
 

@@ -106,6 +106,7 @@ class SnapshotTests(unittest.TestCase):
                 "/preset/set-selected-preset",
                 "/summon/select-character",
                 "/summon/set-select-character",
+                "/user/charge-stamina",
             ],
         )
         self.assertEqual(result["source_sha256"], hashlib.sha256(original_source).hexdigest())

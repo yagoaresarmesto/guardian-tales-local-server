@@ -46,6 +46,7 @@ not fetch missing bootstrap files from an official service.
 | `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 | `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
+| `stamina_regen_catalog.json` | Natural stamina recharge | Matching client, base charged-stamina maximum and interval in minutes |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -75,6 +76,15 @@ Orbital party without editing its definition. It requires no additional public
 catalog: the native mode ID range and preserved private preset data provide its
 scope. Only the saved selection pointer and account revision change; character
 and equipment ownership checks are shared with the phase-loading trial.
+
+The optional `stamina_regen_catalog.json` contains `client` with the same pinned
+version/code/region object, `base_max` and `interval_minutes`. The prepared
+3.57.0 constants supply `MaxStaminaDefault = 63` and `StaminaChargeInterval = 10`.
+Native `Asset.GetMaximum` adds the saved charged asset's `MaxAdj` to that base.
+Keep this derived catalog external; it is not included in the previously
+published 19-reference-file pack. No account values belong in the catalog.
+The handler uses only an existing saved `NextCharge` timer; it does not initialize
+missing timers, purchase energy or transfer reserve stamina.
 
 The attendance reader expects `origin_group`, `active_group`, and `groups`, where
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.

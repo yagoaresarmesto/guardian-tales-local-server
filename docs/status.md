@@ -6,7 +6,10 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **283 passing tests**. Seven Orbital preset-selection regressions
+The suite has **291 passing tests**. Eight natural-stamina regressions cover
+tick/precision/timezone boundaries, adjusted caps, catch-up and reopening,
+no-op states, invalid data/clocks/catalogs, authentication and atomic rollback.
+Seven Orbital preset-selection regressions
 cover exact mutation boundaries, retries and identities, reopening/reconnect,
 scope/authentication, ownership, invalid state, overflow and atomic rollback.
 Six Orbital loading regressions cover
@@ -905,7 +908,13 @@ Changing the preset inside Orbital next failed at
 `/preset/set-selected-preset`. It now selects only existing captured Orbital
 parties, updating the selection pointer and revision with atomic request receipts.
 Replays preserve later choices; team definitions, heroes, equipment and other
-profile data remain unchanged. All 283 isolated tests and private read-only
-compatibility checks pass. Backend reload and the APK selection retry are pending.
+profile data remain unchanged. The APK selection succeeded and its saved receipt,
+pointer and revision matched, with unrelated data preserved. The following failure
+was the parameterless `/user/charge-stamina` request. Natural recharge now uses
+the saved timer, matching interval and adjusted maximum, committing only the
+charged balance, next anchor and revision. Already credited ticks are not granted
+twice; reserve/gems, spending, purchase counters and presets remain intact.
+All 291 isolated tests and a private detached-data calculation pass. Backend reload
+and the APK recharge retry are pending.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

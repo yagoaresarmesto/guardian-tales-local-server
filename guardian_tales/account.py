@@ -55,6 +55,7 @@ from .reference import ReferenceData
 from .snapshots import create_tables as create_snapshot_tables
 from .snapshots import is_imported
 from .stamina_purchase import purchase_stamina
+from .stamina_regen import charge_stamina
 from .story import enter_story_stage, load_story_catalog, open_eligible_stages
 from .summon_draw import draw_characters
 from .summon_pickup import check_pickup_exchange
@@ -87,6 +88,7 @@ ACCOUNT_ROUTES = (
     "/festival-pass/redeem-point-rewards",
     "/user/exchange-summon-pickup-ticket",
     "/user/charge-stamina-by-gem",
+    "/user/charge-stamina",
     "/summon/set-select-character",
     "/summon/select-character",
     "/preset/set-selected-preset",
@@ -978,6 +980,9 @@ class AccountStore:
 
     def purchase_stamina(self, request, operation_id, now=None):
         return purchase_stamina(self, request, operation_id, now)
+
+    def charge_stamina(self, request, now=None):
+        return charge_stamina(self, request, now)
 
     def claim_hero_knowledge(self, request, operation_id):
         return claim_hero_knowledge(self, request, operation_id)
