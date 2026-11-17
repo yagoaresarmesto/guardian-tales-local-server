@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **223 passing tests**, including eighteen first-chapter entry/progress
+The suite has **227 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -647,6 +647,36 @@ exchanges passed. This is a laboratory-tool correction, separate from the public
 idle timeout change. The client retry passed, subsequent client keepalives were
 observed, and the user completed the prologue. No player state or downloaded
 content was reset.
+
+## Additional resource downloads
+
+The clean-client user started the in-game additional resource download. Many
+individual bundles returned HTTP 200, but `ondemand/ancient_darkness.zip` was
+absent and the overall download later reported failure. An individual-bundle
+fallback therefore did not establish successful completion of the full operation.
+
+The repository now provides `scripts/build_ondemand_archives.py` to build group
+ZIPs from external preservation manifests and produce another CDN manifest root.
+Its group-relative paths match the native extractor's destination. Four synthetic
+tests cover source overrides, archive contents and manifest delivery, group
+selection, source/output preservation and path traversal rejection. All 227 tests,
+Black and Ruff pass. Usage is in [setup](setup.md#build-on-demand-resource-archives).
+
+The prepared lab generated 92 group archives containing 1,919 available files.
+The previously missing archive now returns HTTP 200 and passes ZIP CRC validation.
+All 1,919 preserved indexed on-demand files match their index SHA-1 values. This
+does not establish that unpreserved regional resources are available. A cached
+330-byte HTTP error body was moved out of the client's ZIP cache for inspection.
+
+A later retry coincided with a CDN process reload and logged five truncated
+HTTP responses. The user retried with the CDN left running and reported no
+further download error. All 1,524 requested individual on-demand paths are
+present with matching indexed sizes. All 1,753 installed indexed on-demand files
+also match their SHA-1 values; no ZIP files remain pending. This verifies the
+selected client's additional-resource download, not every regional/language
+resource. Use of the generated group ZIP by the APK remains unverified because
+individual files were already cached. The saved player account and original
+preservation files were not changed.
 
 ## Prioritized implementation work
 

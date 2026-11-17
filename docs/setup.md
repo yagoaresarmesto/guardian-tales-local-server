@@ -104,6 +104,27 @@ not request headers, cookies, or query strings. Stop the CDN separately with Ctr
 The backend's platform response advertises port 18080, so keep that port for the
 current original-client configuration.
 
+## Build on-demand resource archives
+
+The client can request group ZIPs such as `AssetBundles/Android/ondemand/<group>.zip`
+as well as individual bundles. To assemble these archives from your preserved
+resources, run this repository script:
+
+```sh
+python scripts/build_ondemand_archives.py --resource-root "/preservation/base/resources/files" --resource-root "/preservation/supplement/resources/files" --output local/ondemand-pack
+```
+
+The output directory must be new or empty, outside the source resource roots.
+Later inputs override earlier matching files. Use repeated `--group NAME` options
+to select specific groups; the default builds every available group. ETag files
+and paths outside the on-demand subtree are excluded. Sources are read only.
+
+Add `--resource-root local/ondemand-pack/resources/files` to the CDN command
+alongside your original resource roots. The output includes its own preservation
+manifest. ZIP members are relative to the on-demand directory, including the
+group name, as the native extractor expects. This tool packages available files;
+it does not retrieve missing resources or establish regional content completeness.
+
 ## Optional package installation
 
 ```sh

@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 223,
+    "tests_run": 227,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -882,5 +882,27 @@
     "campaign_entry_on_this_account_verified": false,
     "restart_recovery_on_this_account_verified": false,
     "observation_read_only": true
+  },
+  "ondemand_archive_preparation": {
+    "automated_result": "PASS",
+    "automated_tests": 227,
+    "new_archive_tests": 4,
+    "prepared_group_archives": 92,
+    "prepared_archive_members": 1919,
+    "preserved_indexed_on_demand_SHA1_matches": 1919,
+    "previously_missing_archive_HTTP_status": 200,
+    "previously_missing_archive_ZIP_CRC_valid": true,
+    "additional_download_completion_verified": true,
+    "group_ZIP_extraction_with_APK_verified": false
+  },
+  "clean_additional_download_result": {
+    "user_reports_no_further_error": true,
+    "requested_individual_paths_present": 1524,
+    "requested_indexed_size_mismatches": 0,
+    "installed_indexed_ondemand_SHA1_matches": 1753,
+    "installed_indexed_ondemand_SHA1_mismatches": 0,
+    "unfinished_ZIP_files": 0,
+    "scope": "Selected clean-client additional resource set, not every region/language",
+    "player_state_reset": false
   }
 }
