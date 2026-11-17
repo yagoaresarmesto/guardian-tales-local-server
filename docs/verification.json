@@ -1302,9 +1302,32 @@
     },
     "local_draw_rules_match_existing_catalog": true,
     "official_probability_claimed": false,
-    "apk_draw_result": "pending",
+    "apk_draw_result": "PASS: owner completed one single draw and one ten-hero batch with selectable controllers",
     "unknown_imported_origins_reject_without_payment": true,
-    "untouched_zero_stacks_preserved": true
+    "untouched_zero_stacks_preserved": true,
+    "apk_saved_draw_checks": {
+      "result": "PASS",
+      "request_counts": [
+        1,
+        10
+      ],
+      "summon_cost_types": [
+        5,
+        5
+      ],
+      "saved_receipts": 2,
+      "saved_results": 11,
+      "selectable_controllers_spent": 11,
+      "free_gems_and_ordinary_controllers_unchanged": true,
+      "duplicate_rewards_and_history_match_receipts": true,
+      "existing_characters_unchanged": true,
+      "equipment_unchanged": true,
+      "party_unchanged": true,
+      "unrelated_profile_sections_unchanged": true,
+      "client_restart_recovery_verified": false,
+      "other_payment_types_apk_verified": false,
+      "player_values_published": false
+    }
   },
   "imported_pickup_preservation": {
     "date": "2026-11-17",
@@ -1347,6 +1370,6 @@
       }
     ],
     "synthetic_demos_passed": true,
-    "post_fix_apk_screen_entry": "pending"
+    "post_fix_apk_screen_entry": "PASS: owner entered summons successfully"
   }
 }

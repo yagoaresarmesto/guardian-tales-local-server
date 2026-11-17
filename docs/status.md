@@ -854,7 +854,12 @@ Configured hero wishlist/draw mutations are now enabled with imported-account
 regressions. Opening summons then failed at its automatic event-coupon check,
 before any draw: the previous handler rejected positive imported counters.
 An explicit local preservation policy now returns those counters unchanged and
-reports no executed conversion. Coupon conversion/expiration remains unimplemented;
-the next APK screen-entry retry is pending. Other mutations remain guarded.
+reports no executed conversion. The owner subsequently opened summons and
+completed one single draw and one ten-hero batch with selectable controllers.
+Read-only SQLite checks verified two receipts, eleven results and controllers
+spent, matching reward/history increments, and unchanged existing heroes,
+equipment, party and unrelated profile sections. Client restart recovery and
+other payment types are not yet APK-verified. Coupon conversion/expiration remains
+unimplemented. Other mutations remain guarded.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

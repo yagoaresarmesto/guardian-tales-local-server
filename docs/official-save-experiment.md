@@ -5,8 +5,9 @@ preserving an owner's existing 3.57.0 European account for this local backend.
 An experimental importer now loads a validated private snapshot into a new
 SQLite state directory. Account fetch, preserved startup reads and local sign-in
 passed a private input check. **The APK now reaches the imported lobby**, following
-a village-request compatibility fix. Configured local hero draws and wishlist
-changes pass imported-account regressions; their APK trial is still pending.
+a village-request compatibility fix. The owner also verified entry into summons
+and one- and ten-hero draws using selectable controllers in the APK. Wishlist
+changes and the other supported payment types have synthetic coverage only.
 Unlocked systems are not automatically implemented by import.
 
 ## Observed sources
@@ -134,11 +135,18 @@ remain available for later implementation. This is limited entry compatibility,
 not a claim that coupon conversion is implemented. Ordinary/selectable inventory
 controllers stay independent and unchanged by this check. Repeated calls return
 current shop state; malformed counters or extra request fields reject without
-mutation. The next APK attempt at opening the screen remains pending.
+mutation. The owner subsequently opened the summons screen successfully.
 
-The next APK check is a supported hero draw. Other hero and equipment actions can
-then be enabled in coherent groups with their own validation, transaction and
-retry tests. A private protocol-level check already
+The owner then completed one single draw and one ten-hero batch using selectable
+controllers (`SummonCostType: 5`). A read-only comparison of SQLite with the
+private imported baseline verified two saved receipts containing eleven results,
+eleven controllers spent, unchanged free gems and ordinary controllers, and the
+matching mileage, duplicate-crystal and historical summon-counter increments.
+Existing heroes, equipment, party and unrelated profile sections were unchanged.
+Client restart recovery after these draws remains unverified.
+
+Other hero and equipment actions can be enabled in coherent groups with their
+own validation, transaction and retry tests. A private protocol-level check already
 confirmed profile equality after reopening, local sign-in identity, completed
 prologue state and the preserved startup replies. This is distinct from an APK
 result or a claim of complete account preservation.
