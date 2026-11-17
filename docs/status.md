@@ -6,12 +6,15 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **259 passing tests**. Ten snapshot-import regressions cover
+The suite has **262 passing tests**. Thirteen snapshot-import regressions cover
 private-input validation, unchanged source/profile data, local sign-in identity,
 preserved startup reads, restart, mutation/prologue rejection, catalog isolation,
 existing-save protection, directory locking, failed-publication cleanup and valid
 or malformed village cache hints. A TLS integration regression checks that a
 rejected registered API records its route without retaining its private body.
+Imported coupon checks additionally cover positive historical counters, regular
+and collaboration maps, zero counts, unchanged inventory/balances/revisions,
+repeated reads, reopening, current-shop replies and malformed-state rejection.
 Seven imported-summon regressions cover existing evolved heroes, equipment and
 historical-state preservation, wishlist changes, one/ten draws, unused zero
 stacks, current-state retries, restart/reconnect, new request epochs, unknown
@@ -848,6 +851,10 @@ routes observed and the saved profile unchanged before mutation testing. Host
 routing, reverse mappings and IPv4/IPv6 isolation were verified. Some localized
 promotional banners were missing; this did not prevent the reported lobby.
 Configured hero wishlist/draw mutations are now enabled with imported-account
-regressions. Their APK test remains pending; other mutations remain guarded.
+regressions. Opening summons then failed at its automatic event-coupon check,
+before any draw: the previous handler rejected positive imported counters.
+An explicit local preservation policy now returns those counters unchanged and
+reports no executed conversion. Coupon conversion/expiration remains unimplemented;
+the next APK screen-entry retry is pending. Other mutations remain guarded.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

@@ -174,11 +174,16 @@ ad viewing/claims.
 whether to reload its catalog. The checksum matches `/summon/on-event`; entry
 does not modify the account or implement the actual summoning operations.
 
-The automatic `/user/exchange-summon-pickup-ticket` check supports an empty
-saved pair of event-coupon maps only. It returns `UserShop` plus empty
+The automatic `/user/exchange-summon-pickup-ticket` check returns current
+`UserShop` plus empty
 `ExchangeSummonPickUpTickets` and `ExchangeCollaborationPickUpTickets` dictionaries.
 Regular/selectable inventory tickets are a separate resource and remain intact.
-Existing event coupons are rejected until their conversion rules are implemented.
+For imported accounts, the explicit local preservation policy retains valid
+pickup/collaboration coupon counters, including positive amounts, without
+processing conversions or expiration. No currencies, items, shop revision or
+coupon amounts are changed. This permits the automatic scene-entry check while
+actual redemption remains unsupported. Fresh local accounts still require empty
+coupon maps. Malformed counters and unexpected parameters are rejected.
 
 ## Resource boundaries
 

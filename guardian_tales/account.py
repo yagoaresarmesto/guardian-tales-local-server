@@ -55,6 +55,7 @@ from .snapshots import is_imported
 from .stamina_purchase import purchase_stamina
 from .story import enter_story_stage, load_story_catalog, open_eligible_stages
 from .summon_draw import draw_characters
+from .summon_pickup import check_pickup_exchange
 from .summon_selection import select_characters
 from .training import train_characters
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
@@ -1004,18 +1005,7 @@ class AccountStore:
             # UserRecord. Preserve the local ad state without creating rewards.
             return {"UserRecord": self.profile()["UserRecord"]}
         if route == "/user/exchange-summon-pickup-ticket":
-            if request is not None and request != {}:
-                raise ValueError("Pickup ticket exchange accepts no parameters")
-            shop = self.profile()["UserShop"]
-            if shop["SummonPickUpTickets"] or shop["CollaborationPickUpTickets"]:
-                raise ValueError("Exchange of existing event pickup tickets is not implemented")
-            # These event coupon maps differ from regular/selectable inventory
-            # tickets. No exchange is needed when both saved maps are empty.
-            return {
-                "UserShop": shop,
-                "ExchangeSummonPickUpTickets": {},
-                "ExchangeCollaborationPickUpTickets": {},
-            }
+            return check_pickup_exchange(self, request)
         if route == "/stage/get-stage-progresses":
             result = initial_stage_progresses(request)
             progress = self.profile()["UserProgress"]

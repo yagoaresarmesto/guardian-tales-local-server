@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 259,
+    "tests_run": 262,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1305,5 +1305,48 @@
     "apk_draw_result": "pending",
     "unknown_imported_origins_reject_without_payment": true,
     "untouched_zero_stacks_preserved": true
+  },
+  "imported_pickup_preservation": {
+    "date": "2026-11-17",
+    "observed_failure_route": "/user/exchange-summon-pickup-ticket",
+    "failure_occurred_before_first_draw": true,
+    "profile_equal_to_imported_baseline_after_failure": true,
+    "draw_receipts_after_failure": 0,
+    "policy": "Preserve valid imported event-coupon counters; report no executed conversions",
+    "coupon_conversion_implemented": false,
+    "coupon_expiration_claimed": false,
+    "coupons_cleared": false,
+    "replacement_rewards_granted": false,
+    "private_counter_read_check": "PASS",
+    "new_regressions": 3,
+    "focused_windows_checks": 40,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 262,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 262,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "synthetic_demos_passed": true,
+    "post_fix_apk_screen_entry": "pending"
   }
 }

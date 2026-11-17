@@ -220,6 +220,75 @@ class SnapshotTests(unittest.TestCase):
             self.assertEqual(db.total_changes, before)
             self.assertEqual(session.store.account.profile(), self.snapshot["profile"])
 
+    def test_imported_event_coupon_check_preserves_counters_and_inventory(self):
+        self.snapshot["profile"]["UserShop"]["SummonPickUpTickets"] = {"12": 7, "17": 0}
+        self.snapshot["profile"]["UserShop"]["CollaborationPickUpTickets"] = {"21": 3}
+        self.snapshot["profile"]["User"]["ItemStackables"] = [
+            {"Id": 3, "ItemId": 110007, "Amount": 20},
+            {"Id": 4, "ItemId": 110015, "Amount": 4},
+        ]
+        self.snapshot["profile"]["User"]["ItemIdCounter"] = 4
+        self.write_source()
+        import_snapshot(self.source, self.state)
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            session = BootstrapSession(GuestStore(db))
+            session.signed_in = True
+            before = db.total_changes
+            for body in (None, {}, None):
+                value = json.loads(
+                    session.handle(request("/user/exchange-summon-pickup-ticket", body)).body
+                )
+                self.assertEqual(
+                    value,
+                    {
+                        "UserShop": self.snapshot["profile"]["UserShop"],
+                        "ExchangeSummonPickUpTickets": {},
+                        "ExchangeCollaborationPickUpTickets": {},
+                    },
+                )
+            self.assertEqual(db.total_changes, before)
+            self.assertEqual(session.store.account.profile(), self.snapshot["profile"])
+
+    def test_imported_coupon_check_returns_current_shop_after_reopen(self):
+        self.snapshot["profile"]["UserShop"]["SummonPickUpTickets"] = {"12": 7}
+        self.write_source()
+        import_snapshot(self.source, self.state)
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            account = GuestStore(db).account
+            account.read("/user/exchange-summon-pickup-ticket")
+            current = account.profile()
+            current["UserShop"]["SelectedSummonCharacters"] = [101, 102, 103, 104, 105]
+            current["UserShop"]["Cas"] += 1
+            with db:
+                db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(current),))
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            account = GuestStore(db).account
+            before = db.total_changes
+            result = account.read("/user/exchange-summon-pickup-ticket")
+            self.assertEqual(result["UserShop"], current["UserShop"])
+            self.assertEqual(account.profile(), current)
+            self.assertEqual(db.total_changes, before)
+
+    def test_imported_coupon_check_rejects_malformed_counts_without_mutation(self):
+        import_snapshot(self.source, self.state)
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            session = BootstrapSession(GuestStore(db))
+            session.signed_in = True
+            for values in ([1], {"12": True}, {"12": -1}, {"12": "7"}, {"bad": 7}, {"12": 1 << 63}):
+                profile = copy.deepcopy(self.snapshot["profile"])
+                profile["UserShop"]["SummonPickUpTickets"] = values
+                with db:
+                    db.execute(
+                        "UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),)
+                    )
+                before = db.total_changes
+                with self.subTest(values=values), self.assertRaises(PacketError):
+                    session.handle(request("/user/exchange-summon-pickup-ticket"))
+                self.assertEqual(db.total_changes, before)
+                self.assertEqual(session.store.account.profile(), profile)
+            with self.assertRaises(PacketError):
+                session.handle(request("/user/exchange-summon-pickup-ticket", {"Unexpected": True}))
+
     def test_existing_state_and_repeat_import_are_never_overwritten(self):
         import_snapshot(self.source, self.state)
         original = (self.state / "server.sqlite3").read_bytes()

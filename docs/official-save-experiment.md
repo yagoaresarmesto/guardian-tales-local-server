@@ -120,6 +120,22 @@ rewards to repair an unsupported response would damage the imported state.
 Captured stage strings are retained in SQLite but imported campaign play remains
 outside the current scope.
 
+The first attempt to open summons reached `/summon/enter` and then failed at the
+automatic `/user/exchange-summon-pickup-ticket` check. The imported account had a
+positive event-coupon counter, while the original local handler accepted only
+empty coupon maps. No draw occurred and the saved profile remained unchanged.
+
+That check now has an explicit **local preservation policy** for imported
+accounts: it validates the saved pickup/collaboration counter maps and returns
+the current `UserShop` unchanged with two empty executed-conversion maps. It does
+not classify coupons as expired, clear them or grant replacement rewards. Pickup
+seasons and their conversion rules are not configured locally, so those counters
+remain available for later implementation. This is limited entry compatibility,
+not a claim that coupon conversion is implemented. Ordinary/selectable inventory
+controllers stay independent and unchanged by this check. Repeated calls return
+current shop state; malformed counters or extra request fields reject without
+mutation. The next APK attempt at opening the screen remains pending.
+
 The next APK check is a supported hero draw. Other hero and equipment actions can
 then be enabled in coherent groups with their own validation, transaction and
 retry tests. A private protocol-level check already

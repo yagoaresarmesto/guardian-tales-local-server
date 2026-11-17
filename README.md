@@ -96,7 +96,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Summons screen entry | Optional local hero candidate catalog with matching checksums; empty fallback without external data |
 | Hero wishlist | Up to five distinct catalog heroes persist without spending currency or granting inventory |
 | Local hero draws | One/ten draws with configured probabilities, free gems or either controller type; new heroes, duplicate crystals, mileage and persistent retry receipts |
-| Pickup-ticket exchange check | Returns empty results when both event-coupon maps are empty; inventory tickets stay unchanged |
+| Pickup-ticket exchange check | Preserves imported event-coupon counters without conversion; empty fresh guests supported; redemption/expiration pending |
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Initial free points, local shop availability and configured asset/stackable/individual item redemptions; sticker packs and other progression pending |
