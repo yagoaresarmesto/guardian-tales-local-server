@@ -618,9 +618,12 @@ through an additional manifest root without editing the preservation copies.
 Two generated empty Spanish filters are an explicit local policy, not recovered
 official dictionaries. A fresh local SDK guest was issued through `/kong/sign-up`
 and the game accepted `/auth/sign-in`, without importing the earlier guest cache.
-The initial package's download/extraction and playable startup are still pending. These generated inputs and
-machine-specific preparation tools are not distributed by the repository. A
-working prepared client must not be treated as proof of a clean installation.
+The user selected tutorial play with background downloads and reached the
+tutorial. The native client downloaded and extracted the package: all 11,874
+entries are present with matching sizes, and three selected bundle/script/tilemap
+files also match their preserved SHA-256 hashes. These generated inputs and
+machine-specific preparation tools are not distributed by the repository. The
+full clean-account tutorial and subsequent gameplay remain unverified.
 
 The user reached the choice between playing the tutorial with or without
 background downloads, then reported a connection error. The server had a
@@ -630,7 +633,16 @@ The server now waits for a frame's first byte without an idle deadline, then
 bounds header/body completion to ten seconds each. Three regressions cover an
 authenticated idle/resume, shutdown of an idle game connection and incomplete
 header expiry. All 223 tests, Black and Ruff pass. Deployment preserved the
-complete new profile. The original-client menu/download retry is pending.
+complete new profile. The original-client retry reached the tutorial and
+extracted the initial resource package.
+
+The next tutorial disconnect was traced to the clean laboratory's private
+diagnostic wrapper: it attempted to parse binary keepalives as JSON. The wrapper
+now observes API requests only and passes keepalives unchanged. A direct check
+reproduced the old failure; the corrected wrapper and three live TLS Ping/Pong
+exchanges passed. This is a laboratory-tool correction, separate from the public
+idle timeout change. Client retry after this fix is pending; no player state or
+downloaded content was reset.
 
 ## Prioritized implementation work
 

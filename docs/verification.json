@@ -849,7 +849,7 @@
     "complete_static_tables_delivered": 129,
     "initial_local_test_ZIP_bytes": 1657219037,
     "initial_local_test_ZIP_entries": 11874,
-    "initial_ZIP_download_extraction_verified": false,
+    "initial_ZIP_download_extraction_verified": true,
     "fresh_guest_access_verified": true,
     "playable_startup_verified": false
   },
@@ -862,5 +862,15 @@
     "shutdown_of_idle_game_connection_verified": true,
     "deployment_preserved_complete_new_profile": true,
     "APK_menu_download_retry_verified": false
+  },
+  "clean_initial_package_and_keepalive_observation": {
+    "APK_initial_ZIP_transfer_observed": true,
+    "extracted_entries_with_matching_sizes": 11874,
+    "selected_SHA256_checks_passed": 3,
+    "user_reached_tutorial": true,
+    "private_observer_valid_ping_regression_passed": true,
+    "live_TLS_keepalive_requests_passed": 3,
+    "private_observer_fix_changes_public_server_code": false,
+    "client_retry_after_observer_fix_verified": false
   }
 }
