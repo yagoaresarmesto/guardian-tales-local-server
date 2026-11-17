@@ -6,7 +6,10 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **266 passing tests**. Four contents-book prerequisite regressions
+The suite has **269 passing tests**. Three infinite-tower entry regressions cover
+legacy formations, signed/current imported progress and invalid-state rejection;
+authentication, parameter and mutation guards also cover the tower entry.
+Four contents-book prerequisite regressions
 cover authentication, exact request shapes, imported presets and rift selections,
 unchanged database state and unsupported action rejection. Both prerequisite
 reads subsequently succeeded in the APK after a backend reload and reconnect.
@@ -872,6 +875,11 @@ so its menu view is explicitly empty. Mode gameplay and rewards remain unfinishe
 After the backend reload, both prerequisite reads succeeded. The owner reported
 recovery using Reconnect without closing the game; the connection remained active
 and the saved one/ten draw receipts were retained. Individual tabs and mode
-gameplay remain outside this verification.
+gameplay remain outside this verification. The next error was the unimplemented
+`/tower-infinity/enter` read. Its handler now returns the captured floor and legacy
+formation under the native callback's top-level `TowerInfinity` key without
+changing progress. Private read checks and 269 isolated tests pass; backend reload
+and the APK retry are pending. Tower battles, formation edits and rewards remain
+unsupported.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

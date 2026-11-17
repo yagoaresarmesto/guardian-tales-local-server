@@ -200,6 +200,29 @@ receipts still contained their original one and ten results. Earlier failure
 counters had not increased. This verifies the prerequisite exchange and reported
 reconnect recovery, not every tab, mode gameplay or a full client restart.
 
+## Infinite-tower entry
+
+The owner's next error produced an unsupported `/tower-infinity/enter` request.
+The native builder supplies no body, and the entry callback reads a top-level
+`TowerInfinity` object before transitioning to `Tower1000`. Returning only a
+`UserProgress` wrapper would not satisfy that callback. The profile capture
+already contains the saved floor and legacy formation, and the native client
+retains a fallback for that legacy formation.
+
+The authenticated read now returns current `UserProgress.TowerInfinity` under
+the required top-level key. It preserves the captured object, including signed
+floor values, without filling in new formation presets or resetting progress.
+Unexpected request fields and invalid saved floor data reject without writes.
+Three new regressions cover the legacy shape, signed/current imported progress
+and malformed-state rejection; existing guard tests now also cover this entry
+and unsupported tower mutations. All 269 tests pass on Python 3.11 and 3.13 with
+external networking disabled. A private read-only check matched the captured
+tower object and retained the complete profile and existing draw receipts.
+
+The original entry response was not captured. Backend reload and the APK retry
+remain pending. Ranking, formation edits, battles, floor advancement and rewards
+are not implemented by this read.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

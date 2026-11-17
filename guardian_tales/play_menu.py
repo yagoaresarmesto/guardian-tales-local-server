@@ -1,12 +1,26 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Read-only contents-book prerequisites; mode gameplay remains unsupported."""
+"""Read-only Play menu prerequisites and saved mode entry; battles unsupported."""
 
 from .snapshots import preserved_read
 
-PLAY_MENU_ROUTES = ("/coop-expedition/enter", "/rift/enter")
+PLAY_MENU_ROUTES = ("/coop-expedition/enter", "/rift/enter", "/tower-infinity/enter")
 
 
 def read(store, route, body):
+    if route == "/tower-infinity/enter":
+        if body not in (None, {}):
+            raise ValueError("Infinite tower entry accepts no parameters")
+        tower = store.account.profile()["UserProgress"].get("TowerInfinity")
+        if (
+            not isinstance(tower, dict)
+            or type(tower.get("Floor")) is not int
+            or not -0x7FFFFFFF <= tower["Floor"] <= 0x7FFFFFFF
+        ):
+            raise ValueError("Invalid saved infinite tower progress")
+        # The entry callback reads this top-level object directly. Returning
+        # only UserProgress would not satisfy it. Retain legacy Formation and
+        # signed floors without migrating presets or saving any state.
+        return {"TowerInfinity": tower}
     if route == "/rift/enter":
         if body not in (None, {}):
             raise ValueError("Rift entry accepts no parameters")

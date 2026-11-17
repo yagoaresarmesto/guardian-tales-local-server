@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 266,
+    "tests_run": 269,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1441,5 +1441,49 @@
       ],
       "mode_gameplay_verified": false
     }
+  },
+  "imported_infinite_tower_entry": {
+    "date": "2026-11-17",
+    "observed_failure_route": "/tower-infinity/enter",
+    "native_parameterless_builder_verified": true,
+    "native_entry_callback_verified": true,
+    "required_top_level_response_key": "TowerInfinity",
+    "native_legacy_formation_fallback_inspected": true,
+    "returns_current_saved_tower_object": true,
+    "signed_floor_and_legacy_formation_preserved": true,
+    "profile_or_rewards_changed": false,
+    "new_regressions": 3,
+    "focused_windows_checks": 40,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 269,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 269,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_input_read_check": "PASS",
+    "original_entry_response_captured": false,
+    "formation_changes_rankings_battles_and_rewards_implemented": false,
+    "running_backend_reloaded": false,
+    "post_fix_apk_entry": "pending"
   }
 }

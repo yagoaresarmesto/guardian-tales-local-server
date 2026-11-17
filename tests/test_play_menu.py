@@ -98,6 +98,7 @@ class PlayMenuTests(unittest.TestCase):
         for route, body in (
             ("/coop-expedition/enter", {"IsPartial": False}),
             ("/rift/enter", None),
+            ("/tower-infinity/enter", None),
         ):
             with self.assertRaises(PacketError):
                 self.call(route, body)
@@ -117,6 +118,7 @@ class PlayMenuTests(unittest.TestCase):
                 {"isPartial": False},
             ),
             "/rift/enter": ([], False, 0, {"Claim": True}, {"IsPartial": False}),
+            "/tower-infinity/enter": ([], False, 0, {"Floor": 1}, {"Claim": True}),
         }
         for route, bodies in malformed.items():
             for body in bodies:
@@ -139,8 +141,69 @@ class PlayMenuTests(unittest.TestCase):
             ("/coop-expedition/create", {}),
             ("/rift/set-evolve-stone-reward", {}),
             ("/stage/start-stage", {}),
+            ("/tower-infinity/save-formation", {}),
+            ("/tower-infinity/start-stage", {}),
+            ("/tower-infinity/end-stage", {}),
         ):
             with self.subTest(route=route), self.assertRaises(PacketError):
                 self.call(route, body)
         self.assertEqual(list(self.db.iterdump()), before)
-        self.assertEqual(set(PLAY_MENU_ROUTES), {"/coop-expedition/enter", "/rift/enter"})
+        self.assertEqual(
+            set(PLAY_MENU_ROUTES),
+            {"/coop-expedition/enter", "/rift/enter", "/tower-infinity/enter"},
+        )
+
+    def test_tower_entry_returns_legacy_formation_without_migration_or_writes(self):
+        self.login()
+        before = list(self.db.iterdump())
+        tower = self.store.account.profile()["UserProgress"]["TowerInfinity"]
+        for body in (None, {}):
+            response = self.call("/tower-infinity/enter", body)
+            self.assertEqual(response, {"TowerInfinity": tower})
+            self.assertNotIn("Formations", response["TowerInfinity"])
+            self.assertNotIn("SelectedParty", response["TowerInfinity"])
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_imported_tower_entry_preserves_signed_floor_formation_and_current_state(self):
+        self.install_import()
+        profile = self.store.account.profile()
+        profile["UserProgress"]["TowerInfinity"] = {
+            "Floor": -27,
+            "Formation": {"Id": 2, "Positions": [0, 1, 0, 0]},
+        }
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        self.login()
+        for floor in (-27, 28):
+            profile["UserProgress"]["TowerInfinity"]["Floor"] = floor
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            before = list(self.db.iterdump())
+            for body in (None, {}):
+                self.assertEqual(
+                    self.call("/tower-infinity/enter", body),
+                    {"TowerInfinity": profile["UserProgress"]["TowerInfinity"]},
+                )
+            self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_invalid_saved_tower_progress_is_rejected_without_repair_or_rewards(self):
+        self.install_import()
+        self.login()
+        for invalid in (
+            None,
+            [],
+            {},
+            {"Floor": True},
+            {"Floor": "1"},
+            {"Floor": -(2**31)},
+            {"Floor": 2**31},
+        ):
+            with self.subTest(progress=invalid):
+                profile = self.store.account.profile()
+                profile["UserProgress"]["TowerInfinity"] = invalid
+                with self.db:
+                    self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+                before = list(self.db.iterdump())
+                with self.assertRaises(PacketError):
+                    self.call("/tower-infinity/enter")
+                self.assertEqual(list(self.db.iterdump()), before)

@@ -200,6 +200,16 @@ was not captured. After the backend reload, both APK reads succeeded and the
 owner reported recovery using Reconnect without closing the game. This does not
 establish working mode gameplay.
 
+`/tower-infinity/enter` is another authenticated, parameterless read. Its native
+entry callback reads a top-level `TowerInfinity` object and assigns it to the
+client's progress before transitioning. The handler returns the current saved
+`UserProgress.TowerInfinity` object under that exact key, retaining signed floors
+and legacy `Formation` without migrating presets. Missing or invalid saved floor
+data is rejected without repair. It performs no writes, floor advancement or
+rewards. Formation changes, rankings and stage start/end remain unsupported.
+The request builder, callback and legacy formation fallback were inspected
+statically; the original response was not captured. APK retry is pending.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation
