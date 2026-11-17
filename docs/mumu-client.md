@@ -101,6 +101,10 @@ After `BRIDGE READY`, open the game and choose **Login as Guest**. The host
 backend creates and retains this installation's own local account. Initial and
 additional downloads come from the imported resource set.
 
+Keep all three terminals running if you use the game's downloaded-file
+check/organization afterward. That operation also passed in the fresh-install
+test; all 1,753 selected on-demand files retained their expected SHA-256 hashes.
+
 The bridge temporarily enables the selected instance's root support, overlays
 its hosts/trust files and blocks external IPv4/IPv6 traffic while retaining
 loopback and MuMu's ADB management connection. It is limited to MuMu's default

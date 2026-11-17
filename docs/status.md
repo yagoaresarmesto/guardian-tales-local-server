@@ -754,6 +754,15 @@ other interface languages are outside that result. The backend and bridge
 continued running with the same account. The transfer failure is recovered for
 this session; its root cause and a permanent correction remain unresolved.
 
+The user then completed the game's downloaded-file check/organization without
+an error. The journal added one media-index request (HTTP 304), with no further
+resource downloads. A fresh SHA-256 check still matched all 1,753 selected
+on-demand files. Afterward, the previously observed partial group ZIP was no
+longer present; no ZIP, `.mkdownload` or temporary checksum files were found.
+The backend continued to report the prologue selection as saved. This confirms
+the completed organization result for this installation, not the cause of the
+earlier transfer cuts or a permanent correction for them.
+
 ## Reproducible content import
 
 The [offline content guide](offline-content.md) documents the matching APK

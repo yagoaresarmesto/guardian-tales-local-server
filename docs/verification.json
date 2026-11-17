@@ -1107,5 +1107,19 @@
     "backend_and_bridge_kept_running_during_recovery": true,
     "transfer_failure_root_cause_established": false,
     "permanent_transfer_fix_implemented": false
+  },
+  "fresh_public_bridge_file_organization": {
+    "user_confirmed_completion_without_error": true,
+    "additional_media_index_HTTP_status": 304,
+    "additional_resource_downloads": 0,
+    "installed_ondemand_SHA256_matches": 1753,
+    "installed_ondemand_SHA256_mismatches": 0,
+    "missing_selected_ondemand_files": 0,
+    "partial_archive_remaining_after_check": false,
+    "mkdownload_files_remaining_after_check": false,
+    "temporary_checksum_remaining_after_check": false,
+    "backend_prologue_selection_still_saved": true,
+    "observer_modified_client_files": false,
+    "scope": "Post-organization resource verification for the selected English voice set; not a full player-state comparison or a permanent transfer fix"
   }
 }
