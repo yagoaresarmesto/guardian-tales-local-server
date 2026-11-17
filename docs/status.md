@@ -6,7 +6,11 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **321 passing tests**. Ten Orbital preset-creation regressions cover
+The suite has **336 passing tests**. Fifteen village-harvest regressions cover
+mutation bounds, seeds, interval/period gates, follower bonuses, storage/capacity,
+future/zero clocks, retries, reopening/new login, malformed data, ownership,
+authentication, unfinished facilities, revision limits and atomic rollback.
+Ten Orbital preset-creation regressions cover
 applying a new team, empty definitions, catalogs/slot bounds/native order,
 ownership, retries across deletion/recreation and catalog removal, reopening,
 authentication, revisions and rollback.
@@ -946,8 +950,21 @@ ID with native empty order 999 and `SetSelected=true`. Creation now requires the
 matching optional slot-count catalog and validates owned heroes/gear before
 atomically saving and selecting the team. New order is appended locally; other
 teams retain their order. Old save/delete retries preserve later recreations.
-All 321 isolated tests pass. The pending request passed on a temporary in-memory
-DB copy without changing the saved account. Backend reload and the APK Apply retry
-remain pending; reordering, other modes and saved Orbital progression are unfinished.
+The APK subsequently saved two creations and two deletions. Their receipt history
+reproduced current definitions, selection and revisions with unrelated profile,
+captured reads and previous selection/summon receipts intact. Reordering, other
+modes and saved Orbital progression are unfinished.
+
+The next failure was `/lobby-village/harvest-all`, collecting village production.
+It now uses a matching optional catalog, saved inn/facility clocks and owned
+follower bonuses to collect gold and soul points within storage/capacity limits.
+Balances, source clocks, revisions and retry receipts commit together; current
+village reads retain the clocks after reconnect. Full resources preserve their
+clocks, while other resources remain collectible. The captured seed and unrelated
+village systems remain unchanged. All 336 isolated tests pass. Detached actual
+account validation credited only eligible gold, retained full soul points and
+their clocks, and left unrelated fields intact without writing the saved account.
+Backend reload and the APK collection retry remain pending. Other village actions
+and rewards are unfinished.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

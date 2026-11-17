@@ -299,9 +299,27 @@ native empty-slot builder. A missing definition now requires a matching external
 ordering policy appends after the highest saved Orbital order, retaining other
 teams. Creation, optional selection and the existing edit receipt commit together.
 Old save retries cannot resurrect a deleted team; old delete retries cannot remove
-a recreated team. Validation of the observed pending request passed against an
-in-memory database copy without changing the saved account. APK Apply retry is
-pending. Reordering, other modes and Orbital result writes remain unsupported.
+a recreated team. The APK subsequently persisted two creations and two deletions;
+their history reproduced the current group, selection and revisions with unrelated
+profile and captured reads intact. Reordering, other modes and Orbital result
+writes remain unsupported.
+
+`/lobby-village/harvest-all` collects configured gold and soul-point production
+from the preserved village. Inn production uses separate saved resource clocks
+and manufacture levels; ready facilities use saved `EndTime`, public effect
+periods/storage and owned follower rarity/specialization bonuses. Native generic
+metadata resolves the response notices as `List<ItemPlaceholder>`. The original
+official response was not captured. Minimum intervals and capacity consumption
+are explicit local policies described in the [experiment](official-save-experiment.md).
+
+`village_state` holds current village clocks without changing its imported seed.
+Preserved village entry overlays that state after reopening. One transaction
+stores credited asset balances, village clocks, both revisions and a
+`village_harvest_requests` receipt. Replays return frozen notices with current
+models, even without a catalog, and never grant again. No-op receipts do not
+change revisions. Full resources retain clocks; other eligible resources can
+still be collected. Detached actual-account validation passed without saved
+account writes; APK collection retry is pending. Other village systems are separate.
 
 ## Resource boundaries
 

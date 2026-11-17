@@ -48,6 +48,7 @@ not fetch missing bootstrap files from an official service.
 | `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
 | `stamina_regen_catalog.json` | Natural stamina recharge | Matching client, base charged-stamina maximum and interval in minutes |
 | `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
+| `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -107,6 +108,31 @@ Keep this derived catalog external; it is not included in the previously
 published 19-reference-file pack. No account values belong in the catalog.
 The handler uses only an existing saved `NextCharge` timer; it does not initialize
 missing timers, purchase energy or transfer reserve stamina.
+
+The optional `village_harvest_catalog.json` is limited to 2 MiB. It contains the
+pinned `client`, `min_seconds`, `inn_factor`, `facility_divisor`, `sp_base_max`,
+`rarity_bonus`, `match_bonus` and decimal-ID `buildings`/`followers` objects.
+The [synthetic fixture builder](../tests/test_village_harvest.py) shows its shape.
+Inn rows contain both rates/storage limits and the maximum manufacture level.
+Producer rows contain specialization, follower slots and same-resource effects
+with `item_id`, `value`, `period` and `storage`; other building rows explicitly
+use `kind: "other"`. Follower rows contain rarity and specialization.
+
+The prepared catalog derives from the matching `lobbyvillage`, `followers` and
+`heavenholddata` tables: minimum 600 seconds, inn factor 45, facility divisor 10,
+base soul-point capacity 0, rarity bonuses 5/10/15 and matching bonus 10 percent.
+The saved asset's `MaxAdj` supplies the account's capacity. Keep all public
+definitions external and account values out of this catalog; it is additional
+to the older 19-reference-file pack.
+
+Harvesting uses saved inn clocks and ready facilities' `EndTime`; it does not
+initialize zero/future anchors. The explicit local policy credits up to free
+capacity, consumes eligible clocks only for credited resources and discards
+capped excess. Full resources retain their clocks. Only gold and soul points
+are supported; mixed-resource facility effects and unfinished inns reject.
+Airships, visitors, guardian-base-camp points, dispatches, shops and construction
+require their own operations. Native arithmetic is evidence for the local
+calculation, not a captured official reward contract.
 
 The attendance reader expects `origin_group`, `active_group`, and `groups`, where
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.

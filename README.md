@@ -104,7 +104,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Orbital preset selection | Captured owned party choice saved in APK; atomic choice and retry receipts |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
-| Orbital preset creation/application | Saves and optionally selects an unused configured slot atomically; APK apply retry pending |
+| Orbital preset creation/application | Two APK creations persisted; current state matches save/delete history and selections |
+| Village resource collection | Configured inn/facility gold and soul points with saved clocks and retry receipts; APK retry pending |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |

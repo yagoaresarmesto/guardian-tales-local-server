@@ -98,9 +98,10 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Six mutations are now enabled: `/summon/set-select-character`,
+Seven mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
-`/preset/set-presets`, `/preset/delete-preset` and `/user/charge-stamina`. The summon routes
+`/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina` and
+`/lobby-village/harvest-all`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
@@ -110,6 +111,8 @@ Orbital preset saves its definition separately from the captured seed; a matchin
 slot-count catalog also permits creating a missing definition. Deletion
 removes one existing Orbital definition and clears its selection if necessary. Natural stamina
 recharge advances the saved timer and charged balance up to its configured cap.
+Village harvesting collects configured inn/facility gold and soul points with
+balances, clocks and retry receipts stored together.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -457,8 +460,54 @@ networking. The actual pending request passed against a temporary in-memory DB
 copy, changing only the intended group and selection fields. The real account
 was unchanged; only structural evidence and pre-apply hashes were recorded.
 The optional five-slot catalog was derived from the already imported static data.
-Backend reload and the APK Apply retry remain pending. Reordering, other modes
-and saved Orbital battle progression remain unsupported.
+After reload, two APK creations and two subsequent deletions succeeded. Replaying
+the saved definition history reproduced the current group, selected pointer and
+revisions; unrelated profile data, captured reads and earlier selection/summon
+receipts remained unchanged. Reordering, other modes and saved Orbital battle
+progression remain unsupported.
+
+## Collecting village production
+
+The next reported failure was the parameterless `/lobby-village/harvest-all`
+request. Native builders and the harvest coroutine establish that request and
+its `AddedItems` response. Resolving the coroutine's generic conversion gives
+`List<ItemPlaceholder>`, so notices use item/amount objects. Native production
+helpers and field offsets establish separate inn soul-point/gold Unix-second
+anchors, facility `EndTime` anchors, manufacture types, production periods,
+per-building storage and follower rarity/specialization bonuses. `Harvest` status
+is 2. Soul points use asset 70012, gold 70001; the soul-point capacity is the
+matching `DefaultMaxSP` plus the saved asset adjustment. No official harvest
+response was captured.
+
+The local policy requires a matching external production catalog and a preserved
+village. An eligible inn uses its saved manufacture levels; ready facilities use
+their owned deployed followers. Production is bounded by each building's storage
+and available asset capacity. Facility percentage arithmetic retains the native
+float32 conversion before double production, cap and truncation. The local minimum
+interval applies separately to each producer. Future/zero anchors are not
+initialized or backfilled. Unfinished facilities are skipped; unfinished inns
+and mixed-resource facility clocks reject until supported.
+
+A credited resource consumes its eligible source clocks, with capped excess
+discarded. A full resource retains its clocks and balance, so a full soul-point
+balance does not prevent gold collection. One transaction stores the profile,
+current village, both revisions and a session/sequence receipt. No-op collections
+retain their revisions and store an empty receipt. Replays return frozen notices
+with current profile/village without another grant. `/lobby-village/enter` overlays
+the current village after reopening; the original captured startup seed is
+immutable. Airships, visitors, base-camp points, dispatches, shops, complaints,
+construction, heroes, equipment and historical spending remain separate.
+
+Fifteen regressions cover exact mutation bounds and seeds, minimum/period gates,
+bonuses/storage, full and partial capacities, future/zero clocks, current-state
+replays without a catalog, reopening/new login, authentication/parameters,
+malformed catalogs/state, ownership, revisions, unfinished facilities and atomic
+rollback. All 336 tests pass on Python 3.11 and 3.13 with external networking
+disabled. A detached check of the actual account credited only eligible gold,
+retaining its full soul-point asset and corresponding clocks. Unrelated account
+and village fields were unchanged and replay did not write. The real account
+was unchanged; private pre-collection hashes were recorded. Backend reload and
+the APK collection retry remain pending. Other village actions are unfinished.
 
 ## Host readiness before the APK check
 

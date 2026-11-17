@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 321,
+    "tests_run": 336,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1199,6 +1199,7 @@
     },
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
+      "/lobby-village/harvest-all",
       "/preset/delete-preset",
       "/preset/set-presets",
       "/preset/set-selected-preset",
@@ -1926,8 +1927,107 @@
     "private_pre_apply_hashes_recorded": true,
     "real_account_mutated_during_checks": false,
     "original_official_response_captured": false,
-    "running_backend_reloaded": false,
-    "post_fix_apk_apply": "pending",
+    "running_backend_reloaded": true,
+    "post_fix_apk_apply": {
+      "result": "PASS",
+      "successful_creation_receipts": 2,
+      "new_save_receipts": 2,
+      "new_delete_receipts": 2,
+      "current_group_matches_save_delete_history": true,
+      "current_choice_and_revision_match_history": true,
+      "unrelated_profile_unchanged": true,
+      "captured_seed_unchanged": true,
+      "preset_selection_requests_unchanged": true,
+      "character_summon_requests_unchanged": true
+    },
     "reordering_other_modes_and_battle_results_implemented": false
+  },
+  "village_resource_harvest": {
+    "date": "2026-11-18",
+    "observed_failure_route": "/lobby-village/harvest-all",
+    "native_builder_parameterless": true,
+    "native_harvest_coroutine_production_helpers_field_offsets_and_enums_inspected": true,
+    "native_added_items_generic_type": "System.Collections.Generic.List<Oak.ItemPlaceholder>",
+    "scope": "Configured inn and ready facility gold/soul-point production from preserved village",
+    "public_data_sources": [
+      "lobbyvillage",
+      "followers",
+      "heavenholddata"
+    ],
+    "optional_external_catalog": "village_harvest_catalog.json",
+    "prepared_public_constants": {
+      "minimum_seconds": 600,
+      "inn_factor": 45,
+      "facility_divisor": 10,
+      "base_soul_point_capacity": 0,
+      "rarity_bonus_percent": [
+        5,
+        10,
+        15
+      ],
+      "specialization_match_percent": 10
+    },
+    "native_harvest_status": 2,
+    "inn_separate_resource_clocks_and_manufacture_levels_used": true,
+    "facility_saved_clock_periods_storage_and_owned_follower_bonuses_used": true,
+    "facility_percentage_uses_float32_before_double_cap_and_truncation": true,
+    "explicit_local_policy": "Per-producer minimum interval; credit up to available capacity; consume eligible credited-resource clocks and discard capped excess",
+    "full_resources_retain_balances_and_clocks": true,
+    "future_zero_clocks_not_initialized_or_backfilled": true,
+    "unfinished_facilities_skipped_unfinished_inns_and_mixed_resource_facility_clocks_rejected": true,
+    "profile_current_village_revisions_and_receipt_atomic": true,
+    "replay_frozen_notices_with_current_state_without_regrant": true,
+    "reopening_uses_current_village_without_changing_imported_seed": true,
+    "other_village_systems_owned_heroes_equipment_and_spending_preserved": true,
+    "new_regressions": 15,
+    "focused_windows_checks": 58,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 336,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 336,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_actual_account_detached_check": {
+      "result": "PASS",
+      "matching_public_catalog_valid": true,
+      "detached_actual_account_harvest": "PASS",
+      "credited_asset_ids": [
+        70001
+      ],
+      "balance_changes_match_notices": true,
+      "account_revision_matches_collection": true,
+      "village_revision_matches_collection": true,
+      "unrelated_profile_unchanged": true,
+      "unrelated_village_unchanged": true,
+      "full_soul_points_and_inn_clock_preserved": true,
+      "replay_does_not_write": true,
+      "real_account_mutated_during_check": false
+    },
+    "private_pre_collection_hashes_recorded": true,
+    "real_account_mutated_during_checks": false,
+    "original_official_response_captured": false,
+    "running_backend_reloaded": false,
+    "post_fix_apk_collection": "pending",
+    "base_camp_visitors_airship_dispatch_shop_construction_and_other_village_actions_implemented": false
   }
 }

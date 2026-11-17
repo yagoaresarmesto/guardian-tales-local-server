@@ -64,6 +64,8 @@ from .summon_pickup import check_pickup_exchange
 from .summon_selection import select_characters
 from .training import train_characters
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
+from .village import create_tables as create_village_tables
+from .village import harvest as harvest_village
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -96,6 +98,7 @@ ACCOUNT_ROUTES = (
     "/preset/set-selected-preset",
     "/preset/set-presets",
     "/preset/delete-preset",
+    "/lobby-village/harvest-all",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -147,6 +150,7 @@ class AccountStore:
         self.references = ReferenceData(reference_dir)
         create_snapshot_tables(db)
         create_preset_tables(db)
+        create_village_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -987,6 +991,9 @@ class AccountStore:
 
     def delete_party_preset(self, request, operation_id):
         return delete_existing_preset(self, request, operation_id)
+
+    def harvest_village(self, request, operation_id, now=None):
+        return harvest_village(self, request, operation_id, now)
 
     def purchase_stamina(self, request, operation_id, now=None):
         return purchase_stamina(self, request, operation_id, now)

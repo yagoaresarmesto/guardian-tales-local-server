@@ -34,6 +34,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/preset/set-presets",
         "/preset/delete-preset",
         "/user/charge-stamina",
+        "/lobby-village/harvest-all",
     )
 )
 ACCOUNT_READS = frozenset(
@@ -82,15 +83,20 @@ def preserved_read(db, route):
     if route not in reads:
         return None
     value = reads[route]["value"]
+    overlays = {
+        "/preset/get-presets": ("party_preset_state", "UserPartyPreset2"),
+        "/lobby-village/enter": ("village_state", "UserLobbyVillage"),
+    }
+    overlay = overlays.get(route)
     if (
-        route == "/preset/get-presets"
+        overlay
         and db.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='party_preset_state'"
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (overlay[0],)
         ).fetchone()
     ):
-        current = db.execute("SELECT value FROM party_preset_state WHERE id=1").fetchone()
+        current = db.execute("SELECT value FROM " + overlay[0] + " WHERE id=1").fetchone()
         if current:
-            value = dict(value, UserPartyPreset2=json.loads(current[0]))
+            value = dict(value, **{overlay[1]: json.loads(current[0])})
     return value
 
 
@@ -113,8 +119,8 @@ def validate_preserved_request(route, body):
         datetime.fromisoformat(body["lastLobbyShopUpdated"])
     except ValueError as error:
         raise ValueError("Invalid village shop cache timestamp") from error
-    # These are native cache hints. This imported account returns its frozen
-    # full village state without changing the profile or refreshing the shop.
+    # These are native cache hints. This imported account returns its preserved
+    # full village state with its current harvest clocks, without refreshing the shop.
 
 
 def _private_field(key):
@@ -322,7 +328,7 @@ def summary(value, digest):
         "startup_reads": len(value["startup_reads"]),
         "preserved_stage_progresses": len(value["stage_progresses"]),
         "enabled_mutation_routes": sorted(IMPORTED_MUTATIONS),
-        "scope": "Imported profile/startup reads with configured hero draws/wishlists, Orbital presets and natural stamina",
+        "scope": "Imported profile/startup reads with configured hero draws/wishlists, Orbital presets, stamina and village harvesting",
     }
 
 
