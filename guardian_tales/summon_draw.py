@@ -6,6 +6,7 @@ import secrets
 from datetime import datetime, timezone
 
 from .characters import new_character
+from .snapshots import is_imported
 
 CATEGORIES = {"Normal", "Story", "Unique"}
 
@@ -162,13 +163,19 @@ def draw_characters(account, request, operation_id):
         ):
             raise ValueError("Not enough summon tickets of the selected kind")
         left = count
+        depleted = set()
         for item in sorted(stacks, key=lambda i: i["Id"]):
             spent = min(item["Amount"], left)
             item["Amount"] -= spent
             left -= spent
-        user["ItemStackables"] = [i for i in user["ItemStackables"] if i["Amount"] > 0]
+            if spent and item["Amount"] == 0:
+                depleted.add(item["Id"])
+        user["ItemStackables"] = [i for i in user["ItemStackables"] if i["Id"] not in depleted]
     owned = {}
+    imported = is_imported(account.db)
     for character in user["Characters"]:
+        if imported and str(character["CharacterId"]) not in catalog["origin_by_spec"]:
+            raise ValueError("Imported hero origin is not covered by the configured draw catalog")
         origin = catalog["origin_by_spec"].get(
             str(character["CharacterId"]), character["CharacterId"]
         )

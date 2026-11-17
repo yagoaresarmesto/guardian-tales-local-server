@@ -17,7 +17,7 @@ from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
 from .protocol import PacketError, decode_frame, encode_wire, frame_length, make_pong
 from .reference import default_cert_dir
-from .snapshots import is_imported
+from .snapshots import IMPORTED_MUTATIONS, is_imported
 from .state_lock import StateLock
 
 
@@ -62,6 +62,7 @@ class LocalServer:
         self.db.commit()
 
     def status(self):
+        imported = is_imported(self.db)
         return dict(
             service="Guardian Tales 3.57.0 local",
             stage="local_guest_prologue",
@@ -75,7 +76,9 @@ class LocalServer:
             campaign_scope="inn_clear_path_and_catalog_story_entry; other_gameplay_pending",
             full_game_implemented=False,
             prologue_selection_saved=not self.guests.account.needs_prologue(),
-            imported_account_read_only=is_imported(self.db),
+            imported_account=imported,
+            imported_account_read_only=imported and not IMPORTED_MUTATIONS,
+            imported_account_mutation_routes=sorted(IMPORTED_MUTATIONS) if imported else [],
             game_state_implemented=False,
             host="127.0.0.1",
             ports=self.ports,

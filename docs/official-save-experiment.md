@@ -4,9 +4,10 @@ This research is isolated on `experiment/official-save-import`. It investigates
 preserving an owner's existing 3.57.0 European account for this local backend.
 An experimental importer now loads a validated private snapshot into a new
 SQLite state directory. Account fetch, preserved startup reads and local sign-in
-passed a private input check. **The first APK attempt reached account fetch but
-stalled before the imported lobby.** Unlocked systems are not automatically
-implemented by import.
+passed a private input check. **The APK now reaches the imported lobby**, following
+a village-request compatibility fix. Configured local hero draws and wishlist
+changes pass imported-account regressions; their APK trial is still pending.
+Unlocked systems are not automatically implemented by import.
 
 ## Observed sources
 
@@ -34,8 +35,9 @@ delta merge behavior must be established before applying updates.
 ## Private evidence and current checks
 
 The observer reads received application frames without writing into the game or
-changing its routing. The owner performs authentication. Request bodies and raw
-frames are not persisted. Saved output is limited to recognized account sections
+changing its routing. The owner performs authentication. The original capture
+excluded request bodies and raw frames. Saved output is limited to recognized
+account sections
 and selected game-state reads; authentication fields are excluded before writing.
 The machine-specific observation tools and resulting files stay outside this
 repository and are not part of the public installation workflow.
@@ -92,17 +94,35 @@ The imported account uses a protected network mode. Account fetch and known read
 remain available; the four preserved startup responses replace their empty local
 counterparts. The preserved collection supplies its own new-entry markers.
 Other empty social/catalog scaffolding still has the limitations documented in
-[status](status.md). Health exposes `imported_account_read_only: true`.
+[status](status.md). Health exposes `imported_account: true` and lists the enabled
+mutation routes in `imported_account_mutation_routes`.
 
-Network mutations are rejected until their contracts are validated against
-imported state. Existing mutation and reward receipts cannot be inferred merely
-from an inventory snapshot. Replaying a prologue or issuing rewards to repair an
-unsupported response would damage the imported state. Captured stage strings are
-retained in SQLite but campaign re-entry is not enabled for imported accounts.
+Two mutations are now enabled: `/summon/set-select-character` and
+`/summon/select-character`. They use the existing local selection/draw catalogs,
+atomic payment/reward transactions and session-scoped retry receipts. Supported
+draws are one or ten heroes using free gems, ordinary controllers or selectable
+controllers. Other mutations remain rejected until validated for imported state.
+Health's `imported_account_read_only` is false because these two routes can write.
 
-The next APK check is loading the imported profile and initial menus. Hero,
-equipment and draw actions can then be enabled in coherent groups with their own
-validation, transaction and retry tests. A private protocol-level check already
+The draw rules remain the explicitly local rules in the
+[reference-data guide](reference-data.md), including their local category weights.
+Importing an official profile does not recover official rates, promotions, pity,
+weapon draws or special payment variants. An imported hero whose origin cannot
+be resolved from the configured catalog prevents a new draw without payment.
+Owned evolved heroes retain their progression and equipment on duplicate draws.
+Only ticket stacks depleted by the current payment are removed; untouched empty
+stacks and unrelated inventory stay unchanged.
+
+Existing official mutation/reward receipts cannot be inferred merely from an
+inventory snapshot. New draws receive this local server's own operation receipts
+without resetting the historical summon counter. Replaying a prologue or issuing
+rewards to repair an unsupported response would damage the imported state.
+Captured stage strings are retained in SQLite but imported campaign play remains
+outside the current scope.
+
+The next APK check is a supported hero draw. Other hero and equipment actions can
+then be enabled in coherent groups with their own validation, transaction and
+retry tests. A private protocol-level check already
 confirmed profile equality after reopening, local sign-in identity, completed
 prologue state and the preserved startup replies. This is distinct from an APK
 result or a claim of complete account preservation.
@@ -119,7 +139,13 @@ parameters. Empty bodies remain accepted for existing local probes.
 Regressions cover both partial flags, timestamp bounds/types, invalid parameters,
 unchanged profile data and rejection without mutation. Known API validation
 failures now increment `rejected_api:<route>` health counters without storing
-request bodies. The follow-up APK retry remains pending.
+request bodies. The subsequent APK retry reached the lobby, as reported by the
+owner. Backend counters confirm village entry and the later preset/shop/content
+reads; the saved profile still matched the imported baseline before draw testing.
+IPv4/IPv6 rejection rules, game-host loopback routing and the expected ADB reverse
+mappings were also verified while the local game connection was active. Some
+localized promotional banners returned HTTP 404 without preventing that reported
+lobby. This is not verification of every menu, asset or gameplay operation.
 
 ## Host readiness before the APK check
 
@@ -133,7 +159,8 @@ were then stopped; emulator routing was not changed by this check.
 
 A Windows Proactor connection-close callback logged `WinError 10054` during that
 preliminary check. The certificate checks, keepalives and cleanup completed; this
-warning is not evidence of a failed APK session, and no APK result is claimed.
+warning is not evidence of a failed APK session. This preliminary check did not
+exercise the APK.
 
 Use synthetic accounts for regression fixtures. Real profiles, captured response
 bodies, identifiers, credentials and resource files remain private. The supported

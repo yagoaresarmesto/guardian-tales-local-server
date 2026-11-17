@@ -21,7 +21,13 @@ from .lobby import respond as lobby_response
 from .packet_reader import lz4_block
 from .protocol import Packet, PacketError
 from .reference import compressed_empty_list
-from .snapshots import ACCOUNT_READS, is_imported, preserved_read, validate_preserved_request
+from .snapshots import (
+    ACCOUNT_READS,
+    IMPORTED_MUTATIONS,
+    is_imported,
+    preserved_read,
+    validate_preserved_request,
+)
 
 BOOTSTRAP_ROUTES = (
     "/auth/get-server-info",
@@ -192,10 +198,8 @@ class BootstrapSession:
             raise PacketError("API operation not implemented")
         body = read_json_body(request)
         if self.signed_in and is_imported(self.store.db):
-            if route in ACCOUNT_ROUTES and route not in ACCOUNT_READS:
-                raise PacketError(
-                    "Imported-account mutations require their own validated contracts"
-                )
+            if route in ACCOUNT_ROUTES and route not in ACCOUNT_READS | IMPORTED_MUTATIONS:
+                raise PacketError("Imported-account operation requires its own validated contract")
             preserved = preserved_read(self.store.db, route)
             if preserved is not None:
                 try:

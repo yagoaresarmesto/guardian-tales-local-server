@@ -99,7 +99,14 @@ class SnapshotTests(unittest.TestCase):
         original_source = self.source.read_bytes()
         result = import_snapshot(self.source, self.state)
         self.assertTrue(result["imported"])
-        self.assertFalse(result["network_mutations_enabled"])
+        self.assertTrue(result["network_mutations_enabled"])
+        self.assertEqual(
+            result["enabled_mutation_routes"],
+            [
+                "/summon/select-character",
+                "/summon/set-select-character",
+            ],
+        )
         self.assertEqual(result["source_sha256"], hashlib.sha256(original_source).hexdigest())
         self.assertEqual(self.source.read_bytes(), original_source)
         for _ in range(2):
@@ -145,7 +152,7 @@ class SnapshotTests(unittest.TestCase):
             before = db.total_changes
             for route, body in (
                 ("/user/charge-stamina-by-gem", {"Count": 1}),
-                ("/summon/select-character", {"Count": 1}),
+                ("/user/add-character-experience", {}),
                 ("/mission/claim-beginner-all", {}),
                 ("/user/mark-tutorial", {}),
             ):

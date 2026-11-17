@@ -26,6 +26,7 @@ STARTUP_READS = frozenset(
         "/preset/get-presets",
     )
 )
+IMPORTED_MUTATIONS = frozenset(("/summon/set-select-character", "/summon/select-character"))
 ACCOUNT_READS = frozenset(
     (
         "/auth/fetch-account",
@@ -299,7 +300,8 @@ def summary(value, digest):
         ),
         "startup_reads": len(value["startup_reads"]),
         "preserved_stage_progresses": len(value["stage_progresses"]),
-        "scope": "Experimental imported profile and startup reads; network mutations are disabled",
+        "enabled_mutation_routes": sorted(IMPORTED_MUTATIONS),
+        "scope": "Imported profile/startup reads with configured local hero wishlists and draws",
     }
 
 
@@ -346,7 +348,9 @@ def import_snapshot(path, data_dir):
             if temporary is not None:
                 temporary.unlink(missing_ok=True)
                 Path(str(temporary) + "-journal").unlink(missing_ok=True)
-    return dict(summary(value, digest), imported=True, network_mutations_enabled=False)
+    return dict(
+        summary(value, digest), imported=True, network_mutations_enabled=bool(IMPORTED_MUTATIONS)
+    )
 
 
 def main(argv=None):

@@ -189,6 +189,14 @@ ambiguous without an independent client operation ID. Pity, official promotions,
 paid/discount/free-event currencies, weapon draws and general hero training remain
 unfinished. The local draw route is `/summon/select-character`.
 
+Imported accounts can use these same local hero draws and wishlist operations.
+Each owned imported hero spec must have a known origin mapping before a new draw
+can proceed; unknown forms reject without payment rather than risking a second
+copy of an evolved hero. Existing hero progression/equipment and historical draw
+counts are retained. Ticket payment removes only stacks depleted by that draw,
+preserving other zero-amount stacks. Imported-account regressions also cover
+reopening, reconnect receipts, legitimate new-session draws and rollback.
+
 ## Beginner reward batches
 
 The optional `beginner_mission_catalog.json` extends the built-in Inn, initial

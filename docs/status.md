@@ -6,12 +6,16 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **252 passing tests**. Ten snapshot-import regressions cover
+The suite has **259 passing tests**. Ten snapshot-import regressions cover
 private-input validation, unchanged source/profile data, local sign-in identity,
 preserved startup reads, restart, mutation/prologue rejection, catalog isolation,
 existing-save protection, directory locking, failed-publication cleanup and valid
 or malformed village cache hints. A TLS integration regression checks that a
 rejected registered API records its route without retaining its private body.
+Seven imported-summon regressions cover existing evolved heroes, equipment and
+historical-state preservation, wishlist changes, one/ten draws, unused zero
+stacks, current-state retries, restart/reconnect, new request epochs, unknown
+hero origins and atomic rejection/receipt failure.
 The existing 241 tests include eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
@@ -838,8 +842,12 @@ directory. Private protocol-level checks passed for local identity,
 completed-prologue state, startup replies and unchanged profile after reopening.
 The first APK attempt reached account fetch and then stalled at village entry:
 the preserved read validator rejected the native request's cache hints. Those
-parameters are now validated and covered by regressions; the follow-up APK retry
-is pending. Imported network
-mutations remain disabled until their contracts and retry behavior are validated.
+parameters are now validated and covered by regressions. The owner confirmed that
+the follow-up APK retry reached the imported lobby, with the matching startup
+routes observed and the saved profile unchanged before mutation testing. Host
+routing, reverse mappings and IPv4/IPv6 isolation were verified. Some localized
+promotional banners were missing; this did not prevent the reported lobby.
+Configured hero wishlist/draw mutations are now enabled with imported-account
+regressions. Their APK test remains pending; other mutations remain guarded.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).
