@@ -36,6 +36,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `beginner_mission_catalog.json` | Hero-draw beginner milestones | Public mission IDs, required draw counts and supported asset/stackable rewards |
 | `stamina_purchase_catalog.json` | Free-gem purchases of stored stamina | Matching public amount, price tiers, storage ceiling and type-9 daily limit |
 | `challenge_mission_catalog.json` | Hero collection/draw challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
+| `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -250,6 +251,41 @@ across fresh logins also applies here. Receipted retries survive catalog removal
 Without the external catalog, the original first-knight/group-200 step-1
 fallback remains available on the next-step route. It does not extend to later
 steps or a larger roster. The all-step route requires an explicit catalog.
+
+## Initial hero acquisition knowledge
+
+`/collection/claim-hero-knowledge-all` accepts exactly `CharacterIds`: a list of
+owned character **inventory IDs**, not hero spec/origin IDs. The external
+`hero_knowledge_catalog.json` contains a `heroes` object keyed by base spec ID.
+Each row has `origin_id` matching that key, a unique positive `knowledge_id`
+ending in `01`, and a `rewards` list of positive `item_id`/`amount` pairs. Empty
+reward lists are valid. See the [synthetic fixture](../tests/fixtures/hero_knowledge_catalog.json).
+
+The supported condition is initial acquisition of a directly owned, untrained
+base hero. Experience, rank upgrades, limit breaks and blessings must be zero,
+and the awakening tree empty. Evolved forms and later rank, level, awakening,
+ascension, blessing and myth objectives need additional rules. A request outside
+that scope rejects the whole batch without marking those other objectives done.
+
+The matching native sequence rule is `max(knowledge_id % 100 - 1, 0)`; supported
+initial rows therefore use bit zero of the owned character's `Knowledge` value.
+The batch checks inventory ownership and marker/receipt agreement, deduplicates
+IDs and preserves other bits. Initial-knowledge IDs are unique across receipts
+to prevent a duplicated origin from awarding acquisition twice.
+
+One SQLite transaction commits acquisition flags, configured asset rewards,
+per-hero receipts and a frozen request receipt. The response includes current
+`User` and `AddedItems`, including an empty list when no currency is awarded.
+Reconnect retries preserve notices without granting again; mixed old/new batches
+grant only new acquisitions. Existing request receipts remain usable after
+catalog removal or subsequent hero progression. Fresh-login request ambiguity
+has the same limits as other epoch-based operations.
+
+The prepared public catalog has 173 initial acquisition rows. Fifteen contain
+60-gem rewards; the others have no asset reward. The observed 25-character
+request contains only the latter. Initial knowledge can therefore be saved
+without awarding gems. Book bonuses are evaluated by the client from its public
+knowledge data and saved flags; server-side battle/stat validation is unfinished.
 
 ## Gem stamina purchases
 

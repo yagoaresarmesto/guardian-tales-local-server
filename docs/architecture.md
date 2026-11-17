@@ -33,6 +33,7 @@ flowchart LR
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
 | `beginner.py` | Eligibility, atomic multi-mission rewards, claim bits and persistent retry receipts |
 | `challenges.py` | Catalog challenge conditions, contiguous next/all-step claims and atomic step/request receipts |
+| `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
 | `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |

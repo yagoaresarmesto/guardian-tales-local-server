@@ -1,0 +1,7 @@
+{
+  "heroes": {
+    "101": {"knowledge_id": 10101, "origin_id": 101, "rewards": [{"item_id": 70003, "amount": 5}]},
+    "102": {"knowledge_id": 10201, "origin_id": 102, "rewards": []},
+    "103": {"knowledge_id": 10301, "origin_id": 103, "rewards": [{"item_id": 70004, "amount": 7}]}
+  }
+}

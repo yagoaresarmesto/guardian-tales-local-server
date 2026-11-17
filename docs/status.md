@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **175 passing tests**, including eighteen first-chapter entry/progress
+The suite has **188 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -20,6 +20,9 @@ catalog validation, authentication/reconnect and failed-write rollback.
 Thirteen challenge-batch regressions cover legacy claim preservation, next/all
 steps, distinct request identity, persisted retries, malformed/incomplete groups,
 catalogs, balance overflow, contiguous receipts and transaction rollback.
+Thirteen initial hero-knowledge regressions cover owned inventory IDs, batches
+with/without rewards, preserved flags, mixed old/new claims, persisted retries,
+unsupported progression, catalog/receipt validation, authentication and rollback.
 Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
 sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
@@ -464,9 +467,29 @@ The matching public data has 100 steps in each requested group. With 26 owned
 heroes and 34 draws, the saved account has earned hero-collection steps 2 through
 26 and hero-draw steps 1 through 3. Step 1 of collection was already claimed.
 The pending batch therefore qualifies for 1,250 gems and 30,000 experience.
-All 175 tests, Black and Ruff pass. Deployment preserved the complete profile;
-the original APK retry is pending. Other challenge conditions, inventory rewards,
+All 175 tests, Black and Ruff passed for that change. Deployment preserved the
+complete profile. The original APK retried the batch: collection advanced to
+26, hero draws to 3, and 28 new step receipts plus one batch receipt persisted.
+Gems became 990,950 and experience 230,562, matching the expected awards; the
+previous collection receipt remained intact. Other challenge conditions, inventory rewards,
 daily/event missions and compass rules remain unfinished.
+
+The next failure was `/collection/claim-hero-knowledge-all` for 25 owned inventory
+characters. Their pending condition is initial acquisition; the matching rows
+award no assets. The new handler validates the whole batch, marks acquisition
+bit zero, preserves other knowledge bits and writes per-hero/request receipts
+atomically. Matching external definitions cover 173 initial hero origins. This
+scope requires untrained base heroes and does not claim later knowledge
+objectives are implemented.
+
+All 188 tests, Black and Ruff pass. Deployment again preserved the complete
+saved profile before retry. The APK retried successfully: all 25 acquisition
+flags and per-hero receipts plus one batch receipt persisted. Gems stayed at
+990,950 and experience at 230,562. The previously owned characters retained
+their other reported fields. The user also made 20 further draws before the
+state inspection, adding six heroes and changing controller/crystal/mileage
+state, so this was not an isolated full-profile comparison of the knowledge
+operation. Unrelated profile preservation is covered by the automated tests.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

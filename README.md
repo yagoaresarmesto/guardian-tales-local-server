@@ -77,6 +77,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
 | Mission book | Inn, knight level 2, stamina and configured hero-draw milestones; atomic batches and persistent reward receipts; other missions pending |
 | Hero collection/draw challenges | Configured thresholds, next-step or all-earned-step batches, atomic asset rewards and persistent step/request receipts |
+| Hero acquisition knowledge | Catalog-backed initial knowledge for batches of untrained base heroes, saved character flags and retry receipts; advanced objectives pending |
 | Ad inbox initialization | Returns saved local ad state; ad playback and reward claims remain pending |
 | Summons screen entry | Optional local hero candidate catalog with matching checksums; empty fallback without external data |
 | Hero wishlist | Up to five distinct catalog heroes persist without spending currency or granting inventory |

@@ -32,6 +32,7 @@ from .challenges import claim_challenges
 from .characters import new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
+from .hero_knowledge import claim_hero_knowledge
 from .items import inventory_item
 from .missions import (
     FIRST_HERO_CHALLENGE_GEMS,
@@ -62,6 +63,7 @@ ACCOUNT_ROUTES = (
     "/chat/guild-history/v2",
     "/collection/list-all",
     "/collection/list-new",
+    "/collection/claim-hero-knowledge-all",
     "/heavenholdfarm/collection-all",
     "/pasture/collection-all",
     "/friend2/has-changes",
@@ -171,6 +173,12 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS challenge_mission_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, rewards TEXT NOT NULL, targets TEXT NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS hero_knowledge_claims (character_id INTEGER PRIMARY KEY, knowledge_id INTEGER NOT NULL UNIQUE, rewards TEXT NOT NULL)"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS hero_knowledge_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, rewards TEXT NOT NULL)"
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS guardian_pass_claims (season_id INTEGER NOT NULL, level INTEGER NOT NULL, rewards TEXT NOT NULL, PRIMARY KEY(season_id,level))"
@@ -946,6 +954,9 @@ class AccountStore:
 
     def purchase_stamina(self, request, operation_id, now=None):
         return purchase_stamina(self, request, operation_id, now)
+
+    def claim_hero_knowledge(self, request, operation_id):
+        return claim_hero_knowledge(self, request, operation_id)
 
     def read(self, route, request=None):
         if route == "/summon/set-select-character":
