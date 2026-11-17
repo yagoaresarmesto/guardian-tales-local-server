@@ -26,7 +26,9 @@ STARTUP_READS = frozenset(
         "/preset/get-presets",
     )
 )
-IMPORTED_MUTATIONS = frozenset(("/summon/set-select-character", "/summon/select-character"))
+IMPORTED_MUTATIONS = frozenset(
+    ("/summon/set-select-character", "/summon/select-character", "/preset/set-selected-preset")
+)
 ACCOUNT_READS = frozenset(
     (
         "/auth/fetch-account",
@@ -301,7 +303,7 @@ def summary(value, digest):
         "startup_reads": len(value["startup_reads"]),
         "preserved_stage_progresses": len(value["stage_progresses"]),
         "enabled_mutation_routes": sorted(IMPORTED_MUTATIONS),
-        "scope": "Imported profile/startup reads with configured local hero wishlists and draws",
+        "scope": "Imported profile/startup reads with configured hero draws/wishlists and Orbital preset selection",
     }
 
 

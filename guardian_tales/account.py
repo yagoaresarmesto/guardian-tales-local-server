@@ -49,6 +49,8 @@ from .passes import (
     FIRST_PASS_SEASON,
     FIRST_PASS_STAMINA,
 )
+from .presets import create_tables as create_preset_tables
+from .presets import set_selected as set_selected_preset
 from .reference import ReferenceData
 from .snapshots import create_tables as create_snapshot_tables
 from .snapshots import is_imported
@@ -87,6 +89,7 @@ ACCOUNT_ROUTES = (
     "/user/charge-stamina-by-gem",
     "/summon/set-select-character",
     "/summon/select-character",
+    "/preset/set-selected-preset",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -137,6 +140,7 @@ class AccountStore:
         self.db = db
         self.references = ReferenceData(reference_dir)
         create_snapshot_tables(db)
+        create_preset_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -968,6 +972,9 @@ class AccountStore:
 
     def draw_summon_characters(self, request, operation_id):
         return draw_characters(self, request, operation_id)
+
+    def select_party_preset(self, request, operation_id):
+        return set_selected_preset(self, request, operation_id)
 
     def purchase_stamina(self, request, operation_id, now=None):
         return purchase_stamina(self, request, operation_id, now)

@@ -284,6 +284,15 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/preset/set-selected-preset":
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.select_party_preset(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/summon/select-character":
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)

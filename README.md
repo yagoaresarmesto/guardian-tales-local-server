@@ -101,6 +101,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Infinite-tower entry | Returns the saved floor and formation without changing progress; APK entry observed; battles and rewards unfinished |
 | Infinite-tower rankings | Empty local leaderboard list; APK query succeeded; no official rank or player entries inferred |
 | Orbital phase loading trial | APK loading and owner-confirmed defeat return; no saved-state changes or end request observed; victory/rewards pending |
+| Orbital preset selection | Selects existing captured owned parties; atomic saved choice and retry receipts; team editing and APK retry pending |
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Initial free points, local shop availability and configured asset/stackable/individual item redemptions; sticker packs and other progression pending |

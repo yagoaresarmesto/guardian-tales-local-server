@@ -98,12 +98,15 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Two mutations are now enabled: `/summon/set-select-character` and
-`/summon/select-character`. They use the existing local selection/draw catalogs,
+Three mutations are now enabled: `/summon/set-select-character`,
+`/summon/select-character` and `/preset/set-selected-preset`. The summon routes
+use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
-controllers. Other mutations remain rejected until validated for imported state.
-Health's `imported_account_read_only` is false because these two routes can write.
+controllers. Preset selection changes only the chosen captured Orbital preset
+and the account revision, with its own atomic retry receipts. Other mutations
+remain rejected until validated for imported state. Health's
+`imported_account_read_only` is false because these routes can write.
 
 The draw rules remain the explicitly local rules in the
 [reference-data guide](reference-data.md), including their local category weights.
@@ -281,6 +284,34 @@ matched the pre-deployment state. This establishes loading and the reported
 defeat return, not a persisted battle result. Victory, battle-result validation,
 result persistence and rewards require their own implementation before claiming
 playable saved Orbital progress.
+
+## Selecting a captured Orbital preset
+
+The next reported failure was `/preset/set-selected-preset` while changing the
+team inside Orbital. The native builder sends exactly integer `PresetId`.
+Static enum and ID helpers establish `InfiniteTower = 4` and a preset-type width
+of 100, placing that mode's IDs in `[400,500)`. The popup success callback uses
+the selected ID; the saved choice belongs to `User.SelectedPresetId.InfiniteTower`.
+The original selection response was not captured.
+
+The enabled mutation accepts only that mode's already captured party presets.
+It shares the phase-entry ownership checks for distinct characters and equipment.
+Selection updates only the mode's pointer and `User.Cas`; all other profile data
+and preserved preset definitions remain unchanged. Repeating the same choice
+does not increment the revision. Session-epoch/sequence receipts are committed
+with the profile update; replays return current `User` without reverting a later
+choice. Reusing an operation ID with different data rejects. A fresh login can
+make a new choice, while reconnect/reopening retains prior request identities.
+
+Seven synthetic regressions cover selection and phase entry, exact mutation
+boundaries, current-state retries, no-op choices, request identity conflicts,
+reopening/reconnect, scope/authentication, invalid or unowned presets, revision
+overflow and rollback on receipt failure. All 283 tests pass on Python 3.11 and
+3.13 without external networking. Private read-only checks resolved the captured
+Orbital options and retained the real profile and draw receipts; no selection was
+applied to the real account by those checks. Backend reload and the APK selection
+retry remain pending. Creating, editing, deleting and reordering presets, other
+modes' selections and Orbital formation/result writes remain unsupported.
 
 ## Host readiness before the APK check
 

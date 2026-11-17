@@ -6,7 +6,10 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **276 passing tests**. Six Orbital loading regressions cover
+The suite has **283 passing tests**. Seven Orbital preset-selection regressions
+cover exact mutation boundaries, retries and identities, reopening/reconnect,
+scope/authentication, ownership, invalid state, overflow and atomic rollback.
+Six Orbital loading regressions cover
 authentication, requests, configured/saved floor limits, preserved presets,
 ownership, invalid inputs, retries/reconnect and unchanged state. Result saving
 and rewards remain unsupported. An empty tower-ranking regression covers
@@ -898,5 +901,11 @@ the owner confirmed defeat followed by return to the Orbital menu. No end-stage
 request was observed; the full profile and draw receipts remained unchanged.
 Victory, result persistence, formation edits and rewards remain unsupported;
 this trial does not establish saved Orbital progression.
+Changing the preset inside Orbital next failed at
+`/preset/set-selected-preset`. It now selects only existing captured Orbital
+parties, updating the selection pointer and revision with atomic request receipts.
+Replays preserve later choices; team definitions, heroes, equipment and other
+profile data remain unchanged. All 283 isolated tests and private read-only
+compatibility checks pass. Backend reload and the APK selection retry are pending.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

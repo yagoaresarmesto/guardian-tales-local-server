@@ -234,6 +234,18 @@ owner confirmed defeat followed by return to the menu. No end-stage request was
 observed in that trial; the full profile and draw receipts remained unchanged.
 Victory, saved progression and rewards are still unverified and unimplemented.
 
+`/preset/set-selected-preset` accepts exactly integer `PresetId`. The native enum
+uses `InfiniteTower = 4` with width-100 ID ranges. The implemented scope is existing
+captured Orbital presets in `[400,500)`, validated by the same owned-party helper
+as phase entry. One transaction changes only `User.SelectedPresetId.InfiniteTower`
+and `User.Cas`, then stores a session-epoch/sequence request receipt. No-op choices
+leave the revision intact; retries return current `User` without undoing later
+choices. Reusing a request identity for another ID rejects, and a failed receipt
+write rolls back the profile update. Preset definitions, current party, character
+progression/equipment and inventory remain unchanged. Creating/editing presets,
+other modes and formation/result writes are separate unsupported contracts.
+The original response was not captured; the APK selection retry is pending.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation
