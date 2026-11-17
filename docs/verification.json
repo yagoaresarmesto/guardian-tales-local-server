@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 219,
+    "tests_run": 220,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -837,5 +837,20 @@
     "scope": "Authenticated local empty history; boolean Listen and null Since only",
     "deployment_preserved_complete_profile": true,
     "APK_retry_verified": false
+  },
+  "clean_installation_experiment": {
+    "automated_tests": 220,
+    "automated_result": "PASS",
+    "device_specific_settings_APK_accepted": true,
+    "base_and_ARM64_APKs_match_preserved_hashes": true,
+    "existing_saved_account_instance_stopped": true,
+    "new_account_database_separate": true,
+    "local_media_index_and_Spanish_strings_downloaded": true,
+    "complete_static_tables_delivered": 129,
+    "initial_local_test_ZIP_bytes": 1657219037,
+    "initial_local_test_ZIP_entries": 11874,
+    "initial_ZIP_download_extraction_verified": false,
+    "fresh_guest_access_verified": false,
+    "playable_startup_verified": false
   }
 }

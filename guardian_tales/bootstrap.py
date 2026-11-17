@@ -27,6 +27,7 @@ BOOTSTRAP_ROUTES = (
     "/announcement/all",
     "/auth/sign-in",
     "/static-data/resource-url",
+    "/static-data/device-specific-settings",
     "/static-data/in-app-product-ids",
     "/static-data/get",
     "/static-data/check-update",
@@ -376,6 +377,17 @@ class BootstrapSession:
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
             return json_response(request, value)
+        if route == "/static-data/device-specific-settings":
+            if body not in (None, {}):
+                raise PacketError("Device-specific settings accepts no parameters")
+            # The native consumer expects LZ4-compressed static-item text, not JSON.
+            # A blank line yields no overrides and retains its built-in DSP fallback.
+            return Packet(
+                packet_type=1,
+                body_type=2,
+                sequence_id=request["sequence_id"],
+                body=b"\x10\n" + struct.pack("<I", 1),
+            )
         if route in STATIC_SEEDS:
             filename, kind = STATIC_SEEDS[route]
             try:

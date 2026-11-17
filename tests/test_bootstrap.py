@@ -70,6 +70,26 @@ class BootstrapTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.session.handle(request({}, "/battle/unimplemented"))
 
+    def test_device_settings_before_sign_in_returns_static_text_without_account_writes(self):
+        route = "/static-data/device-specific-settings"
+        profile = self.session.store.account.profile()
+        changes = self.db.total_changes
+        for body in (None, {}):
+            response = parse_packet(encode_packet(self.session.handle(request(body, route))))
+            self.assertEqual(response["packet_type"], 1)
+            self.assertEqual(response["body_type"], 2)
+            self.assertEqual(response["sequence_id"], 17)
+            self.assertEqual(response["api"], "")
+            payload = bytes.fromhex(response["body_hex"])
+            decoded = lz4_block(payload[:-4], int.from_bytes(payload[-4:], "little"))
+            self.assertEqual(decoded.decode("utf-8").split(), [])
+        for body in (False, [], {"Device": "test"}, ""):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.session.handle(request(body, route))
+        self.assertFalse(self.session.signed_in)
+        self.assertEqual(self.session.store.account.profile(), profile)
+        self.assertEqual(self.db.total_changes, changes)
+
     def test_empty_channel_listening_is_authenticated_and_read_only(self):
         route = "/chat/listen-channel"
         body = {"Listen": True, "Since": None}

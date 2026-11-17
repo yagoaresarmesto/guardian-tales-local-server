@@ -84,6 +84,18 @@ copying this repository to another computer does not recreate it.
 
 ## Expected behavior and current stopping point
 
+A newly installed client also requests `/static-data/device-specific-settings`
+before sign-in. The local response provides no hardware-specific audio override,
+so the native client uses its built-in DSP fallback. This needs no external
+catalog and does not create gameplay progress.
+
+Clean installation is a separate work in progress. The earlier prepared client
+already had its static tables and downloaded content. A captured checksum-only
+`/static-data/get` response does not supply those tables to a new client. Fresh
+setups need a complete matching initial table response in addition to the CDN
+resources; copying only that earlier response is insufficient. See the
+[clean installation findings](status.md#clean-installation-experiment).
+
 With the compatible private inputs and routing, the observed sequence is local
 guest access, prologue, saved character, lobby, and world map. On a new account,
 explicitly select a personality as well as the avatar and name. The game creates

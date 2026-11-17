@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **219 passing tests**, including eighteen first-chapter entry/progress
+The suite has **220 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -587,6 +587,39 @@ for hosted results associated with each published commit.
 
 These observations do not mean an arbitrary fresh clone of this repository can
 boot an APK without its own content, reference bodies, routing and certificates.
+
+## Clean installation experiment
+
+A separate new Android instance has the exact matching base and ARM64 split
+APKs, verified by SHA-256, with no prior app launch, downloaded resources or guest
+cache. Its backend has a separate empty database; the established saved account
+and its emulator remain stopped. Internet egress is blocked for the experiment.
+
+The first new request was `/static-data/device-specific-settings`. Native audio
+initialization consumes an LZ4-compressed static-item text stream. The local
+handler now returns a blank stream with no hardware overrides, leaving the
+client's built-in DSP fallback. It accepts no parameters and requires no sign-in
+or external file. A regression verifies binary response framing, decoded empty
+text, invalid requests and absence of account/SQL writes. All 220 tests, Black
+and Ruff pass. The APK accepted this response and continued bootstrap.
+
+The local CDN served the media index and Spanish strings. Two requested Spanish
+banword lists are absent from the preservation set. The prior captured
+`static_data_get.bin` was only a checksum response for an already populated
+client: it is insufficient for an empty `ClientVersions` request. A private
+complete-table bootstrap now supplies 129 matching text/binary tables, with
+binary data encoded as base64 in the static-item stream. They remain external
+game data. The client persisted these tables and advanced to requesting its
+initial resource ZIP, also absent from the earlier prepared environment.
+
+A private 1.66 GB test ZIP has been generated from 11,874 preserved indexed
+files and version/index metadata, excluding on-demand content. It is served
+through an additional manifest root without editing the preservation copies.
+Two generated empty Spanish filters are an explicit local policy, not recovered
+official dictionaries. The initial package's download/extraction, fresh guest
+access and playable startup are still pending. These generated inputs and
+machine-specific preparation tools are not distributed by the repository. A
+working prepared client must not be treated as proof of a clean installation.
 
 ## Prioritized implementation work
 
