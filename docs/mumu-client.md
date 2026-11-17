@@ -8,9 +8,13 @@ It does not modify the APK or copy an existing account into Android.
 Use the pinned **3.57.0 Google Play European APK**, including required splits,
 and first follow the [content download/import guide](offline-content.md).
 Other emulators, Android versions and regions are not supported by this helper.
-The first bounded setup/cleanup test passed on a fresh MuMu instance, with
-independent restoration checks. The new bridge's full APK path is still being
-verified. Earlier APK observations used a separate prepared laboratory.
+The bounded setup/cleanup test passed with independent restoration checks.
+A fresh APK installation then signed in as a new local guest, downloaded and
+extracted the initial content, and completed the prologue through this bridge
+using the public Release pack. The selected additional-resource download also
+completed after restarting the CDN; its 1,753 installed on-demand files matched
+the pack's SHA-256 hashes. The initial transfer cuts remain unexplained; later
+gameplay remains subject to the [documented coverage](status.md).
 
 ## 1. Prepare the dedicated instance
 
@@ -53,16 +57,16 @@ no certificates in Windows or Android.
 If a backend is already running, stop it with Ctrl+C before selecting the new
 certificate directory. Keep the same state directory to retain your account.
 
-First terminal:
+First terminal: **backend**.
 
 ```sh
 python -m guardian_tales serve --data-dir local/state --cert-dir local/client-tls --reference-dir local/client-data/reference
 ```
 
-Second terminal:
+Second terminal: **CDN**.
 
 ```sh
-python -m guardian_tales assets --resource-root local/client-data/resources/files --port 18080
+python -m guardian_tales assets --resource-root local/client-data/resources/files --port 18080 --journal local/cdn-requests.jsonl
 ```
 
 Keep both running. Check [backend health](http://127.0.0.1:17657/health).
@@ -70,10 +74,12 @@ If another local experiment occupies 18080, use `--port 18081` for this CDN and
 `--cdn-port 18081` for the bridge. Android still receives its CDN on 18080.
 The bridge verifies the backend's hostname certificates and the CDN before
 changing the emulator. It does not turn off TLS verification.
+The CDN terminal prints `Local CDN: manifest-listed resource files: ...`.
+Its local journal records requested paths, availability and HTTP response codes.
 
 ## 4. Run a short routing check, then the play session
 
-In a third terminal, first run a thirty-second session:
+In a third terminal (**bridge**), first run a thirty-second session:
 
 ```sh
 python -m guardian_tales android-bridge run --index 1 --name GT357-Install-Test --minutes 0.5
@@ -137,6 +143,24 @@ Use the same session directory. A running bridge owns a local lock; stop it
 before invoking a separate restore command. Failed restoration keeps the session
 marked active and reports the error. Do not delete its session record to hide
 an incomplete cleanup.
+
+## Additional download errors
+
+Keep the CDN journal enabled when testing downloads. A missing resource returns
+HTTP 404; Unity's `Curl error 18` means the response ended before the advertised
+body was complete. HTTP 200 in the journal alone does not prove that the client
+received or installed the entire file.
+
+In the fresh-install test, several transfers were truncated and the in-game
+retry failed again. While the download was paused at its error prompt, the user
+stopped only the CDN with Ctrl+C and reran its command with the same resource
+root and port, adding the journal. The next in-game retry installed the remaining
+five files. All 1,753 installed on-demand files then matched the public pack's
+SHA-256 hashes. The backend, bridge and account stayed in place.
+
+This records a successful recovery, not a permanent correction. The cause of
+the transfer cuts is still unresolved. Preserve the journal if the failure
+recurs; avoid deleting the account or downloaded content to troubleshoot it.
 
 ## TLS inspection on Windows
 

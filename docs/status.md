@@ -726,8 +726,33 @@ first thirty-second bridge test. Independent checks confirmed the original
 hosts/trust hashes, IPv4/IPv6 OUTPUT rules, removed firewall chains, empty reverse
 mappings and removed staging directory. Root access matched its observed initial
 availability. The bridge now queries MuMu's root configuration directly for
-future sessions. APK login through this new bridge remains pending. The existing
-player accounts were not migrated.
+future sessions. The existing player accounts were not migrated.
+
+The fresh APK subsequently created its own local SDK guest and completed game
+sign-in through the public bridge. It downloaded and extracted the initial
+archive from the imported Release pack: all 11,874 entries were present with
+their expected sizes, and three sample SHA-256 checks matched the pack's
+manifest (the AssetBundle manifest, one script and one tilemap). This was not a
+full hash check of every installed file. The user completed the prologue, and
+the backend confirmed that its character selection was saved.
+
+The additional download initially failed with truncated responses (`Curl error
+18`), including an 88,040,061-byte archive that stopped 25,213 bytes short.
+An immediate in-game retry also failed. A Windows probe reproduced incomplete
+transfers from the active CDN, while separate diagnostic servers delivered the
+same file successfully under both HTTP/1.0 and HTTP/1.1. These observations do
+not isolate the cause or establish a protocol fix.
+
+The user restarted only the CDN with its request journal enabled. The next
+in-game retry completed: the journal recorded an unchanged index (HTTP 304) and
+five successful resource responses (HTTP 200). All 1,753 installed on-demand
+files matched the public pack's SHA-256 hashes, including those five files.
+The temporary checksum disappeared. A partial group ZIP remained on disk and
+was excluded from that installed-content verification. This validates the
+selected English voice resource set; Japanese-only resources, other media and
+other interface languages are outside that result. The backend and bridge
+continued running with the same account. The transfer failure is recovered for
+this session; its root cause and a permanent correction remain unresolved.
 
 ## Reproducible content import
 
