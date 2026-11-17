@@ -11,6 +11,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from guardian_tales.bootstrap import read_json_body
 from guardian_tales.packet_reader import parse_packet
@@ -123,6 +124,69 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(echoed, 10000 + i)
             self.assertLess(abs(stamp - int(time.time() * 1000)), 5000)
         self.assertEqual(self.server.status()["counters"]["pongs_sent"], 3)
+        await self.finish(writer)
+
+    async def test_idle_authenticated_client_can_resume_without_a_heartbeat(self):
+        loop = asyncio.get_running_loop()
+        schedule = loop.call_later
+
+        def accelerated_long_deadline(delay, callback, *args, **kwargs):
+            # Make obsolete long idle timers expire quickly; short I/O/test bounds stay real.
+            return schedule(0.03 if delay >= 60 else delay, callback, *args, **kwargs)
+
+        with patch.object(loop, "call_later", side_effect=accelerated_long_deadline):
+            reader, writer = await self.connect()
+            seed = struct.unpack("<I", await reader.readexactly(4))[0]
+            body = {"AuthKind": 0, "AccessToken": "TEST_IDLE_GUEST", "Reconnect": False}
+            writer.write(
+                encode_wire(
+                    Packet(
+                        0,
+                        json.dumps(body).encode(),
+                        body_type=1,
+                        api="/auth/sign-in",
+                        sequence_id=1,
+                    ),
+                    seed,
+                )
+            )
+            await writer.drain()
+            await self.read_pong(reader, seed)
+            before = self.server.guests.account.profile()
+            # Download choices can leave the native client without keepalives.
+            await asyncio.sleep(0.12)
+            writer.write(encode_wire(Packet(3, struct.pack("<q", 123), body_type=2), seed + 1))
+            await writer.drain()
+            pong = await self.read_pong(reader, seed - 1)
+            self.assertEqual(pong["packet_type"], 4)
+            self.assertEqual(struct.unpack("<q", bytes.fromhex(pong["body_hex"])[:8])[0], 123)
+            self.assertEqual(self.server.guests.account.profile(), before)
+            self.assertNotIn("invalid_or_interrupted_messages", self.server.status()["counters"])
+            await self.finish(writer)
+
+    async def test_shutdown_closes_idle_game_connection(self):
+        reader, writer = await self.connect()
+        await reader.readexactly(4)
+        await self.server.close()
+        self.assertEqual(await asyncio.wait_for(reader.read(), 2), b"")
+        self.assertFalse(self.server.active)
+        await self.finish(writer)
+
+    async def test_started_frame_header_still_has_a_completion_deadline(self):
+        reader, writer = await self.connect()
+        seed = struct.unpack("<I", await reader.readexactly(4))[0]
+        loop = asyncio.get_running_loop()
+        schedule = loop.call_later
+
+        def accelerated_io_deadline(delay, callback, *args, **kwargs):
+            return schedule(0.03 if delay >= 10 else delay, callback, *args, **kwargs)
+
+        with patch.object(loop, "call_later", side_effect=accelerated_io_deadline):
+            frame = encode_wire(Packet(3, struct.pack("<q", 123), body_type=2), seed)
+            writer.write(frame[:1])
+            await writer.drain()
+            self.assertEqual(await asyncio.wait_for(reader.read(), 1), b"")
+        self.assertEqual(self.server.status()["counters"]["invalid_or_interrupted_messages"], 1)
         await self.finish(writer)
 
     async def test_platform_https_returns_explicit_not_implemented(self):

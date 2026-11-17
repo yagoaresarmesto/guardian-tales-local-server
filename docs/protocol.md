@@ -15,6 +15,13 @@ frame counters increment; server frame counters decrement, modulo 2^32.
 
 Port 10500 is a separate HTTPS platform API, not another binary transport.
 
+After the game handshake, an idle connection can wait for its next frame without
+an inactivity deadline. The client may pause in menus or download choices without
+sending keepalives. Once a frame's first byte arrives, its remaining header must
+arrive within ten seconds; the body has a separate ten-second completion bound.
+The initial version handshake is also limited to ten seconds. Server shutdown
+still closes idle connections, including a bounded laboratory session's end.
+
 ## Outer frame
 
 | Offset | Size | Field |

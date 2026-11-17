@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **220 passing tests**, including eighteen first-chapter entry/progress
+The suite has **223 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -616,10 +616,21 @@ A private 1.66 GB test ZIP has been generated from 11,874 preserved indexed
 files and version/index metadata, excluding on-demand content. It is served
 through an additional manifest root without editing the preservation copies.
 Two generated empty Spanish filters are an explicit local policy, not recovered
-official dictionaries. The initial package's download/extraction, fresh guest
-access and playable startup are still pending. These generated inputs and
+official dictionaries. A fresh local SDK guest was issued through `/kong/sign-up`
+and the game accepted `/auth/sign-in`, without importing the earlier guest cache.
+The initial package's download/extraction and playable startup are still pending. These generated inputs and
 machine-specific preparation tools are not distributed by the repository. A
 working prepared client must not be treated as proof of a clean installation.
+
+The user reached the choice between playing the tutorial with or without
+background downloads, then reported a connection error. The server had a
+90-second next-frame timeout even when the client was simply waiting in a menu.
+A real TLS regression with accelerated long deadlines reproduced that disconnect.
+The server now waits for a frame's first byte without an idle deadline, then
+bounds header/body completion to ten seconds each. Three regressions cover an
+authenticated idle/resume, shutdown of an idle game connection and incomplete
+header expiry. All 223 tests, Black and Ruff pass. Deployment preserved the
+complete new profile. The original-client menu/download retry is pending.
 
 ## Prioritized implementation work
 

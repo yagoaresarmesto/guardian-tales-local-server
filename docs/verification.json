@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 220,
+    "tests_run": 223,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -850,7 +850,17 @@
     "initial_local_test_ZIP_bytes": 1657219037,
     "initial_local_test_ZIP_entries": 11874,
     "initial_ZIP_download_extraction_verified": false,
-    "fresh_guest_access_verified": false,
+    "fresh_guest_access_verified": true,
     "playable_startup_verified": false
+  },
+  "idle_game_connection_update": {
+    "automated_result": "PASS",
+    "automated_tests": 223,
+    "legacy_idle_disconnect_reproduced_in_TLS_regression": true,
+    "idle_authenticated_resume_verified": true,
+    "incomplete_header_deadline_verified": true,
+    "shutdown_of_idle_game_connection_verified": true,
+    "deployment_preserved_complete_new_profile": true,
+    "APK_menu_download_retry_verified": false
   }
 }

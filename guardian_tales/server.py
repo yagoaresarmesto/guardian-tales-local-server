@@ -229,7 +229,10 @@ class LocalServer:
             inbound = outbound = seed
             session = BootstrapSession(self.guests)
             while not self.stopping:
-                header = await asyncio.wait_for(reader.readexactly(8), 90)
+                # The client can pause in menus/download choices without sending pings.
+                # Wait for a new frame, then bound completion of its header and body.
+                header = await reader.readexactly(1)
+                header += await asyncio.wait_for(reader.readexactly(7), 10)
                 size = frame_length(header, inbound)
                 rest = await asyncio.wait_for(reader.readexactly(size - 8), 10)
                 request = decode_frame(header + rest, inbound)
