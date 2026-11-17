@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 270,
+    "tests_run": 276,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1530,7 +1530,62 @@
     ],
     "private_read_check": "PASS",
     "original_ranking_response_captured": false,
+    "running_backend_reloaded": true,
+    "post_fix_apk_ranking": "PASS: APK ranking query succeeded; owner proceeded to phase entry",
+    "full_profile_and_draw_receipts_unchanged_after_apk_query": true
+  },
+  "orbital_stage_loading_trial": {
+    "date": "2026-11-17",
+    "observed_failure_route": "/tower-infinity/start-stage",
+    "native_start_builder_and_callback_inspected": true,
+    "request_fields": {
+      "floor": "positive integer",
+      "presetId": "positive integer"
+    },
+    "native_success_callback_ignores_response_body": true,
+    "response": {},
+    "local_eligibility_policy": "Configured floor no higher than absolute saved floor plus one",
+    "captured_party_presets_required": true,
+    "owned_characters_and_equipment_validated": true,
+    "prepared_external_floor_ids": 1501,
+    "additional_catalog_in_existing_release": false,
+    "profile_selected_party_currency_and_inventory_unchanged": true,
+    "attempts_or_results_persisted": false,
+    "rewards_granted": false,
+    "end_stage_implemented": false,
+    "formation_changes_implemented": false,
+    "new_regressions": 6,
+    "focused_windows_checks": 47,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 276,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 276,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_next_floor_and_saved_preset_read_check": "PASS",
+    "original_start_response_captured": false,
     "running_backend_reloaded": false,
-    "post_fix_apk_ranking": "pending"
+    "post_fix_apk_phase_loading": "pending",
+    "saved_orbital_progression_claimed": false
   }
 }

@@ -238,9 +238,43 @@ One new regression verifies repeated empty-list reads and unchanged complete
 database state for both fresh and imported accounts. Existing authentication and
 malformed-request checks also cover the route. All 270 tests pass on Python 3.11
 and 3.13 without external networking. A private read-only check confirmed the
-empty response and unchanged account/draw receipts. Backend reload and the APK
-ranking retry remain pending; the original ranking response was not captured.
+empty response and unchanged account/draw receipts. After reload, health recorded
+a successful APK ranking query, and the owner proceeded to phase entry. The full
+profile and draw receipts still matched the private pre-deployment check. The
+original ranking response was not captured.
 The separate `/tower-infinity/get-my-ranking` route is still unsupported.
+
+## Orbital phase-loading trial
+
+The next failure was `/tower-infinity/start-stage`. Its native builder sends
+integer `floor` and `presetId`, and the success callback ignores the response
+body while constructing the client's existing floor stage. The related end
+builder sends `floor`, `isCleared` and `damages`; its callback can apply rewards
+and tower progress. Entry and result handling therefore have separate boundaries.
+
+The authenticated entry trial now checks completed-prologue state, a matching
+external floor catalog and a preserved party preset. Its explicit local policy
+allows configured floors through the absolute saved floor plus one. The party
+must have one to four distinct owned characters, with every referenced equipment
+item owned. Invalid requests, missing/ambiguous presets, unknown references and
+unsupported floors reject without writes. Valid entry returns `{}` and performs
+no selected-party migration, payment, attempt recording, floor advancement or
+reward grants. `/tower-infinity/end-stage` and formation edits remain rejected.
+The trial is for loading a phase; winning it does not save progression or rewards.
+
+The prepared lab extracted 1,501 public floor IDs from its matching imported
+static table into the optional external entry catalog. The existing Release pack
+does not include this additional catalog. Six synthetic regressions cover
+authentication, strict request fields, configured/saved limits, preset ambiguity,
+owned character/equipment references, invalid catalogs, repeated entry,
+reopening/reconnect and rejected result operations. All 276 tests pass on Python
+3.11 and 3.13 without external networking. A private read-only check accepted the
+account's next configured floor and saved Orbital preset, retaining the complete
+profile and earlier draw receipts. No actual combat was started by that check.
+
+The original start response was not captured. Backend reload and the APK loading
+retry remain pending. Battle-result validation, result persistence and rewards
+require their own implementation before claiming playable saved Orbital progress.
 
 ## Host readiness before the APK check
 

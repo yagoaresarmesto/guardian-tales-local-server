@@ -18,6 +18,8 @@ from datetime import datetime, timezone
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .lobby import LOBBY_ROUTES
 from .lobby import respond as lobby_response
+from .orbital import ORBITAL_ENTRY_ROUTE
+from .orbital import enter as enter_orbital
 from .packet_reader import lz4_block
 from .play_menu import PLAY_MENU_ROUTES
 from .play_menu import read as play_menu_read
@@ -43,6 +45,7 @@ BOOTSTRAP_ROUTES = (
     *ACCOUNT_ROUTES,
     *LOBBY_ROUTES,
     *PLAY_MENU_ROUTES,
+    ORBITAL_ENTRY_ROUTE,
 )
 STATIC_SEEDS = {
     "/static-data/resource-url": ("resource_urls.bin", 2),
@@ -210,6 +213,13 @@ class BootstrapSession:
                 except ValueError as error:
                     raise PacketError(str(error)) from error
                 return json_response(request, preserved)
+        if route == ORBITAL_ENTRY_ROUTE:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                return json_response(request, enter_orbital(self.store, body))
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
         if route in PLAY_MENU_ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")

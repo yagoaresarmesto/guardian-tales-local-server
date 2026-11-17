@@ -45,6 +45,7 @@ not fetch missing bootstrap files from an official service.
 | `challenge_mission_catalog.json` | Hero collection/draw and gold collection challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
 | `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
+| `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -53,6 +54,21 @@ needed for the synthetic demo or the core persistence tests.
 
 An external directory can override a built-in JSON template by filename. Keep
 overrides local, compatible and free of official account state.
+
+The optional `orbital_entry_catalog.json` contains `client` equal to
+`{"version":"3.57.0","version_code":431,"region":"eu"}` and `floors`, a nonempty
+list of distinct positive integer floor IDs from the matching `infinitytowerfloors`
+table. The file is limited to 128 KiB and 10,000 IDs. The prepared experiment
+extracted 1,501 IDs from its already imported static data. This additional catalog
+is not included in the previously published 19-reference-file content pack.
+Only synthetic subsets belong in tests; keep the prepared catalog external.
+
+This catalog enables only a guarded phase-loading trial with preserved imported
+party presets. The local eligibility policy permits configured floors through
+the absolute saved floor plus one. The selected preset must contain one to four
+distinct owned characters and owned equipment. Entry does not change the saved
+floor, selected preset, currency or inventory. Combat results, attempts, rewards
+and the separate formation-save route are not implemented by this trial.
 
 The attendance reader expects `origin_group`, `active_group`, and `groups`, where
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.

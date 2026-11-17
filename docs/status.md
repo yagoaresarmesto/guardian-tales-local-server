@@ -6,7 +6,10 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **270 passing tests**. An empty tower-ranking regression covers
+The suite has **276 passing tests**. Six Orbital loading regressions cover
+authentication, requests, configured/saved floor limits, preserved presets,
+ownership, invalid inputs, retries/reconnect and unchanged state. Result saving
+and rewards remain unsupported. An empty tower-ranking regression covers
 repeated fresh/imported reads and unchanged database state; authentication and
 request-shape guards also cover the ranking read. Three infinite-tower entry
 regressions cover
@@ -885,8 +888,13 @@ changing progress. The APK subsequently completed entry and reached the ranking
 query; a private check confirmed unchanged full profile and draw receipts.
 Opening rankings then failed at `/tower-infinity/get-rankings`. It now returns an
 empty local `Rankings` list without inferring official entries or a personal rank.
-Private read checks and all 270 isolated tests pass; backend reload and the APK
-ranking retry are pending. Tower battles, formation edits and rewards remain
-unsupported.
+The APK subsequently completed the ranking query and reached
+`/tower-infinity/start-stage`. A guarded loading trial now validates the configured
+floor against saved progress and resolves the captured preset's owned characters
+and equipment before returning success. It performs no profile writes, payments,
+attempt recording or rewards. All 276 isolated tests and a private read-only check
+of the actual next floor/preset pass. Backend reload and the APK phase-loading
+retry are pending. Result persistence, formation edits and rewards remain
+unsupported; entering a battle does not establish saved Orbital progression.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

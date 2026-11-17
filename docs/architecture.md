@@ -206,7 +206,8 @@ client's progress before transitioning. The handler returns the current saved
 `UserProgress.TowerInfinity` object under that exact key, retaining signed floors
 and legacy `Formation` without migrating presets. Missing or invalid saved floor
 data is rejected without repair. It performs no writes, floor advancement or
-rewards. Formation changes and stage start/end remain unsupported.
+rewards. Formation changes and stage end remain unsupported; stage loading has
+the separate guarded trial described below.
 The request builder, callback and legacy formation fallback were inspected
 statically; the original response was not captured. The APK subsequently completed
 entry and reached the ranking query with the full saved profile unchanged.
@@ -216,8 +217,19 @@ entry and reached the ranking query with the full saved profile unchanged.
 uses the list's count. An empty array is therefore required rather than a missing
 or null list. This is an empty local leaderboard with no copied official entries,
 invented self-rank, rewards or database writes. Unexpected parameters reject.
-The separate personal-ranking query remains unsupported. APK ranking retry is
-pending; this contract comes from static client inspection and synthetic checks.
+The separate personal-ranking query remains unsupported. After reload, health
+recorded a successful APK ranking query, and the owner proceeded to stage entry.
+
+`/tower-infinity/start-stage` accepts exactly integer `floor` and `presetId`.
+Its native success callback ignores the response body and starts the existing
+client floor spec with the selected preset. The experimental handler validates
+sign-in, completed prologue, a matching external floor catalog, the local
+saved-floor limit and a preserved party preset with owned characters/equipment
+before returning `{}`. It writes no attempt or profile state and grants no
+rewards. Repeating or reconnecting the request therefore spends nothing and
+does not advance progress. Stage results and formation changes remain rejected.
+This enables a loading trial, not saved Orbital combat progression. The original
+start response was not captured; APK phase loading remains pending.
 
 ## Resource boundaries
 
