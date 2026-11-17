@@ -206,7 +206,7 @@ class Bridge:
         for program in ("iptables", "ip6tables"):
             self.record[program + "_output_sha256"] = digest(d.root(program + " -S OUTPUT"))
         self.save()
-        d.root("mkdir -p " + base)
+        d.adb("shell", "mkdir", "-p", base)
         (self.directory / "hosts.original").write_bytes(original)
         (self.directory / "hosts.local").write_bytes(local_hosts(original))
         d.adb("push", str(self.directory / "hosts.local"), base + "/hosts")
@@ -216,6 +216,7 @@ class Bridge:
         d.root("cp " + base + "/ca.pem " + base + "/cacerts/" + ca.name)
         d.root("chmod 644 " + base + "/hosts " + base + "/cacerts/" + ca.name)
         d.root("chcon -R u:object_r:system_file:s0 " + base + "/cacerts")
+        d.root("chcon u:object_r:system_file:s0 " + base + "/hosts")
         self.record["overlays_started"] = True
         self.save()
         d.root("mount --bind " + base + "/hosts " + HOSTS_FILE)
