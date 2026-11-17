@@ -1,5 +1,11 @@
 # External reference data and resources
 
+For the matching preserved snapshot, follow the
+[offline content download/import guide](offline-content.md). It supplies a
+versioned Release pack and creates `local/client-data/reference` plus a CDN
+resource root. This document describes individual input contracts and other
+preservation layouts.
+
 ## What the source contains
 
 `guardian_tales/templates/` holds a reconstructed empty local-account template,
@@ -14,14 +20,15 @@ for the game content needed by an APK.
 ## External bootstrap directory
 
 The default external directory is `local/reference/`, ignored by Git. Supply a
-compatible set from your own prepared 3.57.0 environment, or pass another folder
-with `--reference-dir`. The repository does not retrieve these files.
+compatible set from your own prepared 3.57.0 environment, or import the content
+release and pass `--reference-dir local/client-data/reference`. The backend does
+not fetch missing bootstrap files from an official service.
 
 | Filename | Used for | Stored encoding |
 |---|---|---|
 | `resource_urls.bin` | `/static-data/resource-url` | Body type 2: raw LZ4 plus trailing decoded length |
 | `product_ids.bin` | `/static-data/in-app-product-ids` | Body type 2 |
-| `static_data_get.bin` | `/static-data/get` | Body type 2; version/checksum bootstrap body |
+| `static_data_get.bin` | `/static-data/get` | Body type 2; clean clients require full matching static tables, not only version/checksum data |
 | `static_data_check.bin` | `/static-data/check-update` | Body type 1 reference body |
 | `attendance_catalog.json` | Daily attendance reward lookup | Parsed public attendance catalog, not account state |
 | `training_catalog.json` | Knight experience targets and story caps | Parsed public experience catalog for the matching build |
@@ -235,7 +242,8 @@ gold asset 70001's current `Amount` and lifetime `Spent`, capped at 2,147,483,64
 This matches native mission type 32, so spending gold does not remove collection
 progress. Other condition types need their own evaluation rules. The prepared
 catalog has 100 steps each for public groups 200, 202 and 206; the repository
-does not distribute those full game tables.
+does not embed those full game tables in the source tree. The separate content
+release supplies the matching prepared catalog.
 
 Both routes accept exactly `{"missionIds": [group_ids]}`. With the external
 catalog, `/mission/claim-challenge-all` awards at most one new eligible step per

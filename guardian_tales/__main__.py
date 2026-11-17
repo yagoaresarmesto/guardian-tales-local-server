@@ -9,6 +9,10 @@ COMMANDS = {
     "serve": ("server", "Run the local game and platform server"),
     "admin": ("admin", "Grant local gems/Festival points with audit receipts or inspect history"),
     "assets": ("assets", "Serve manifest-listed local resources"),
+    "content": (
+        "content_pack",
+        "Import/check versioned offline content releases or build release parts",
+    ),
     "probe": ("probe", "Check an already running local transport"),
     "demo": ("demo", "Run a temporary synthetic loopback demonstration"),
     "validate": ("validation", "Run the repository regression suite"),

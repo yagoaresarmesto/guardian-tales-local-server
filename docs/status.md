@@ -1,12 +1,12 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-17**. The public repository is a source-only
-reorganization of the working prototype. Test results and original-client
-observations have different scopes.
+Status recorded on **2026-11-17**. The public source tree reorganizes the working
+prototype; preserved game data is distributed separately as versioned Release
+attachments. Test results and original-client observations have different scopes.
 
 ## Automated checks
 
-The suite has **227 passing tests**, including eighteen first-chapter entry/progress
+The suite has **234 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -685,6 +685,34 @@ sidecar were removed, with no added files or other size changes. All 1,753 index
 on-demand files still pass SHA-1 checks. The full saved profile digest remained
 identical, including the completed prologue. This observation did not require a
 backend restart or any agent change to the client's files.
+
+## Reproducible content import
+
+The [offline content guide](offline-content.md) documents the matching APK
+baseline, four required downloads, exact placement, import/check commands,
+backend/CDN startup and separate Android routing/trust requirements. The source
+tree remains free of game binaries, content and account state. The separate
+content snapshot is identified as `gt357-eu-20261116` and carries its own notice.
+
+The release was built from the preserved base, Japanese voice supplement,
+prepared initial archive, 92 on-demand archives and 19 allowlisted reference
+files. Three ZIP parts total 5,049,412,576 bytes. A full import into a new
+directory passed SHA-256 checks for 15,915 resource files and all 19 reference
+files, producing the CDN allowlist. The import does not overwrite existing data
+or a saved account. Game resources retain their original rights; Apache 2.0
+applies to the project's source and documentation.
+
+The imported directory also passed HEAD/range delivery checks for its index,
+initial archive and one on-demand archive. With external networking disabled,
+the imported reference files passed local TLS Ping/Pong, persistent guest and
+platform probes; all 129 initial static tables passed their own data hashes.
+These are synthetic server/data checks, not another APK session.
+
+Seven synthetic regressions cover multipart import, nested archive expansion,
+content tampering, unsafe/private paths, duplicate part names, existing-directory
+protection, missing bootstrap inputs and later file changes. All 234 tests pass
+with external networking disabled; Black and Ruff pass. This data-distribution
+work does not establish another end-to-end APK run or implement pending routes.
 
 ## Prioritized implementation work
 

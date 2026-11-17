@@ -2,8 +2,9 @@
 
 The source-only quick start validates a backend. Connecting the original APK is
 a separate integration task. This repository does not include an emulator image,
-APK installer, game data, extracted metadata, SDK cache, private CA, rootfs or
-machine-specific routing scripts.
+APK installer, extracted metadata, SDK cache, private CA, rootfs or
+machine-specific routing scripts. Matching preserved game data is available
+separately through the [offline content release and import guide](offline-content.md).
 
 ## Client version and content compatibility
 
@@ -38,9 +39,10 @@ independently. Supporting a newer client means reviewing its protocol, response
 contracts and content assumptions, then testing that version explicitly; changing
 a version string does not establish compatibility.
 
-The repository supplies the server source and synthetic tests. Each client setup
-must supply its own compatible game installation and content; these are not
-included in the source ZIP.
+The source ZIP supplies the server and synthetic tests. Each client setup must
+supply its own compatible APK installation; matching content can be imported
+from the separate Release attachments. Neither the APK nor those attachments
+are embedded in the source ZIP.
 
 ## Requirements for an APK experiment
 
@@ -68,7 +70,9 @@ for those names. The project does not disable TLS verification.
 ## Prepared Windows/MuMu test
 
 The existing private workspace used a dedicated MuMu clone, transient hostname
-and Android trust overlays, a local SDK guest cache, and reversible egress rules.
+and Android trust overlays, and reversible egress rules. Its earlier prepared
+client reused a local SDK guest cache; the later clean-client experiment created
+a new guest through the local platform service without importing that cache.
 The binary/HTTPS backend ran in a prepared Python rootfs **inside Android**. The
 read-only resource CDN ran on Windows and reached Android through ADB reverse.
 
@@ -99,8 +103,9 @@ resources; copying only that earlier response is insufficient. See the
 With the complete matching external inputs supplied, the separate clean-client
 experiment has now passed local guest access, initial resource download and
 extraction, and user-confirmed prologue completion with one saved character.
-This establishes that path in the prepared clean laboratory. The repository
-still does not distribute the game data or recreate its machine-specific setup.
+This establishes that path in the prepared clean laboratory. The matching data
+is now packaged in the project's separate content release. The repository does
+not yet recreate the laboratory's machine-specific routing/trust setup.
 
 With the compatible private inputs and routing, the observed sequence is local
 guest access, prologue, saved character, lobby, and world map. On a new account,

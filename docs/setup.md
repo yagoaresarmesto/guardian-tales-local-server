@@ -5,7 +5,8 @@
 - Python 3.11 or newer, including its standard `ssl` and `sqlite3` modules.
 - An OpenSSL executable to generate development certificates once.
 - Docker only if you want the optional isolated tests.
-- A compatible, locally preserved client/resource set for APK integration.
+- A matching APK and compatible resource set for APK integration; the
+  [offline content guide](offline-content.md) covers the project's data release.
 
 Commands below run from the repository root. On Windows, `py -3.11` can replace
 `python`. No virtual environment or `pip install` is needed to run from source.
@@ -87,7 +88,17 @@ the prepared Android laboratory's separate data-directory requirements.
 
 ## Serve preserved resources
 
-Start the CDN in a second terminal:
+After importing the project's content release, start the backend with
+`--reference-dir local/client-data/reference` and the CDN in a second terminal:
+
+```sh
+python -m guardian_tales assets --resource-root local/client-data/resources/files
+```
+
+See the [download and import steps](offline-content.md) for exact file placement.
+The imported data and writable account directory `local/state` are separate.
+
+For other preservation copies, supply their roots instead:
 
 ```sh
 python -m guardian_tales assets --resource-root "/preservation/base/resources/files" --resource-root "/preservation/supplement/resources/files"

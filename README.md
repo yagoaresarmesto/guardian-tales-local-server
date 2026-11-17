@@ -15,7 +15,21 @@ passed with the same saved account.
 Optional collectibles, later phases, equipment changes, battle validation and
 most other game systems remain unfinished.
 
-## Quick start
+## Use the matching APK with preserved offline content
+
+Start with the [offline content guide](docs/offline-content.md). It explains
+which Release attachments to download, exactly where to put them, how to import
+and verify them, and how to start both the backend and resource CDN. The
+[3.57.0 European content release](https://github.com/yagoaresarmesto/guardian-tales-local-server/releases/tag/content-3.57.0-eu-20261117)
+contains the preserved resource packages and matching bootstrap/catalog data.
+Supply your own compatible APK. A new installation creates its own local guest;
+no existing player's save is distributed.
+
+Android hostname routing and TLS trust still need a dedicated test setup. The
+guide distinguishes those integration requirements from importing the content.
+The remaining backend limitations below continue to apply.
+
+## Quick backend test
 
 Clone the repository and run these commands with **Python 3.11 or newer**:
 
@@ -44,11 +58,11 @@ after starting it.
 | `127.0.0.1:17657` | HTTP health/status endpoint |
 | `127.0.0.1:18080` | Optional, separately started resource CDN |
 
-Starting the backend does **not** install the game, configure an emulator, supply
-game resources, or make the official APK connect to it automatically. An APK test
-also needs compatible external bootstrap data, preserved resources, routing and
-TLS trust in a dedicated test environment. See [setup](docs/setup.md) and
-[client integration](docs/client-integration.md).
+Starting the backend does **not** install the game, configure an emulator, import
+game resources, or make the official APK connect to it automatically. Use the
+[content guide](docs/offline-content.md) to obtain and import the separate data
+release, and [client integration](docs/client-integration.md) for routing and TLS
+trust requirements.
 
 The pinned client baseline is **Android 3.57.0, Google Play, European service**,
 with compatible bootstrap data and preserved resources from the same content
@@ -96,6 +110,7 @@ server, not a service for public hosting.
 
 ## Documentation
 
+- [Offline content: downloads, exact file placement and startup](docs/offline-content.md)
 - [Setup and server commands](docs/setup.md)
 - [Grant gems/Festival points and inspect administrative history](docs/administration.md)
 - [How the components work](docs/architecture.md)
@@ -121,10 +136,11 @@ docs/                 Setup, architecture, protocol and current status
 local/                Your runtime inputs and state; ignored by Git
 ```
 
-The repository excludes account databases, certificate keys, game archives,
+The source tree excludes account databases, certificate keys, game archives,
 downloaded assets, captured bootstrap payloads, and tools tied to a particular
-computer. The full attendance catalog is also external input. The built-in
-templates contain empty local state, not a reference player's account.
+computer. Preserved resources and matching reference data are distributed
+separately as Release attachments with a [content notice](docs/content-notice.md).
+The built-in templates contain empty local state, not a reference player's account.
 
 ## License
 

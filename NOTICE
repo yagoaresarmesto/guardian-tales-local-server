@@ -9,3 +9,7 @@ Guardian Tales and related names belong to their respective owners. No game
 client, artwork, AssetBundles, scripts, recovered metadata, account credentials,
 or captured game bootstrap response bodies are distributed with this source.
 Externally supplied game files are not covered by this project's license.
+
+Preserved content distributed as separate GitHub Release attachments has its
+own provenance and content notice in docs/content-notice.md. The Apache license
+does not apply to those original game materials.
