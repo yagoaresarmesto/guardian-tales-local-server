@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **218 passing tests**, including eighteen first-chapter entry/progress
+The suite has **219 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -538,7 +538,15 @@ public catalog contains 100 steps; native mission type 32 counts current gold
 plus spent gold, capped at a signed 32-bit maximum. The catalog handler now uses
 that condition with the existing atomic batch and per-step receipts. Deployment
 preserved the complete saved profile. All 218 tests and formatting/lint checks
-pass; original-client retry confirmation is still pending.
+pass. The APK retry persisted the first three steps and their 150-gem reward.
+
+The next missing request was `/chat/listen-channel`, with `Listen: true` and a
+null `Since`. Its native callback requires a `History` array. The local handler
+returns an empty array for authenticated listen/unlisten requests with a null
+cursor, without storing a subscription or changing account state. Non-null
+cursors and message sending remain unsupported. The complete saved profile was
+unchanged at deployment. All 219 tests, Black and Ruff pass; original-client
+chat retry confirmation is pending.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

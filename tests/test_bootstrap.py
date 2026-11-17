@@ -70,6 +70,23 @@ class BootstrapTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.session.handle(request({}, "/battle/unimplemented"))
 
+    def test_empty_channel_listening_is_authenticated_and_read_only(self):
+        route = "/chat/listen-channel"
+        body = {"Listen": True, "Since": None}
+        with self.assertRaises(PacketError):
+            self.session.handle(request(body, route))
+        self.session.signed_in = True
+        before = self.session.store.account.profile()
+        changes = self.db.total_changes
+        for listen in (True, False, True):
+            reply = self.session.handle(request({"Listen": listen, "Since": None}, route))
+            self.assertEqual(json.loads(reply.body), {"History": []})
+        for invalid in (None, {}, {"Listen": 1, "Since": None}, {"Listen": True, "Since": 1}):
+            with self.subTest(body=invalid), self.assertRaises(PacketError):
+                self.session.handle(request(invalid, route))
+        self.assertEqual(self.session.store.account.profile(), before)
+        self.assertEqual(self.db.total_changes, changes)
+
     def test_profile_requires_sign_in_and_contains_only_new_guest_state(self):
         with self.assertRaises(PacketError):
             self.session.handle(request(None, "/auth/fetch-account"))

@@ -62,6 +62,7 @@ ACCOUNT_ROUTES = (
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/chat/guild-history/v2",
+    "/chat/listen-channel",
     "/collection/list-all",
     "/collection/list-new",
     "/collection/claim-hero-knowledge-all",
@@ -1027,6 +1028,15 @@ class AccountStore:
         if route == "/guild/get-my-guild":
             return {"Hash": 0, "Guild": None, "GuildMember": None, "GuildMembers": []}
         if route == "/chat/guild-history/v2":
+            return {"History": []}
+        if route == "/chat/listen-channel":
+            if (
+                not isinstance(request, dict)
+                or set(request) != {"Listen", "Since"}
+                or type(request["Listen"]) is not bool
+                or request["Since"] is not None
+            ):
+                raise ValueError("Local empty-channel listening requires a null history cursor")
             return {"History": []}
         if route == "/collection/list-all":
             return {

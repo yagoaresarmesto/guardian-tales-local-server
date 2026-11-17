@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 218,
+    "tests_run": 219,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -827,6 +827,14 @@
     "prepared_public_group": 202,
     "prepared_steps": 100,
     "condition": "min(gold Amount + Spent, 2147483647)",
+    "deployment_preserved_complete_profile": true,
+    "APK_retry_verified": true
+  },
+  "empty_channel_listening_update": {
+    "result": "PASS",
+    "automated_tests": 219,
+    "route": "/chat/listen-channel",
+    "scope": "Authenticated local empty history; boolean Listen and null Since only",
     "deployment_preserved_complete_profile": true,
     "APK_retry_verified": false
   }
