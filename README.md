@@ -110,6 +110,8 @@ server, not a service for public hosting.
 
 ## Documentation
 
+- [Fresh installation in PyCharm on Windows](docs/pycharm.md)
+- [Connect a dedicated MuMu Android 12 instance](docs/mumu-client.md)
 - [Offline content: downloads, exact file placement and startup](docs/offline-content.md)
 - [Setup and server commands](docs/setup.md)
 - [Grant gems/Festival points and inspect administrative history](docs/administration.md)

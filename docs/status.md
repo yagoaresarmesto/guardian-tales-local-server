@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **234 passing tests**, including eighteen first-chapter entry/progress
+The suite has **240 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -704,6 +704,26 @@ Both Python 3.11.18 and 3.13.18 pass all 234 tests and the synthetic TLS demo
 with external networking disabled. This is a transport/CI correction; no player
 save or resource content was changed. Hosted results remain recorded per commit
 in [GitHub Actions](https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml).
+
+## Fresh PyCharm setup and public client bridge
+
+A new clone under PyCharm used a project-local Python 3.11.9 environment and
+the user's fresh public Release downloads. Import passed for 15,915 resource
+files and 19 references. The host backend health and the separate CDN's index
+delivery passed. Norton initially substituted its own TLS certificate; after
+the user temporarily disabled HTTPS scanning, the normal verified protocol
+probe passed with TLS 1.3 and three Pongs. The received certificate then matched
+the generated certificate exactly. The local website-exclusion form rejected
+`https://localhost`, so no working Norton local exclusion is claimed.
+
+The source now includes a separate client-hostname certificate generator and an
+experimental reversible MuMu Android 12 bridge, documented in the
+[PyCharm walkthrough](pycharm.md) and [MuMu setup](mumu-client.md). Six additional
+regressions guard the instance identity, loopback serial, conflicting hosts,
+staging paths, existing keys and corrupted-session restoration. The full suite
+and synthetic demo pass offline on Python 3.11 and 3.13. The new bridge's live
+setup/cleanup and APK login remain separate pending checks; these automated
+results do not establish them. The existing player accounts were not migrated.
 
 ## Reproducible content import
 

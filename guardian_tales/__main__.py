@@ -14,6 +14,8 @@ COMMANDS = {
         "Import/check versioned offline content releases or build release parts",
     ),
     "probe": ("probe", "Check an already running local transport"),
+    "client-cert": ("client_cert", "Generate local certificates for the pinned APK hostnames"),
+    "android-bridge": ("android_bridge", "Connect a dedicated MuMu Android 12 test instance"),
     "demo": ("demo", "Run a temporary synthetic loopback demonstration"),
     "validate": ("validation", "Run the repository regression suite"),
     "read-packet": ("packet_reader", "Decode a local packet file"),

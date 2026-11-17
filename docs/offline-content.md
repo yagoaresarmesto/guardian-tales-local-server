@@ -158,6 +158,11 @@ for controlled local currency changes.
 
 ## 5. Connect the Android client
 
+For the supported Windows/MuMu Android 12 experiment, continue with the
+[certificate and reversible bridge guide](mumu-client.md). It uses the imported
+data and the same host state directory. The [PyCharm walkthrough](pycharm.md)
+also records interpreter setup and the fresh-clone checks.
+
 Install your matching APK/splits in a dedicated test emulator. Starting these
 two computer processes does not redirect the APK automatically. Its requests to
 the European API/auth hostnames must reach ports 10100/10500, its advertised
@@ -169,8 +174,9 @@ The certificate from step 4 covers only `localhost` and `127.0.0.1` for backend
 probes. It does not establish the game's hostname trust. ADB reverse mappings
 alone do not solve hostname routing or trust either. Follow the separate
 [client integration requirements and tested MuMu arrangement](client-integration.md#requirements-for-an-apk-experiment).
-The transient routing/trust launcher used in the prepared laboratory remains
-machine-specific and is not part of this content release.
+The earlier prepared laboratory's launcher remains machine-specific. The new
+public bridge is a separate experimental implementation; its documented scope
+and verification do not imply that every Android environment is supported.
 
 Once that integration is configured, choose **Login as Guest**. The backend
 creates a new local guest, not a copy of the developer's account. The game can

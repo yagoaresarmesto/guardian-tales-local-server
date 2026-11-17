@@ -5,6 +5,10 @@ a separate integration task. This repository does not include an emulator image,
 APK installer, extracted metadata, SDK cache, private CA, rootfs or
 machine-specific routing scripts. Matching preserved game data is available
 separately through the [offline content release and import guide](offline-content.md).
+An experimental [MuMu Android 12 bridge](mumu-client.md) now supplies reproducible
+hostname/trust/routing setup for a host backend whose TLS connection already
+passes verification. Its new APK path is still being tested separately from the
+earlier private laboratory observations below.
 
 ## Client version and content compatibility
 

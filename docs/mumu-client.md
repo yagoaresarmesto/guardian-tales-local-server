@@ -1,0 +1,151 @@
+# Connect a dedicated MuMu test instance
+
+This experimental bridge connects **MuMu Player 12 on Windows, Android 12** to
+the backend running on the computer. It supplies temporary hostname routing,
+Android certificate trust, ADB reverse mappings and instance network isolation.
+It does not modify the APK or copy an existing account into Android.
+
+Use the pinned **3.57.0 Google Play European APK**, including required splits,
+and first follow the [content download/import guide](offline-content.md).
+Other emulators, Android versions and regions are not supported by this helper.
+Automated guard checks are included; the new bridge's full APK path is still
+being verified. Earlier APK observations used a separate prepared laboratory.
+
+## 1. Prepare the dedicated instance
+
+Create another instance in MuMu's instance manager and name it
+`GT357-Install-Test`. Install your matching APK and keep the instance running at
+the Android home screen. The bridge requires a non-main instance; it rejects
+instance zero and checks the selected name and creation timestamp before ADB
+operations.
+
+Find the index by running MuMu's `mumu-cli.exe info --vmindex all` or checking its
+instance manager. Examples below use **index 1**; replace it with your actual
+index. Python 3.11+, OpenSSL and MuMu's bundled ADB are required. The default CLI
+location is under `Program Files/Netease/MuMuPlayerGlobal-12.0/nx_main/`.
+Pass `--mumu-cli PATH` to the bridge if your installation uses another location.
+
+Commands run from the repository root. In a PyCharm virtual environment on
+Windows, replace `python` with `.\.venv\Scripts\python.exe` if the terminal has
+not activated that environment. The [PyCharm walkthrough](pycharm.md) describes
+that setup.
+
+## 2. Generate the APK certificate
+
+```sh
+python -m guardian_tales client-cert
+```
+
+This creates `local/client-tls/`: a private thirty-day development CA, a
+seven-day server certificate and key, and the public hashed Android CA file.
+The server certificate covers `localhost`, `127.0.0.1`,
+`eu-api.live.guardiantales.com` and `eu-auth.live.guardiantales.com`.
+The basic quick-start certificate does not cover those game hostnames.
+
+Existing keys are never overwritten. To renew, choose another empty directory
+using `--output`, then pass it as `--cert-dir` to both server and bridge. Keep
+these files local; only the public CA is sent to Android. This command installs
+no certificates in Windows or Android.
+
+## 3. Start the two host services
+
+If a backend is already running, stop it with Ctrl+C before selecting the new
+certificate directory. Keep the same state directory to retain your account.
+
+First terminal:
+
+```sh
+python -m guardian_tales serve --data-dir local/state --cert-dir local/client-tls --reference-dir local/client-data/reference
+```
+
+Second terminal:
+
+```sh
+python -m guardian_tales assets --resource-root local/client-data/resources/files --port 18080
+```
+
+Keep both running. Check [backend health](http://127.0.0.1:17657/health).
+If another local experiment occupies 18080, use `--port 18081` for this CDN and
+`--cdn-port 18081` for the bridge. Android still receives its CDN on 18080.
+The bridge verifies the backend's hostname certificates and the CDN before
+changing the emulator. It does not turn off TLS verification.
+
+## 4. Run a short routing check, then the play session
+
+In a third terminal, first run a thirty-second session:
+
+```sh
+python -m guardian_tales android-bridge run --index 1 --name GT357-Install-Test --minutes 0.5
+```
+
+For a CDN on 18081, append `--cdn-port 18081`. Expect `BRIDGE READY`, followed
+by `BRIDGE INACTIVE` after the limit and restoration. This first check tests
+setup/cleanup; keep the game closed during it. The local session report is
+`local/android-bridge/session.json`. A successful cleanup records `active: false`
+and an empty `restoration_errors` list.
+
+Then run the regular session:
+
+```sh
+python -m guardian_tales android-bridge run --index 1 --name GT357-Install-Test --minutes 500
+```
+
+After `BRIDGE READY`, open the game and choose **Login as Guest**. The host
+backend creates and retains this installation's own local account. Initial and
+additional downloads come from the imported resource set.
+
+The bridge temporarily enables the selected instance's root support, overlays
+its hosts/trust files and blocks external IPv4/IPv6 traffic while retaining
+loopback and MuMu's ADB management connection. It is limited to MuMu's default
+management topology (`10.0.2.2`, Android ADB port 5555).
+
+| Android loopback port | Host loopback port | Purpose |
+|---|---|---|
+| 10100 | 10100 | Binary game TLS |
+| 10500 | 10500 | Platform HTTPS |
+| 17657 | 17657 | Local status/web URLs |
+| 18080 | `--cdn-port`, default 18080 | Resource HTTP |
+
+## 5. Stop and restore
+
+Press **Ctrl+C in the bridge terminal** before stopping the backend/CDN. The
+bridge stops the game, removes its mappings and firewall chains, unmounts its
+hosts/trust overlays, checks the original hashes and restores the initial root
+setting. The account stays in `local/state/server.sqlite3` on the computer;
+game downloads stay in the dedicated Android instance. It does not stop the
+host services or close another emulator.
+
+Closing the actual emulator process also ends the bridge. Its transient mounts
+and network rules disappear with Android shutdown; the helper restores the root
+configuration and records that cleanup happened through shutdown. Minimizing a
+window is not shutdown. A normal session ends automatically after 500 minutes.
+
+If the controller was interrupted without finishing cleanup, run:
+
+```sh
+python -m guardian_tales android-bridge restore --index 1 --name GT357-Install-Test
+```
+
+Use the same session directory. A running bridge owns a local lock; stop it
+before invoking a separate restore command. Failed restoration keeps the session
+marked active and reports the error. Do not delete its session record to hide
+an incomplete cleanup.
+
+## TLS inspection on Windows
+
+During the fresh-install test, Norton Web/Mail Shield replaced the development
+certificate with its own. The plain HTTP health page worked while the TLS probe
+failed. The user temporarily disabled **HTTPS scanning** in Norton; the normal
+verified probe then passed TLS 1.3 with three Pong responses, and the received
+certificate's SHA-256 matched the generated certificate. The website-exclusion
+form rejected `https://localhost`; a working local exclusion was not established.
+
+This is a machine-specific finding, not a requirement to disable antivirus.
+If local TLS inspection interferes, resolve it in your environment or use an
+Android-local backend as in the earlier prepared lab. This bridge expects a
+working, verified host TLS connection. Turning inspection back on can make the
+same native-host connection fail again. Restore any temporary protection change
+when your test is finished.
+
+The bridge's guard tests and a server health page do not establish a complete
+offline game. See [current gameplay coverage](status.md).
