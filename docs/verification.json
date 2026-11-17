@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 336,
+    "tests_run": 348,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1200,6 +1200,7 @@
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
       "/lobby-village/harvest-all",
+      "/lobby-village/harvest-basecamp",
       "/preset/delete-preset",
       "/preset/set-presets",
       "/preset/set-selected-preset",
@@ -2026,8 +2027,94 @@
     "private_pre_collection_hashes_recorded": true,
     "real_account_mutated_during_checks": false,
     "original_official_response_captured": false,
+    "running_backend_reloaded": true,
+    "post_fix_apk_collection": {
+      "result": "PASS",
+      "successful_harvest_receipts": 1,
+      "credited_asset_ids": [
+        70001
+      ],
+      "saved_balances_match_receipts": true,
+      "account_revision_matches_collections": true,
+      "village_revision_matches_collections": true,
+      "unrelated_profile_unchanged": true,
+      "unrelated_village_unchanged": true,
+      "full_soul_point_clock_preserved": true,
+      "credited_gold_clock_advanced": true,
+      "captured_seed_unchanged": true,
+      "character_summon_requests_unchanged": true,
+      "preset_selection_requests_unchanged": true,
+      "preset_edit_requests_unchanged": true,
+      "preset_delete_requests_unchanged": true
+    },
+    "ordinary_basecamp_production_and_other_village_actions_implemented": false
+  },
+  "basecamp_fixed_mastery_debug": {
+    "date": "2026-11-18",
+    "observed_failure_route": "/lobby-village/harvest-basecamp",
+    "native_parameterless_builder_and_combined_collection_callback_inspected": true,
+    "native_separate_portal_clock_and_minimum_interval_inspected": true,
+    "native_normal_guardian_asset": 70013,
+    "native_mastery_asset": 70033,
+    "owner_explicitly_selected_repeated_mastery_debug_reward": 100000000,
+    "scope": "Opt-in fixed mastery reward for an upgraded producing camp; ordinary production unfinished",
+    "external_debug_catalog": "basecamp_harvest_catalog.json",
+    "prepared_minimum_seconds": 60,
+    "prepared_portal_spec_ids": [
+      200502
+    ],
+    "saved_positive_mastery_level_required": true,
+    "no_implicit_reward_without_explicit_catalog": true,
+    "future_zero_clocks_not_initialized": true,
+    "normal_guardian_points_levels_gold_tickets_parties_and_owned_gear_preserved": true,
+    "profile_camp_clock_revisions_and_receipt_atomic": true,
+    "retry_returns_frozen_notice_with_current_models_without_regrant": true,
+    "overflow_rejects_entire_fixed_reward": true,
+    "new_regressions": 12,
+    "focused_windows_checks": 40,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 348,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 348,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_actual_account_detached_validation": {
+      "result": "PASS",
+      "explicit_owner_requested_debug_amount": 100000000,
+      "credited_asset_id": 70033,
+      "detached_actual_account_check": "PASS",
+      "exact_mastery_notice": true,
+      "only_mastery_balance_and_account_revision_changed": true,
+      "only_camp_clock_and_village_revision_changed": true,
+      "normal_guardian_points_levels_gold_and_other_state_preserved": true,
+      "replay_does_not_grant_again": true,
+      "real_account_mutated_during_check": false
+    },
+    "private_pre_retry_hashes_recorded": true,
+    "real_account_mutated_during_checks": false,
+    "original_official_response_captured": false,
     "running_backend_reloaded": false,
-    "post_fix_apk_collection": "pending",
-    "base_camp_visitors_airship_dispatch_shop_construction_and_other_village_actions_implemented": false
+    "post_fix_apk_mastery_debug_collection": "pending",
+    "ordinary_production_scoring_conversion_tickets_party_changes_and_mastery_upgrades_implemented": false
   }
 }

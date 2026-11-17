@@ -11,6 +11,8 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+from .basecamp import create_tables as create_basecamp_tables
+from .basecamp import harvest as harvest_basecamp
 from .beginner import claim_beginner
 from .campaign import (
     CHARGED_STAMINA,
@@ -99,6 +101,7 @@ ACCOUNT_ROUTES = (
     "/preset/set-presets",
     "/preset/delete-preset",
     "/lobby-village/harvest-all",
+    "/lobby-village/harvest-basecamp",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -151,6 +154,7 @@ class AccountStore:
         create_snapshot_tables(db)
         create_preset_tables(db)
         create_village_tables(db)
+        create_basecamp_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -994,6 +998,9 @@ class AccountStore:
 
     def harvest_village(self, request, operation_id, now=None):
         return harvest_village(self, request, operation_id, now)
+
+    def harvest_basecamp(self, request, operation_id, now=None):
+        return harvest_basecamp(self, request, operation_id, now)
 
     def purchase_stamina(self, request, operation_id, now=None):
         return purchase_stamina(self, request, operation_id, now)

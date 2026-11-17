@@ -289,6 +289,15 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/lobby-village/harvest-basecamp":
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.harvest_basecamp(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/lobby-village/harvest-all":
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)

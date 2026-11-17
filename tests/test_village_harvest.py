@@ -20,7 +20,7 @@ from tests.test_snapshots import synthetic_snapshot
 NOW = 1800000000
 
 
-class VillageHarvestTests(unittest.TestCase):
+class VillageFixture:
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(dir=os.environ.get("GT_TEST_TMP"))
         self.root = Path(self.temporary.name)
@@ -148,6 +148,8 @@ class VillageHarvestTests(unittest.TestCase):
             self.call(body)
         self.assertEqual(list(self.db.iterdump()), before)
 
+
+class VillageHarvestTests(VillageFixture, unittest.TestCase):
     def test_collection_updates_only_balances_clocks_and_revisions(self):
         profile = self.store.account.profile()
         seed = self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0]

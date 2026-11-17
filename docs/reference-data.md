@@ -49,6 +49,7 @@ not fetch missing bootstrap files from an official service.
 | `stamina_regen_catalog.json` | Natural stamina recharge | Matching client, base charged-stamina maximum and interval in minutes |
 | `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
+| `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -133,6 +134,24 @@ are supported; mixed-resource facility effects and unfinished inns reject.
 Airships, visitors, guardian-base-camp points, dispatches, shops and construction
 require their own operations. Native arithmetic is evidence for the local
 calculation, not a captured official reward contract.
+
+`/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
+reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,
+limited to 4 KiB, with exactly `client`, `portal_specs`, `min_seconds` and
+`debug_mastery_points`. The client object is pinned as above; specs are a nonempty
+list of distinct positive IDs, the interval is 1..86,400 seconds, and the reward
+is a positive signed-32-bit amount. The prepared experiment uses the matching
+upgraded portal spec, 60 seconds and **100,000,000 mastery points**, explicitly
+requested by the owner. This catalog is not part of the published content pack.
+
+The reward goes to the existing asset 70033. It requires a positive saved mastery
+level and one configured camp in producing status, using that camp's `EndTime`.
+Future/zero anchors are retained. Each eligible new request grants the fixed
+amount and advances the clock; retries cannot grant it again. Normal guardian
+points (70013), mastery/guardian levels, gold, tickets, parties and equipment
+remain unchanged. Overflow rejects the whole reward. Without the explicit catalog,
+the operation rejects; ordinary production/scoring, conversion, quick-harvest
+tickets, party changes and mastery upgrades remain unfinished.
 
 The attendance reader expects `origin_group`, `active_group`, and `groups`, where
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.

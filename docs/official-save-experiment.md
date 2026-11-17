@@ -98,10 +98,10 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Seven mutations are now enabled: `/summon/set-select-character`,
+Eight mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina` and
-`/lobby-village/harvest-all`. The summon routes
+`/lobby-village/harvest-all` and `/lobby-village/harvest-basecamp`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
@@ -113,6 +113,8 @@ removes one existing Orbital definition and clears its selection if necessary. N
 recharge advances the saved timer and charged balance up to its configured cap.
 Village harvesting collects configured inn/facility gold and soul points with
 balances, clocks and retry receipts stored together.
+Base-camp harvesting currently requires an explicit fixed mastery debug reward;
+the prepared experiment uses the owner's requested 100 million per collection.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -506,8 +508,49 @@ rollback. All 336 tests pass on Python 3.11 and 3.13 with external networking
 disabled. A detached check of the actual account credited only eligible gold,
 retaining its full soul-point asset and corresponding clocks. Unrelated account
 and village fields were unchanged and replay did not write. The real account
-was unchanged; private pre-collection hashes were recorded. Backend reload and
-the APK collection retry remain pending. Other village actions are unfinished.
+was unchanged; private pre-collection hashes were recorded. After reload, one APK
+collection succeeded. Its receipt matched the gold balance and both revisions;
+the gold clock advanced and full soul-point clocks were retained. Unrelated
+profile/village data, captured seed and earlier summon/preset receipts remained
+unchanged. The following error was the separate base-camp collection request.
+
+## Fixed mastery rewards in the guardian base camp
+
+The combined village collection then reached the parameterless
+`/lobby-village/harvest-basecamp` request, which was unsupported. Native inspection
+established its builder, separate portal `EndTime`, 60-second minimum, and the
+distinction between normal guardian-point asset 70013 and mastery asset 70033.
+The response uses current `User`, current `UserLobbyVillage` and `AddedItems`
+notices. No original official base-camp response was captured.
+
+During investigation the owner explicitly requested 100 million points in each
+collection, then selected **mastery points** after clarifying the two balances.
+The implemented contract is therefore an opt-in fixed debug reward, not ordinary
+camp production. A separate external catalog selects upgraded camp specs, the
+minimum interval and the fixed mastery amount. The prepared policy grants exactly
+100,000,000 to existing asset 70033 for each eligible new collection.
+
+The handler requires a preserved village, a positive saved mastery level and one
+configured producing camp. It retains future/zero clocks. A credited collection
+updates only mastery balance, camp `EndTime` and account/village revisions, with
+its receipt in the same transaction. Replays return frozen notices and current
+models without another grant, including after reopening or catalog removal.
+Normal guardian points, levels, gold, tickets, owned heroes/gear and other village
+systems remain unchanged. If the full reward would exceed the signed-32-bit
+balance, the request rejects atomically. No fallback debug reward exists without
+the catalog. Ordinary camp rates/scoring, gold conversion, ticket collection,
+party management and mastery upgrades are separate unfinished contracts.
+
+Twelve regressions cover exact rewards and preserved state/seeds, interval/future/
+zero-clock boundaries, current-state retries, reopening/new login, explicit catalog
+validation, authentication/parameters, inactive mastery, missing/ambiguous/unready
+camps, overflow/revisions, rollback, interleaving regular village collection and
+changed debug configuration. All 348 tests pass on Python 3.11 and 3.13 with
+external networking disabled. A detached actual-account check granted exactly
+100 million mastery points, preserving all other fields except the intended camp
+clock and revisions; replay did not write. The real account was unchanged and
+private pre-retry hashes were recorded. Backend reload and the APK retry remain
+pending.
 
 ## Host readiness before the APK check
 

@@ -318,8 +318,24 @@ stores credited asset balances, village clocks, both revisions and a
 `village_harvest_requests` receipt. Replays return frozen notices with current
 models, even without a catalog, and never grant again. No-op receipts do not
 change revisions. Full resources retain clocks; other eligible resources can
-still be collected. Detached actual-account validation passed without saved
-account writes; APK collection retry is pending. Other village systems are separate.
+still be collected. The APK collection succeeded: its gold receipt, balance,
+advanced clock and revisions matched, with full soul points and unrelated state
+retained. The subsequent failure was the base-camp collection request.
+
+`/lobby-village/harvest-basecamp` currently implements the owner's requested
+fixed mastery reward under an explicit external debug catalog. The prepared policy
+uses 100 million of asset 70033 per eligible collection, a 60-second minimum and
+the matching upgraded camp spec. A positive saved mastery level is required.
+Ordinary camp production/scoring and gold conversion remain unfinished.
+
+The handler shares `village_state`, preserving current regular harvest clocks
+and all other village fields. One transaction stores the mastery balance, camp
+clock, both revisions and a `basecamp_harvest_requests` receipt. Replays return
+frozen notices with current models, including after catalog removal, without
+granting again. Existing normal guardian points, levels, gold, tickets and owned
+heroes/gear remain unchanged; overflow rejects the entire fixed reward. Detached
+actual-account validation passed without saved account writes. APK debug
+collection retry is pending.
 
 ## Resource boundaries
 

@@ -104,6 +104,7 @@ class SnapshotTests(unittest.TestCase):
             result["enabled_mutation_routes"],
             [
                 "/lobby-village/harvest-all",
+                "/lobby-village/harvest-basecamp",
                 "/preset/delete-preset",
                 "/preset/set-presets",
                 "/preset/set-selected-preset",

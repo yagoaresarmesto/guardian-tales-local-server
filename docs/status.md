@@ -6,7 +6,11 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **336 passing tests**. Fifteen village-harvest regressions cover
+The suite has **348 passing tests**. Twelve base-camp mastery-debug regressions
+cover exact rewards and mutation bounds, interval gates, retries/reopening,
+catalog/authentication guards, camp/mastery state, overflow, revisions, rollback,
+interleaving regular collection and changed configuration.
+Fifteen village-harvest regressions cover
 mutation bounds, seeds, interval/period gates, follower bonuses, storage/capacity,
 future/zero clocks, retries, reopening/new login, malformed data, ownership,
 authentication, unfinished facilities, revision limits and atomic rollback.
@@ -964,7 +968,20 @@ clocks, while other resources remain collectible. The captured seed and unrelate
 village systems remain unchanged. All 336 isolated tests pass. Detached actual
 account validation credited only eligible gold, retained full soul points and
 their clocks, and left unrelated fields intact without writing the saved account.
-Backend reload and the APK collection retry remain pending. Other village actions
-and rewards are unfinished.
+The APK collection succeeded; saved gold and both revisions matched its receipt,
+the gold clock advanced, full soul-point clocks were retained, and unrelated
+profile/village data and prior receipts were unchanged. The next error was
+`/lobby-village/harvest-basecamp`. The owner then requested a fixed reward and
+selected **100 million mastery points per eligible collection**.
+
+That separate request now uses an explicit debug catalog and the producing
+upgraded camp's own clock, with the native 60-second minimum. The mastery balance,
+camp clock, revisions and receipt commit together; retries do not grant again.
+Normal guardian points, levels, gold, tickets, parties, heroes and equipment remain
+unchanged. Ordinary camp scoring/rates and conversion are unfinished. All 348
+isolated tests pass. The exact reward and mutation bounds passed against a
+temporary in-memory copy of the actual account, without changing its saved state.
+Backend reload and the APK mastery-debug collection retry remain pending. Other
+village actions and rewards are unfinished.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

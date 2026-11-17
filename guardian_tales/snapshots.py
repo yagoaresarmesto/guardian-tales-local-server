@@ -35,6 +35,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/preset/delete-preset",
         "/user/charge-stamina",
         "/lobby-village/harvest-all",
+        "/lobby-village/harvest-basecamp",
     )
 )
 ACCOUNT_READS = frozenset(
