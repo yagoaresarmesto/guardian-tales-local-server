@@ -192,8 +192,13 @@ Four synthetic regressions cover authentication, both cache flags, strict reques
 shapes, captured presets, current rift settings, unchanged complete database state
 and rejection of unsupported actions. All 266 tests pass on Python 3.11 and 3.13
 without external networking. Private read-only checks also verified the captured
-presets, current rift selections and unchanged account/draw receipts. Loading the
-new handlers into the running backend and the subsequent APK retry remain pending.
+presets, current rift selections and unchanged account/draw receipts. After the
+owner reloaded the backend, the running service exposed both routes and recorded
+one successful APK read for each. The owner reported recovery using Reconnect
+without closing the game. The local connection was active and both saved draw
+receipts still contained their original one and ten results. Earlier failure
+counters had not increased. This verifies the prerequisite exchange and reported
+reconnect recovery, not every tab, mode gameplay or a full client restart.
 
 ## Host readiness before the APK check
 

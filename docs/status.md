@@ -8,7 +8,8 @@ attachments. Test results and original-client observations have different scopes
 
 The suite has **266 passing tests**. Four contents-book prerequisite regressions
 cover authentication, exact request shapes, imported presets and rift selections,
-unchanged database state and unsupported action rejection. APK retry is pending.
+unchanged database state and unsupported action rejection. Both prerequisite
+reads subsequently succeeded in the APK after a backend reload and reconnect.
 Thirteen snapshot-import regressions cover
 private-input validation, unchanged source/profile data, local sign-in identity,
 preserved startup reads, restart, mutation/prologue rejection, catalog isolation,
@@ -868,6 +869,9 @@ unimplemented cooperative-expedition prerequisite. Read-only handlers now cover
 that request and the loader's following rift read. Rift selections and captured
 cooperative presets are retained; separate cooperative progress was not captured,
 so its menu view is explicitly empty. Mode gameplay and rewards remain unfinished.
-Backend reload and the next APK menu check are pending.
+After the backend reload, both prerequisite reads succeeded. The owner reported
+recovery using Reconnect without closing the game; the connection remained active
+and the saved one/ten draw receipts were retained. Individual tabs and mode
+gameplay remain outside this verification.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

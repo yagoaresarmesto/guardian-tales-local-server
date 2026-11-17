@@ -196,7 +196,9 @@ That separate cooperative progress was not captured or recovered from the
 official account. The placeholder is not saved over the imported profile and
 does not enable matching, battles, clears or rewards. Request builders, client
 load order and model fields were inspected statically; the original response
-was not captured, and an APK retry is still required.
+was not captured. After the backend reload, both APK reads succeeded and the
+owner reported recovery using Reconnect without closing the game. This does not
+establish working mode gameplay.
 
 ## Resource boundaries
 

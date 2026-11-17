@@ -1423,7 +1423,23 @@
       }
     ],
     "private_account_read_check": "PASS",
-    "running_backend_reloaded": false,
-    "post_fix_apk_menu_entry": "pending"
+    "running_backend_reloaded": true,
+    "post_fix_apk_menu_entry": "Owner reports recovery using Reconnect; both prerequisite reads succeeded",
+    "apk_reconnect_check": {
+      "result": "PASS",
+      "successful_prerequisite_reads": {
+        "/coop-expedition/enter": 1,
+        "/rift/enter": 1
+      },
+      "failure_counters_unchanged": true,
+      "owner_reports_reconnect_recovery": true,
+      "game_closed_for_retry": false,
+      "saved_draw_receipts_preserved": true,
+      "saved_draw_result_counts": [
+        1,
+        10
+      ],
+      "mode_gameplay_verified": false
+    }
   }
 }
