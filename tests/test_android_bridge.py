@@ -5,6 +5,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from guardian_tales.android_bridge import (
@@ -61,6 +62,22 @@ class AndroidBridgeTests(unittest.TestCase):
         ):
             with self.subTest(changes=changes), self.assertRaises(ValueError):
                 serial({**info, **changes})
+
+    def test_root_setting_is_read_from_mumu_configuration_without_enabling_it(self):
+        for value in ("true", "false", "unexpected", True):
+            result = SimpleNamespace(stdout=json.dumps({"root_permission": value}).encode())
+            with (
+                self.subTest(value=value),
+                patch.object(Device, "info", return_value=self.info()),
+                patch("guardian_tales.android_bridge.command", return_value=result) as run,
+            ):
+                device = Device("synthetic.exe", 4, "Synthetic test")
+                if value in ("true", "false"):
+                    self.assertEqual(device.root_setting(), value == "true")
+                else:
+                    with self.assertRaises(ValueError):
+                        device.root_setting()
+                self.assertNotIn("--value", run.call_args.args[0])
 
     def test_hosts_preserve_existing_entries_and_refuse_ambiguous_routing(self):
         original = b"127.0.0.1 localhost\n::1 localhost\n192.0.2.1 synthetic.example\n"

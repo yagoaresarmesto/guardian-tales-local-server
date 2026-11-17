@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **240 passing tests**, including eighteen first-chapter entry/progress
+The suite has **241 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -718,12 +718,16 @@ the generated certificate exactly. The local website-exclusion form rejected
 
 The source now includes a separate client-hostname certificate generator and an
 experimental reversible MuMu Android 12 bridge, documented in the
-[PyCharm walkthrough](pycharm.md) and [MuMu setup](mumu-client.md). Six additional
+[PyCharm walkthrough](pycharm.md) and [MuMu setup](mumu-client.md). Seven additional
 regressions guard the instance identity, loopback serial, conflicting hosts,
-staging paths, existing keys and corrupted-session restoration. The full suite
-and synthetic demo pass offline on Python 3.11 and 3.13. The new bridge's live
-setup/cleanup and APK login remain separate pending checks; these automated
-results do not establish them. The existing player accounts were not migrated.
+staging paths, existing keys, root configuration and corrupted-session restoration. The full suite
+and synthetic demo pass offline on Python 3.11 and 3.13. The user completed the
+first thirty-second bridge test. Independent checks confirmed the original
+hosts/trust hashes, IPv4/IPv6 OUTPUT rules, removed firewall chains, empty reverse
+mappings and removed staging directory. Root access matched its observed initial
+availability. The bridge now queries MuMu's root configuration directly for
+future sessions. APK login through this new bridge remains pending. The existing
+player accounts were not migrated.
 
 ## Reproducible content import
 

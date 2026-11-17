@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 240,
+    "tests_run": 241,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1065,23 +1065,24 @@
     "local_matrix": [
       {
         "python": "3.11.18",
-        "tests_run": 240,
+        "tests_run": 241,
         "result": "PASS",
         "external_network_disabled": true
       },
       {
         "python": "3.13.18",
-        "tests_run": 240,
+        "tests_run": 241,
         "result": "PASS",
         "external_network_disabled": true
       }
     ],
-    "guard_regressions": 6,
+    "guard_regressions": 7,
     "native_generated_certificate_hostnames_verified": true,
     "public_release_import_resources": 15915,
     "public_release_import_references": 19,
     "native_original_certificate_verified_after_user_changed_HTTPS_inspection": true,
-    "new_bridge_live_restoration_verified": false,
+    "new_bridge_live_restoration_verified": true,
+    "root_configuration_read_directly_from_mumu": true,
     "new_bridge_APK_login_verified": false
   }
 }

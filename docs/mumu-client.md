@@ -8,8 +8,9 @@ It does not modify the APK or copy an existing account into Android.
 Use the pinned **3.57.0 Google Play European APK**, including required splits,
 and first follow the [content download/import guide](offline-content.md).
 Other emulators, Android versions and regions are not supported by this helper.
-Automated guard checks are included; the new bridge's full APK path is still
-being verified. Earlier APK observations used a separate prepared laboratory.
+The first bounded setup/cleanup test passed on a fresh MuMu instance, with
+independent restoration checks. The new bridge's full APK path is still being
+verified. Earlier APK observations used a separate prepared laboratory.
 
 ## 1. Prepare the dedicated instance
 
@@ -114,6 +115,12 @@ hosts/trust overlays, checks the original hashes and restores the initial root
 setting. The account stays in `local/state/server.sqlite3` on the computer;
 game downloads stay in the dedicated Android instance. It does not stop the
 host services or close another emulator.
+
+The initial root setting is read from MuMu's `root_permission` configuration.
+Availability of `su` to ADB is not used to infer that setting. In the first
+short test, root access was already available and remained available afterward;
+the original hosts, trust listing, IPv4/IPv6 rules, reverse mappings and staging
+directory were independently checked after restoration.
 
 Closing the actual emulator process also ends the bridge. Its transient mounts
 and network rules disappear with Android shutdown; the helper restores the root

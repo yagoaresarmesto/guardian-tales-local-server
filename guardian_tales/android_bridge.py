@@ -99,6 +99,17 @@ class Device:
     def root(self, value):
         return self.adb("exec-out", "su -c " + shlex.quote(value))
 
+    def root_setting(self):
+        self.check()
+        value = json.loads(
+            command(
+                [self.cli, "setting", "--vmindex", str(self.index), "--key", "root_permission"]
+            ).stdout
+        ).get("root_permission")
+        if value not in ("true", "false"):
+            raise ValueError("MuMu returned an invalid root_permission setting")
+        return value == "true"
+
     def set_root(self, enabled):
         self.check()
         command(
@@ -182,7 +193,7 @@ class Bridge:
         mappings = d.adb("reverse", "--list").decode().split()
         if any("tcp:" + str(port) in mappings for port in (10100, 10500, 17657, 18080)):
             raise ValueError("Required Android reverse ports are already in use")
-        rooted = b"uid=0" in d.adb("exec-out", "su -c id", check=False)
+        rooted = d.root_setting()
         base = staging_path("/data/local/tmp/gt357bridge_" + uuid.uuid4().hex[:16])
         self.record = {
             "active": True,
