@@ -272,9 +272,15 @@ reopening/reconnect and rejected result operations. All 276 tests pass on Python
 account's next configured floor and saved Orbital preset, retaining the complete
 profile and earlier draw receipts. No actual combat was started by that check.
 
-The original start response was not captured. Backend reload and the APK loading
-retry remain pending. Battle-result validation, result persistence and rewards
-require their own implementation before claiming playable saved Orbital progress.
+The original start response was not captured. After reload, the APK completed the
+start request and loaded the phase. The owner confirmed that the battle ended in
+defeat and returned to the Orbital menu. The local connection remained active;
+no successful, rejected or unsupported `/tower-infinity/end-stage` request was
+observed in that trial. A private full-profile and draw-receipt comparison still
+matched the pre-deployment state. This establishes loading and the reported
+defeat return, not a persisted battle result. Victory, battle-result validation,
+result persistence and rewards require their own implementation before claiming
+playable saved Orbital progress.
 
 ## Host readiness before the APK check
 

@@ -1584,8 +1584,17 @@
     ],
     "private_next_floor_and_saved_preset_read_check": "PASS",
     "original_start_response_captured": false,
-    "running_backend_reloaded": false,
-    "post_fix_apk_phase_loading": "pending",
-    "saved_orbital_progression_claimed": false
+    "running_backend_reloaded": true,
+    "post_fix_apk_phase_loading": "PASS: phase loaded; owner confirmed defeat and return to Orbital menu",
+    "saved_orbital_progression_claimed": false,
+    "apk_loading_and_defeat_return": {
+      "result": "PASS",
+      "owner_confirmed_phase_loaded": true,
+      "owner_confirmed_defeat_and_return_to_menu": true,
+      "successful_start_request_observed": true,
+      "end_stage_request_observed": false,
+      "complete_profile_and_draw_receipts_unchanged": true,
+      "victory_progression_or_rewards_verified": false
+    }
   }
 }

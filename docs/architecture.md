@@ -229,7 +229,10 @@ before returning `{}`. It writes no attempt or profile state and grants no
 rewards. Repeating or reconnecting the request therefore spends nothing and
 does not advance progress. Stage results and formation changes remain rejected.
 This enables a loading trial, not saved Orbital combat progression. The original
-start response was not captured; APK phase loading remains pending.
+start response was not captured. The APK subsequently loaded the phase, and the
+owner confirmed defeat followed by return to the menu. No end-stage request was
+observed in that trial; the full profile and draw receipts remained unchanged.
+Victory, saved progression and rewards are still unverified and unimplemented.
 
 ## Resource boundaries
 

@@ -893,8 +893,10 @@ The APK subsequently completed the ranking query and reached
 floor against saved progress and resolves the captured preset's owned characters
 and equipment before returning success. It performs no profile writes, payments,
 attempt recording or rewards. All 276 isolated tests and a private read-only check
-of the actual next floor/preset pass. Backend reload and the APK phase-loading
-retry are pending. Result persistence, formation edits and rewards remain
-unsupported; entering a battle does not establish saved Orbital progression.
+of the actual next floor/preset pass. After reload, the APK loaded the phase, and
+the owner confirmed defeat followed by return to the Orbital menu. No end-stage
+request was observed; the full profile and draw receipts remained unchanged.
+Victory, result persistence, formation edits and rewards remain unsupported;
+this trial does not establish saved Orbital progression.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).
