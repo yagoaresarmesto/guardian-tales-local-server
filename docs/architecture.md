@@ -185,6 +185,19 @@ coupon amounts are changed. This permits the automatic scene-entry check while
 actual redemption remains unsupported. Fresh local accounts still require empty
 coupon maps. Malformed counters and unexpected parameters are rejected.
 
+The contents-book loader queries `/coop-expedition/enter` and then `/rift/enter`
+before loading its tabs. The former accepts exactly a Boolean `IsPartial`; the
+latter accepts an empty body. Both require sign-in and perform no database writes.
+Rift entry returns the current full `UserProgress`, preserving captured evolution
+reward selections without daily refreshes. Cooperative entry returns a full
+`UserCoopExpedition` local placeholder with empty stage/narrative/reward state,
+zero counters and the captured `CoopExpeditionSlots` presets when available.
+That separate cooperative progress was not captured or recovered from the
+official account. The placeholder is not saved over the imported profile and
+does not enable matching, battles, clears or rewards. Request builders, client
+load order and model fields were inspected statically; the original response
+was not captured, and an APK retry is still required.
+
 ## Resource boundaries
 
 The CDN accepts only files listed under `resources/files/` in preservation

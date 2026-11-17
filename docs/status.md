@@ -6,7 +6,10 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **262 passing tests**. Thirteen snapshot-import regressions cover
+The suite has **266 passing tests**. Four contents-book prerequisite regressions
+cover authentication, exact request shapes, imported presets and rift selections,
+unchanged database state and unsupported action rejection. APK retry is pending.
+Thirteen snapshot-import regressions cover
 private-input validation, unchanged source/profile data, local sign-in identity,
 preserved startup reads, restart, mutation/prologue rejection, catalog isolation,
 existing-save protection, directory locking, failed-publication cleanup and valid
@@ -860,6 +863,11 @@ Read-only SQLite checks verified two receipts, eleven results and controllers
 spent, matching reward/history increments, and unchanged existing heroes,
 equipment, party and unrelated profile sections. Client restart recovery and
 other payment types are not yet APK-verified. Coupon conversion/expiration remains
-unimplemented. Other mutations remain guarded.
+unimplemented. Other mutations remain guarded. Opening Play next failed at the
+unimplemented cooperative-expedition prerequisite. Read-only handlers now cover
+that request and the loader's following rift read. Rift selections and captured
+cooperative presets are retained; separate cooperative progress was not captured,
+so its menu view is explicitly empty. Mode gameplay and rewards remain unfinished.
+Backend reload and the next APK menu check are pending.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

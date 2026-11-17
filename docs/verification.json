@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 262,
+    "tests_run": 266,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1371,5 +1371,59 @@
     ],
     "synthetic_demos_passed": true,
     "post_fix_apk_screen_entry": "PASS: owner entered summons successfully"
+  },
+  "play_menu_prerequisites": {
+    "date": "2026-11-17",
+    "owner_reported_play_entry_failure": true,
+    "observed_unsupported_route": "/coop-expedition/enter",
+    "static_contents_book_load_order": [
+      "/coop-expedition/enter",
+      "/rift/enter"
+    ],
+    "native_request_builders_and_cooperative_model_inspected": true,
+    "official_read_responses_captured": false,
+    "request_contracts": {
+      "/coop-expedition/enter": {
+        "IsPartial": "boolean"
+      },
+      "/rift/enter": "empty body"
+    },
+    "read_only_handlers": true,
+    "saved_rift_selections_preserved": true,
+    "captured_cooperative_presets_preserved": true,
+    "cooperative_progress_recovered": false,
+    "cooperative_response_policy": "Explicit empty local view; not persisted over imported profile",
+    "matching_battles_clears_and_rewards_implemented": false,
+    "new_regressions": 4,
+    "focused_windows_checks": 37,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 266,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 266,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_account_read_check": "PASS",
+    "running_backend_reloaded": false,
+    "post_fix_apk_menu_entry": "pending"
   }
 }

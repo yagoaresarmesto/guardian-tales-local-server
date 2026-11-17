@@ -19,6 +19,8 @@ from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_in
 from .lobby import LOBBY_ROUTES
 from .lobby import respond as lobby_response
 from .packet_reader import lz4_block
+from .play_menu import PLAY_MENU_ROUTES
+from .play_menu import read as play_menu_read
 from .protocol import Packet, PacketError
 from .reference import compressed_empty_list
 from .snapshots import (
@@ -40,6 +42,7 @@ BOOTSTRAP_ROUTES = (
     "/static-data/check-update",
     *ACCOUNT_ROUTES,
     *LOBBY_ROUTES,
+    *PLAY_MENU_ROUTES,
 )
 STATIC_SEEDS = {
     "/static-data/resource-url": ("resource_urls.bin", 2),
@@ -207,6 +210,13 @@ class BootstrapSession:
                 except ValueError as error:
                     raise PacketError(str(error)) from error
                 return json_response(request, preserved)
+        if route in PLAY_MENU_ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                return json_response(request, play_menu_read(self.store, route, body))
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
         if route in LOBBY_ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")

@@ -171,6 +171,30 @@ mappings were also verified while the local game connection was active. Some
 localized promotional banners returned HTTP 404 without preventing that reported
 lobby. This is not verification of every menu, asset or gameplay operation.
 
+## Play-menu prerequisite experiment
+
+The owner next reported a failure while opening Play. Health recorded the
+unsupported `/coop-expedition/enter` request before a mode was started. Static
+inspection of `ContentsBook` confirms that loading the menu sends this request
+and then `/rift/enter`. The native builders supply `IsPartial` as a Boolean for
+cooperative entry and no body for rift entry. Native model fields establish the
+cooperative object's structure; no official response to these reads was captured.
+
+The new handlers require sign-in and reject extra or malformed parameters. Rift
+entry returns current `UserProgress` without resetting reward selections or
+refreshing bonuses. Cooperative entry returns an explicitly empty local view,
+including the already captured cooperative presets where present. Its stage
+states, narratives and reward counters are placeholders, not recovered official
+progress. The full object is returned for either cache hint without saving it
+into the imported profile. Matching, battles, clears and rewards remain blocked.
+
+Four synthetic regressions cover authentication, both cache flags, strict request
+shapes, captured presets, current rift settings, unchanged complete database state
+and rejection of unsupported actions. All 266 tests pass on Python 3.11 and 3.13
+without external networking. Private read-only checks also verified the captured
+presets, current rift selections and unchanged account/draw receipts. Loading the
+new handlers into the running backend and the subsequent APK retry remain pending.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all
