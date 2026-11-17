@@ -678,6 +678,14 @@ resource. Use of the generated group ZIP by the APK remains unverified because
 individual files were already cached. The saved player account and original
 preservation files were not changed.
 
+The user next completed the in-game downloaded-file check/organization function.
+It requested the media index, received HTTP 304 and made no new resource download.
+The file inventory changed from 16,442 to 16,440: one summon video and its ETag
+sidecar were removed, with no added files or other size changes. All 1,753 indexed
+on-demand files still pass SHA-1 checks. The full saved profile digest remained
+identical, including the completed prologue. This observation did not require a
+backend restart or any agent change to the client's files.
+
 ## Prioritized implementation work
 
 Use the [API inventory and implementation plan](implementation-plan.md) to

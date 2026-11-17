@@ -904,5 +904,20 @@
     "unfinished_ZIP_files": 0,
     "scope": "Selected clean-client additional resource set, not every region/language",
     "player_state_reset": false
+  },
+  "clean_downloaded_file_organization": {
+    "user_reports_finished": true,
+    "file_count_before": 16442,
+    "file_count_after": 16440,
+    "removed_summon_videos": 1,
+    "removed_ETag_sidecars": 1,
+    "new_files": 0,
+    "other_file_size_changes": 0,
+    "media_index_HTTP_status": 304,
+    "HTTP_errors": 0,
+    "ondemand_SHA1_matches": 1753,
+    "ondemand_SHA1_mismatches": 0,
+    "complete_profile_digest_unchanged": true,
+    "observation_read_only": true
   }
 }
