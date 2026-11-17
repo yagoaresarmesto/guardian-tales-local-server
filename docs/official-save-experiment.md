@@ -98,15 +98,16 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Five mutations are now enabled: `/summon/set-select-character`,
-`/summon/select-character`, `/preset/set-selected-preset` and
-`/preset/set-presets`, plus `/user/charge-stamina`. The summon routes
+Six mutations are now enabled: `/summon/set-select-character`,
+`/summon/select-character`, `/preset/set-selected-preset`,
+`/preset/set-presets`, `/preset/delete-preset` and `/user/charge-stamina`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
 controllers. Preset selection changes only the chosen captured Orbital preset
 and the account revision, with its own atomic retry receipts. Editing an existing
-Orbital preset saves its definition separately from the captured seed. Natural stamina
+Orbital preset saves its definition separately from the captured seed. Deletion
+removes one existing Orbital definition and clears its selection if necessary. Natural stamina
 recharge advances the saved timer and charged balance up to its configured cap.
 Other mutations
 remain rejected until validated for imported state. Health's
@@ -317,7 +318,7 @@ applied to the real account by those checks. After reload, the APK selection
 request succeeded and one receipt was saved. A private check matched the selected
 pointer and revision to that receipt; all unrelated profile data and preserved
 preset definitions were unchanged. The subsequent failure was a separate
-`/user/charge-stamina` request. Creating, deleting and reordering presets, other
+`/user/charge-stamina` request. Creating and reordering presets, other
 modes' selections and Orbital formation/result writes remain unsupported.
 
 ## Natural stamina recharge
@@ -386,8 +387,43 @@ scope/schema/ownership checks, empty teams, revision limits and transaction
 rollback. All 301 tests pass on Python 3.11 and 3.13 without external networking.
 A private read-only check confirmed that the captured Orbital teams round-trip
 through the native serialized shape without changes. No real team was edited by
-that check. Backend reload and the APK save retry remain pending. Creating,
-deleting, reordering, other modes and Orbital battle results remain unsupported.
+that check. After reload, one APK save succeeded and its receipt reproduced the
+current group and optional selection/revision changes. Unrelated profile fields,
+the captured seed, summon receipts and earlier selection receipts were unchanged.
+The next error was the separate delete endpoint. Creating, reordering, other
+modes and Orbital battle results remain unsupported.
+
+## Deleting an existing Orbital preset
+
+The owner reported an error while deleting a preset. The backend rejected
+`/preset/delete-preset`; its native builder sends exactly integer `PresetId`.
+The native success callback refreshes the preset list and editor. The model's
+`Presets` array application clears its dictionary before adding the supplied
+definitions, so a full current group can remove a deleted definition. No original
+official delete response was captured.
+
+The handler removes exactly one existing Orbital definition in `[400,500)`,
+increments the group's revision and returns current `UserPartyPreset2` and `User`.
+Other definitions, including their order, remain unchanged. If that team was
+selected, the explicit local policy resets only the Orbital pointer to zero and
+increments `User.Cas`; choosing another team remains a client action. Removing
+the last saved Orbital team is allowed. Owned heroes, equipment, inventory and
+the immutable captured seed are retained.
+
+The current group, optional selection change and session/sequence deletion receipt
+commit together. Replays return current state without restoring deleted presets
+or reverting later edits and choices. A new request for a missing or ambiguous ID
+rejects. Current reads and reconnects retain the deletion; selection, editing and
+stage entry cannot use the removed definition.
+
+Ten new regressions cover selected/nonselected deletion, preserved unrelated
+data and seeds, dependent-operation rejection, retries after edits/selections,
+reopening/new epochs, the last team, strict schema/authentication/scope, empty
+teams, ambiguous IDs, revision limits and rollback. All 311 isolated tests pass
+on Python 3.11 and 3.13 without external networking. Private pre-delete hashes
+were recorded without changing the account. Backend reload and the APK retry
+remain pending. Preset creation/reordering, other modes and saved Orbital battle
+results remain unsupported.
 
 ## Host readiness before the APK check
 

@@ -242,8 +242,9 @@ and `User.Cas`, then stores a session-epoch/sequence request receipt. No-op choi
 leave the revision intact; retries return current `User` without undoing later
 choices. Reusing a request identity for another ID rejects, and a failed receipt
 write rolls back the profile update. Preset definitions, current party, character
-progression/equipment and inventory remain unchanged. Creating/deleting presets,
-other modes and formation/result writes are separate unsupported contracts.
+progression/equipment and inventory remain unchanged. Creation, other modes and
+formation/result writes are separate unsupported contracts; editing/deletion
+are described below.
 The original response was not captured. The APK selection subsequently succeeded;
 its saved receipt, pointer and revision matched, with unrelated state preserved.
 
@@ -275,8 +276,18 @@ and stage loading resolve edits after reopening. The group revision increments
 only for a changed definition. An optional changed selection increments `User.Cas`;
 the profile's hero/equipment/inventory fields remain unchanged. Group, optional
 selection and `preset_edit_requests` receipt commit together. Retries return
-current state and cannot restore an earlier definition. Creation, deletion,
-reordering and other mode edits remain unsupported. APK save retry is pending.
+current state and cannot restore an earlier definition. The APK save succeeded;
+its receipt matched the saved definition and selection with unrelated state intact.
+
+`/preset/delete-preset` accepts one existing Orbital `PresetId`. It removes only
+that definition and increments the group revision. If selected, the local policy
+clears the Orbital pointer to zero and increments `User.Cas`, leaving replacement
+selection to the client. The group, optional profile update and
+`preset_delete_requests` receipt commit atomically. Replays return current state;
+new requests for missing/ambiguous IDs reject. Full `UserPartyPreset2.Presets`
+replaces the client's dictionary, as established by native model inspection.
+The original official response was not captured; APK deletion retry is pending.
+Creation, reordering, other modes and Orbital result writes remain unsupported.
 
 ## Resource boundaries
 

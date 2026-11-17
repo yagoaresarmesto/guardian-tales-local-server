@@ -6,7 +6,11 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **301 passing tests**. Ten Orbital preset-edit regressions cover
+The suite has **311 passing tests**. Ten Orbital preset-delete regressions cover
+selected/nonselected and last-team removal, preserved data/seeds, dependent
+operation rejection, retries/reopening, strict schema/authentication/scope,
+ambiguous IDs, empty teams, revisions and atomic rollback.
+Ten Orbital preset-edit regressions cover
 exact mutation bounds, optional selection, omitted gear fields, no-ops, retries,
 reopening, schema/scope/ownership checks, empty teams and rollback/revision limits.
 Eight natural-stamina regressions cover
@@ -924,8 +928,16 @@ reads. The following error came after editing/saving a preset at
 optional selection atomically with a retry receipt, retaining other teams and
 the original captured seed. Current reads, selection and entry use the saved
 definitions. Hero progression, equipped character data and inventory are preserved.
-All 301 isolated tests and private shape/ownership checks pass. Backend reload
-and the APK save retry remain pending; creating/deleting/reordering presets,
-other modes and saved Orbital battle progression remain unsupported.
+The APK save succeeded. Its receipt matched the current definitions and optional
+selection/revision changes, with unrelated profile fields, captured seed, summon
+receipts and earlier selection receipts intact. The next error was deletion at
+`/preset/delete-preset`. It now removes one existing Orbital definition atomically
+with a retry receipt, clearing only that mode's selection if necessary. Current
+reads retain removal across reconnects; deleted teams cannot be selected, edited
+or used for phase entry. Full responses refresh the client's preset dictionary.
+All 311 isolated tests pass. Private pre-delete hashes were recorded without an
+account mutation. Backend reload and the APK delete retry remain pending;
+creation/reordering, other modes and saved Orbital battle progression remain
+unsupported.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

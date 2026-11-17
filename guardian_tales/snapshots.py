@@ -32,6 +32,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/summon/select-character",
         "/preset/set-selected-preset",
         "/preset/set-presets",
+        "/preset/delete-preset",
         "/user/charge-stamina",
     )
 )

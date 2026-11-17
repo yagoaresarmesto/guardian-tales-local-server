@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Select and edit existing Orbital presets without changing owned heroes or gear."""
+"""Manage existing Orbital presets without changing owned heroes or gear."""
 
 import json
 
@@ -24,6 +24,10 @@ def create_tables(db):
     )
     db.execute(
         "CREATE TABLE IF NOT EXISTS preset_edit_requests "
+        "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL)"
+    )
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS preset_delete_requests "
         "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL)"
     )
 
@@ -220,3 +224,60 @@ def save_existing(account, body, operation_id):
             )
         account.db.execute("INSERT INTO preset_edit_requests VALUES(?,?)", (operation_id, encoded))
     return {"UserPartyPreset2": group, "User": profile["User"]}
+
+
+def delete_existing(account, body, operation_id):
+    if (
+        not isinstance(body, dict)
+        or set(body) != {"PresetId"}
+        or not integer(body["PresetId"])
+        or not 400 <= body["PresetId"] < 500
+        or not isinstance(operation_id, str)
+        or not 1 <= len(operation_id) <= 200
+        or account.needs_prologue()
+    ):
+        raise ValueError("Delete one existing Orbital preset after completing the prologue")
+    encoded = json.dumps(body, separators=(",", ":"))
+    previous = account.db.execute(
+        "SELECT request FROM preset_delete_requests WHERE operation_id=?", (operation_id,)
+    ).fetchone()
+    profile = account.profile()
+    group = current_group(account.db)
+    if previous:
+        if previous[0] != encoded:
+            raise ValueError("Preset deletion request identity was reused with different data")
+        # A delayed retry returns current state, without deleting another preset
+        # or resurrecting definitions from the immutable captured seed.
+        return {"UserPartyPreset2": group, "User": profile["User"]}
+    matches = [
+        i
+        for i, preset in enumerate(group["Presets"])
+        if isinstance(preset, dict) and preset.get("Id") == body["PresetId"]
+    ]
+    if len(matches) != 1:
+        raise ValueError("Deletion requires one existing unambiguous Orbital preset")
+    revision = group.get("Cas")
+    if type(revision) is not int or not 0 <= revision < MAX_REVISION:
+        raise ValueError("Invalid preset group revision")
+    user = profile["User"]
+    selected = user.get("SelectedPresetId")
+    current = selected.get("InfiniteTower") if isinstance(selected, dict) else None
+    # Zero means no saved selection. Choosing a replacement remains an explicit
+    # client action; deleting a definition never selects an unrelated team.
+    selected_changed = choose_orbital(user, 0 if current == body["PresetId"] else current)
+    del group["Presets"][matches[0]]
+    group["Cas"] += 1
+    with account.db:
+        account.db.execute(
+            "INSERT INTO party_preset_state VALUES(1,?) ON CONFLICT(id) DO UPDATE SET value=excluded.value",
+            (json.dumps(group, separators=(",", ":")),),
+        )
+        if selected_changed:
+            account.db.execute(
+                "UPDATE local_account SET profile=? WHERE id=1",
+                (json.dumps(profile, separators=(",", ":")),),
+            )
+        account.db.execute(
+            "INSERT INTO preset_delete_requests VALUES(?,?)", (operation_id, encoded)
+        )
+    return {"UserPartyPreset2": group, "User": user}

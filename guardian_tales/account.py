@@ -50,6 +50,7 @@ from .passes import (
     FIRST_PASS_STAMINA,
 )
 from .presets import create_tables as create_preset_tables
+from .presets import delete_existing as delete_existing_preset
 from .presets import save_existing as save_existing_preset
 from .presets import set_selected as set_selected_preset
 from .reference import ReferenceData
@@ -94,6 +95,7 @@ ACCOUNT_ROUTES = (
     "/summon/select-character",
     "/preset/set-selected-preset",
     "/preset/set-presets",
+    "/preset/delete-preset",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -982,6 +984,9 @@ class AccountStore:
 
     def save_party_preset(self, request, operation_id):
         return save_existing_preset(self, request, operation_id)
+
+    def delete_party_preset(self, request, operation_id):
+        return delete_existing_preset(self, request, operation_id)
 
     def purchase_stamina(self, request, operation_id, now=None):
         return purchase_stamina(self, request, operation_id, now)
