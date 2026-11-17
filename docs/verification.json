@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 211,
+    "tests_run": 215,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -812,5 +812,13 @@
     "other_full_profile_digest_preserved": true,
     "backend_restarted_on_existing_account": true,
     "original_apk_visible_balance_confirmed_by_user": true
+  },
+  "festival_individual_delivery_update": {
+    "result": "PASS",
+    "automated_tests": 215,
+    "prepared_catalog_supported_items": 40,
+    "prepared_catalog_items": 42,
+    "APK_persisted_purchases": "22 costumes, nine merch types, materials, hammers, tickets and assets",
+    "remaining_delivery": "Two sticker packs; equip/use/upgrade not established"
   }
 }

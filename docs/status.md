@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **211 passing tests**, including eighteen first-chapter entry/progress
+The suite has **215 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -27,6 +27,8 @@ Six Festival shop checks cover read-only availability, purchase limits, owned
 persistent items, empty-season reads, data validation and authentication. Eight
 redemption regressions cover point costs, quantities, assets/stacks, limits,
 receipt/reconnect behavior, invalid requests, overflow and atomic rollback.
+Four individual-item delivery regressions cover persistent costumes, separate
+merch inventory IDs, spent-state retries, row/counter bounds and rollback.
 Eight Festival administration regressions cover a season-bound million-point
 grant, persistence, spent-balance retries, conflicting arguments, validation,
 rollback and cross-process locking. A pass-claim retry regression preserves
@@ -522,8 +524,12 @@ backend was stopped. A normalized full-profile digest verified that only
 `UserFestivalPass.Point` and its revision changed. The user confirmed the million
 balance in the APK. The first free pass reward now replays its original receipt
 against current points/purchases instead of requiring the old balance of four.
-All 211 tests, Black and Ruff pass; the eight new administration tests also pass
-on Windows. Other delivery types in the Festival shop remain unfinished.
+All 215 tests, Black and Ruff pass; the eight new administration tests also pass
+on Windows. Individual delivery now covers costumes, portrait frames, blueprints
+and merch; matching hammer items use stackable storage. The prepared catalog
+supports 40 of 42 entries, with two sticker packs still unsupported. APK requests
+and persisted receipts confirm all 22 costume purchases, nine merch types and
+repeated material/ticket/currency batches. Equip/use/upgrade behavior is separate.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

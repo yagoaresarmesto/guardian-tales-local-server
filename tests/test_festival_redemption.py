@@ -206,6 +206,69 @@ class FestivalRedemptionTests(unittest.TestCase):
             self.db.execute("DROP TRIGGER reject_festival")
             self.db.commit()
 
+    def test_owned_cosmetic_persists_in_misc_and_cannot_be_bought_again(self):
+        before = self.account.profile()
+        result = self.redeem(15)
+        saved = self.account.profile()
+        delivered = saved["User"]["ItemMiscs"][-1]
+        self.assertEqual(delivered, inventory_item(before["User"]["ItemIdCounter"] + 1, 13001))
+        self.assertEqual(saved["UserFestivalPass"]["Point"], 2)
+        self.assertEqual(
+            result["AddedItems"], [{"Id": delivered["Id"], "ItemId": 13001, "Amount": 1}]
+        )
+        self.assertEqual(
+            self.account.read("/festival-pass/check-not-redeemable"), {"NotRedeemable": [15]}
+        )
+        self.assertEqual(self.redeem(15), result)
+        with self.assertRaises(ValueError):
+            self.redeem(15, operation="another-purchase")
+        self.assert_unchanged(saved, 1)
+
+    def test_individual_merch_quantity_has_distinct_ids_and_frozen_retry_after_upgrade(self):
+        before = self.account.profile()
+        result = self.redeem(16, 3)
+        p = self.account.profile()
+        rows = p["User"]["ItemMiscs"][-3:]
+        self.assertEqual(
+            [i["Id"] for i in rows],
+            list(range(before["User"]["ItemIdCounter"] + 1, before["User"]["ItemIdCounter"] + 4)),
+        )
+        self.assertTrue(all(i["ItemId"] == 150001 and i["Amount"] == 1 for i in rows))
+        self.assertEqual(p["UserFestivalPass"]["Point"], 1)
+        p["User"]["ItemMiscs"][-1]["Experience"] = 5
+        self.save(p)
+        retry = self.redeem(16, 3)
+        self.assertEqual(retry["AddedItems"], result["AddedItems"])
+        self.assertEqual(retry["User"], p["User"])
+        self.assert_unchanged(p, 1)
+
+    def test_individual_item_counter_and_batch_size_limits_are_atomic(self):
+        p = self.account.profile()
+        p["User"]["ItemIdCounter"] = 0x7FFFFFFE
+        self.save(p)
+        with self.assertRaises(ValueError):
+            self.redeem(16, 2)
+        self.assert_unchanged(p)
+        p["User"]["ItemIdCounter"] = 2
+        p["UserFestivalPass"]["Point"] = 2000
+        self.save(p)
+        catalog = json.loads(self.catalog_file.read_text())
+        catalog["items"]["16"]["rewards"][0]["amount"] = 2
+        self.catalog_file.write_text(json.dumps(catalog))
+        with self.assertRaises(ValueError):
+            self.redeem(16, 501)
+        self.assert_unchanged(p)
+
+    def test_misc_profile_failure_rolls_back_every_delivered_row_and_point(self):
+        p = self.account.profile()
+        self.db.execute(
+            "CREATE TRIGGER reject_misc BEFORE UPDATE ON local_account BEGIN SELECT RAISE(ABORT,'test'); END"
+        )
+        self.db.commit()
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.redeem(16, 3)
+        self.assert_unchanged(p)
+
     def test_packet_auth_reconnect_and_fresh_login_only_charge_intended_purchases(self):
         session = BootstrapSession(self.store)
         request = self.packet(ROUTE, {"shopItemId": 12, "amount": 1})

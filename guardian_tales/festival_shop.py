@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Catalog Festival shop exclusions and atomic asset/stackable point redemptions."""
+"""Catalog Festival shop exclusions and atomic asset/stackable/misc redemptions."""
 
 import json
 
@@ -47,7 +47,7 @@ def load_shop_catalog(references):
                 or not 1 <= reward["item_id"] <= 0x7FFFFFFF
                 or type(reward["amount"]) is not int
                 or not 1 <= reward["amount"] <= 0x7FFFFFFF
-                or reward["storage"] not in ("asset", "stackable", "unsupported")
+                or reward["storage"] not in ("asset", "stackable", "misc", "unsupported")
             ):
                 raise ValueError("Invalid Festival shop reward")
     return value
@@ -165,10 +165,27 @@ def redeem_points(account, request, operation_id):
         raise ValueError("Not enough Festival points or purchase counter overflow")
     if any(r["storage"] == "unsupported" for r in item["rewards"]):
         raise ValueError("This Festival reward's inventory/progression type is not implemented")
+    individual_count = sum(r["amount"] * count for r in item["rewards"] if r["storage"] == "misc")
+    if individual_count > 1000:
+        raise ValueError("A Festival redemption can create at most 1000 individual items")
     assets = {a["Id"]: a for a in user["Assets"]}
     rewards = []
     for reward in item["rewards"]:
         item_id, amount = reward["item_id"], reward["amount"] * count
+        if reward["storage"] == "misc":
+            if item_id in assets:
+                raise ValueError("Festival assets cannot be stored as individual items")
+            if (
+                type(user["ItemIdCounter"]) is not int
+                or not 0 <= user["ItemIdCounter"] <= 0x7FFFFFFF - amount
+            ):
+                raise ValueError("Festival inventory counter overflow")
+            for _ in range(amount):
+                user["ItemIdCounter"] += 1
+                delivered = inventory_item(user["ItemIdCounter"], item_id)
+                user["ItemMiscs"].append(delivered)
+                rewards.append({"Id": delivered["Id"], "ItemId": item_id, "Amount": 1})
+            continue
         if reward["storage"] == "asset":
             if item_id not in assets:
                 raise ValueError("The saved account is missing a Festival reward asset")

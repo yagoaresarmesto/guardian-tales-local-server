@@ -331,7 +331,7 @@ The external `festival_shop_catalog.json` contains `season_id` and an `items`
 object keyed by positive decimal shop IDs. Each item has `price`, `limit`,
 `owned_misc_ids` and `rewards`; the [synthetic fixture](../tests/fixtures/festival_shop_catalog.json)
 shows the shape. A zero limit means unlimited redemptions. Each reward has
-positive `item_id`/`amount` and `storage` equal to `asset`, `stackable` or
+positive `item_id`/`amount` and `storage` equal to `asset`, `stackable`, `misc` or
 `unsupported`. Unsupported delivery types can remain in the availability catalog
 but cannot be redeemed by this implementation.
 
@@ -345,7 +345,7 @@ empty season-zero state can use the catalog for this read without initialization
 other season mismatches or unknown history fail rather than silently resetting.
 
 The prepared season-41 catalog contains shop set 2's 42 items. Ownership rules
-cover its 22 costumes and one portrait frame. Complete official server exclusion
+cover its 22 costumes, one portrait frame and two blueprints. Complete official server exclusion
 rules, including other cosmetic subsystems, are unverified; these are explicit
 local rules derived from matching public item types and the local inventory model.
 
@@ -353,14 +353,19 @@ local rules derived from matching public item types and the local inventory mode
 where amount is the number of exchanges. One transaction spends
 `price * amount` Festival points, updates `UserFestivalPass.Purchase`, grants the
 multiplied rewards and records a request receipt. Asset rewards require an
-existing asset; stackable rewards merge or receive a new inventory ID. The
+existing asset; stackable rewards merge or receive a new inventory ID. Individual
+`misc` rewards create one `User.ItemMiscs` row per unit with distinct inventory
+IDs. A request can create at most 1,000 individual rows. The
 response contains `User`, `UserFestivalPass` and `AddedItems`, as consumed by the
 native purchase routine. Other asset spending counters are unchanged.
 
-The prepared simple deliveries cover shop IDs 210, 301, 302, 304 and 305.
+The prepared deliveries cover 40 of the 42 shop entries: costumes, portrait
+frames, blueprints, merch, materials, hammers, tickets and supported assets.
 Item 304 costs one point for three item-110009 relic-option change tickets.
-Merch equipment, individual hammers and cosmetic/progression delivery remain
-unsupported and reject without point spending. Missing data, ownership/limit
+Hammers use stackable storage, as observed in the matching inventory model.
+Sticker packs (shop IDs 102 and 104) remain unsupported and reject without
+point spending. Delivery support does not establish equip/use/upgrade behavior.
+Missing data, ownership/limit
 conflicts, insufficient points and overflow reject the entire purchase.
 
 Reconnect retries return frozen reward notices with current player/pass state
