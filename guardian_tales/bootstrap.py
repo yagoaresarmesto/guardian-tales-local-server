@@ -21,6 +21,7 @@ from .lobby import respond as lobby_response
 from .packet_reader import lz4_block
 from .protocol import Packet, PacketError
 from .reference import compressed_empty_list
+from .snapshots import ACCOUNT_READS, is_imported, preserved_read
 
 BOOTSTRAP_ROUTES = (
     "/auth/get-server-info",
@@ -120,7 +121,8 @@ class GuestStore:
             self.db.execute(
                 "UPDATE guest SET last_sign_in=?,sign_in_count=sign_in_count+1 WHERE id=1", (now,)
             )
-        user_id, guest_uuid, created_at, last = identity
+        _, guest_uuid, created_at, last = identity
+        user_id = self.account.profile()["User"]["Id"]
         return {
             "GuildMember": None,
             "ServerTime": now,
@@ -189,6 +191,16 @@ class BootstrapSession:
         if route not in BOOTSTRAP_ROUTES:
             raise PacketError("API operation not implemented")
         body = read_json_body(request)
+        if self.signed_in and is_imported(self.store.db):
+            if route in ACCOUNT_ROUTES and route not in ACCOUNT_READS:
+                raise PacketError(
+                    "Imported-account mutations require their own validated contracts"
+                )
+            preserved = preserved_read(self.store.db, route)
+            if preserved is not None:
+                if body not in (None, {}):
+                    raise PacketError("Preserved startup reads accept no parameters")
+                return json_response(request, preserved)
         if route in LOBBY_ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")

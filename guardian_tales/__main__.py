@@ -19,6 +19,7 @@ COMMANDS = {
     "demo": ("demo", "Run a temporary synthetic loopback demonstration"),
     "validate": ("validation", "Run the repository regression suite"),
     "read-packet": ("packet_reader", "Decode a local packet file"),
+    "snapshot": ("snapshots", "Inspect/import a private experimental account snapshot"),
 }
 
 

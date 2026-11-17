@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 241,
+    "tests_run": 249,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1121,5 +1121,59 @@
     "backend_prologue_selection_still_saved": true,
     "observer_modified_client_files": false,
     "scope": "Post-organization resource verification for the selected English voice set; not a full player-state comparison or a permanent transfer fix"
+  },
+  "experimental_snapshot_import": {
+    "date": "2026-11-17",
+    "result": "PASS",
+    "synthetic_regressions": 8,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 249,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 249,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "synthetic_demo_python_versions": [
+      "3.11.18",
+      "3.13.18"
+    ],
+    "synthetic_demos_passed": true,
+    "focused_windows_tests": {
+      "python": "3.11.9",
+      "tests_run": 8,
+      "result": "PASS"
+    },
+    "private_input_checks": {
+      "snapshot_imported_to_separate_empty_directory": true,
+      "profile_identifiers_preserved": true,
+      "completed_prologue_recognized": true,
+      "profile_equal_after_reopening": true,
+      "startup_read_replies_equal": true,
+      "source_capture_unchanged": true,
+      "player_values_published": false
+    },
+    "network_mutations_enabled": false,
+    "campaign_entry_enabled_for_imported_account": false,
+    "apk_tested_against_imported_database": false,
+    "scope": "Input integrity, isolated regressions and private protocol-level checks; not an end-to-end APK result or a complete server export"
   }
 }

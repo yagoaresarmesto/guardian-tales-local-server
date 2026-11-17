@@ -17,6 +17,7 @@ from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
 from .protocol import PacketError, decode_frame, encode_wire, frame_length, make_pong
 from .reference import default_cert_dir
+from .snapshots import is_imported
 from .state_lock import StateLock
 
 
@@ -74,6 +75,7 @@ class LocalServer:
             campaign_scope="inn_clear_path_and_catalog_story_entry; other_gameplay_pending",
             full_game_implemented=False,
             prologue_selection_saved=not self.guests.account.needs_prologue(),
+            imported_account_read_only=is_imported(self.db),
             game_state_implemented=False,
             host="127.0.0.1",
             ports=self.ports,

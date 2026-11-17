@@ -2,8 +2,10 @@
 
 This research is isolated on `experiment/official-save-import`. It investigates
 preserving an owner's existing 3.57.0 European account for this local backend.
-**Account import is not implemented yet.** Capturing account data does not show
-that this backend can load it or run its unlocked systems.
+An experimental importer now loads a validated private snapshot into a new
+SQLite state directory. Account fetch, preserved startup reads and local sign-in
+passed a private input check. **The APK has not yet been tested against the
+imported account.** Unlocked systems are not automatically implemented by import.
 
 ## Observed sources
 
@@ -15,7 +17,8 @@ A private, read-only observation of the matching Android client captured:
 - `/preset/get-presets`: the separate party, character-list and other presets.
 - `/lobby-village/enter`: the separate village state and associated read response.
 - `/pasture/collection-all`: the separate monster collection response.
-- `/stage/get-stage-progresses`: nonempty encoded progress for the queried chapter.
+- `/stage/get-stage-progresses`: encoded or null progress entries for the queried
+  chapters, retained without replacing null entries with invented empty progress.
 
 These are observations of one owner's session, not a complete server export.
 Global stage flags and detailed per-stage progress are different datasets.
@@ -43,17 +46,65 @@ Source and prepared-output SHA-256 hashes were recorded privately. These checks
 establish integrity of the observed input, not complete game-state preservation
 or compatibility with the local mutation handlers.
 
-## Next implementation boundary
+## Inspect and import a snapshot
 
-An importer must validate the snapshot before writing, target a separate empty
-state directory, preserve the captured source and refuse to replace an existing
-save. Switching Git branches alone does not separate runtime state.
+The input is a private JSON file with `format` equal to
+`guardian-tales-account-snapshot`, integer `format_version: 1`, and `client` equal
+to `{"version":"3.57.0","version_code":431,"region":"eu"}`. It contains:
 
-Before an imported account can be tested, the implementation needs explicit
-handling for local sign-in identity, completed-prologue state, separate startup
-reads and captured campaign progress. Existing mutation and reward receipts
-cannot be inferred merely from an inventory snapshot. Imported progression must
-not be reset or awarded again to make an unsupported operation appear to work.
+- `profile`: every section from a complete account fetch, with credentials
+  excluded. Empty or partial update responses are not replacements for this fetch.
+- `startup_reads`: all four collection/pasture/village/preset routes above, each
+  holding `{"body_type":1,"value":{...}}` with the observed response object.
+- `stage_progresses`: a dictionary of stage IDs to their captured Base64 strings
+  or null values. Missing progress is not inferred.
+
+The [synthetic tests](../tests/test_snapshots.py) construct a small example without
+player data. Machine-specific capture and snapshot preparation are separate from
+the importer. There is no automatic official-service login or account downloader.
+
+```sh
+python -m guardian_tales snapshot inspect --input /private/account-snapshot.json
+python -m guardian_tales snapshot import --input /private/account-snapshot.json --data-dir local/imported-state
+```
+
+On Windows/PyCharm, use `.\.venv\Scripts\python.exe` and the full path to your own
+input file. The source is read without modification. Validation checks the pinned
+client, complete profile sections, excluded credential/contact fields, consistent
+IDs, owned party/equipment references, inventory uniqueness/counters, signed
+historical spending and the preserved-read format. Reports omit account values.
+
+`--data-dir` is mandatory and must be empty. The same state lock as the backend
+protects the directory. A completed database is published without overwriting an
+existing file; repeated imports are refused. Switching Git branches alone does
+not separate runtime state. Start the backend with that explicit state directory
+and the usual compatible content and certificate directories.
+
+The imported account retains its profile ID and is recognized as having completed
+the prologue. The local platform issues its own guest UUID and credentials.
+Reopening the database preserves the profile. Catalog startup does not unlock
+additional stages or rewrite imported progress.
+
+## Current implementation boundary
+
+The imported account uses a protected network mode. Account fetch and known reads
+remain available; the four preserved startup responses replace their empty local
+counterparts. The preserved collection supplies its own new-entry markers.
+Other empty social/catalog scaffolding still has the limitations documented in
+[status](status.md). Health exposes `imported_account_read_only: true`.
+
+Network mutations are rejected until their contracts are validated against
+imported state. Existing mutation and reward receipts cannot be inferred merely
+from an inventory snapshot. Replaying a prologue or issuing rewards to repair an
+unsupported response would damage the imported state. Captured stage strings are
+retained in SQLite but campaign re-entry is not enabled for imported accounts.
+
+The next APK check is loading the imported profile and initial menus. Hero,
+equipment and draw actions can then be enabled in coherent groups with their own
+validation, transaction and retry tests. A private protocol-level check already
+confirmed profile equality after reopening, local sign-in identity, completed
+prologue state and the preserved startup replies. This is distinct from an APK
+result or a claim of complete account preservation.
 
 Use synthetic accounts for regression fixtures. Real profiles, captured response
 bodies, identifiers, credentials and resource files remain private. The supported

@@ -6,7 +6,11 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **241 passing tests**, including eighteen first-chapter entry/progress
+The suite has **249 passing tests**. Eight snapshot-import regressions cover
+private-input validation, unchanged source/profile data, local sign-in identity,
+preserved startup reads, restart, mutation/prologue rejection, catalog isolation,
+existing-save protection, directory locking and failed-publication cleanup.
+The existing 241 tests include eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -824,8 +828,13 @@ scaffolding; they are not implementations of the corresponding game systems.
 
 On 2026-11-17, the separate `experiment/official-save-import` branch recorded a
 private observation of an owner's matching 3.57.0 client. The account fetch,
-separate collection/preset/village/pasture reads and one chapter's encoded stage
-progress were retained with authentication fields excluded. Input integrity and
-inventory-reference checks passed. No official-account importer or APK run
-against an imported local database has been verified. See the
+separate collection/preset/village/pasture reads and queried chapters' encoded or
+null stage progress were retained with authentication fields excluded. Input
+integrity and inventory-reference checks passed. The experimental importer now
+preserves that profile and the selected startup reads in a separate empty state
+directory. Private protocol-level checks passed for local identity,
+completed-prologue state, startup replies and unchanged profile after reopening.
+The APK has not yet run against this imported database. Imported network
+mutations remain disabled until their contracts and retry behavior are validated.
+See the
 [experiment boundaries and remaining work](official-save-experiment.md).

@@ -50,6 +50,8 @@ from .passes import (
     FIRST_PASS_STAMINA,
 )
 from .reference import ReferenceData
+from .snapshots import create_tables as create_snapshot_tables
+from .snapshots import is_imported
 from .stamina_purchase import purchase_stamina
 from .story import enter_story_stage, load_story_catalog, open_eligible_stages
 from .summon_draw import draw_characters
@@ -133,6 +135,7 @@ class AccountStore:
     def __init__(self, db, reference_dir=None):
         self.db = db
         self.references = ReferenceData(reference_dir)
+        create_snapshot_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -233,7 +236,7 @@ class AccountStore:
             raise ValueError("Unsupported account schema version")
         db.commit()
         catalog = load_story_catalog(self.references)
-        if catalog and not self.needs_prologue():
+        if catalog and not self.needs_prologue() and not is_imported(db):
             profile = self.profile()
             if open_eligible_stages(profile, catalog):
                 with db:
@@ -248,9 +251,13 @@ class AccountStore:
         )
 
     def needs_prologue(self):
-        return not bool(self.db.execute("SELECT 1 FROM prologue_selection WHERE id=1").fetchone())
+        return not is_imported(self.db) and not bool(
+            self.db.execute("SELECT 1 FROM prologue_selection WHERE id=1").fetchone()
+        )
 
     def complete_prologue(self, name, info):
+        if is_imported(self.db):
+            raise ValueError("An imported account cannot repeat the prologue")
         if not valid_name(name) or not valid_prologue_info(info):
             raise ValueError("Invalid prologue selection")
         previous = self.db.execute("SELECT name,info FROM prologue_selection WHERE id=1").fetchone()
