@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 291,
+    "tests_run": 301,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1199,6 +1199,7 @@
     },
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
+      "/preset/set-presets",
       "/preset/set-selected-preset",
       "/summon/select-character",
       "/summon/set-select-character",
@@ -1713,7 +1714,77 @@
     "real_account_mutated_during_check": false,
     "additional_catalog_in_existing_release": false,
     "original_official_response_captured": false,
+    "running_backend_reloaded": true,
+    "post_fix_apk_recharge": "PASS: saved balance and timer match due ticks and cap; later preset choices and revisions also verified",
+    "apk_recharge_check": {
+      "result": "PASS",
+      "successful_natural_recharge_requests": 1,
+      "balance_and_timer_match_elapsed_ticks_and_cap": true,
+      "preset_choice_matches_receipts": true,
+      "revision_matches_recharge_and_later_preset_changes": true,
+      "unrelated_profile_unchanged_at_observed_selection": true,
+      "summon_receipts_unchanged": true,
+      "preserved_reads_unchanged": true,
+      "additional_preset_requests": 3
+    }
+  },
+  "orbital_preset_edit": {
+    "date": "2026-11-17",
+    "observed_failure_route": "/preset/set-presets",
+    "owner_confirmed_trigger": "after editing or saving",
+    "native_builder_party_and_character_serializers_and_save_callback_inspected": true,
+    "request_fields": [
+      "PartyPreset",
+      "SetSelected"
+    ],
+    "party_fields": [
+      "Id",
+      "Name",
+      "Order",
+      "Characters"
+    ],
+    "scope": "Edit one existing Orbital preset, retaining its order; optionally select it",
+    "omitted_nullable_gear_means_unequipped": true,
+    "other_presets_captured_seed_owned_heroes_and_inventory_preserved": true,
+    "current_reads_selection_and_entry_resolve_saved_definitions": true,
+    "current_group_and_optional_selection_and_receipt_atomic": true,
+    "retries_preserve_later_edits_and_choices": true,
+    "noops_do_not_increment_revisions": true,
+    "empty_nonselected_team_supported": true,
+    "empty_team_selection_and_entry_rejected": true,
+    "new_regressions": 10,
+    "focused_windows_checks": 91,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 301,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 301,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_native_shape_and_ownership_check": "PASS",
+    "real_account_mutated_during_check": false,
+    "original_official_response_captured": false,
     "running_backend_reloaded": false,
-    "post_fix_apk_recharge": "pending"
+    "post_fix_apk_save": "pending",
+    "creating_deleting_reordering_other_modes_and_battle_results_implemented": false
   }
 }

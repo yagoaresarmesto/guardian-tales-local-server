@@ -6,7 +6,10 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **291 passing tests**. Eight natural-stamina regressions cover
+The suite has **301 passing tests**. Ten Orbital preset-edit regressions cover
+exact mutation bounds, optional selection, omitted gear fields, no-ops, retries,
+reopening, schema/scope/ownership checks, empty teams and rollback/revision limits.
+Eight natural-stamina regressions cover
 tick/precision/timezone boundaries, adjusted caps, catch-up and reopening,
 no-op states, invalid data/clocks/catalogs, authentication and atomic rollback.
 Seven Orbital preset-selection regressions
@@ -914,7 +917,15 @@ was the parameterless `/user/charge-stamina` request. Natural recharge now uses
 the saved timer, matching interval and adjusted maximum, committing only the
 charged balance, next anchor and revision. Already credited ticks are not granted
 twice; reserve/gems, spending, purchase counters and presets remain intact.
-All 291 isolated tests and a private detached-data calculation pass. Backend reload
-and the APK recharge retry are pending.
+The APK recharge succeeded; its saved balance/anchor and later selection revisions
+matched their expected changes, preserving unrelated profile data and captured
+reads. The following error came after editing/saving a preset at
+`/preset/set-presets`. It now saves one existing Orbital team's definition and
+optional selection atomically with a retry receipt, retaining other teams and
+the original captured seed. Current reads, selection and entry use the saved
+definitions. Hero progression, equipped character data and inventory are preserved.
+All 301 isolated tests and private shape/ownership checks pass. Backend reload
+and the APK save retry remain pending; creating/deleting/reordering presets,
+other modes and saved Orbital battle progression remain unsupported.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

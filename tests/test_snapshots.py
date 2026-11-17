@@ -103,6 +103,7 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(
             result["enabled_mutation_routes"],
             [
+                "/preset/set-presets",
                 "/preset/set-selected-preset",
                 "/summon/select-character",
                 "/summon/set-select-character",

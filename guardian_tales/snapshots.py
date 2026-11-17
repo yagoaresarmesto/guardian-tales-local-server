@@ -31,6 +31,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/summon/set-select-character",
         "/summon/select-character",
         "/preset/set-selected-preset",
+        "/preset/set-presets",
         "/user/charge-stamina",
     )
 )
@@ -77,7 +78,19 @@ def preserved_read(db, route):
         return {
             key: collection[key] for key in ("NewItems", "NewCustomCollections", "NewItemMastery")
         }
-    return reads[route]["value"] if route in reads else None
+    if route not in reads:
+        return None
+    value = reads[route]["value"]
+    if (
+        route == "/preset/get-presets"
+        and db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='party_preset_state'"
+        ).fetchone()
+    ):
+        current = db.execute("SELECT value FROM party_preset_state WHERE id=1").fetchone()
+        if current:
+            value = dict(value, UserPartyPreset2=json.loads(current[0]))
+    return value
 
 
 def validate_preserved_request(route, body):
@@ -308,7 +321,7 @@ def summary(value, digest):
         "startup_reads": len(value["startup_reads"]),
         "preserved_stage_progresses": len(value["stage_progresses"]),
         "enabled_mutation_routes": sorted(IMPORTED_MUTATIONS),
-        "scope": "Imported profile/startup reads with configured hero draws/wishlists, Orbital selection and natural stamina",
+        "scope": "Imported profile/startup reads with configured hero draws/wishlists, Orbital presets and natural stamina",
     }
 
 

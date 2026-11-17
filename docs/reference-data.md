@@ -71,11 +71,15 @@ distinct owned characters and owned equipment. Entry does not change the saved
 floor, selected preset, currency or inventory. Combat results, attempts, rewards
 and the separate formation-save route are not implemented by this trial.
 
-The separate `/preset/set-selected-preset` mutation can select an existing captured
+The separate `/preset/set-selected-preset` mutation can select an existing saved
 Orbital party without editing its definition. It requires no additional public
 catalog: the native mode ID range and preserved private preset data provide its
 scope. Only the saved selection pointer and account revision change; character
 and equipment ownership checks are shared with the phase-loading trial.
+`/preset/set-presets` can edit that existing Orbital party's name, members and
+gear references. Current definitions are kept in SQLite separately from the
+captured startup seed and are used by subsequent preserved reads and entry.
+It requires no additional public catalog and does not modify owned inventory.
 
 The optional `stamina_regen_catalog.json` contains `client` with the same pinned
 version/code/region object, `base_max` and `interval_minutes`. The prepared

@@ -242,7 +242,7 @@ and `User.Cas`, then stores a session-epoch/sequence request receipt. No-op choi
 leave the revision intact; retries return current `User` without undoing later
 choices. Reusing a request identity for another ID rejects, and a failed receipt
 write rolls back the profile update. Preset definitions, current party, character
-progression/equipment and inventory remain unchanged. Creating/editing presets,
+progression/equipment and inventory remain unchanged. Creating/deleting presets,
 other modes and formation/result writes are separate unsupported contracts.
 The original response was not captured. The APK selection subsequently succeeded;
 its saved receipt, pointer and revision matched, with unrelated state preserved.
@@ -257,7 +257,26 @@ credited ticks, while later requests can earn newly elapsed ticks. Future/null
 anchors and full/over-cap balances are no-ops. Seven-digit .NET fractions are
 preserved without granting an early tick. The response returns current `User`;
 reserve stamina, spending, gems, purchase counters and presets remain unchanged.
-The original official response was not captured; APK recharge retry is pending.
+The original official response was not captured. The APK recharge subsequently
+succeeded; the saved balance/timer and later selection revisions matched their
+expected changes, with unrelated profile and captured reads preserved.
+
+`/preset/set-presets` edits one existing Orbital party with `PartyPreset` and a
+Boolean `SetSelected`. The native party serializer includes ID/name/order/members;
+nullable character equipment fields are omitted and normalize to unequipped
+slots. The handler validates the existing mode ID, preserved order, bounded name,
+distinct owned members and owned equipment. Empty nonselected teams can be stored,
+but selection/entry still require a nonempty team. It returns the full current
+`UserPartyPreset2` group and current `User`, retaining other presets.
+
+`party_preset_state` holds the current group; the original imported startup seed
+remains unchanged. Preserved reads overlay that group so later menus, selection
+and stage loading resolve edits after reopening. The group revision increments
+only for a changed definition. An optional changed selection increments `User.Cas`;
+the profile's hero/equipment/inventory fields remain unchanged. Group, optional
+selection and `preset_edit_requests` receipt commit together. Retries return
+current state and cannot restore an earlier definition. Creation, deletion,
+reordering and other mode edits remain unsupported. APK save retry is pending.
 
 ## Resource boundaries
 

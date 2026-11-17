@@ -98,14 +98,15 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Four mutations are now enabled: `/summon/set-select-character`,
+Five mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset` and
-`/user/charge-stamina`. The summon routes
+`/preset/set-presets`, plus `/user/charge-stamina`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
 controllers. Preset selection changes only the chosen captured Orbital preset
-and the account revision, with its own atomic retry receipts. Natural stamina
+and the account revision, with its own atomic retry receipts. Editing an existing
+Orbital preset saves its definition separately from the captured seed. Natural stamina
 recharge advances the saved timer and charged balance up to its configured cap.
 Other mutations
 remain rejected until validated for imported state. Health's
@@ -316,7 +317,7 @@ applied to the real account by those checks. After reload, the APK selection
 request succeeded and one receipt was saved. A private check matched the selected
 pointer and revision to that receipt; all unrelated profile data and preserved
 preset definitions were unchanged. The subsequent failure was a separate
-`/user/charge-stamina` request. Creating, editing, deleting and reordering presets, other
+`/user/charge-stamina` request. Creating, deleting and reordering presets, other
 modes' selections and Orbital formation/result writes remain unsupported.
 
 ## Natural stamina recharge
@@ -346,8 +347,47 @@ All 291 tests pass on Python 3.11 and 3.13 without external networking. A privat
 calculation on detached account data accepted the saved timer and changed only
 the intended fields; it did not write to the real account. The optional recharge
 catalog was extracted from the matching imported constants and is additional to
-the older Release pack. Backend reload and the APK recharge retry remain pending.
+the older Release pack. After reload, the APK recharge request succeeded. Its
+saved balance and timer matched elapsed ticks and the adjusted cap. Later preset
+selection receipts explained the additional revision changes; the observed choice,
+unrelated profile data, summon receipts and captured reads remained consistent.
 Gem purchases and reserve-stamina transfers are separate operations.
+
+## Editing an existing Orbital preset
+
+The owner next edited/saved a team and reached `/preset/set-presets`, which was
+unsupported. Native builders and serializers establish a single `PartyPreset`
+object containing `Id`, `Name`, `Order` and `Characters`, plus Boolean
+`SetSelected`. Character rows contain an owned ID and optional equipment IDs;
+the native serializer omits nullable gear slots. Those omitted slots therefore
+mean unequipped, rather than preserving a previous slot. The save callback reads
+the refreshed party model before marking the editor saved. No official save
+response was captured.
+
+The mutation now updates one existing Orbital preset in `[400,500)`. It accepts
+up to four distinct owned characters and owned equipment, retaining the existing
+order and all other teams. Names are bounded to 64 UTF-16 units with control and
+invalid surrogate characters rejected. A nonselected team can be saved empty;
+empty teams cannot be selected or used for entry. Unsupported fields, new IDs,
+other modes, reordering and invalid references reject without partial changes.
+
+Current preset definitions are stored separately from the immutable captured
+startup reads. `/preset/get-presets`, selection and phase entry use this current
+group, including after restart. A changed definition increments only its group
+revision. If `SetSelected` changes the chosen team, the selection pointer and
+`User.Cas` also change. One transaction stores the group, any selection change and
+the edit receipt. Replays return current definitions and selection without undoing
+later edits; exact no-ops do not increment revisions. The owned hero roster,
+inventory and equipped character progression remain unchanged.
+
+Ten new regressions cover edit/save and entry, optional selection, omitted gear,
+no-op serialization, current-state retries, reopening/new epochs, authentication,
+scope/schema/ownership checks, empty teams, revision limits and transaction
+rollback. All 301 tests pass on Python 3.11 and 3.13 without external networking.
+A private read-only check confirmed that the captured Orbital teams round-trip
+through the native serialized shape without changes. No real team was edited by
+that check. Backend reload and the APK save retry remain pending. Creating,
+deleting, reordering, other modes and Orbital battle results remain unsupported.
 
 ## Host readiness before the APK check
 
