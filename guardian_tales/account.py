@@ -718,8 +718,9 @@ class AccountStore:
             or type(festival_pass["PassType"]) is not int
             or festival_pass["PassType"] != 0
             or type(festival_pass["Point"]) is not int
+            or not 0 <= festival_pass["Point"] <= 0x7FFFFFFF
             or festival_pass["Missions"]
-            or festival_pass["Purchase"]
+            or not isinstance(festival_pass["Purchase"], dict)
             or set(claimed) != {"Free", "Gold", "Platinum", "ExtraExp"}
             or any(type(value) is not int for value in claimed.values())
             or claimed["Free"] not in (0, FIRST_FESTIVAL_LEVEL)
@@ -734,7 +735,8 @@ class AccountStore:
         ).fetchone()
         if (
             bool(receipt) != (claimed["Free"] == FIRST_FESTIVAL_LEVEL)
-            or festival_pass["Point"] != (FIRST_FESTIVAL_POINTS if receipt else 0)
+            or not receipt
+            and (festival_pass["Point"] != 0 or festival_pass["Purchase"])
             or (
                 receipt and (season != FIRST_FESTIVAL_SEASON or receipt != (FIRST_FESTIVAL_POINTS,))
             )

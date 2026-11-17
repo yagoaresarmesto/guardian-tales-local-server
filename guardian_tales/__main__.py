@@ -7,7 +7,7 @@ import sys
 
 COMMANDS = {
     "serve": ("server", "Run the local game and platform server"),
-    "admin": ("admin", "Grant free gems with audit receipts or inspect grant history"),
+    "admin": ("admin", "Grant local gems/Festival points with audit receipts or inspect history"),
     "assets": ("assets", "Serve manifest-listed local resources"),
     "probe": ("probe", "Check an already running local transport"),
     "demo": ("demo", "Run a temporary synthetic loopback demonstration"),

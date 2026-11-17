@@ -72,7 +72,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Monster reports | Inn handles plus external stage catalogs; atomic rewards once per stage/handle, provisional local rates, no battle validation |
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
 | Configured later clear exits | External exit/encounter prerequisites, saved completion and earned openings; additional clear rewards pending |
-| Local gem administration | Audited CLI grants, persistent free-gem balances, idempotent operation IDs and exclusive offline writes |
+| Local currency administration | Audited gem and season-bound Festival point grants, idempotent operation IDs and exclusive offline writes |
 | Gem stamina purchases | External price tiers, atomic free-gem costs and stored stamina, UTC daily quota and persistent retry receipts |
 | Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
 | Mission book | Inn, knight level 2, stamina and configured hero-draw milestones; atomic batches and persistent reward receipts; other missions pending |
@@ -97,7 +97,7 @@ server, not a service for public hosting.
 ## Documentation
 
 - [Setup and server commands](docs/setup.md)
-- [Grant gems and inspect administrative history](docs/administration.md)
+- [Grant gems/Festival points and inspect administrative history](docs/administration.md)
 - [How the components work](docs/architecture.md)
 - [External reference data and resources](docs/reference-data.md)
 - [Connecting a test client](docs/client-integration.md)

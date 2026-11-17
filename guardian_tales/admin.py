@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Audited offline administration of the existing single local player's free gems."""
+"""Audited offline grants and history for the existing single local player."""
 
 import argparse
 import json
@@ -15,9 +15,9 @@ MAX_GEMS = 0x7FFFFFFF
 AUDIT_COLUMNS = "operation_id,amount,balance_before,balance_after,reason,created_at"
 
 
-def grant_gems(data_dir, amount, operation_id, reason):
-    if type(amount) is not int or not 1 <= amount <= MAX_GEMS:
-        raise ValueError(f"Amount must be between 1 and {MAX_GEMS}")
+def validate_grant_parameters(amount, operation_id, reason, maximum):
+    if type(amount) is not int or not 1 <= amount <= maximum:
+        raise ValueError(f"Amount must be between 1 and {maximum}")
     if not isinstance(operation_id, str) or not re.fullmatch(
         r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}", operation_id
     ):
@@ -32,7 +32,11 @@ def grant_gems(data_dir, amount, operation_id, reason):
         raise ValueError(
             "Provide a nonempty reason up to 200 characters without control characters"
         )
-    reason = reason.strip()
+    return reason.strip()
+
+
+def grant_gems(data_dir, amount, operation_id, reason):
+    reason = validate_grant_parameters(amount, operation_id, reason, MAX_GEMS)
     database = Path(data_dir).resolve() / "server.sqlite3"
     if not database.is_file():
         raise ValueError("No existing server.sqlite3 in the selected data directory")
@@ -146,12 +150,34 @@ def main(argv=None):
     history = commands.add_parser("gem-history", help="Read administrative gem grant receipts")
     history.add_argument("--data-dir", type=Path, required=True)
     history.add_argument("--limit", type=int, default=20)
+    festival = commands.add_parser(
+        "grant-festival-points", help="Add points once to an existing active Festival season"
+    )
+    festival.add_argument("amount", type=int)
+    festival.add_argument("--season-id", type=int, required=True)
+    festival.add_argument("--data-dir", type=Path, required=True)
+    festival.add_argument("--operation-id", required=True)
+    festival.add_argument("--reason", required=True)
+    festival_history = commands.add_parser(
+        "festival-point-history", help="Read administrative Festival point receipts"
+    )
+    festival_history.add_argument("--data-dir", type=Path, required=True)
+    festival_history.add_argument("--limit", type=int, default=20)
     args = parser.parse_args(argv)
     try:
         if args.action == "grant-gems":
             result = grant_gems(args.data_dir, args.amount, args.operation_id, args.reason)
-        else:
+        elif args.action == "gem-history":
             result = gem_history(args.data_dir, args.limit)
+        else:
+            from .admin_festival import festival_point_history, grant_festival_points
+
+            if args.action == "grant-festival-points":
+                result = grant_festival_points(
+                    args.data_dir, args.amount, args.season_id, args.operation_id, args.reason
+                )
+            else:
+                result = festival_point_history(args.data_dir, args.limit)
     except (ValueError, RuntimeError, OSError, sqlite3.Error, KeyError, TypeError) as error:
         parser.error(str(error))
     print(json.dumps(result, indent=2))

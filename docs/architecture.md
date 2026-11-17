@@ -37,6 +37,7 @@ flowchart LR
 | `items.py` | Shared persistent inventory-row defaults |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
 | `festival_shop.py` | Local shop exclusions, catalog point prices and atomic asset/stackable redemptions |
+| `admin.py`, `admin_festival.py` | Exclusive audited grants of gems and active-season Festival points |
 | `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |

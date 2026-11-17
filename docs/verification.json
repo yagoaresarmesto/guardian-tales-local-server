@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 202,
+    "tests_run": 211,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -789,6 +789,28 @@
     "original_apk_availability_interval_profile_unchanged": true,
     "profile_unchanged_across_redemption_deployment": true,
     "pre_retry_festival_points": 4,
-    "original_apk_redemption_confirmed": false
+    "original_apk_redemption_confirmed": true,
+    "original_apk_redemption_receipts": 1,
+    "post_redemption_points": 3,
+    "original_apk_delivered_item_id": 110009,
+    "original_apk_delivered_amount": 3
+  },
+  "festival_point_administration": {
+    "date": "2026-11-17",
+    "scope": "Exclusive audited offline grants to an existing matching Festival season; only pass points and pass revision change.",
+    "season_id": 41,
+    "grant_amount": 1000000,
+    "balance_before": 3,
+    "balance_after": 1000003,
+    "operation_id": "festival-million-20261117-001",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 211,
+    "additional_administrative_tests": 8,
+    "windows_administrative_tests_passed": 8,
+    "initial_pass_claim_retry_after_spending_or_grant_checked": true,
+    "grant_applied_with_backend_stopped": true,
+    "other_full_profile_digest_preserved": true,
+    "backend_restarted_on_existing_account": true,
+    "original_apk_visible_balance_confirmed_by_user": true
   }
 }

@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **202 passing tests**, including eighteen first-chapter entry/progress
+The suite has **211 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -27,6 +27,10 @@ Six Festival shop checks cover read-only availability, purchase limits, owned
 persistent items, empty-season reads, data validation and authentication. Eight
 redemption regressions cover point costs, quantities, assets/stacks, limits,
 receipt/reconnect behavior, invalid requests, overflow and atomic rollback.
+Eight Festival administration regressions cover a season-bound million-point
+grant, persistence, spent-balance retries, conflicting arguments, validation,
+rollback and cross-process locking. A pass-claim retry regression preserves
+points after spending or an administrative grant.
 Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
 sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
@@ -509,8 +513,17 @@ That purchase was `/festival-pass/redeem-point-rewards` with
 (110009). The new handler commits point spending, purchase count, asset/stackable
 delivery and a frozen request receipt together. Other delivery kinds remain
 unsupported. All 202 tests and Black/Ruff checks pass; deployment preserved the
-complete profile with four Festival points. The actual APK redemption retry is
-pending.
+complete profile with four Festival points. The APK retried successfully: one
+receipt saved, points became three and three item-110009 tickets were delivered.
+
+The user then requested one million Festival points. The new season-bound
+administrative command changed season 41 from 3 to 1,000,003 points while the
+backend was stopped. A normalized full-profile digest verified that only
+`UserFestivalPass.Point` and its revision changed. The user confirmed the million
+balance in the APK. The first free pass reward now replays its original receipt
+against current points/purchases instead of requiring the old balance of four.
+All 211 tests, Black and Ruff pass; the eight new administration tests also pass
+on Windows. Other delivery types in the Festival shop remain unfinished.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

@@ -1,7 +1,8 @@
-# Local gem administration
+# Local currency administration
 
-The administrative CLI adds **free gems** to the existing single local account.
-It updates the saved balance, increments the user revision and writes an audit
+The administrative CLI adds **free gems** or **active-season Festival points**
+to the existing single local account. Each command updates its saved balance,
+increments the corresponding revision and writes an audit
 receipt in one SQLite transaction. It does not require an APK modification or
 external service. After restarting and reconnecting, the game receives the saved
 balance through the normal account response.
@@ -53,7 +54,7 @@ grant; they do not change when gems are spent later. The grant command's separat
 
 - Amounts must be positive integers. The resulting free-gem balance must fit
   within the command's conservative limit of 2,147,483,647.
-- Only asset 70003 and `User.Cas` change. Paid currency, spending counters,
+- Gem grants change only asset 70003 and `User.Cas`. Paid currency, spending counters,
   inventory, quests, stage progress and reward receipts remain untouched.
 - A failed balance update or receipt insert rolls back the entire grant.
 - The updated backend and grant command hold the same operating-system file
@@ -67,7 +68,8 @@ grant; they do not change when gems are spent later. The grant command's separat
 
 The CLI is a local administration tool. It does not expose an administrative
 network endpoint. The configured local hero-draw route can spend free gems.
-Shop purchases, paid events and weapon draws remain unfinished.
+Configured Festival point shop exchanges are implemented separately. General
+shop purchases, paid events and weapon draws remain unfinished.
 
 Automated checks cover a million-gem grant, persistence, account responses,
 retries after spending, conflicting IDs, invalid input, overflow, rollback,
@@ -80,3 +82,41 @@ receipt persisted, and the rest of the saved profile matched its previous digest
 after excluding the gem amount and user revision. The backend then restarted
 with the same database. The user then confirmed that the original game displayed
 **1,000,400 gems** after entering the saved account.
+
+## Add Festival points to the active season
+
+Stop the backend and use its existing data directory:
+
+```sh
+python -m guardian_tales admin grant-festival-points 1000000 --season-id 41 --data-dir local/state --operation-id festival-million-001 --reason "Local testing"
+```
+
+The required season must match saved `UserFestivalPass.SeasonId` and be nonzero.
+Claim the initial pass reward to initialize the local season first. The command
+does not initialize or rotate a season, migrate a profile or create a database.
+As with gems, the prepared Android lab needs the command inside Android against
+its actual `/runtime` directory while that backend is stopped.
+
+This **adds** points: three become 1,000,003. Only `UserFestivalPass.Point` and
+`UserFestivalPass.Cas` change. Gems, other balances, inventory, purchases,
+progress and earned reward receipts remain intact. One transaction records the
+grant in `admin_festival_point_grants`. The shared state lock, integer balance
+limit and rollback rules apply. Replay with the same season, amount, operation
+ID and reason preserves later spending; conflicting arguments or another active
+season are rejected. IDs are scoped to the grant type and selected database.
+
+```sh
+python -m guardian_tales admin festival-point-history --data-dir local/state --limit 20
+```
+
+History is read-only and may run while the backend is active. Restart the backend
+after a grant and leave/reenter Festival Pass to refresh the displayed balance.
+The initial four-point reward's saved receipt now replays against current points
+and purchase history, preserving spent or administratively granted balances.
+Granting currency does not implement additional reward-delivery types.
+
+Eight administrative tests pass on Windows and in the isolated Linux suite,
+plus a pass-claim retry regression and all existing gem tests. The prepared lab
+applied one million points to season 41 on 2026-11-17: **3 -> 1,000,003**. A
+normalized full-profile digest confirmed that only point amount/pass revision
+changed. The user confirmed seeing the million-point balance in the original APK.

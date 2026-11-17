@@ -87,6 +87,20 @@ class FirstFestivalPassTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 GuestStore(empty_db).account.claim_festival_pass(None)
 
+    def test_claimed_reward_retry_preserves_spent_or_administratively_granted_points(self):
+        self.claim()
+        for balance in (3, 1000003):
+            self.profile = self.account.profile()
+            self.profile["UserFestivalPass"]["Point"] = balance
+            self.profile["UserFestivalPass"]["Purchase"] = {"304": 1}
+            self.save()
+            response = self.claim()
+            self.assertEqual(response["UserFestivalPass"]["Point"], balance)
+            self.assertEqual(self.account.profile(), self.profile)
+            self.assertEqual(
+                self.db.execute("SELECT count(*) FROM festival_pass_claims").fetchone(), (1,)
+            )
+
     def test_unsupported_progress_and_paid_passes_are_rejected_unchanged(self):
         original = json.loads(json.dumps(self.profile))
         for patch in (
