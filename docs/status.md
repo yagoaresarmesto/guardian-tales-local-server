@@ -471,14 +471,27 @@ boot an APK without its own content, reference bodies, routing and certificates.
 
 ## Prioritized implementation work
 
-1. Continue from the next user-reported unsupported operation. The earlier
-   [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
-2. Finish Inn's optional collectible/custom-state contracts and battle validation.
-3. Implement later campaign phases and their progression/reward rules.
-4. Implement item/random daily rewards and the remaining inventory operations.
-5. Add the account's mission progression and the systems it unlocks.
+Use the [API inventory and implementation plan](implementation-plan.md) to
+implement coherent systems independently of manual failures. The initial static
+scan found 710 distinct route literals across 62 systems; the server registers
+58 game routes, of which 57 appear in that scan. Registration includes partial
+handlers and empty reads and does not measure game completion. Eight send
+methods require further route resolution. This documentation-only planning
+update does not change the tested server or saved account.
+
+1. Review unresolved routes and request/response contracts; extend automated
+   cross-system scenarios using synthetic guests and temporary databases.
+2. Finish early-campaign quest completion and custom-state contracts, then the
+   remaining configured interactions. Battle validation remains separate work.
+3. Implement ordinary party/equipment operations, followed by additional verified
+   mission conditions and basic item management.
+4. Expand hero development and remaining single-player systems with explicit
+   catalog dependencies and persistent retry behavior.
+5. Implement later campaign phases and their progression/reward rules.
 6. Expand content/resource completeness checks where indices can be interpreted.
 7. Consider multiplayer/social modes only after the single-player state model works.
+
+The earlier [Inn checkpoint](first-phase-checkpoint.md) remains a historical record.
 
 No completion date is implied. Several empty read endpoints are compatibility
 scaffolding; they are not implementations of the corresponding game systems.

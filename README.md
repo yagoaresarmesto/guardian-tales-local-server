@@ -101,6 +101,7 @@ server, not a service for public hosting.
 - [Connecting a test client](docs/client-integration.md)
 - [Observed packet protocol](docs/protocol.md)
 - [Verified behavior and limitations](docs/status.md)
+- [API inventory and implementation plan](docs/implementation-plan.md)
 - [Inn checkpoint and next steps](docs/first-phase-checkpoint.md)
 - [Development, tests, CI and GitHub preparation](docs/development.md)
 

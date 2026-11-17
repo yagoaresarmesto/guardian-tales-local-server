@@ -1,0 +1,7336 @@
+{
+  "client_version": "3.57.0",
+  "date": "2026-11-17",
+  "server_source_commit": "d2483712c665949fa6266fe76af20f16349fb6ad",
+  "scope": "Static native Oak.ApiConnection.Send* route literals and current source dispatch declarations; no game requests issued.",
+  "limitations": [
+    "A route literal is a candidate API endpoint, not a reconstructed backend contract.",
+    "Literal key candidates are hints, not validated request fields or types. An empty list does not establish a parameterless request.",
+    "Registered dispatch does not establish full functionality, APK verification or complete condition/data coverage.",
+    "Constructed/delegated routes, non-Send methods, Lua and ILFix updates are outside this scan.",
+    "Response schemas, official server rules and a percentage of game completion cannot be inferred from these counts."
+  ],
+  "summary": {
+    "native_send_methods_inspected": 717,
+    "methods_with_route_literals": 709,
+    "methods_without_direct_route_literals": 8,
+    "distinct_route_literals": 710,
+    "systems": 62,
+    "registered_game_routes": 58,
+    "registered_routes_in_native_scan": 57,
+    "scanned_routes_without_dispatch": 653
+  },
+  "methods_without_direct_route_literals": [
+    "SendClaimMission",
+    "SendSignInReconnect",
+    "SendKamazonLandGetRankings",
+    "SendClaimMissionList",
+    "SendClaimCompass",
+    "SendClaimBeginner",
+    "SendRogueChessSetArtifact",
+    "SendRogueChessSetSpell"
+  ],
+  "registered_routes_outside_native_scan": [
+    "/shop/get-sales-costume-collection-items"
+  ],
+  "systems": [
+    {
+      "system": "abuser-report",
+      "literal_routes": 2,
+      "registered_routes": 0
+    },
+    {
+      "system": "achievement",
+      "literal_routes": 6,
+      "registered_routes": 0
+    },
+    {
+      "system": "ad",
+      "literal_routes": 6,
+      "registered_routes": 1
+    },
+    {
+      "system": "announcement",
+      "literal_routes": 1,
+      "registered_routes": 1
+    },
+    {
+      "system": "arena",
+      "literal_routes": 11,
+      "registered_routes": 0
+    },
+    {
+      "system": "auth",
+      "literal_routes": 17,
+      "registered_routes": 6
+    },
+    {
+      "system": "builder",
+      "literal_routes": 1,
+      "registered_routes": 0
+    },
+    {
+      "system": "champion-arena",
+      "literal_routes": 13,
+      "registered_routes": 0
+    },
+    {
+      "system": "chat",
+      "literal_routes": 8,
+      "registered_routes": 1
+    },
+    {
+      "system": "collection",
+      "literal_routes": 9,
+      "registered_routes": 2
+    },
+    {
+      "system": "colosseum",
+      "literal_routes": 14,
+      "registered_routes": 0
+    },
+    {
+      "system": "content-book",
+      "literal_routes": 3,
+      "registered_routes": 3
+    },
+    {
+      "system": "coop-expedition",
+      "literal_routes": 30,
+      "registered_routes": 0
+    },
+    {
+      "system": "deathmatch",
+      "literal_routes": 15,
+      "registered_routes": 0
+    },
+    {
+      "system": "escape",
+      "literal_routes": 14,
+      "registered_routes": 0
+    },
+    {
+      "system": "exchange",
+      "literal_routes": 7,
+      "registered_routes": 0
+    },
+    {
+      "system": "expedition",
+      "literal_routes": 13,
+      "registered_routes": 0
+    },
+    {
+      "system": "festival-pass",
+      "literal_routes": 5,
+      "registered_routes": 2
+    },
+    {
+      "system": "friend2",
+      "literal_routes": 17,
+      "registered_routes": 1
+    },
+    {
+      "system": "friendly-arena",
+      "literal_routes": 16,
+      "registered_routes": 0
+    },
+    {
+      "system": "friendly-deathmatch",
+      "literal_routes": 16,
+      "registered_routes": 0
+    },
+    {
+      "system": "garage",
+      "literal_routes": 7,
+      "registered_routes": 0
+    },
+    {
+      "system": "guardian-pass",
+      "literal_routes": 4,
+      "registered_routes": 2
+    },
+    {
+      "system": "guild",
+      "literal_routes": 35,
+      "registered_routes": 4
+    },
+    {
+      "system": "guild-arcade",
+      "literal_routes": 3,
+      "registered_routes": 0
+    },
+    {
+      "system": "guild-castle",
+      "literal_routes": 12,
+      "registered_routes": 0
+    },
+    {
+      "system": "guild-meteor",
+      "literal_routes": 4,
+      "registered_routes": 0
+    },
+    {
+      "system": "guild-punchking",
+      "literal_routes": 10,
+      "registered_routes": 0
+    },
+    {
+      "system": "guild-raid2",
+      "literal_routes": 14,
+      "registered_routes": 0
+    },
+    {
+      "system": "guild-war",
+      "literal_routes": 20,
+      "registered_routes": 0
+    },
+    {
+      "system": "heavenhold",
+      "literal_routes": 16,
+      "registered_routes": 0
+    },
+    {
+      "system": "heavenholdfarm",
+      "literal_routes": 27,
+      "registered_routes": 1
+    },
+    {
+      "system": "inbox",
+      "literal_routes": 5,
+      "registered_routes": 2
+    },
+    {
+      "system": "item",
+      "literal_routes": 32,
+      "registered_routes": 0
+    },
+    {
+      "system": "kakao",
+      "literal_routes": 3,
+      "registered_routes": 0
+    },
+    {
+      "system": "kamazonland",
+      "literal_routes": 23,
+      "registered_routes": 0
+    },
+    {
+      "system": "knight-training",
+      "literal_routes": 3,
+      "registered_routes": 0
+    },
+    {
+      "system": "live-event",
+      "literal_routes": 21,
+      "registered_routes": 0
+    },
+    {
+      "system": "lobby-village",
+      "literal_routes": 34,
+      "registered_routes": 1
+    },
+    {
+      "system": "merch",
+      "literal_routes": 2,
+      "registered_routes": 0
+    },
+    {
+      "system": "mini-game",
+      "literal_routes": 2,
+      "registered_routes": 0
+    },
+    {
+      "system": "mission",
+      "literal_routes": 9,
+      "registered_routes": 3
+    },
+    {
+      "system": "my-room",
+      "literal_routes": 6,
+      "registered_routes": 0
+    },
+    {
+      "system": "party",
+      "literal_routes": 1,
+      "registered_routes": 0
+    },
+    {
+      "system": "pasture",
+      "literal_routes": 21,
+      "registered_routes": 1
+    },
+    {
+      "system": "preset",
+      "literal_routes": 10,
+      "registered_routes": 1
+    },
+    {
+      "system": "return-event",
+      "literal_routes": 3,
+      "registered_routes": 0
+    },
+    {
+      "system": "rift",
+      "literal_routes": 11,
+      "registered_routes": 0
+    },
+    {
+      "system": "rogue-chess3",
+      "literal_routes": 9,
+      "registered_routes": 0
+    },
+    {
+      "system": "shop",
+      "literal_routes": 14,
+      "registered_routes": 3
+    },
+    {
+      "system": "single-raid",
+      "literal_routes": 10,
+      "registered_routes": 0
+    },
+    {
+      "system": "stage",
+      "literal_routes": 21,
+      "registered_routes": 10
+    },
+    {
+      "system": "static-data",
+      "literal_routes": 5,
+      "registered_routes": 4
+    },
+    {
+      "system": "summon",
+      "literal_routes": 15,
+      "registered_routes": 4
+    },
+    {
+      "system": "test",
+      "literal_routes": 1,
+      "registered_routes": 0
+    },
+    {
+      "system": "tower",
+      "literal_routes": 5,
+      "registered_routes": 0
+    },
+    {
+      "system": "tower-infinity",
+      "literal_routes": 6,
+      "registered_routes": 0
+    },
+    {
+      "system": "training-room",
+      "literal_routes": 6,
+      "registered_routes": 0
+    },
+    {
+      "system": "unexplored-expedition",
+      "literal_routes": 6,
+      "registered_routes": 0
+    },
+    {
+      "system": "user",
+      "literal_routes": 46,
+      "registered_routes": 4
+    },
+    {
+      "system": "web-event",
+      "literal_routes": 1,
+      "registered_routes": 0
+    },
+    {
+      "system": "worldclearpass",
+      "literal_routes": 3,
+      "registered_routes": 0
+    }
+  ],
+  "routes": [
+    {
+      "route": "/abuser-report/get-today-report-count",
+      "client_methods": [
+        "SendAbuserReportGetTodayReportCount"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/abuser-report/report",
+      "client_methods": [
+        "SendAbuserReportReport"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/achievement/claim-guild-rewards",
+      "client_methods": [
+        "SendClaimGuildRewards"
+      ],
+      "literal_key_candidates": [
+        "Points"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/achievement/claim-missions",
+      "client_methods": [
+        "SendClaimMissions"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/achievement/claim-rewards",
+      "client_methods": [
+        "SendClaimRewards"
+      ],
+      "literal_key_candidates": [
+        "Points"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/achievement/enter",
+      "client_methods": [
+        "SendEnterAchievement"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/achievement/get-rankings",
+      "client_methods": [
+        "SendAchievementGetRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/achievement/unlock-trophy",
+      "client_methods": [
+        "SendUnlockTrophy"
+      ],
+      "literal_key_candidates": [
+        "TrophyId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/ad/enable-radar",
+      "client_methods": [
+        "SendEnableRadarByAd"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/ad/garage-refill-playcount",
+      "client_methods": [
+        "SendRefillGaragePlayCount"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/ad/get-inbox-reward",
+      "client_methods": [
+        "SendAdGetInboxReward"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/ad/init-inbox",
+      "client_methods": [
+        "SendAdInitInbox"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/ad/upgrade-accelerate-heavenhold",
+      "client_methods": [
+        "SendHeavenHoldUpgradeAccelerate"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/ad/upgrade-accelerate-lobby-village",
+      "client_methods": [
+        "SendLobbyVillageUpgradeAccelerate"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/announcement/all",
+      "client_methods": [
+        "SendGetAnnouncements"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "bootstrap"
+    },
+    {
+      "route": "/arena/cancel-matching",
+      "client_methods": [
+        "SendArenaCancelMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/end-stage",
+      "client_methods": [
+        "SendArenaEndStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId",
+        "Damages",
+        "HighestDamage",
+        "Result"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/enter",
+      "client_methods": [
+        "SendArenaEnter"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserArena"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/get-battle-infos",
+      "client_methods": [
+        "SendArenaGetBattleInfos"
+      ],
+      "literal_key_candidates": [
+        "SeasonId",
+        "Tier"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/get-my-ranking",
+      "client_methods": [
+        "SendArenaGetMyRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/get-rankings",
+      "client_methods": [
+        "SendArenaGetRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/report-abuser/v2",
+      "client_methods": [
+        "SendArenaReportAbuser"
+      ],
+      "literal_key_candidates": [
+        "Info",
+        "Mode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/report-connection-failed",
+      "client_methods": [
+        "SendArenaReportConnectionFailed"
+      ],
+      "literal_key_candidates": [
+        "Opts",
+        "Reason"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/request-matching",
+      "client_methods": [
+        "SendArenaRequestMatching"
+      ],
+      "literal_key_candidates": [
+        "CountryCode",
+        "GeoCountryCode",
+        "Mcc",
+        "Mnc",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/select-characters",
+      "client_methods": [
+        "SendArenaSelectCharacters"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/arena/start-stage",
+      "client_methods": [
+        "SendArenaStartStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/answer-captcha",
+      "client_methods": [
+        "SendAuthAnswerCaptcha"
+      ],
+      "literal_key_candidates": [
+        "Code",
+        "Key"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/bind-account",
+      "client_methods": [
+        "SendBindAccount"
+      ],
+      "literal_key_candidates": [
+        "AccessToken",
+        "AuthKind",
+        "Uuid"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/check-name",
+      "client_methods": [
+        "SendCheckName"
+      ],
+      "literal_key_candidates": [
+        "Name"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/auth/check-transfer-kong",
+      "client_methods": [
+        "SendCheckTransferKong"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/fetch-account",
+      "client_methods": [
+        "SendFetchAccount"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/auth/find-account",
+      "client_methods": [
+        "SendFindAccount"
+      ],
+      "literal_key_candidates": [
+        "AccessToken",
+        "AppId",
+        "AuthKind"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/get-captcha",
+      "client_methods": [
+        "SendAuthGetCaptcha"
+      ],
+      "literal_key_candidates": [
+        "Renew"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/get-info-for-transfer-kong",
+      "client_methods": [
+        "SendGetInfoForTransferKong"
+      ],
+      "literal_key_candidates": [
+        "AppId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/get-previews",
+      "client_methods": [
+        "SendGetPreviews"
+      ],
+      "literal_key_candidates": [
+        "AccessToken",
+        "AppId",
+        "AuthKind"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/get-server-info",
+      "client_methods": [
+        "SendGetServerInfo"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "bootstrap"
+    },
+    {
+      "route": "/auth/get-server-time",
+      "client_methods": [
+        "SendGetServerTime"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/sign-in",
+      "client_methods": [
+        "SendSignIn"
+      ],
+      "literal_key_candidates": [
+        "AccessToken",
+        "AuthKind",
+        "Reconnect"
+      ],
+      "server_dispatch": "bootstrap"
+    },
+    {
+      "route": "/auth/sign-name",
+      "client_methods": [
+        "SendSignName"
+      ],
+      "literal_key_candidates": [
+        "Info",
+        "Name"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/auth/sign-up",
+      "client_methods": [
+        "SendSignUp"
+      ],
+      "literal_key_candidates": [
+        "AccessToken",
+        "AuthKind"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/sign-up/v2",
+      "client_methods": [
+        "SendSignUp"
+      ],
+      "literal_key_candidates": [
+        "AccessToken",
+        "AuthKind",
+        "Info",
+        "Name"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/auth/transfer-kong",
+      "client_methods": [
+        "SendTransferKong"
+      ],
+      "literal_key_candidates": [
+        "IsPushEnabled",
+        "IsPushEnabledForNight"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/auth/unpause",
+      "client_methods": [
+        "SendAuthUnpause"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/builder/command",
+      "client_methods": [
+        "SendBuilderCommand"
+      ],
+      "literal_key_candidates": [
+        "cmd"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/cancel-matching",
+      "client_methods": [
+        "SendChampionArenaCancelMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/end-pick",
+      "client_methods": [
+        "SendChampionArenaEndPick"
+      ],
+      "literal_key_candidates": [
+        "Order",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/end-stage",
+      "client_methods": [
+        "SendChampionArenaEndStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId",
+        "Damages",
+        "HighestDamage",
+        "Result"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/enter",
+      "client_methods": [
+        "SendChampionArenaEnter"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserArena"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/get-battle-records",
+      "client_methods": [
+        "SendChampionArenaGetBattleRecords"
+      ],
+      "literal_key_candidates": [
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/get-my-ranking",
+      "client_methods": [
+        "SendChampionArenaGetMyRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/get-rankings",
+      "client_methods": [
+        "SendChampionArenaGetRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/pick-character",
+      "client_methods": [
+        "SendChampionArenaPickCharacter"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "RoomId",
+        "Slot"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/request-matching",
+      "client_methods": [
+        "SendChampionArenaRequestMatching"
+      ],
+      "literal_key_candidates": [
+        "CountryCode",
+        "GeoCountryCode",
+        "Mcc",
+        "Mnc",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/select-bans",
+      "client_methods": [
+        "SendChampionArenaSelectBans"
+      ],
+      "literal_key_candidates": [
+        "CharacterSpecIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/start-pick",
+      "client_methods": [
+        "SendChampionArenaStartPick"
+      ],
+      "literal_key_candidates": [
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/start-stage",
+      "client_methods": [
+        "SendChampionArenaStartStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/champion-arena/win-by-default",
+      "client_methods": [
+        "SendChampionArenaWinByDefault"
+      ],
+      "literal_key_candidates": [
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/chat/channel",
+      "client_methods": [
+        "SendChatChannel"
+      ],
+      "literal_key_candidates": [
+        "Message"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/chat/guild",
+      "client_methods": [
+        "SendChatGuild"
+      ],
+      "literal_key_candidates": [
+        "Message"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/chat/guild-history/v2",
+      "client_methods": [
+        "SendChatGuildHistory"
+      ],
+      "literal_key_candidates": [
+        "Since"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/chat/guild/coop",
+      "client_methods": [
+        "SendChatGuildCoop"
+      ],
+      "literal_key_candidates": [
+        "CoopId",
+        "Message"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/chat/invite-coop",
+      "client_methods": [
+        "SendChatInviteCoop"
+      ],
+      "literal_key_candidates": [
+        "MessageParams",
+        "RoomId",
+        "StringKey",
+        "UserIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/chat/listen-channel",
+      "client_methods": [
+        "SendChatListenChannel"
+      ],
+      "literal_key_candidates": [
+        "Listen",
+        "Since"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/chat/move-channel",
+      "client_methods": [
+        "SendChatMoveChannel"
+      ],
+      "literal_key_candidates": [
+        "Name"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/chat/whisper",
+      "client_methods": [
+        "SendChatWhisper"
+      ],
+      "literal_key_candidates": [
+        "Message",
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/check-new-item",
+      "client_methods": [
+        "SendCollectionCheckNewItem"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/claim-hero-knowledge",
+      "client_methods": [
+        "SendCollectionClaimHeroKnowledge"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "SpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/claim-hero-knowledge-all",
+      "client_methods": [
+        "SendClaimHeroKnowledgeAll"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/claim-item-mastery",
+      "client_methods": [
+        "SendCollectionClaimItemMastery"
+      ],
+      "literal_key_candidates": [
+        "ItemType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/claim-new-collection",
+      "client_methods": [
+        "SendCollectionClaimNewCollection"
+      ],
+      "literal_key_candidates": [
+        "CollectionId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/claim-new-collection-all",
+      "client_methods": [
+        "SendClaimNewCollectionAll"
+      ],
+      "literal_key_candidates": [
+        "collectionIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/claim-new-item-all",
+      "client_methods": [
+        "SendCollectionClaimNewItemAll"
+      ],
+      "literal_key_candidates": [
+        "itemSpecIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/collection/list-all",
+      "client_methods": [
+        "SendCollectionListAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/collection/list-new",
+      "client_methods": [
+        "SendCollectionListNew"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/colosseum/end-stage/v3",
+      "client_methods": [
+        "SendColosseumEndStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/enter",
+      "client_methods": [
+        "SendColosseumEnter"
+      ],
+      "literal_key_candidates": [
+        "UserColosseum"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/get-battle-infos",
+      "client_methods": [
+        "SendColosseumGetBattleInfos"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/get-battle-records",
+      "client_methods": [
+        "SendColosseumGetBattleRecords"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/get-defense-party",
+      "client_methods": [
+        "SendColosseumGetDefenseParty"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/get-my-ranking",
+      "client_methods": [
+        "SendColosseumGetMyRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/get-opponents",
+      "client_methods": [
+        "SendColosseumGetOpponents"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/get-rankings",
+      "client_methods": [
+        "SendColosseumGetRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/refresh-opponents",
+      "client_methods": [
+        "SendColosseumRefreshOpponents"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/refresh-rechallenge",
+      "client_methods": [
+        "SendColosseumRefreshRechallenge"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/save-formation",
+      "client_methods": [
+        "SendColosseumSaveFormation"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/set-defense-party-formation",
+      "client_methods": [
+        "SendColosseumSetDefensePartyFormation"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/set-defense-party-preset",
+      "client_methods": [
+        "SendColosseumSetDefensePartyPreset"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/colosseum/start-stage/v2",
+      "client_methods": [
+        "SendColosseumStartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/content-book/kamazon-red-dot",
+      "client_methods": [
+        "SendKamazonRedDot"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/content-book/recommend",
+      "client_methods": [
+        "SendContentBookRecommend"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/content-book/unexplored-expedition-red-dot",
+      "client_methods": [
+        "SendUnexploredExpeditionRedDot"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/coop-expedition/animate",
+      "client_methods": [
+        "SendCoopExpeditionAnimate"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/apply-slots",
+      "client_methods": [
+        "SendCoopExpeditionApplySlots"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/cancel-matching",
+      "client_methods": [
+        "SendCoopExpeditionCancelMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/chat",
+      "client_methods": [
+        "SendCoopExpeditionChat"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/create",
+      "client_methods": [
+        "SendCoopExpeditionCreate"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/end-stage",
+      "client_methods": [
+        "SendCoopExpeditionEndStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/enter",
+      "client_methods": [
+        "SendCoopExpeditionEnter"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserCoopExpedition"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/get-room-list",
+      "client_methods": [
+        "SendCoopExpeditionGetRoomList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/get-stage-id-by-room-id",
+      "client_methods": [
+        "SendCoopExpeditionGetStageIdByRoomId"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/get-stage-rankings",
+      "client_methods": [
+        "SendCoopExpeditionGetStageRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/give-like",
+      "client_methods": [
+        "SendCoopExpeditionGiveLike"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/join",
+      "client_methods": [
+        "SendCoopExpeditionJoin"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/kick",
+      "client_methods": [
+        "SendCoopExpeditionKick"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/leave",
+      "client_methods": [
+        "SendCoopExpeditionLeave"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/mark-narrative",
+      "client_methods": [
+        "SendCoopExpeditionMarkNarrative"
+      ],
+      "literal_key_candidates": [
+        "NarrativeSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/open-bonus-treasure",
+      "client_methods": [
+        "SendCoopExpeditionOpenBonusTreasure"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/pass/claim-all",
+      "client_methods": [
+        "SendCoopExpeditionPassClaimAll"
+      ],
+      "literal_key_candidates": [
+        "SeasonId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/pass/claim-mission",
+      "client_methods": [
+        "SendCoopExpeditionPassClaimMission"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/pass/claim-mission-all",
+      "client_methods": [
+        "SendCoopExpeditionPassClaimMissionAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/pass/claim-one",
+      "client_methods": [
+        "SendCoopExpeditionPassClaimOne"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/pass/skip-level",
+      "client_methods": [
+        "SendCoopExpeditionPassSkipLevel"
+      ],
+      "literal_key_candidates": [
+        "SeasonId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/rechallenge",
+      "client_methods": [
+        "SendCoopExpeditionRechallenge"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/request-matching",
+      "client_methods": [
+        "SendCoopExpeditionRequestMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/save-troll",
+      "client_methods": [
+        "SendCoopExpeditionSaveTroll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/select-character",
+      "client_methods": [
+        "SendCoopExpeditionSelectCharacter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/select-stage",
+      "client_methods": [
+        "SendCoopExpeditionSelectStage"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/set-private-room",
+      "client_methods": [
+        "SendCoopExpeditionSetPrivateRoom"
+      ],
+      "literal_key_candidates": [
+        "PrivateRoom",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/set-ready",
+      "client_methods": [
+        "SendCoopExpeditionSetReady"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/set-recruiting",
+      "client_methods": [
+        "SendCoopExpeditionSetRecruiting"
+      ],
+      "literal_key_candidates": [
+        "Recruiting",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/coop-expedition/start-stage",
+      "client_methods": [
+        "SendCoopExpeditionStartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/cancel-matching",
+      "client_methods": [
+        "SendDeathMatchCancelMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/create",
+      "client_methods": [
+        "SendDeathMatchCreate"
+      ],
+      "literal_key_candidates": [
+        "IsPrivate",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/end-stage/v2",
+      "client_methods": [
+        "SendDeathMatchEndStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId",
+        "Damaged",
+        "Damages",
+        "Death",
+        "HighestDamage",
+        "Kill",
+        "Ranking",
+        "Result"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/enter",
+      "client_methods": [
+        "SendDeathMatchEnter"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserArena"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/get-my-ranking",
+      "client_methods": [
+        "SendDeathMatchGetMyRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/get-rankings",
+      "client_methods": [
+        "SendDeathMatchGetRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/join",
+      "client_methods": [
+        "SendDeathMatchJoin"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/leave",
+      "client_methods": [
+        "SendDeathMatchLeave"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/prepare-stage",
+      "client_methods": [
+        "SendDeathMatchPrepareStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/request-matching",
+      "client_methods": [
+        "SendDeathMatchRequestMatching"
+      ],
+      "literal_key_candidates": [
+        "CountryCode",
+        "GeoCountryCode",
+        "Mcc",
+        "Mnc",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/save-troll",
+      "client_methods": [
+        "SendDeathMatchSaveTroll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/select-characters",
+      "client_methods": [
+        "SendDeathMatchSelectCharacters"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/set-ready",
+      "client_methods": [
+        "SendDeathMatchSetReady"
+      ],
+      "literal_key_candidates": [
+        "Ready",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/set-team",
+      "client_methods": [
+        "SendDeathMatchSetTeam"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "TeamId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/deathmatch/start-stage",
+      "client_methods": [
+        "SendDeathMatchStartStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/cancel-matching",
+      "client_methods": [
+        "SendEscapeCancelMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/chat",
+      "client_methods": [
+        "SendEscapeChat"
+      ],
+      "literal_key_candidates": [
+        "Message",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/claim-extreme-open-reward",
+      "client_methods": [
+        "SendClaimExtremeOpenReward"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/end-stage/v2",
+      "client_methods": [
+        "SendEscapeEndStageV2"
+      ],
+      "literal_key_candidates": [
+        "CoopId",
+        "RaidResult",
+        "Result"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/enter",
+      "client_methods": [
+        "SendEscapeEnter"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserArena"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/kick",
+      "client_methods": [
+        "SendEscapeKick"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/request-create",
+      "client_methods": [
+        "SendEscapeRequestCreate"
+      ],
+      "literal_key_candidates": [
+        "StageId",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/request-join",
+      "client_methods": [
+        "SendEscapeRequestJoin"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/request-matching",
+      "client_methods": [
+        "SendEscapeRequestMatching"
+      ],
+      "literal_key_candidates": [
+        "StageId",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/save-troll",
+      "client_methods": [
+        "SendEscapeSaveTroll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/select-characters",
+      "client_methods": [
+        "SendEscapeSelectCharacters"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/set-private-room",
+      "client_methods": [
+        "SendEscapeSetPrivateRoom"
+      ],
+      "literal_key_candidates": [
+        "PrivateRoom",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/set-ready",
+      "client_methods": [
+        "SendEscapeSetReady"
+      ],
+      "literal_key_candidates": [
+        "Ready",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/escape/start-stage",
+      "client_methods": [
+        "SendEscapeStartStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/exchange/boss-rush-token",
+      "client_methods": [
+        "SendExchangeBossRushToken"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/exchange/evolve-stones",
+      "client_methods": [
+        "SendExchangeStoryEvolveStones"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/exchange/hero-ascend-ticket",
+      "client_methods": [
+        "SendExchangeHeroAscendTicket"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/exchange/kamazon-land",
+      "client_methods": [
+        "SendExchangeKamazonLand"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/exchange/material",
+      "client_methods": [
+        "SendExchangeMaterial"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/exchange/merch",
+      "client_methods": [
+        "SendExchangeMerch"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/exchange/rogue-chess",
+      "client_methods": [
+        "SendExchangeRogueChess"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/beat-monsters",
+      "client_methods": [
+        "SendExpeditionBeatMonsters"
+      ],
+      "literal_key_candidates": [
+        "MonsterHandleNames",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/claim-district-reward",
+      "client_methods": [
+        "SendClaimDistrictReward"
+      ],
+      "literal_key_candidates": [
+        "DistrictId",
+        "DistrictScore"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/claim-special-collectibles-play-rewards",
+      "client_methods": [
+        "SendClaimSpecialCollectiblesPlayRewards"
+      ],
+      "literal_key_candidates": [
+        "SpecialCollectiblesId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/clear-stage/v2",
+      "client_methods": [
+        "SendExpeditionClearStageV2"
+      ],
+      "literal_key_candidates": [
+        "KillScore",
+        "Kills",
+        "PartySwitchingCount",
+        "PlayTime",
+        "StageId",
+        "SupportSkillUsed",
+        "Survivors"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/end-stage",
+      "client_methods": [
+        "SendExpeditionEndStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/enter",
+      "client_methods": [
+        "SendEnterExpedition"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "RegionId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/get-stage-rankings",
+      "client_methods": [
+        "SendGetExpeditionStageRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/get-today-max-score",
+      "client_methods": [
+        "SendExpeditionGetTodayMaxScore"
+      ],
+      "literal_key_candidates": [
+        "RegionId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/interact-collectibles",
+      "client_methods": [
+        "SendInteractCollectibles"
+      ],
+      "literal_key_candidates": [
+        "Collectibles",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/interact-special-collectibles",
+      "client_methods": [
+        "SendInteractSpecialCollectibles"
+      ],
+      "literal_key_candidates": [
+        "SpecialCollectibles",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/open-stage",
+      "client_methods": [
+        "SendExpeditionOpenStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/start-stage",
+      "client_methods": [
+        "SendExpeditionStartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/expedition/upgrade",
+      "client_methods": [
+        "SendExpeditionUpgrade"
+      ],
+      "literal_key_candidates": [
+        "Grade",
+        "RegionId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/festival-pass/check-not-redeemable",
+      "client_methods": [
+        "SendFestivalPassCheckNotRedeemableItem"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/festival-pass/claim-all",
+      "client_methods": [
+        "SendFestivalPassClaimAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/festival-pass/claim-missions",
+      "client_methods": [
+        "SendFestivalPassClaimMissions"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/festival-pass/enter",
+      "client_methods": [
+        "SendFestivalPassEnter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/festival-pass/redeem-point-rewards",
+      "client_methods": [
+        "SendFestivalPassRedeemPointRewards"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/accept",
+      "client_methods": [
+        "SendAcceptFriendRequest"
+      ],
+      "literal_key_candidates": [
+        "FriendId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/allow-request",
+      "client_methods": [
+        "SendAllowRequest"
+      ],
+      "literal_key_candidates": [
+        "AllowRequest"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/check-friend",
+      "client_methods": [
+        "SendCheckFriend"
+      ],
+      "literal_key_candidates": [
+        "FriendId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/enter",
+      "client_methods": [
+        "SendEnterFriend2"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/has-changes",
+      "client_methods": [
+        "SendFriendChanged"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/friend2/invite-coop",
+      "client_methods": [
+        "SendInviteCoopFriend2"
+      ],
+      "literal_key_candidates": [
+        "CoopMode",
+        "InviteeIds",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/presence",
+      "client_methods": [
+        "SendPresence2"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/receive-gift",
+      "client_methods": [
+        "SendFriendReceiveGift"
+      ],
+      "literal_key_candidates": [
+        "friendId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/receive-send-gift",
+      "client_methods": [
+        "SendFriendReceiveAndSend"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/recommend",
+      "client_methods": [
+        "SendRecommendFriend"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/remove",
+      "client_methods": [
+        "SendRemoveFriend2"
+      ],
+      "literal_key_candidates": [
+        "FriendId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/request",
+      "client_methods": [
+        "SendFriendRequest"
+      ],
+      "literal_key_candidates": [
+        "FriendId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/search",
+      "client_methods": [
+        "SendSearchFriend2"
+      ],
+      "literal_key_candidates": [
+        "HashTag"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/send-gift",
+      "client_methods": [
+        "SendFriendSendGift"
+      ],
+      "literal_key_candidates": [
+        "friendId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/set-checked",
+      "client_methods": [
+        "SendLastChecked"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/visit-farm",
+      "client_methods": [
+        "SendFriendVisitFarm2"
+      ],
+      "literal_key_candidates": [
+        "HostUserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friend2/visit-pasture",
+      "client_methods": [
+        "SendFriendVisitPasture2"
+      ],
+      "literal_key_candidates": [
+        "HostUserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/apply-preset-change",
+      "client_methods": [
+        "SendFriendlyArenaApplyPresetChange"
+      ],
+      "literal_key_candidates": [
+        "PresetId",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/cancel-matching",
+      "client_methods": [
+        "SendFriendlyArenaCancelMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/chat",
+      "client_methods": [
+        "SendFriendlyArenaChat"
+      ],
+      "literal_key_candidates": [
+        "Message",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/create",
+      "client_methods": [
+        "SendFriendlyArenaCreate"
+      ],
+      "literal_key_candidates": [
+        "IsBlindPick",
+        "IsPrivate",
+        "IsStatSame",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/end-stage",
+      "client_methods": [
+        "SendFriendlyArenaEndStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId",
+        "Damages",
+        "HighestDamage",
+        "Result"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/join",
+      "client_methods": [
+        "SendFriendlyArenaJoin"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/kick",
+      "client_methods": [
+        "SendFriendlyArenaKick"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/leave",
+      "client_methods": [
+        "SendFriendlyArenaLeave"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/request-matching",
+      "client_methods": [
+        "SendFriendlyArenaRequestMatching"
+      ],
+      "literal_key_candidates": [
+        "CountryCode",
+        "GeoCountryCode",
+        "IsBlindPick",
+        "IsStatSame",
+        "Mcc",
+        "Mnc",
+        "TestMode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/select-character-orders",
+      "client_methods": [
+        "SendFriendlyArenaSelectCharacterOrders"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/select-host",
+      "client_methods": [
+        "SendFriendlyArenaSelectHost"
+      ],
+      "literal_key_candidates": [
+        "HostUserId",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/select-mode",
+      "client_methods": [
+        "SendFriendlyArenaSelectMode"
+      ],
+      "literal_key_candidates": [
+        "IsBlindPick",
+        "IsStatSame",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/select-stage",
+      "client_methods": [
+        "SendFriendlyArenaSelectStage"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/set-observer",
+      "client_methods": [
+        "SendFriendlyArenaSetObserver"
+      ],
+      "literal_key_candidates": [
+        "IsObserver",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/set-ready",
+      "client_methods": [
+        "SendFriendlyArenaSetReady"
+      ],
+      "literal_key_candidates": [
+        "Ready",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-arena/start-stage",
+      "client_methods": [
+        "SendFriendlyArenaStartStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/apply-preset-change",
+      "client_methods": [
+        "SendFriendlyDeathMatchApplyPresetChange"
+      ],
+      "literal_key_candidates": [
+        "PresetId",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/cancel-matching",
+      "client_methods": [
+        "SendFriendlyDeathMatchCancelMatching"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/chat",
+      "client_methods": [
+        "SendFriendlyDeathMatchChat"
+      ],
+      "literal_key_candidates": [
+        "Message",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/create",
+      "client_methods": [
+        "SendFriendlyDeathMatchCreate"
+      ],
+      "literal_key_candidates": [
+        "DeathMatchMode",
+        "IsPrivate",
+        "IsStatSame"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/end-stage",
+      "client_methods": [
+        "SendFriendlyDeathMatchEndStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId",
+        "Damaged",
+        "Damages",
+        "Death",
+        "HighestDamage",
+        "Kill",
+        "Ranking",
+        "Result"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/join",
+      "client_methods": [
+        "SendFriendlyDeathMatchJoin"
+      ],
+      "literal_key_candidates": [
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/leave",
+      "client_methods": [
+        "SendFriendlyDeathMatchLeave"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/request-matching",
+      "client_methods": [
+        "SendFriendlyDeathMatchRequestMatching"
+      ],
+      "literal_key_candidates": [
+        "CountryCode",
+        "DeathMatchMode",
+        "GeoCountryCode",
+        "IsStatSame",
+        "Mcc",
+        "Mnc"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/select-character-orders",
+      "client_methods": [
+        "SendFriendlyDeathMatchSelectCharacterOrders"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/select-host",
+      "client_methods": [
+        "SendFriendlyDeathMatchSelectHost"
+      ],
+      "literal_key_candidates": [
+        "HostUserId",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/select-mode",
+      "client_methods": [
+        "SendFriendlyDeathMatchSelectMode"
+      ],
+      "literal_key_candidates": [
+        "DeathMatchMode",
+        "IsStatSame",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/select-stage",
+      "client_methods": [
+        "SendFriendlyDeathMatchSelectStage"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/set-observer",
+      "client_methods": [
+        "SendFriendlyDeathMatchSetObserver"
+      ],
+      "literal_key_candidates": [
+        "IsObserver",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/set-ready",
+      "client_methods": [
+        "SendFriendlyDeathMatchSetReady"
+      ],
+      "literal_key_candidates": [
+        "Ready",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/set-team",
+      "client_methods": [
+        "SendFriendlyDeathMatchSetTeam"
+      ],
+      "literal_key_candidates": [
+        "RoomId",
+        "TeamId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/friendly-deathmatch/start-stage",
+      "client_methods": [
+        "SendFriendlyDeathMatchStartStage"
+      ],
+      "literal_key_candidates": [
+        "CoopId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/garage/add-loss-time",
+      "client_methods": [
+        "SendAddGarageLossTime"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/garage/clear-stage",
+      "client_methods": [
+        "SendClearGarage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/garage/end-stage",
+      "client_methods": [
+        "SendEndGarage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/garage/open-stage",
+      "client_methods": [
+        "SendOpenGarage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/garage/reset-playcount",
+      "client_methods": [
+        "SendResetGaragePlayCount"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/garage/start-stage",
+      "client_methods": [
+        "SendStartGarage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/garage/sweep-stage",
+      "client_methods": [
+        "SendSweepGarage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guardian-pass/claim-all",
+      "client_methods": [
+        "SendGuardianPassClaimAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/guardian-pass/claim-missions",
+      "client_methods": [
+        "SendGuardianPassClaimMissions"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guardian-pass/enter",
+      "client_methods": [
+        "SendGuardianPassEnter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/guardian-pass/skip-level",
+      "client_methods": [
+        "SendGuardianPassSkipLevel"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-arcade/end-stage",
+      "client_methods": [
+        "SendGuildArcadeEndStage"
+      ],
+      "literal_key_candidates": [
+        "Score",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-arcade/enter",
+      "client_methods": [
+        "SendEnterGuildArcade"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-arcade/start-stage",
+      "client_methods": [
+        "SendGuildArcadeStartStage"
+      ],
+      "literal_key_candidates": [
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/accept-or-decline-duel",
+      "client_methods": [
+        "SendAcceptOrDeclineDuel"
+      ],
+      "literal_key_candidates": [
+        "Accept"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/allocate-entity-id",
+      "client_methods": [
+        "SendAllocateEntityId"
+      ],
+      "literal_key_candidates": [
+        "Count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/broadcast",
+      "client_methods": [
+        "SendBroadcastGuildCastle"
+      ],
+      "literal_key_candidates": [
+        "Commands"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/challenge-to-duel",
+      "client_methods": [
+        "SendChallengeToDuel"
+      ],
+      "literal_key_candidates": [
+        "OpponentUserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/enter",
+      "client_methods": [
+        "SendEnterGuildCastle"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/finish-duel",
+      "client_methods": [
+        "SendFinishDuel"
+      ],
+      "literal_key_candidates": [
+        "Winner"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/finish-scarecrow/v3",
+      "client_methods": [
+        "SendFinishScarecrow"
+      ],
+      "literal_key_candidates": [
+        "Damages",
+        "ScarecrowId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/get-scarecrow-guild-rankings",
+      "client_methods": [
+        "SendGetScarecrowGuildRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/get-scarecrow-individual-rankings",
+      "client_methods": [
+        "SendGetScarecrowIndividualRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/leave",
+      "client_methods": [
+        "SendLeaveGuildCastle"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/send",
+      "client_methods": [
+        "SendSendGuildCastle"
+      ],
+      "literal_key_candidates": [
+        "TargetingCommands"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-castle/start-scarecrow/v2",
+      "client_methods": [
+        "SendStartScarecrow"
+      ],
+      "literal_key_candidates": [
+        "ScarecrowId",
+        "elementalType",
+        "presetId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-meteor/claim-pickaxe",
+      "client_methods": [
+        "SendGuildMeteorClaimPickAxe"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-meteor/enter",
+      "client_methods": [
+        "SendEnterGuildMeteor"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserRaid"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-meteor/excavate",
+      "client_methods": [
+        "SendGuildMeteorExcavate"
+      ],
+      "literal_key_candidates": [
+        "MeteorId",
+        "Power"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-meteor/refresh",
+      "client_methods": [
+        "SendGuildMeteorRefresh"
+      ],
+      "literal_key_candidates": [
+        "MeteorId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/buy-items",
+      "client_methods": [
+        "SendGuildPunchKingBuyItems"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/claim-all-point-rewards",
+      "client_methods": [
+        "SendGuildPunchKingClaimAllPointRewards"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/claim-point-rewards",
+      "client_methods": [
+        "SendGuildPunchKingClaimPointRewards"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/end-stage",
+      "client_methods": [
+        "SendGuildPunchKingEndStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/enter",
+      "client_methods": [
+        "SendEnterGuildPunchKing"
+      ],
+      "literal_key_candidates": [
+        "UserRaid"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/get-guild-rankings",
+      "client_methods": [
+        "SendGuildPunchKingGetGuildRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/get-member-rankings",
+      "client_methods": [
+        "SendGuildPunchKingGetMemberRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/get-user-rankings",
+      "client_methods": [
+        "SendGuildPunchKingGetUserRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/set-message",
+      "client_methods": [
+        "SendGuildPunchKingSetMessage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-punchking/start-stage",
+      "client_methods": [
+        "SendGuildPunchKingStartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/abandon-stage",
+      "client_methods": [
+        "SendGuildRaid2AbandonStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/claim-season-rewards",
+      "client_methods": [
+        "SendGuildRaid2ClaimSeasonRewards"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/end-stage",
+      "client_methods": [
+        "SendGuildRaid2EndStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/enter",
+      "client_methods": [
+        "SendEnterGuildRaid2"
+      ],
+      "literal_key_candidates": [
+        "UserRaid"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/get-battle-infos",
+      "client_methods": [
+        "SendGuildRaid2GetBattleInfos"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/get-battle-records/boss",
+      "client_methods": [
+        "SendGuildRaid2GetBattleRecordsBossId"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/get-battle-records/latest",
+      "client_methods": [
+        "SendGuildRaid2GetBattleRecordsLatest"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/get-battle-records/member",
+      "client_methods": [
+        "SendGuildRaid2GetBattleRecordsMember"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/get-battle-status",
+      "client_methods": [
+        "SendGuildRaid2GetBattleStatus"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/get-guild-rankings",
+      "client_methods": [
+        "SendGuildRaid2GetGuildRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/get-member-rankings",
+      "client_methods": [
+        "SendGuildRaid2GetMemberRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/reset",
+      "client_methods": [
+        "SendResetGuildRaid2"
+      ],
+      "literal_key_candidates": [
+        "UserRaid"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/start-stage",
+      "client_methods": [
+        "SendGuildRaid2StartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-raid2/update-status",
+      "client_methods": [
+        "SendGuildRaid2UpdateStatus"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/abandon-stage",
+      "client_methods": [
+        "SendGuildWarAbandonStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/buy-items",
+      "client_methods": [
+        "SendGuildWarBuyItems"
+      ],
+      "literal_key_candidates": [
+        "count",
+        "shopItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/claim-rewards",
+      "client_methods": [
+        "SendGuildWarClaimRewards"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/end-coop-stage/v2",
+      "client_methods": [
+        "SendGuildWarEndCoopStageV2"
+      ],
+      "literal_key_candidates": [
+        "additionalDamage",
+        "damages",
+        "stageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/end-multi-stage/v2",
+      "client_methods": [
+        "SendGuildWarEndMultiStageV2"
+      ],
+      "literal_key_candidates": [
+        "additionalDamage",
+        "damages",
+        "stageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/end-single-stage",
+      "client_methods": [
+        "SendGuildWarEndSingleStage"
+      ],
+      "literal_key_candidates": [
+        "elapsedMilliseconds",
+        "isClear",
+        "stageClearRank"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/enter",
+      "client_methods": [
+        "SendGuildWarEnter"
+      ],
+      "literal_key_candidates": [
+        "UserRaid",
+        "isPartial"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/get-all-castle-simple-infos",
+      "client_methods": [
+        "SendGuildWarGetAllCastleSimpleInfos"
+      ],
+      "literal_key_candidates": [
+        "seasonId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/get-battle-records",
+      "client_methods": [
+        "SendGuildWarGetBattleRecords"
+      ],
+      "literal_key_candidates": [
+        "seasonId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/get-castle-detail-info",
+      "client_methods": [
+        "SendGuildWarGetCastleDetailInfo"
+      ],
+      "literal_key_candidates": [
+        "castleId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/get-guild-coin-ranking",
+      "client_methods": [
+        "SendGuildWarGetGuildCoinRanking"
+      ],
+      "literal_key_candidates": [
+        "seasonId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/get-member-battle-records",
+      "client_methods": [
+        "SendGuildWarGetBattleRecordsByMemberId"
+      ],
+      "literal_key_candidates": [
+        "day",
+        "seasonId",
+        "userId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/get-ranking",
+      "client_methods": [
+        "SendGuildWarGetRanking"
+      ],
+      "literal_key_candidates": [
+        "seasonId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/give-up-castle",
+      "client_methods": [
+        "SendGuildWarGiveUpCastle"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/marking-castle",
+      "client_methods": [
+        "SendGuildWarMarkingCastle"
+      ],
+      "literal_key_candidates": [
+        "castleId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/start-coop-stage",
+      "client_methods": [
+        "SendGuildWarStartCoopStage"
+      ],
+      "literal_key_candidates": [
+        "presetId",
+        "stageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/start-multi-stage",
+      "client_methods": [
+        "SendGuildWarStartMultiStage"
+      ],
+      "literal_key_candidates": [
+        "presetId",
+        "stageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/start-single-stage",
+      "client_methods": [
+        "SendGuildWarStartSingleStage"
+      ],
+      "literal_key_candidates": [
+        "presetId",
+        "stageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/upgrade-defense",
+      "client_methods": [
+        "SendGuildWarUpgradeDefense"
+      ],
+      "literal_key_candidates": [
+        "buffIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild-war/upgrade-offense",
+      "client_methods": [
+        "SendGuildWarUpgradeOffense"
+      ],
+      "literal_key_candidates": [
+        "buffIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/accept-applicant",
+      "client_methods": [
+        "SendAcceptGuildApplicant"
+      ],
+      "literal_key_candidates": [
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/accept-invite",
+      "client_methods": [
+        "SendAcceptInvite"
+      ],
+      "literal_key_candidates": [
+        "GuildId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/cancel-request-join",
+      "client_methods": [
+        "SendCancelRequestJoinGuild"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/change-information",
+      "client_methods": [
+        "SendChangeGuildInformation"
+      ],
+      "literal_key_candidates": [
+        "Emblem",
+        "Introduce",
+        "IsPublic"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/change-member-type",
+      "client_methods": [
+        "SendChangeGuildMemberType"
+      ],
+      "literal_key_candidates": [
+        "MemberType",
+        "MemberUserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/change-notice",
+      "client_methods": [
+        "SendChangeGuildNotice"
+      ],
+      "literal_key_candidates": [
+        "Notice"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/change-notice/v2",
+      "client_methods": [
+        "SendChangeGuildNoticeV2"
+      ],
+      "literal_key_candidates": [
+        "Notices"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/check-name",
+      "client_methods": [
+        "SendCheckGuildName"
+      ],
+      "literal_key_candidates": [
+        "Name"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/claim-guild-daily-attendance",
+      "client_methods": [
+        "SendClaimGuildDailyAttendance"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/commit-expelled",
+      "client_methods": [
+        "SendCommitExpelled"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/create",
+      "client_methods": [
+        "SendCreateGuild"
+      ],
+      "literal_key_candidates": [
+        "Emblem",
+        "Introduce",
+        "IsPublic",
+        "MinLevel",
+        "Name"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/decline-applicant",
+      "client_methods": [
+        "SendDeclineGuildApplicant"
+      ],
+      "literal_key_candidates": [
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/decline-invite",
+      "client_methods": [
+        "SendDeclineInvite"
+      ],
+      "literal_key_candidates": [
+        "GuildId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/disband",
+      "client_methods": [
+        "SendDisbandGuild"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/expel-member",
+      "client_methods": [
+        "SendExpelGuildMember"
+      ],
+      "literal_key_candidates": [
+        "MemberUserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/get-guild-name",
+      "client_methods": [
+        "SendGetGuildName"
+      ],
+      "literal_key_candidates": [
+        "GuildId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/get-guild-profile-card",
+      "client_methods": [
+        "SendGetGuildProfileCard"
+      ],
+      "literal_key_candidates": [
+        "GuildId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/get-guild-summary",
+      "client_methods": [
+        "SendGetGuildSummary"
+      ],
+      "literal_key_candidates": [
+        "GuildId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/get-invite-list",
+      "client_methods": [
+        "SendGetInviteList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/guild/get-join-suggestion-list/v2",
+      "client_methods": [
+        "SendGetGuildJoinSuggestionList"
+      ],
+      "literal_key_candidates": [
+        "SuggestBy"
+      ],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/guild/get-my-guild",
+      "client_methods": [
+        "SendGetMyGuild"
+      ],
+      "literal_key_candidates": [
+        "Hash"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/guild/get-online-member-list",
+      "client_methods": [
+        "SendGetGuildOnlineMemberList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/invite-coop",
+      "client_methods": [
+        "SendInviteCoop"
+      ],
+      "literal_key_candidates": [
+        "CoopMode",
+        "InviteeIds",
+        "RoomId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/leave",
+      "client_methods": [
+        "SendLeaveGuild"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/list-item-request",
+      "client_methods": [
+        "SendItemListRequest"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/guild/receive-item",
+      "client_methods": [
+        "SendItemReceive"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/red-dot",
+      "client_methods": [
+        "SendGuildRedDot"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/rename",
+      "client_methods": [
+        "SendRenameGuild"
+      ],
+      "literal_key_candidates": [
+        "Name"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/request-invite",
+      "client_methods": [
+        "SendRequestInvite"
+      ],
+      "literal_key_candidates": [
+        "InviteUserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/request-item",
+      "client_methods": [
+        "SendItemRequest"
+      ],
+      "literal_key_candidates": [
+        "amount",
+        "itemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/request-join/v2",
+      "client_methods": [
+        "SendRequestJoinGuild"
+      ],
+      "literal_key_candidates": [
+        "GuildId",
+        "joinMessage"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/search",
+      "client_methods": [
+        "SendSearchGuild"
+      ],
+      "literal_key_candidates": [
+        "Name"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/search-invitee",
+      "client_methods": [
+        "SendSearchInvitee"
+      ],
+      "literal_key_candidates": [
+        "Name"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/search-invitee-hashtag",
+      "client_methods": [
+        "SendSearchInviteeHashTag"
+      ],
+      "literal_key_candidates": [
+        "HashTag"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/guild/send-item",
+      "client_methods": [
+        "SendItemSend"
+      ],
+      "literal_key_candidates": [
+        "amount",
+        "itemId",
+        "reqId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/basecamp/change-party",
+      "client_methods": [
+        "SendBaseCampChangeParty"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds",
+        "PartyId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/basecamp/unlock-party",
+      "client_methods": [
+        "SendBaseCampUnlockParty"
+      ],
+      "literal_key_candidates": [
+        "PartyId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/enter",
+      "client_methods": [
+        "SendEnterHeavenHold"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "LastLobbyShopUpdated",
+        "UserHeavenHold"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/harvests/all/v2",
+      "client_methods": [
+        "SendHarvestsAllV2"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/harvests/basecamp",
+      "client_methods": [
+        "SendHarvestsBaseCamp"
+      ],
+      "literal_key_candidates": [
+        "HarvestTime"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/harvests/basecamp/ticket",
+      "client_methods": [
+        "SendHarvestsBaseCampUseTicket"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "ItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/harvests/use-ticket",
+      "client_methods": [
+        "SendHarvestsUseTicket"
+      ],
+      "literal_key_candidates": [
+        "clientFinalSoulPointGen",
+        "count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/harvests/visitor",
+      "client_methods": [
+        "SendHarvestsVisitor"
+      ],
+      "literal_key_candidates": [
+        "VisitorIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/recv-gift",
+      "client_methods": [
+        "SendRecvGift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/remove",
+      "client_methods": [
+        "SendRemove"
+      ],
+      "literal_key_candidates": [
+        "DeployId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/swap-building",
+      "client_methods": [
+        "SendSwapBuilding"
+      ],
+      "literal_key_candidates": [
+        "DeployId1",
+        "DeployId2"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/unlock-portal",
+      "client_methods": [
+        "SendUnlockPortal"
+      ],
+      "literal_key_candidates": [
+        "BuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/upgrade-building",
+      "client_methods": [
+        "SendUpgradeBuilding"
+      ],
+      "literal_key_candidates": [
+        "BuildingId",
+        "BuildingSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/upgrade-cancel",
+      "client_methods": [
+        "SendBuildingCancel"
+      ],
+      "literal_key_candidates": [
+        "BuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/upgrade-complete",
+      "client_methods": [
+        "SendUpgradeComplete"
+      ],
+      "literal_key_candidates": [
+        "BuildingId",
+        "EndTime",
+        "QuickComplete",
+        "ServerTime"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenhold/upgrade-portal",
+      "client_methods": [
+        "SendUpgradePortal"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/catch-fish",
+      "client_methods": [
+        "SendCatchFish"
+      ],
+      "literal_key_candidates": [
+        "Fish"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/change-aquarium-theme",
+      "client_methods": [
+        "SendChangeAquariumTheme"
+      ],
+      "literal_key_candidates": [
+        "Floor",
+        "ItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/change-building",
+      "client_methods": [
+        "SendHeavenHoldFarmChangeBuilding"
+      ],
+      "literal_key_candidates": [
+        "BuildingId",
+        "ChangeBuildingSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/change-state",
+      "client_methods": [
+        "SendHeavenHoldFarmChangeState"
+      ],
+      "literal_key_candidates": [
+        "GardenId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/collection-all",
+      "client_methods": [
+        "SendFishCollectionAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/heavenholdfarm/collection-claim-fishes",
+      "client_methods": [
+        "SendClaimFishes"
+      ],
+      "literal_key_candidates": [
+        "FishSpecIds",
+        "IsMax"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/collection-updated",
+      "client_methods": [
+        "SendFishCollectionUpdated"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/craft-mysterypot-recipe",
+      "client_methods": [
+        "SendCraftFarmRecipe"
+      ],
+      "literal_key_candidates": [
+        "MaterialIds",
+        "RecipeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/create-building",
+      "client_methods": [
+        "SendHeavenHoldFarmCreateBuilding"
+      ],
+      "literal_key_candidates": [
+        "FarmBuildingSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/enter",
+      "client_methods": [
+        "SendEnterHeavenHoldFarm"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserHeavenHoldFarm"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/evolve-material",
+      "client_methods": [
+        "SendHeavenHoldFarmEvolveMaterial"
+      ],
+      "literal_key_candidates": [
+        "Amount",
+        "TargetSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/harvest",
+      "client_methods": [
+        "SendHeavenHoldFarmHarvest"
+      ],
+      "literal_key_candidates": [
+        "GardenIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/lock-fish",
+      "client_methods": [
+        "SendLockFish"
+      ],
+      "literal_key_candidates": [
+        "FishIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/move-building",
+      "client_methods": [
+        "SendHeavenHoldFarmMoveBuilding"
+      ],
+      "literal_key_candidates": [
+        "BuildingId",
+        "Position"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/move-obstacle-spot",
+      "client_methods": [
+        "SendMoveObstacleSpot"
+      ],
+      "literal_key_candidates": [
+        "Position",
+        "SpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/multi-plant",
+      "client_methods": [
+        "SendHeavenHoldFarmMultiPlant"
+      ],
+      "literal_key_candidates": [
+        "GardenIds",
+        "SeedSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/plant",
+      "client_methods": [
+        "SendHeavenHoldFarmPlant"
+      ],
+      "literal_key_candidates": [
+        "GardenId",
+        "SeedSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/remove-building",
+      "client_methods": [
+        "SendHeavenHoldFarmRemoveBuilding"
+      ],
+      "literal_key_candidates": [
+        "BuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/remove-obstacle",
+      "client_methods": [
+        "SendHeavenHoldFarmRemoveObstacle"
+      ],
+      "literal_key_candidates": [
+        "RemoveIndexes"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/summon-villager",
+      "client_methods": [
+        "SendSummonVillager"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/summon-villager/v2",
+      "client_methods": [
+        "SendSummonVillagerV2"
+      ],
+      "literal_key_candidates": [
+        "Count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/unlock-fish",
+      "client_methods": [
+        "SendUnlockFish"
+      ],
+      "literal_key_candidates": [
+        "FishIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/upgrade-building",
+      "client_methods": [
+        "SendHeavenHoldFarmUpgradeBuilding"
+      ],
+      "literal_key_candidates": [
+        "BuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/upgrade-cancel",
+      "client_methods": [
+        "SendHeavenHoldFarmUpgradeCancel"
+      ],
+      "literal_key_candidates": [
+        "BuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/upgrade-complete",
+      "client_methods": [
+        "SendHeavenHoldFarmUpgradeComplete"
+      ],
+      "literal_key_candidates": [
+        "BuildingId",
+        "QuickComplete"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/use-bait",
+      "client_methods": [
+        "SendUseBait"
+      ],
+      "literal_key_candidates": [
+        "ItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/heavenholdfarm/use-blueprint",
+      "client_methods": [
+        "SendUseBluePrint"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/inbox/check-scheduled-inbox",
+      "client_methods": [
+        "SendInboxCheckScheduledInbox"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/inbox/list",
+      "client_methods": [
+        "SendInboxList"
+      ],
+      "literal_key_candidates": [
+        "LastInboxItemId"
+      ],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/inbox/open",
+      "client_methods": [
+        "SendInboxOpen"
+      ],
+      "literal_key_candidates": [
+        "InboxItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/inbox/open-all",
+      "client_methods": [
+        "SendInboxOpenAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/inbox/use-kong-coupon",
+      "client_methods": [
+        "SendUseKongCoupon"
+      ],
+      "literal_key_candidates": [
+        "CouponCode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/apply-engrave-options",
+      "client_methods": [
+        "SendApplyEngraveOptions"
+      ],
+      "literal_key_candidates": [
+        "Apply",
+        "TargetWeaponId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/apply-options",
+      "client_methods": [
+        "SendApplyItemOptions"
+      ],
+      "literal_key_candidates": [
+        "Apply",
+        "ItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/apply-relic-options",
+      "client_methods": [
+        "SendApplyRelicOptions"
+      ],
+      "literal_key_candidates": [
+        "Apply",
+        "ItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/attach-jewel",
+      "client_methods": [
+        "SendAttachJewel"
+      ],
+      "literal_key_candidates": [
+        "Destruction",
+        "JewelId",
+        "RelicId",
+        "SlotIndex"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/change-engrave-options",
+      "client_methods": [
+        "SendChangeEngraveOptions"
+      ],
+      "literal_key_candidates": [
+        "MaterialWeaponId",
+        "SourceItems",
+        "TargetWeaponId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/change-lock-options",
+      "client_methods": [
+        "SendChangeLockItemOptions"
+      ],
+      "literal_key_candidates": [
+        "DoLock",
+        "ItemId",
+        "OptionIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/change-options",
+      "client_methods": [
+        "SendChangeItemOptions"
+      ],
+      "literal_key_candidates": [
+        "ItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/change-relic-options/v2",
+      "client_methods": [
+        "SendChangeRelicOptions"
+      ],
+      "literal_key_candidates": [
+        "ItemId",
+        "OptionType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/compose-gears",
+      "client_methods": [
+        "SendComposeGears"
+      ],
+      "literal_key_candidates": [
+        "ComposeRequests"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/compose-weapon",
+      "client_methods": [
+        "SendComposeWeapon"
+      ],
+      "literal_key_candidates": [
+        "SourceWeaponIds",
+        "TargetWeaponId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/decompose-jewel",
+      "client_methods": [
+        "SendDecomposeJewel"
+      ],
+      "literal_key_candidates": [
+        "Jewels"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/decomposition-relic",
+      "client_methods": [
+        "SendDecompositionRelic"
+      ],
+      "literal_key_candidates": [
+        "ItemIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/detach-jewel",
+      "client_methods": [
+        "SendDetachJewel"
+      ],
+      "literal_key_candidates": [
+        "RelicId",
+        "SlotIndex"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/engrave-weapon",
+      "client_methods": [
+        "SendEngraveWeapon"
+      ],
+      "literal_key_candidates": [
+        "MaterialWeaponId",
+        "TargetWeaponId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/enhance-weapon",
+      "client_methods": [
+        "SendEnhanceWeapon"
+      ],
+      "literal_key_candidates": [
+        "SourceItems",
+        "TargetWeaponId",
+        "discountBuff"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/evolve-material",
+      "client_methods": [
+        "SendEvolveMaterial"
+      ],
+      "literal_key_candidates": [
+        "EvolveAmount",
+        "SourceItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/evolve-relic",
+      "client_methods": [
+        "SendEvolveRelic"
+      ],
+      "literal_key_candidates": [
+        "RelicId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/evolve-weapon-bundle",
+      "client_methods": [
+        "SendEvolveWeaponBundle"
+      ],
+      "literal_key_candidates": [
+        "EvolveToMaxRarity",
+        "WeaponIds",
+        "discountBuff"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/exchange-evolvestone",
+      "client_methods": [
+        "SendExchangeEvolveStone"
+      ],
+      "literal_key_candidates": [
+        "ExchangeStones"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/exchange-material",
+      "client_methods": [
+        "SendExchangeMaterial"
+      ],
+      "literal_key_candidates": [
+        "ExchangeAmount",
+        "ExchangeItemSpecId",
+        "SourceItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/expire",
+      "client_methods": [
+        "SendExpireItems"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/extract",
+      "client_methods": [
+        "SendExtractItems"
+      ],
+      "literal_key_candidates": [
+        "ItemIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/inlaid-jewelslot",
+      "client_methods": [
+        "SendInlaidJewelSlot"
+      ],
+      "literal_key_candidates": [
+        "RelicId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/limitbreak-weapon/v2",
+      "client_methods": [
+        "SendLimitBreakWeapon"
+      ],
+      "literal_key_candidates": [
+        "SourceItems",
+        "TargetWeaponId",
+        "discountBuff"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/lock",
+      "client_methods": [
+        "SendLockItems"
+      ],
+      "literal_key_candidates": [
+        "itemIndexes"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/myth-weapon",
+      "client_methods": [
+        "SendMythWeapon"
+      ],
+      "literal_key_candidates": [
+        "targetWeaponId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/sell",
+      "client_methods": [
+        "SendSellItems"
+      ],
+      "literal_key_candidates": [
+        "SellItems"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/unlock",
+      "client_methods": [
+        "SendUnlockItems"
+      ],
+      "literal_key_candidates": [
+        "itemIndexes"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/upgrade-jewel",
+      "client_methods": [
+        "SendUpgradeJewel"
+      ],
+      "literal_key_candidates": [
+        "JewelId",
+        "UseJewelPowder"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/upgrade-jewel-from-relic",
+      "client_methods": [
+        "SendUpgradeJewelFromRelic"
+      ],
+      "literal_key_candidates": [
+        "RelicId",
+        "SlotIndex",
+        "UseJewelPowder"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/use-jump-ticket",
+      "client_methods": [
+        "SendUseJumpTicket"
+      ],
+      "literal_key_candidates": [
+        "TicketId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/item/use-selection-box",
+      "client_methods": [
+        "SendUseSelectionBox"
+      ],
+      "literal_key_candidates": [
+        "boxId",
+        "index"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kakao/claim-inbox",
+      "client_methods": [
+        "SendClaimInbox"
+      ],
+      "literal_key_candidates": [
+        "MessageIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kakao/log-cash-item",
+      "client_methods": [
+        "SendLogCashItem"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kakao/use-coupon",
+      "client_methods": [
+        "SendUseCoupon"
+      ],
+      "literal_key_candidates": [
+        "CouponCode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/apply-preset",
+      "client_methods": [
+        "SendKamazonLandPresetApply"
+      ],
+      "literal_key_candidates": [
+        "PresetId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/apply-set-preset",
+      "client_methods": [
+        "SendKamazonLandApplySetPreset"
+      ],
+      "literal_key_candidates": [
+        "PartyPreset"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/buy-gacha",
+      "client_methods": [
+        "SendKamazonLandBuyGacha"
+      ],
+      "literal_key_candidates": [
+        "Count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/buy-random-box",
+      "client_methods": [
+        "SendKamazonLandBuyRandomBox"
+      ],
+      "literal_key_candidates": [
+        "Count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/buy-shop-item",
+      "client_methods": [
+        "SendKamazonLandBuyShopItem"
+      ],
+      "literal_key_candidates": [
+        "ChoiceArtifactOrCurseId",
+        "DiscardArtifactOrCurseIndex",
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/challenge",
+      "client_methods": [
+        "SendKamazonLandChallenge"
+      ],
+      "literal_key_candidates": [
+        "Difficulty"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/choice-special-event",
+      "client_methods": [
+        "SendKamazonLandChoiceSpecialEvent"
+      ],
+      "literal_key_candidates": [
+        "ChoiceId",
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/claim-likeability-reward",
+      "client_methods": [
+        "SendKamazonLandClaimLikeabilityReward"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/close-battle",
+      "client_methods": [
+        "SendKamazonLandCloseBattle"
+      ],
+      "literal_key_candidates": [
+        "DiscardArtifactIndex",
+        "LootArtifactId",
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/close-shop",
+      "client_methods": [
+        "SendKamazonLandCloseShop"
+      ],
+      "literal_key_candidates": [
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/close-special-event",
+      "client_methods": [
+        "SendKamazonLandCloseSpecialEvent"
+      ],
+      "literal_key_candidates": [
+        "DiscardArtifactIndices",
+        "DiscardCurseIndices",
+        "LootArtifactIds",
+        "LootCurseIds",
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/conclude",
+      "client_methods": [
+        "SendKamazonLandConclude"
+      ],
+      "literal_key_candidates": [
+        "keepingArtifactId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/end-battle",
+      "client_methods": [
+        "SendKamazonLandEndBattle"
+      ],
+      "literal_key_candidates": [
+        "CharacterHps",
+        "MonsterHps",
+        "NodeId",
+        "Result"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/enter",
+      "client_methods": [
+        "SendKamazonLandEnter"
+      ],
+      "literal_key_candidates": [
+        "IsPartial"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/get-except-item-spec-ids",
+      "client_methods": [
+        "SendKamazonLandGetExceptItemSpecIds"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/infinitize",
+      "client_methods": [
+        "SendKamazonLandInfinitize"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/pick-aids",
+      "client_methods": [
+        "SendKamazonLandPickAids"
+      ],
+      "literal_key_candidates": [
+        "ArtifactId",
+        "CurseId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/save-benefits",
+      "client_methods": [
+        "SendKamazonLandSaveBenefits"
+      ],
+      "literal_key_candidates": [
+        "Benefits"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/select-characters",
+      "client_methods": [
+        "SendKamazonLandSelectCharacters"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/start-battle",
+      "client_methods": [
+        "SendKamazonLandStartBattle"
+      ],
+      "literal_key_candidates": [
+        "Formation",
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/start-stage",
+      "client_methods": [
+        "SendKamazonLandStartStage"
+      ],
+      "literal_key_candidates": [
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/sweep",
+      "client_methods": [
+        "SendKamazonLandSweep"
+      ],
+      "literal_key_candidates": [
+        "count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/kamazonland/take-shelter",
+      "client_methods": [
+        "SendKamazonLandTakeShelter"
+      ],
+      "literal_key_candidates": [
+        "ChoiceType",
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/knight-training/claim-all",
+      "client_methods": [
+        "SendKnightTrainingClaimAll"
+      ],
+      "literal_key_candidates": [
+        "MissionIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/knight-training/claim-world-clear",
+      "client_methods": [
+        "SendKnightTrainingClaimWorldClear"
+      ],
+      "literal_key_candidates": [
+        "RewardId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/knight-training/set-cleared",
+      "client_methods": [
+        "SendKnightTrainingSetCleared"
+      ],
+      "literal_key_candidates": [
+        "MissionIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/buy-items-by-live-event-cash",
+      "client_methods": [
+        "SendBuyItemsByLiveEventCash"
+      ],
+      "literal_key_candidates": [
+        "BuyShopId",
+        "Count",
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/buy-items-by-web-event-cash",
+      "client_methods": [
+        "SendBuyItemsByWebEvent"
+      ],
+      "literal_key_candidates": [
+        "BuyShopId",
+        "Count",
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-all-live-point-rewards",
+      "client_methods": [
+        "SendClaimAllLivePointRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-all-web-point-rewards",
+      "client_methods": [
+        "SendClaimAllWebPointRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-attendance-day-rewards",
+      "client_methods": [
+        "SendClaimAttendanceDayRewards"
+      ],
+      "literal_key_candidates": [
+        "Day",
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-bingo-draw",
+      "client_methods": [
+        "SendClaimBingoDraw"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-bingo-fixed-draw",
+      "client_methods": [
+        "SendClaimBingoFixedDraw"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "Number"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-giant-gacha-machine-giveaway-reward",
+      "client_methods": [
+        "SendClaimGiantGachaMachineGiveawayRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "GiveawayId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-live-point-rewards",
+      "client_methods": [
+        "SendClaimLivePointRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "Step"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-marble-all-laps-rewards",
+      "client_methods": [
+        "SendClaimMarbleAllLapsRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-marble-draw",
+      "client_methods": [
+        "SendClaimMarbleDraw"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-marble-fixed-draw",
+      "client_methods": [
+        "SendClaimMarbleFixedDraw"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "Number"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-marble-laps-rewards",
+      "client_methods": [
+        "SendClaimMarbleLapsRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "laps"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-marble-monopoly-rewards",
+      "client_methods": [
+        "SendClaimMarbleMonopolyRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "TileType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-roadmap-point-remaining-rewards",
+      "client_methods": [
+        "SendClaimRoadmapPointRemainingRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-roadmap-point-rewards",
+      "client_methods": [
+        "SendClaimRoadmapPointRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "NodeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-roadmap-point-selected-rewards",
+      "client_methods": [
+        "SendClaimRoadmapPointSelectedRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "NodeIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/claim-web-point-rewards",
+      "client_methods": [
+        "SendClaimWebPointRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId",
+        "Step"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/enter",
+      "client_methods": [
+        "SendEnterLiveEvent"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/skip-bingo-round",
+      "client_methods": [
+        "SendSkipBingoRound"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/live-event/turntable-draw",
+      "client_methods": [
+        "SendTurntableDraw"
+      ],
+      "literal_key_candidates": [
+        "count",
+        "eventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/accept-complaints",
+      "client_methods": [
+        "SendLobbyVillageAcceptComplaints"
+      ],
+      "literal_key_candidates": [
+        "complaintIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/add-interaction-count",
+      "client_methods": [
+        "SendLobbyVillageAddInteractionCount"
+      ],
+      "literal_key_candidates": [
+        "complaintId",
+        "conditionKey",
+        "eventChoiceId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/buy-shop",
+      "client_methods": [
+        "SendBuyLobbyVillageShop"
+      ],
+      "literal_key_candidates": [
+        "amount",
+        "shopItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/change-basecamp-party",
+      "client_methods": [
+        "SendLobbyVillageBaseCampChangeParty"
+      ],
+      "literal_key_candidates": [
+        "characterIds",
+        "partyId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/change-building-asset",
+      "client_methods": [
+        "SendLobbyVillageChangeBuildingAsset"
+      ],
+      "literal_key_candidates": [
+        "assetIndex",
+        "buildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/charge-refuse-count",
+      "client_methods": [
+        "SendLobbyVillageChargeRefuseCount"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/claim-complete-complaints",
+      "client_methods": [
+        "SendLobbyVillageCompleteComplaints"
+      ],
+      "literal_key_candidates": [
+        "complaintIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/claim-service-point-rewards",
+      "client_methods": [
+        "SendLobbyVillageClaimServicePointRewards"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/deploy-characters",
+      "client_methods": [
+        "SendLobbyVillageDeployCharacters"
+      ],
+      "literal_key_candidates": [
+        "heroInfos",
+        "villagerInfos"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/enter",
+      "client_methods": [
+        "SendEnterLobbyVillage"
+      ],
+      "literal_key_candidates": [
+        "UserLobbyVillage",
+        "isPartial",
+        "lastLobbyShopUpdated"
+      ],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/lobby-village/enter-shop",
+      "client_methods": [
+        "SendEnterLobbyVillageShop"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/finish-dispatch",
+      "client_methods": [
+        "SendLobbyVillageFinishDispatch"
+      ],
+      "literal_key_candidates": [
+        "choiceId",
+        "dispatchBuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/harvest-all",
+      "client_methods": [
+        "SendLobbyVillageHarvestAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/harvest-basecamp",
+      "client_methods": [
+        "SendLobbyVillageHarvestBaseCamp"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/harvest-basecamp-ticket",
+      "client_methods": [
+        "SendLobbyVillageHarvestsBaseCampUseTicket"
+      ],
+      "literal_key_candidates": [
+        "count",
+        "itemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/harvest-inn-ticket",
+      "client_methods": [
+        "SendHarvestInnUseTicket"
+      ],
+      "literal_key_candidates": [
+        "count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/harvest-visitor",
+      "client_methods": [
+        "SendLobbyVillageHarvestVisitor"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/prepare-dispatch",
+      "client_methods": [
+        "SendLobbyVillagePrepareDispatch"
+      ],
+      "literal_key_candidates": [
+        "dispatchBuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/receive-gift",
+      "client_methods": [
+        "SendLobbyVillageRecvGift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/refresh-complaints",
+      "client_methods": [
+        "SendLobbyVillageRefreshComplaints"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/refuse-complaints",
+      "client_methods": [
+        "SendLobbyVillageRefuseComplaints"
+      ],
+      "literal_key_candidates": [
+        "complaintIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/remove-building",
+      "client_methods": [
+        "SendLobbyVillageRemoveBuilding"
+      ],
+      "literal_key_candidates": [
+        "buildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/remove-obstacle",
+      "client_methods": [
+        "SendLobbyVillageRemoveObstacle"
+      ],
+      "literal_key_candidates": [
+        "buildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/start-dispatch",
+      "client_methods": [
+        "SendLobbyVillageStartDispatch"
+      ],
+      "literal_key_candidates": [
+        "choiceId",
+        "dispatchBuildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/summon-settler",
+      "client_methods": [
+        "SendLobbyVillageSummonSettler"
+      ],
+      "literal_key_candidates": [
+        "itemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/summon-villager/v2",
+      "client_methods": [
+        "SendLobbyVillageSummonVillagerV2"
+      ],
+      "literal_key_candidates": [
+        "count",
+        "followerGroupId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/swap-building",
+      "client_methods": [
+        "SendLobbyVillageSwapBuilding"
+      ],
+      "literal_key_candidates": [
+        "buildingId1",
+        "buildingId2"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/unlock-basecamp-party",
+      "client_methods": [
+        "SendLobbyVillageBaseCampUnlockParty"
+      ],
+      "literal_key_candidates": [
+        "partyId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/unlock-building",
+      "client_methods": [
+        "SendLobbyVillageUnlockBuilding"
+      ],
+      "literal_key_candidates": [
+        "buildingSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/unlock-portal",
+      "client_methods": [
+        "SendLobbyVillageUnlockPortal"
+      ],
+      "literal_key_candidates": [
+        "buildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/upgrade-building",
+      "client_methods": [
+        "SendLobbyVillageUpgradeBuilding"
+      ],
+      "literal_key_candidates": [
+        "buildingId",
+        "buildingSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/upgrade-building-cancel",
+      "client_methods": [
+        "SendLobbyVillageUpgradeBuildingCancel"
+      ],
+      "literal_key_candidates": [
+        "buildingId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/upgrade-building-complete",
+      "client_methods": [
+        "SendLobbyVillageUpgradeBuildingComplete"
+      ],
+      "literal_key_candidates": [
+        "buildingId",
+        "quickComplete"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/lobby-village/upgrade-manufacture",
+      "client_methods": [
+        "SendUpgradeManufacture"
+      ],
+      "literal_key_candidates": [
+        "ManufactureType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/merch/enhance-merch/v2",
+      "client_methods": [
+        "SendEnhanceMerchV2"
+      ],
+      "literal_key_candidates": [
+        "ItemId",
+        "SourceItems",
+        "discountBuff"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/merch/sell/v2",
+      "client_methods": [
+        "SendSellMerchV2"
+      ],
+      "literal_key_candidates": [
+        "items"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mini-game/load",
+      "client_methods": [
+        "SendMiniGameLoad"
+      ],
+      "literal_key_candidates": [
+        "Type"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mini-game/save",
+      "client_methods": [
+        "SendMiniGameSave"
+      ],
+      "literal_key_candidates": [
+        "Data",
+        "Type"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mission/claim-beginner-all",
+      "client_methods": [
+        "SendClaimBeginnerList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/mission/claim-challenge-all",
+      "client_methods": [
+        "SendClaimChallengeList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/mission/claim-challenge-all-step",
+      "client_methods": [
+        "SendClaimChallengeListAllStep"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mission/claim-compass-all",
+      "client_methods": [
+        "SendClaimCompassList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mission/claim-compass-step",
+      "client_methods": [
+        "SendClaimCompassStep"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mission/claim-daily-all",
+      "client_methods": [
+        "SendClaimDailyList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mission/claim-daily-reward",
+      "client_methods": [
+        "SendClaimDailyReward"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mission/claim-event-all",
+      "client_methods": [
+        "SendClaimEventList"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/mission/get-user-mission",
+      "client_methods": [
+        "SendGetUserMission"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/my-room/buy-item",
+      "client_methods": [
+        "SendMyRoomBuyItem"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/my-room/changes",
+      "client_methods": [
+        "SendMyRoomChanges"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/my-room/claim-friendship-reward",
+      "client_methods": [
+        "SendClaimFriendShipReward"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/my-room/enter",
+      "client_methods": [
+        "SendMyRoomEnter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/my-room/mark-favorites-music",
+      "client_methods": [
+        "SendMyRoomMarkFavoritesMusic"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/my-room/visitor-gifts",
+      "client_methods": [
+        "SendVisitorGifts"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/party/get-presets",
+      "client_methods": [
+        "SendPresetGetAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/bond-monster",
+      "client_methods": [
+        "SendPastureBondMonster"
+      ],
+      "literal_key_candidates": [
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/bond-monster-all",
+      "client_methods": [
+        "SendPastureBondMonsterAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/change-accessory",
+      "client_methods": [
+        "SendPastureChangeAccessory"
+      ],
+      "literal_key_candidates": [
+        "AccessorySpecId",
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/change-observation-building",
+      "client_methods": [
+        "SendPastureChangeObservationBuilding"
+      ],
+      "literal_key_candidates": [
+        "Buildings"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/claim-affinity-reward",
+      "client_methods": [
+        "SendPastureClaimAffinityReward"
+      ],
+      "literal_key_candidates": [
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/collection-all",
+      "client_methods": [
+        "SendPastureCollectionAll"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/pasture/collection-claim-monsters",
+      "client_methods": [
+        "SendPastureClaimMonsters"
+      ],
+      "literal_key_candidates": [
+        "IsMax",
+        "MonsterSpecIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/donate",
+      "client_methods": [
+        "SendPastureDonate"
+      ],
+      "literal_key_candidates": [
+        "Amount",
+        "ItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/enter",
+      "client_methods": [
+        "SendPastureEnter"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserPasture"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/feed-monster",
+      "client_methods": [
+        "SendPastureFeedMonster"
+      ],
+      "literal_key_candidates": [
+        "FoodId",
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/feed-monster/v2",
+      "client_methods": [
+        "SendPastureFeedMonsterV2"
+      ],
+      "literal_key_candidates": [
+        "Amount",
+        "FoodId",
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/giveaway-monster",
+      "client_methods": [
+        "SendPastureGiveawayMonster"
+      ],
+      "literal_key_candidates": [
+        "MonsterIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/interact-observation-building",
+      "client_methods": [
+        "SendPastureInteractObservationBuilding"
+      ],
+      "literal_key_candidates": [
+        "BuildingSpecId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/pray-monster/v2",
+      "client_methods": [
+        "SendPasturePrayMonsterV2"
+      ],
+      "literal_key_candidates": [
+        "PrayRarity"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/record-score",
+      "client_methods": [
+        "SendPastureRecordScore"
+      ],
+      "literal_key_candidates": [
+        "Score"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/reject-monster",
+      "client_methods": [
+        "SendPastureRejectMonster"
+      ],
+      "literal_key_candidates": [
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/release-monster",
+      "client_methods": [
+        "SendPastureReleaseMonster"
+      ],
+      "literal_key_candidates": [
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/tutorial",
+      "client_methods": [
+        "SendPastureTutorial"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/upgrade-building",
+      "client_methods": [
+        "SendPastureUpgradeBuilding"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/upgrade-npc",
+      "client_methods": [
+        "SendPastureUpgradeNpc"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/pasture/visit-monster",
+      "client_methods": [
+        "SendPastureVisitMonster"
+      ],
+      "literal_key_candidates": [
+        "MonsterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/delete-character-list-preset",
+      "client_methods": [
+        "SendDeleteCharacterListPreset"
+      ],
+      "literal_key_candidates": [
+        "PresetId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/delete-multi-party-preset",
+      "client_methods": [
+        "SendDeleteMultiPartyPreset"
+      ],
+      "literal_key_candidates": [
+        "PresetId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/delete-preset",
+      "client_methods": [
+        "SendDeletePartyPreset"
+      ],
+      "literal_key_candidates": [
+        "PresetId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/get-presets",
+      "client_methods": [
+        "SendGetAllPresets"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/preset/get-presets-from-type",
+      "client_methods": [
+        "SendGetPresetsFromType"
+      ],
+      "literal_key_candidates": [
+        "PresetType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/reorder-preset",
+      "client_methods": [
+        "SendReorderPreset"
+      ],
+      "literal_key_candidates": [
+        "Order",
+        "PresetType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/set-character-list-preset",
+      "client_methods": [
+        "SendSetCharacterListPreset"
+      ],
+      "literal_key_candidates": [
+        "CharacterListPreset",
+        "SetSelected"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/set-multi-party-preset",
+      "client_methods": [
+        "SendSetMultiPartyPreset"
+      ],
+      "literal_key_candidates": [
+        "MultiPartyPreset",
+        "SetSelected"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/set-presets",
+      "client_methods": [
+        "SendSetPartyPreset"
+      ],
+      "literal_key_candidates": [
+        "PartyPreset",
+        "SetSelected"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/preset/set-selected-preset",
+      "client_methods": [
+        "SendSetSelectedPreset"
+      ],
+      "literal_key_candidates": [
+        "PresetId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/return-event/claim-day-rewards",
+      "client_methods": [
+        "SendReturnEventClaimDayRewards"
+      ],
+      "literal_key_candidates": [
+        "day"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/return-event/claim-mission",
+      "client_methods": [
+        "SendReturnEventClaimMission"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/return-event/claim-point-rewards",
+      "client_methods": [
+        "SendReturnEventClaimPointRewards"
+      ],
+      "literal_key_candidates": [
+        "amount",
+        "rewardId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/add-loss-time",
+      "client_methods": [
+        "SendAddRiftLossTime"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/beat-monsters/v3",
+      "client_methods": [
+        "SendAllBeatenMonsters"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/buy-gnome-gold-dungeon-ticket",
+      "client_methods": [
+        "SendBuyGnomeGoldDungeonTicket"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/clear-stage/v2",
+      "client_methods": [
+        "SendClearRift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/end-stage",
+      "client_methods": [
+        "SendEndRift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/enter",
+      "client_methods": [
+        "SendEnterRift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/open-stage/v3",
+      "client_methods": [
+        "SendOpenRift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/reset-playcount",
+      "client_methods": [
+        "SendEventRiftResetPlayCount"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/set-evolvestone-reward",
+      "client_methods": [
+        "SendSetEvolveStoneReward"
+      ],
+      "literal_key_candidates": [
+        "RiftEvolveStoneReward",
+        "RiftRewardType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/start-stage",
+      "client_methods": [
+        "SendStartRift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rift/sweep-stage/v2",
+      "client_methods": [
+        "SendSweepRift"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/end-stage",
+      "client_methods": [
+        "SendRogueChessEndStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/enter",
+      "client_methods": [
+        "SendEnterRogueChess"
+      ],
+      "literal_key_candidates": [
+        "UserRogueChess"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/get-rank",
+      "client_methods": [
+        "SendRogueChessGetRankNew"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/mark-narrative",
+      "client_methods": [
+        "SendRogueChessMarkNarrative"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/reward-narrative",
+      "client_methods": [
+        "SendRogueChessRewardNarrative"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/set-ability",
+      "client_methods": [
+        "SendRogueChessSetAbility"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/set-artifact-spell",
+      "client_methods": [
+        "SendRogueChessSetArtifactSpell"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/start-stage",
+      "client_methods": [
+        "SendRogueChessStartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/rogue-chess3/sweep/v2",
+      "client_methods": [
+        "SendRogueChessSweepStage2"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/buy-heavenholdfarmshop-item",
+      "client_methods": [
+        "SendBuyHeavenHoldFarmShopItem"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "ShopItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/buy-heavenholdshop-item",
+      "client_methods": [
+        "SendBuyHeavenHoldShopItem"
+      ],
+      "literal_key_candidates": [
+        "Amount",
+        "ShopItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/buy-lobbyshop-item",
+      "client_methods": [
+        "SendBuyLobbyShopItem"
+      ],
+      "literal_key_candidates": [
+        "Amount",
+        "SelectedCustomPackageIds",
+        "ShopItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/buy-random-set-costume",
+      "client_methods": [
+        "SendBuyRandomSetCostume"
+      ],
+      "literal_key_candidates": [
+        "BuyId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/claim-subscribe",
+      "client_methods": [
+        "SendClaimSubscribe"
+      ],
+      "literal_key_candidates": [
+        "ShopItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/enter",
+      "client_methods": [
+        "SendEnterShop"
+      ],
+      "literal_key_candidates": [
+        "LastUpdated"
+      ],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/shop/enter-heavenholdfarmshop",
+      "client_methods": [
+        "SendEnterHeavenHoldFarmShop"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/enter-heavenholdshop",
+      "client_methods": [
+        "SendEnterHeavenHoldShop"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/fallback-invoice-cashshop-item",
+      "client_methods": [
+        "SendInvoiceCashShopItem"
+      ],
+      "literal_key_candidates": [
+        "BuyOptions",
+        "ProductId",
+        "StoreType",
+        "Token"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/get-random-set-costume",
+      "client_methods": [
+        "SendGetRandomSetCostume"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/shop/get-sales-lobbyshop",
+      "client_methods": [
+        "SendGetSalesLobbyShop"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/shop/invoice-cashshop-item",
+      "client_methods": [
+        "SendInvoiceCashShopItem"
+      ],
+      "literal_key_candidates": [
+        "BuyOptions",
+        "ProductId",
+        "StoreType",
+        "Token"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/reserve-cashshop-item",
+      "client_methods": [
+        "SendReserveCashShopItem"
+      ],
+      "literal_key_candidates": [
+        "BuyOptions",
+        "ProductId",
+        "StoreType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/shop/set-user-age",
+      "client_methods": [
+        "SendSetUserAge"
+      ],
+      "literal_key_candidates": [
+        "age"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/challenge",
+      "client_methods": [
+        "SendSingleRaidChallenge"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/claim-rewards",
+      "client_methods": [
+        "SendSingleRaidClaimRewards"
+      ],
+      "literal_key_candidates": [
+        "Steps"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/conclude",
+      "client_methods": [
+        "SendSingleRaidConclude"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/end-practice",
+      "client_methods": [
+        "SendSingleRaidEndPractice"
+      ],
+      "literal_key_candidates": [
+        "ChallengeId",
+        "Damages",
+        "ElapsedMilliseconds",
+        "Rules"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/end-stage",
+      "client_methods": [
+        "SendSingleRaidEndStage"
+      ],
+      "literal_key_candidates": [
+        "Abandoned",
+        "Damages",
+        "ElapsedMilliseconds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/enter",
+      "client_methods": [
+        "SendEnterSingleRaid"
+      ],
+      "literal_key_candidates": [
+        "IsPartial",
+        "UserSingleRaid"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/get-rankings",
+      "client_methods": [
+        "SendSingleRaidGetRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/set-rules",
+      "client_methods": [
+        "SendSingleRaidSetRules"
+      ],
+      "literal_key_candidates": [
+        "BossId",
+        "Rules",
+        "Step"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/start-practice",
+      "client_methods": [
+        "SendSingleRaidStartPractice"
+      ],
+      "literal_key_candidates": [
+        "ChallengeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/single-raid/start-stage",
+      "client_methods": [
+        "SendSingleRaidStartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/add-follower",
+      "client_methods": [
+        "SendAddFollower"
+      ],
+      "literal_key_candidates": [
+        "FollowerId",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/beat-monsters",
+      "client_methods": [
+        "SendBeatMonsters"
+      ],
+      "literal_key_candidates": [
+        "MonsterHandleNames",
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/clear-quest",
+      "client_methods": [
+        "SendClearQuest"
+      ],
+      "literal_key_candidates": [
+        "Grade",
+        "QuestId",
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/enable-radar",
+      "client_methods": [
+        "SendEnableRadar"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/end-stage",
+      "client_methods": [
+        "SendEndStage"
+      ],
+      "literal_key_candidates": [
+        "ExitName",
+        "IsClearExit",
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/get-rankings",
+      "client_methods": [
+        "SendGetStageRankings"
+      ],
+      "literal_key_candidates": [
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/get-stage-progresses",
+      "client_methods": [
+        "SendGetStageProgresses"
+      ],
+      "literal_key_candidates": [
+        "ChapterCode"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/insert-stone-piece",
+      "client_methods": [
+        "SendInsertStonePiece"
+      ],
+      "literal_key_candidates": [
+        "StageCustom",
+        "StageId",
+        "StonePieceItemId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/interact-substage-item",
+      "client_methods": [
+        "SendInteractSubStageItem"
+      ],
+      "literal_key_candidates": [
+        "StageId",
+        "handleName"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/open-treasure",
+      "client_methods": [
+        "SendOpenTreasureBox"
+      ],
+      "literal_key_candidates": [
+        "StageCustom",
+        "StageId",
+        "TreasureBoxKey"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/pay-gold",
+      "client_methods": [
+        "SendPayGold"
+      ],
+      "literal_key_candidates": [
+        "Gold",
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/pay-items",
+      "client_methods": [
+        "SendPayItems"
+      ],
+      "literal_key_candidates": [
+        "StageCustom",
+        "StageId",
+        "UseItems"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/pick-stage-coins",
+      "client_methods": [
+        "SendPickStageCoins"
+      ],
+      "literal_key_candidates": [
+        "Items",
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/pick-stage-item",
+      "client_methods": [
+        "SendPickStageItem"
+      ],
+      "literal_key_candidates": [
+        "StageCustom",
+        "StageId",
+        "StageItemKey"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/progress-quest",
+      "client_methods": [
+        "SendProgressQuest"
+      ],
+      "literal_key_candidates": [
+        "InnerProgress",
+        "QuestId",
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/revive-game-over",
+      "client_methods": [
+        "SendStageReviveGameOver"
+      ],
+      "literal_key_candidates": [
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/set-custom",
+      "client_methods": [
+        "SendSetCustom"
+      ],
+      "literal_key_candidates": [
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/set-quest-custom-state",
+      "client_methods": [
+        "SendSetQuestCustomState"
+      ],
+      "literal_key_candidates": [
+        "CustomState",
+        "QuestId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/stage/start-quest",
+      "client_methods": [
+        "SendStartQuest"
+      ],
+      "literal_key_candidates": [
+        "QuestId",
+        "StageCustom",
+        "StageId"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/start-stage",
+      "client_methods": [
+        "SendStartStage"
+      ],
+      "literal_key_candidates": [
+        "StageId"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/stage/start-timer",
+      "client_methods": [
+        "SendStartTimer"
+      ],
+      "literal_key_candidates": [
+        "StageId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/static-data/check-update",
+      "client_methods": [
+        "SendCheckUpdate"
+      ],
+      "literal_key_candidates": [
+        "Checksum"
+      ],
+      "server_dispatch": "bootstrap"
+    },
+    {
+      "route": "/static-data/device-specific-settings",
+      "client_methods": [
+        "SendGetDeviceSpecificSettings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/static-data/get",
+      "client_methods": [
+        "SendGetStaticData"
+      ],
+      "literal_key_candidates": [
+        "ClientVersions"
+      ],
+      "server_dispatch": "bootstrap"
+    },
+    {
+      "route": "/static-data/in-app-product-ids",
+      "client_methods": [
+        "SendGetInAppProductIds"
+      ],
+      "literal_key_candidates": [
+        "StoreType"
+      ],
+      "server_dispatch": "bootstrap"
+    },
+    {
+      "route": "/static-data/resource-url",
+      "client_methods": [
+        "SendGetResourceUrl"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "bootstrap"
+    },
+    {
+      "route": "/summon/character",
+      "client_methods": [
+        "SendSummonCharacter"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "IsPickUp",
+        "PickUpKey",
+        "SummonCostType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/claim-festival-event-rewards",
+      "client_methods": [
+        "SendClaimFestivalEventRewards"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/claim-start-dash-rewards",
+      "client_methods": [
+        "SendClaimStartDashRewards"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/enter",
+      "client_methods": [
+        "SendEnterSummon"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/summon/history",
+      "client_methods": [
+        "SendSummonHistory"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/on-event",
+      "client_methods": [
+        "SendOnEvent"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "lobby"
+    },
+    {
+      "route": "/summon/paid-gem-step-up-event-character",
+      "client_methods": [
+        "SendSummonPaidGemStepUpEventCharacter"
+      ],
+      "literal_key_candidates": [
+        "SeasonId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/select-character",
+      "client_methods": [
+        "SendSummonSelectCharacter"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "SummonCostType"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/summon/select-weapon",
+      "client_methods": [
+        "SendSummonSelectWeapon"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "SummonCostType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/set-select-character",
+      "client_methods": [
+        "SendSummonSetSelectCharacter"
+      ],
+      "literal_key_candidates": [
+        "RequestOriginIds"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/summon/set-select-weapon",
+      "client_methods": [
+        "SendSummonSetSelectWeapon"
+      ],
+      "literal_key_candidates": [
+        "RequestItemIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/start-dash-character",
+      "client_methods": [
+        "SendSummonStartDashCharacter"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "SummonCostType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/use-collaboration-pickup-ticket",
+      "client_methods": [
+        "SendSummonUseCollaborationPickUpTicket"
+      ],
+      "literal_key_candidates": [
+        "CollaborationId",
+        "SpecId",
+        "SummonType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/use-pickup-ticket",
+      "client_methods": [
+        "SendSummonUsePickUpTicket"
+      ],
+      "literal_key_candidates": [
+        "PickUpKey",
+        "SpecId",
+        "SummonType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/summon/weapon",
+      "client_methods": [
+        "SendSummonWeapon"
+      ],
+      "literal_key_candidates": [
+        "Count",
+        "IsPickUp",
+        "PickUpKey",
+        "SummonCostType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/test/echo",
+      "client_methods": [
+        "SendUserKickByBadNetworkCondition"
+      ],
+      "literal_key_candidates": [
+        "ContinuedBadConnections",
+        "InputBlockCount",
+        "LastRtt",
+        "NonAcceptableRttCount",
+        "Reason",
+        "ReportTime",
+        "Rtt_Max",
+        "Rtt_Mean",
+        "Rtt_StdDev",
+        "UUID"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower-infinity/end-stage",
+      "client_methods": [
+        "SendTowerInfinityEndStage"
+      ],
+      "literal_key_candidates": [
+        "damages",
+        "floor",
+        "isCleared"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower-infinity/enter",
+      "client_methods": [
+        "SendTowerInfinityEnter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower-infinity/get-my-ranking",
+      "client_methods": [
+        "SendTowerInfinityGetMyRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower-infinity/get-rankings",
+      "client_methods": [
+        "SendTowerInfinityGetRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower-infinity/save-formation",
+      "client_methods": [
+        "SendTowerInfinitySaveFormation"
+      ],
+      "literal_key_candidates": [
+        "Positions"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower-infinity/start-stage",
+      "client_methods": [
+        "SendTowerInfinityStartStage"
+      ],
+      "literal_key_candidates": [
+        "floor",
+        "presetId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower/clear-stage/v3",
+      "client_methods": [
+        "SendTowerClearStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower/end-stage",
+      "client_methods": [
+        "SendTowerEndStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower/enter",
+      "client_methods": [
+        "SendTowerEnter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower/open-stage",
+      "client_methods": [
+        "SendTowerOpenStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/tower/start-stage",
+      "client_methods": [
+        "SendTowerStartStage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/training-room/enter",
+      "client_methods": [
+        "SendTrainingRoomEnter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/training-room/join/v2",
+      "client_methods": [
+        "SendTrainingRoomJoinV2"
+      ],
+      "literal_key_candidates": [
+        "Id",
+        "SlotId",
+        "SlotType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/training-room/leave",
+      "client_methods": [
+        "SendTrainingRoomLeave"
+      ],
+      "literal_key_candidates": [
+        "SlotId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/training-room/reactivate",
+      "client_methods": [
+        "SendTrainingRoomReactivate"
+      ],
+      "literal_key_candidates": [
+        "SlotId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/training-room/reactivate/v2",
+      "client_methods": [
+        "SendTrainingRoomReactivateV2"
+      ],
+      "literal_key_candidates": [
+        "SlotId",
+        "UseTicket"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/training-room/unlock",
+      "client_methods": [
+        "SendTrainingRoomUnlock"
+      ],
+      "literal_key_candidates": [
+        "OptionType",
+        "SlotId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/unexplored-expedition/buy-shop-item",
+      "client_methods": [
+        "SendUnexploredExpeditionBuyShopItem"
+      ],
+      "literal_key_candidates": [
+        "ShopId",
+        "count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/unexplored-expedition/claim-rank-reward",
+      "client_methods": [
+        "SendUnexploredExpeditionClaimRankReward"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/unexplored-expedition/end-battle",
+      "client_methods": [
+        "SendUnexploredExpeditionEndBattle"
+      ],
+      "literal_key_candidates": [
+        "KillScore",
+        "PartySwitchingCount",
+        "PlayTime",
+        "Survivors"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/unexplored-expedition/enter",
+      "client_methods": [
+        "SendEnterUnexploredExpedition"
+      ],
+      "literal_key_candidates": [
+        "IsPartial"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/unexplored-expedition/get-my-ranking",
+      "client_methods": [
+        "SendUnexploredExpeditionGetMyRanking"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/unexplored-expedition/get-top-rankings",
+      "client_methods": [
+        "SendUnexploredExpeditionGetTopRankings"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/add-character-experience",
+      "client_methods": [
+        "SendAddCharacterExperience"
+      ],
+      "literal_key_candidates": [
+        "Experiences"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/user/ascend-character",
+      "client_methods": [
+        "SendAscendCharacter"
+      ],
+      "literal_key_candidates": [
+        "CharacterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/bless-character",
+      "client_methods": [
+        "SendBlessCharacter"
+      ],
+      "literal_key_candidates": [
+        "CharacterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/bless-character-all",
+      "client_methods": [
+        "SendBlessCharacterAll"
+      ],
+      "literal_key_candidates": [
+        "CharacterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-accessory",
+      "client_methods": [
+        "SendChangeAccessory"
+      ],
+      "literal_key_candidates": [
+        "Accessory1",
+        "CharacterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-characters-equipments",
+      "client_methods": [
+        "SendChangeCharactersEquipments"
+      ],
+      "literal_key_candidates": [
+        "equipInfos"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-costume",
+      "client_methods": [
+        "SendChangeCostume"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "Costume"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-equip-costume",
+      "client_methods": [
+        "SendChangeEquipCostume"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "EquipCostume",
+        "WeaponType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-gender",
+      "client_methods": [
+        "SendChangeGender"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "VoiceType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-merch",
+      "client_methods": [
+        "SendChangeMerch"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "Merch"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-name",
+      "client_methods": [
+        "SendChangeName"
+      ],
+      "literal_key_candidates": [
+        "Name"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-orb",
+      "client_methods": [
+        "SendChangeOrb"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "Orb",
+        "Slot"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-party-member/v2",
+      "client_methods": [
+        "SendChangePartyMemberV2"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "Index"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-relic",
+      "client_methods": [
+        "SendChangeRelic"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "Relic"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-sprite-rank",
+      "client_methods": [
+        "SendChangeSpriteRank"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "SpriteRank"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-voice",
+      "client_methods": [
+        "SendChangeVoice"
+      ],
+      "literal_key_candidates": [
+        "VoiceType"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/change-weapons",
+      "client_methods": [
+        "SendChangeWeapons"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "Weapon1",
+        "Weapon2"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/charge-stamina",
+      "client_methods": [
+        "SendChargeStamina"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/charge-stamina-by-gem",
+      "client_methods": [
+        "SendChargeStaminaByGem"
+      ],
+      "literal_key_candidates": [
+        "Count"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/claim-chapter-progress-rewards",
+      "client_methods": [
+        "SendClaimChapterProgressRewards"
+      ],
+      "literal_key_candidates": [
+        "ChapterCode"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/claim-daily-attendance",
+      "client_methods": [
+        "SendClaimDailyAttendance"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/user/claim-one-act-play-rewards",
+      "client_methods": [
+        "SendClaimOneActPlayRewards"
+      ],
+      "literal_key_candidates": [
+        "OneActPlayId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/claim-sns-follower-rewards",
+      "client_methods": [
+        "SendClaimSnsFollowerRewards"
+      ],
+      "literal_key_candidates": [
+        "SnsFollowerRewardId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/claim-survey-rewards",
+      "client_methods": [
+        "SendClaimSurveyRewards"
+      ],
+      "literal_key_candidates": [
+        "SurveyId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/claim-unlock-feature-rewards",
+      "client_methods": [
+        "SendClaimUnlockFeatureRewards"
+      ],
+      "literal_key_candidates": [
+        "Feature"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/evolve-character/v2",
+      "client_methods": [
+        "SendEvolveCharacter"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "DreamSpiritStoneUsageAmount",
+        "UpgradeCount"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/exchange-coop-expedition-coin",
+      "client_methods": [
+        "SendExchangeCoopExpeditionCoin"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/exchange-mileage",
+      "client_methods": [
+        "SendExchangeMileage"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/exchange-summon-pickup-ticket",
+      "client_methods": [
+        "SendExchangeSummonPickUpTicket"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/user/expand-inventory",
+      "client_methods": [
+        "SendExpandInventory"
+      ],
+      "literal_key_candidates": [
+        "TargetStep"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/fix-character-equipments",
+      "client_methods": [
+        "SendUserFixCharacterEquipments"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/get-user-profile-card",
+      "client_methods": [
+        "SendGetUserProfileCard"
+      ],
+      "literal_key_candidates": [
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/get-web-event-token",
+      "client_methods": [
+        "SendGetWebEventToken"
+      ],
+      "literal_key_candidates": [
+        "EventId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/guardian-level-up",
+      "client_methods": [
+        "SendGuardianLevelUp"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/limitbreak-character/v2",
+      "client_methods": [
+        "SendLimitBreakCharacter"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "LimitBreakCount"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/mark-tutorial",
+      "client_methods": [
+        "SendMarkTutorial"
+      ],
+      "literal_key_candidates": [
+        "tutorialIds"
+      ],
+      "server_dispatch": "account"
+    },
+    {
+      "route": "/user/myth-character/v2",
+      "client_methods": [
+        "SendMythCharacter"
+      ],
+      "literal_key_candidates": [
+        "CharacterId",
+        "DreamMythStoneUsageAmount"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/open-profile-sticker-pack",
+      "client_methods": [
+        "SendOpenStickerPack"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/report",
+      "client_methods": [
+        "SendReportUser"
+      ],
+      "literal_key_candidates": [
+        "detail",
+        "isRisk",
+        "reason"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/save-party-member/v2",
+      "client_methods": [
+        "SendSavePartyMemberV2"
+      ],
+      "literal_key_candidates": [
+        "CharacterIds"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/select-representative-character",
+      "client_methods": [
+        "SendSelectRepresentativeCharacter"
+      ],
+      "literal_key_candidates": [
+        "CharacterId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/set-portrait-frame",
+      "client_methods": [
+        "SendSetPortraitFrame"
+      ],
+      "literal_key_candidates": [
+        "FrameId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/set-profile-badge",
+      "client_methods": [
+        "SendSetProfileBadge"
+      ],
+      "literal_key_candidates": [
+        "BadgeId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/set-profile-board",
+      "client_methods": [
+        "SendSetProfileStickerBoard"
+      ],
+      "literal_key_candidates": [
+        "boardId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/set-profile-stickers",
+      "client_methods": [
+        "SendSetProfileStickers"
+      ],
+      "literal_key_candidates": [
+        "stickers"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/user/use-stamina-pieces",
+      "client_methods": [
+        "SendUseStaminaPieces"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/web-event/invoke",
+      "client_methods": [
+        "SendWebEventInvoke"
+      ],
+      "literal_key_candidates": [
+        "Action",
+        "Params",
+        "UserId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/worldclearpass/claim-all",
+      "client_methods": [
+        "SendWorldClearPassClaimAll"
+      ],
+      "literal_key_candidates": [
+        "CustomGoldRewardIndexes",
+        "PartId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/worldclearpass/claim/v2",
+      "client_methods": [
+        "SendWorldClearPassClaim"
+      ],
+      "literal_key_candidates": [
+        "Index",
+        "IsGold",
+        "Level",
+        "PartId"
+      ],
+      "server_dispatch": "absent"
+    },
+    {
+      "route": "/worldclearpass/enter",
+      "client_methods": [
+        "SendWorldClearPassEnter"
+      ],
+      "literal_key_candidates": [],
+      "server_dispatch": "absent"
+    }
+  ]
+}
