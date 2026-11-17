@@ -375,7 +375,7 @@ def main(argv=None):
                 )
             try:
                 bridge.start()
-                print("BRIDGE READY: local routing/trust active. Follow the client guide's next step.", flush=True)
+                print("BRIDGE READY: follow the client guide for the next step.", flush=True)
                 print(
                     "External instance traffic is blocked. Ctrl+C restores routing/trust; closing MuMu also ends this bridge.",
                     flush=True,
