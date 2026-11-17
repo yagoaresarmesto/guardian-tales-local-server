@@ -1,0 +1,19 @@
+{
+  "groups": {
+    "200": {
+      "condition": "owned_heroes",
+      "steps": [
+        {"threshold": 1, "rewards": [{"item_id": 70003, "amount": 50}]},
+        {"threshold": 2, "rewards": [{"item_id": 70003, "amount": 7}]},
+        {"threshold": 4, "rewards": [{"item_id": 70003, "amount": 11}]}
+      ]
+    },
+    "901": {
+      "condition": "hero_draws",
+      "steps": [
+        {"threshold": 2, "rewards": [{"item_id": 70004, "amount": 13}]},
+        {"threshold": 5, "rewards": [{"item_id": 70004, "amount": 17}]}
+      ]
+    }
+  }
+}

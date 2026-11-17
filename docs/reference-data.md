@@ -35,6 +35,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `summon_draw_catalog.json` | Local hero draw costs, pools and duplicate rewards | Explicit local category weights, matching hero definitions and currency identifiers |
 | `beginner_mission_catalog.json` | Hero-draw beginner milestones | Public mission IDs, required draw counts and supported asset/stackable rewards |
 | `stamina_purchase_catalog.json` | Free-gem purchases of stored stamina | Matching public amount, price tiers, storage ceiling and type-9 daily limit |
+| `challenge_mission_catalog.json` | Hero collection/draw challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -215,6 +216,40 @@ catalog, only the three built-in missions are supported.
 The prepared private catalog has 11 hero-draw milestones from the matching
 client's public mission data, with thresholds between 1 and 50. This covers one
 mission type; other beginner conditions remain unfinished.
+
+## Challenge reward steps
+
+The optional `challenge_mission_catalog.json` contains a `groups` object keyed
+by positive decimal group ID. Each group has a `condition` and ordered `steps`;
+each step has an increasing positive `threshold` and a `rewards` list containing
+positive `item_id`/`amount` pairs. List position determines step number, starting
+at one. See the [synthetic fixture](../tests/fixtures/challenge_mission_catalog.json).
+Only existing account asset rewards are supported.
+
+Conditions currently supported are `owned_heroes`, which counts saved
+`User.Characters` entries as the native mission helper does, and `hero_draws`,
+which reads saved `UserRecord.SummonCharacterCount`. Other condition types need
+their own evaluation rules. The prepared catalog has 100 steps each for public
+groups 200 and 206; the repository does not distribute those full game tables.
+
+Both routes accept exactly `{"missionIds": [group_ids]}`. With the external
+catalog, `/mission/claim-challenge-all` awards at most one new eligible step per
+group; `/mission/claim-challenge-all-step` awards every consecutively earned
+remaining step. IDs are deduplicated. An unknown group or a never-started group
+with no completed step rejects the entire batch. Already claimed groups can
+contribute no new reward. Saved claim markers must match contiguous per-step
+receipts, including the old group-200 first-step receipt.
+
+All new asset rewards, step markers, per-step receipts and a request receipt
+commit in one transaction. A reconnect retry returns frozen reward notices with
+current `User`/`UserMission`, without granting again or restoring spent rewards.
+Changing the groups or next/all-step mode under an existing operation ID fails.
+Fresh logins use a new epoch; the existing ambiguity around stale requests
+across fresh logins also applies here. Receipted retries survive catalog removal.
+
+Without the external catalog, the original first-knight/group-200 step-1
+fallback remains available on the next-step route. It does not extend to later
+steps or a larger roster. The all-step route requires an explicit catalog.
 
 ## Gem stamina purchases
 

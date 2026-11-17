@@ -305,9 +305,16 @@ class BootstrapSession:
                     return json_response(request, self.store.account.claim_beginner_missions(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == "/mission/claim-challenge-all":
+            if route in ("/mission/claim-challenge-all", "/mission/claim-challenge-all-step"):
                 try:
-                    return json_response(request, self.store.account.claim_challenge_missions(body))
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request,
+                        self.store.account.claim_challenge_missions(
+                            body, operation_id, route == "/mission/claim-challenge-all-step"
+                        ),
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/guardian-pass/claim-all":

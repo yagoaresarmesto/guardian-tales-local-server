@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **162 passing tests**, including eighteen first-chapter entry/progress
+The suite has **175 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -17,6 +17,9 @@ catalogs, authentication, overflow and transaction rollback.
 Twelve stamina-purchase regressions cover tiered batches, free-gem spending,
 storage/quota limits, UTC resets, receipt persistence after reopening/spending,
 catalog validation, authentication/reconnect and failed-write rollback.
+Thirteen challenge-batch regressions cover legacy claim preservation, next/all
+steps, distinct request identity, persisted retries, malformed/incomplete groups,
+catalogs, balance overflow, contiguous receipts and transaction rollback.
 Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
 sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
@@ -449,6 +452,21 @@ receipts saved, spending 8,000 gems for 1,000 stored stamina and reaching the
 reported balances, heroes, inventory, quests, stages, passes and prior receipts
 were preserved. The client proceeded to `/mission/claim-challenge-all-step`
 for groups 200 and 206, which is the next unsupported operation.
+
+That challenge request exposed the first-step-only handler's scope. The new
+catalog engine evaluates owned heroes and saved hero draws, grants either the
+next eligible step or all consecutively earned steps, and preserves existing
+per-step receipts. The all-step route and next-step route now share batch
+validation, atomic rewards and frozen request receipts. Without an external
+catalog the original first-knight fallback retains its earlier behavior.
+
+The matching public data has 100 steps in each requested group. With 26 owned
+heroes and 34 draws, the saved account has earned hero-collection steps 2 through
+26 and hero-draw steps 1 through 3. Step 1 of collection was already claimed.
+The pending batch therefore qualifies for 1,250 gems and 30,000 experience.
+All 175 tests, Black and Ruff pass. Deployment preserved the complete profile;
+the original APK retry is pending. Other challenge conditions, inventory rewards,
+daily/event missions and compass rules remain unfinished.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

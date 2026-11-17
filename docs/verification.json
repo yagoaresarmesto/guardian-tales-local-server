@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 162,
+    "tests_run": 175,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -707,6 +707,27 @@
     "post_purchase_stored_stamina": 1115,
     "post_purchase_daily_count": 20,
     "other_reported_progress_and_prior_receipts_preserved": true,
-    "next_boundary": "mission/claim-challenge-all-step for groups 200 and 206"
+    "next_boundary": "mission/claim-challenge-all-step for groups 200 and 206; subsequently implemented below"
+  },
+  "challenge_batch_update": {
+    "date": "2026-11-17",
+    "routes": ["/mission/claim-challenge-all", "/mission/claim-challenge-all-step"],
+    "observed_request": {"missionIds": [200, 206]},
+    "scope": "Catalog-backed owned-hero and hero-draw conditions, contiguous next/all-earned-step claims and atomic per-step/per-request receipts; other conditions and non-asset rewards unsupported.",
+    "prepared_groups": [200, 206],
+    "prepared_steps_per_group": 100,
+    "saved_owned_heroes": 26,
+    "saved_hero_draws": 34,
+    "previous_collection_claimed_step": 1,
+    "expected_collection_claimed_step": 26,
+    "expected_hero_draw_claimed_step": 3,
+    "expected_new_gems": 1250,
+    "expected_new_experience": 30000,
+    "automated_test_result": "PASS",
+    "automated_tests_run": 175,
+    "additional_challenge_batch_regressions": 13,
+    "legacy_next_all_mode_retry_identity_progress_validation_and_rollback_checked": true,
+    "profile_unchanged_across_backend_deployment": true,
+    "original_apk_batch_confirmed": false
   }
 }

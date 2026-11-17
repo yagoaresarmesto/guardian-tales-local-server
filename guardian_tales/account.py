@@ -28,6 +28,7 @@ from .campaign import (
     encode_stage_progress,
     initial_stage_progresses,
 )
+from .challenges import claim_challenges
 from .characters import new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
@@ -67,6 +68,7 @@ ACCOUNT_ROUTES = (
     "/mission/get-user-mission",
     "/mission/claim-beginner-all",
     "/mission/claim-challenge-all",
+    "/mission/claim-challenge-all-step",
     "/ad/init-inbox",
     "/guardian-pass/enter",
     "/guardian-pass/claim-all",
@@ -166,6 +168,9 @@ class AccountStore:
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS challenge_mission_claims (group_id INTEGER NOT NULL, step INTEGER NOT NULL, rewards TEXT NOT NULL, PRIMARY KEY(group_id,step))"
+        )
+        db.execute(
+            "CREATE TABLE IF NOT EXISTS challenge_mission_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, rewards TEXT NOT NULL, targets TEXT NOT NULL)"
         )
         db.execute(
             "CREATE TABLE IF NOT EXISTS guardian_pass_claims (season_id INTEGER NOT NULL, level INTEGER NOT NULL, rewards TEXT NOT NULL, PRIMARY KEY(season_id,level))"
@@ -567,8 +572,17 @@ class AccountStore:
     def claim_beginner_missions(self, request):
         return claim_beginner(self, request)
 
-    def claim_challenge_missions(self, request):
-        """Grant only the one-knight account's first collect-hero challenge step."""
+    def claim_challenge_missions(self, request, operation_id=None, all_steps=False):
+        """Claim configured steps, retaining the legacy first-knight fallback."""
+        if (
+            all_steps
+            or (self.references.directory / "challenge_mission_catalog.json").is_file()
+            or isinstance(operation_id, str)
+            and self.db.execute(
+                "SELECT 1 FROM challenge_mission_requests WHERE operation_id=?", (operation_id,)
+            ).fetchone()
+        ):
+            return claim_challenges(self, request, operation_id, all_steps)
         if (
             not isinstance(request, dict)
             or set(request) != {"missionIds"}
