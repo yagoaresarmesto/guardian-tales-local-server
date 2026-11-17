@@ -6,7 +6,7 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **215 passing tests**, including eighteen first-chapter entry/progress
+The suite has **218 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
@@ -20,6 +20,8 @@ catalog validation, authentication/reconnect and failed-write rollback.
 Thirteen challenge-batch regressions cover legacy claim preservation, next/all
 steps, distinct request identity, persisted retries, malformed/incomplete groups,
 catalogs, balance overflow, contiguous receipts and transaction rollback.
+Three gold-collection regressions cover current balance plus lifetime spending,
+integer clamping, next/all steps, spent-reward retries and invalid mixed batches.
 Thirteen initial hero-knowledge regressions cover owned inventory IDs, batches
 with/without rewards, preserved flags, mixed old/new claims, persisted retries,
 unsupported progression, catalog/receipt validation, authentication and rollback.
@@ -530,6 +532,13 @@ and merch; matching hammer items use stackable storage. The prepared catalog
 supports 40 of 42 entries, with two sticker packs still unsupported. APK requests
 and persisted receipts confirm all 22 costume purchases, nine merch types and
 repeated material/ticket/currency batches. Equip/use/upgrade behavior is separate.
+
+Those purchases then unlocked gold collection challenge group 202. Its matching
+public catalog contains 100 steps; native mission type 32 counts current gold
+plus spent gold, capped at a signed 32-bit maximum. The catalog handler now uses
+that condition with the existing atomic batch and per-step receipts. Deployment
+preserved the complete saved profile. All 218 tests and formatting/lint checks
+pass; original-client retry confirmation is still pending.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

@@ -117,6 +117,60 @@ class ChallengeBatchTests(unittest.TestCase):
         )
         self.assert_unchanged(expected, 5, 1)
 
+    def configure_gold(self):
+        catalog = json.loads(self.catalog_file.read_text())
+        catalog["groups"]["902"] = {
+            "condition": "collected_gold",
+            "steps": [
+                {"threshold": n, "rewards": [{"item_id": 70003, "amount": 5}]}
+                for n in (100, 300, 500, 0x7FFFFFFF)
+            ],
+        }
+        self.catalog_file.write_text(json.dumps(catalog))
+
+    def test_gold_collection_uses_balance_plus_spending_and_preserves_retries(self):
+        self.configure_gold()
+        before = self.account.profile()
+        gold = self.asset(before, 70001)
+        gold.update(Amount=80, Spent=450)
+        self.save(before)
+        self.claim([902])
+        expected = copy.deepcopy(before)
+        self.asset(expected, 70003)["Amount"] += 15
+        expected["UserMission"]["ChallengeClaimed"]["902"] = 3
+        expected["User"]["Cas"] += 1
+        expected["UserMission"]["Cas"] += 1
+        self.assertEqual(self.account.profile(), expected)
+        self.asset(expected, 70001).update(Amount=30, Spent=500)
+        self.asset(expected, 70003)["Amount"] -= 10
+        self.save(expected)
+        self.claim([902])
+        self.assertEqual(self.account.profile(), expected)
+        self.claim([902], operation="gold-again")
+        self.assertEqual(self.account.profile(), expected)
+
+    def test_gold_collection_clamps_large_totals_and_next_step_mode(self):
+        self.configure_gold()
+        before = self.account.profile()
+        self.asset(before, 70001).update(Amount=100, Spent=0x7FFFFFFF)
+        self.save(before)
+        self.claim([902], all_steps=False)
+        self.assertEqual(self.account.profile()["UserMission"]["ChallengeClaimed"]["902"], 1)
+        self.claim([902], operation="remaining-gold")
+        self.assertEqual(self.account.profile()["UserMission"]["ChallengeClaimed"]["902"], 4)
+        self.assertEqual(self.asset(self.account.profile(), 70003)["Amount"], 520)
+
+    def test_invalid_gold_progress_rejects_the_entire_mixed_batch(self):
+        self.configure_gold()
+        for field, value in (("Amount", True), ("Spent", -1), ("Spent", "500")):
+            with self.subTest(field=field, value=value):
+                before = self.account.profile()
+                self.asset(before, 70001)[field] = value
+                self.save(before)
+                with self.assertRaises(ValueError):
+                    self.claim([200, 902])
+                self.assert_unchanged(before)
+
     def test_next_step_mode_advances_one_per_group_and_new_request_can_advance_again(self):
         self.claim(all_steps=False)
         first = self.account.profile()

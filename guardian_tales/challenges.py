@@ -20,7 +20,7 @@ def load_challenge_catalog(references):
             or int(key) > 0x7FFFFFFF
             or not isinstance(group, dict)
             or set(group) != {"condition", "steps"}
-            or group["condition"] not in ("owned_heroes", "hero_draws")
+            or group["condition"] not in ("owned_heroes", "hero_draws", "collected_gold")
             or not isinstance(group["steps"], list)
             or not 1 <= len(group["steps"]) <= 1000
         ):
@@ -100,11 +100,18 @@ def claim_challenges(account, request, operation_id, all_steps):
         ).fetchall()
         if receipts != [(i,) for i in range(1, claimed + 1)]:
             raise ValueError("Challenge receipts do not match saved contiguous steps")
-        progress = (
-            len(user["Characters"])
-            if group["condition"] == "owned_heroes"
-            else profile["UserRecord"]["SummonCharacterCount"]
-        )
+        if group["condition"] == "owned_heroes":
+            progress = len(user["Characters"])
+        elif group["condition"] == "hero_draws":
+            progress = profile["UserRecord"]["SummonCharacterCount"]
+        else:
+            gold = [a for a in user["Assets"] if a["Id"] == 70001]
+            if len(gold) != 1 or any(
+                type(gold[0].get(k)) is not int or not 0 <= gold[0][k] <= bound
+                for k, bound in (("Amount", 0x7FFFFFFF), ("Spent", 0x7FFFFFFFFFFFFFFF))
+            ):
+                raise ValueError("Invalid saved gold collection progress")
+            progress = min(gold[0]["Amount"] + gold[0]["Spent"], 0x7FFFFFFF)
         if type(progress) is not int or progress < 0:
             raise ValueError("Invalid saved challenge progress")
         if not claimed and progress < group["steps"][0]["threshold"]:

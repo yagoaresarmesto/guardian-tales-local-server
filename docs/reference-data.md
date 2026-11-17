@@ -35,7 +35,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `summon_draw_catalog.json` | Local hero draw costs, pools and duplicate rewards | Explicit local category weights, matching hero definitions and currency identifiers |
 | `beginner_mission_catalog.json` | Hero-draw beginner milestones | Public mission IDs, required draw counts and supported asset/stackable rewards |
 | `stamina_purchase_catalog.json` | Free-gem purchases of stored stamina | Matching public amount, price tiers, storage ceiling and type-9 daily limit |
-| `challenge_mission_catalog.json` | Hero collection/draw challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
+| `challenge_mission_catalog.json` | Hero collection/draw and gold collection challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
 | `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 
@@ -229,10 +229,13 @@ at one. See the [synthetic fixture](../tests/fixtures/challenge_mission_catalog.
 Only existing account asset rewards are supported.
 
 Conditions currently supported are `owned_heroes`, which counts saved
-`User.Characters` entries as the native mission helper does, and `hero_draws`,
-which reads saved `UserRecord.SummonCharacterCount`. Other condition types need
-their own evaluation rules. The prepared catalog has 100 steps each for public
-groups 200 and 206; the repository does not distribute those full game tables.
+`User.Characters` entries as the native mission helper does; `hero_draws`, which
+reads saved `UserRecord.SummonCharacterCount`; and `collected_gold`, which adds
+gold asset 70001's current `Amount` and lifetime `Spent`, capped at 2,147,483,647.
+This matches native mission type 32, so spending gold does not remove collection
+progress. Other condition types need their own evaluation rules. The prepared
+catalog has 100 steps each for public groups 200, 202 and 206; the repository
+does not distribute those full game tables.
 
 Both routes accept exactly `{"missionIds": [group_ids]}`. With the external
 catalog, `/mission/claim-challenge-all` awards at most one new eligible step per

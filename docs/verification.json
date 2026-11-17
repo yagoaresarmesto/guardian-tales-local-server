@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 215,
+    "tests_run": 218,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -820,5 +820,14 @@
     "prepared_catalog_items": 42,
     "APK_persisted_purchases": "22 costumes, nine merch types, materials, hammers, tickets and assets",
     "remaining_delivery": "Two sticker packs; equip/use/upgrade not established"
+  },
+  "gold_collection_challenge_update": {
+    "result": "PASS",
+    "automated_tests": 218,
+    "prepared_public_group": 202,
+    "prepared_steps": 100,
+    "condition": "min(gold Amount + Spent, 2147483647)",
+    "deployment_preserved_complete_profile": true,
+    "APK_retry_verified": false
   }
 }
