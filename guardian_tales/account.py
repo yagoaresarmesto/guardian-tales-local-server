@@ -7,11 +7,11 @@ reference player's inventory, balance, progress or credentials are included.
 Campaign battle results and most reward-changing operations remain unimplemented.
 """
 
-import base64
 import hashlib
 import json
 from datetime import datetime, timezone
 
+from .beginner import claim_beginner
 from .campaign import (
     CHARGED_STAMINA,
     FIRST_CHAPTER_CODE,
@@ -31,12 +31,11 @@ from .campaign import (
 from .characters import new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
+from .items import inventory_item
 from .missions import (
-    BEGINNER_REWARDS,
     FIRST_HERO_CHALLENGE_GEMS,
     FIRST_HERO_CHALLENGE_GROUP,
     FIRST_HERO_CHALLENGE_STEP,
-    STAMINA_MISSION_SPEND,
 )
 from .monsters import record_defeated_monsters
 from .passes import (
@@ -117,24 +116,6 @@ def valid_prologue_info(info):
         )
         and type(info["BobLindaQuestGrade"]) is int
         and 0 <= info["BobLindaQuestGrade"] <= 255
-    )
-
-
-def inventory_item(inventory_id, item_id):
-    """Construct the common persistent inventory shape with default options."""
-    return dict(
-        Id=inventory_id,
-        ItemId=item_id,
-        Amount=1,
-        Experience=0,
-        EvolveProgress=0,
-        Options=None,
-        RelicOptions=None,
-        LimitBreaks=0,
-        Locked=False,
-        JewelSlots=None,
-        EngraveOptions=None,
-        EngraveCeiling=0,
     )
 
 
@@ -579,84 +560,7 @@ class AccountStore:
         }
 
     def claim_beginner_missions(self, request):
-        """Grant one supported beginner mission per batch with a persistent receipt."""
-        if (
-            not isinstance(request, dict)
-            or set(request) != {"missionIds"}
-            or not isinstance(request["missionIds"], list)
-            or not 1 <= len(request["missionIds"]) <= 32
-            or any(
-                type(value) is not int or value not in BEGINNER_REWARDS
-                for value in request["missionIds"]
-            )
-            or len(set(request["missionIds"])) != 1
-        ):
-            raise ValueError("Only beginner missions 0, 1 or 9 in separate batches are implemented")
-        mission_id = request["missionIds"][0]
-        profile = self.profile()
-        user, progress, mission = profile["User"], profile["UserProgress"], profile["UserMission"]
-        if self.needs_prologue():
-            raise ValueError("Finish local account creation before claiming missions")
-        if (
-            mission_id == 0
-            and not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED
-        ):
-            raise ValueError("Complete Inn before claiming its beginner mission")
-        if mission_id == 1:
-            knight = next((c for c in user["Characters"] if c["Id"] == 1), None)
-            trained = self.db.execute(
-                "SELECT experience FROM first_knight_training WHERE character_id=1"
-            ).fetchone()
-            if trained != (37,) or knight is None or knight["Experience"] < 37:
-                raise ValueError("Reach knight level 2 before claiming its beginner mission")
-        if mission_id == 9:
-            # The native UsedStamina getter sums these two assets' Spent fields.
-            spent = sum(
-                a["Spent"] for a in user["Assets"] if a["Id"] in (CHARGED_STAMINA, RESERVE_STAMINA)
-            )
-            if spent < STAMINA_MISSION_SPEND:
-                raise ValueError("Spend 10 stamina before claiming its beginner mission")
-        bits = bytearray(base64.b64decode(mission["GuideClaimed"], validate=True))
-        byte_index, bit_index = divmod(mission_id, 8)
-        mask = 1 << bit_index
-        marked = byte_index < len(bits) and bool(bits[byte_index] & mask)
-        claimed = self.db.execute(
-            "SELECT rewards FROM beginner_mission_claims WHERE mission_id=?", (mission_id,)
-        ).fetchone()
-        if bool(claimed) != marked:
-            raise ValueError("Mission receipt does not match saved claim flags")
-        if claimed:
-            return {"User": user, "UserMission": mission, "AddedItems": json.loads(claimed[0])}
-
-        rewards = []
-        for item_id, amount in BEGINNER_REWARDS[mission_id]:
-            if item_id in (FREE_GEMS, RESERVE_STAMINA):
-                next(a for a in user["Assets"] if a["Id"] == item_id)["Amount"] += amount
-                inventory_id = 0
-            else:
-                item = next((i for i in user["ItemStackables"] if i["ItemId"] == item_id), None)
-                if item is None:
-                    user["ItemIdCounter"] += 1
-                    item = inventory_item(user["ItemIdCounter"], item_id)
-                    item["Amount"] = 0
-                    user["ItemStackables"].append(item)
-                item["Amount"] += amount
-                inventory_id = item["Id"]
-            rewards.append({"Id": inventory_id, "ItemId": item_id, "Amount": amount})
-        bits.extend(bytes(max(0, byte_index + 1 - len(bits))))
-        bits[byte_index] |= mask
-        mission["GuideClaimed"] = base64.b64encode(bits).decode("ascii")
-        mission["Cas"] += 1
-        user["Cas"] += 1
-        with self.db:
-            self.db.execute(
-                "INSERT INTO beginner_mission_claims VALUES(?,?)", (mission_id, json.dumps(rewards))
-            )
-            self.db.execute(
-                "UPDATE local_account SET profile=? WHERE id=1",
-                (json.dumps(profile, separators=(",", ":")),),
-            )
-        return {"User": user, "UserMission": mission, "AddedItems": rewards}
+        return claim_beginner(self, request)
 
     def claim_challenge_missions(self, request):
         """Grant only the one-knight account's first collect-hero challenge step."""

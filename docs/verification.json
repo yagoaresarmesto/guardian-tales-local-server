@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 142,
+    "tests_run": 150,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -650,6 +650,30 @@
     "post_single_draw_receipt_count": 7,
     "post_single_draw_hero_crystals": 107,
     "post_single_draw_mileage": 34,
-    "next_boundary": "Batch beginner mission claim IDs 10, 418, 173, 419, 175, 420 and 181"
+    "next_boundary": "Batch beginner mission claim IDs 10, 418, 173, 419, 175, 420 and 181; subsequently implemented below"
+  },
+  "beginner_batch_update": {
+    "date": "2026-11-17",
+    "route": "/mission/claim-beginner-all",
+    "scope": "Atomic batches of built-in beginner missions and configured hero-draw milestones; other condition and reward types remain unsupported.",
+    "prepared_external_summon_milestones": 11,
+    "prepared_threshold_range": [1, 50],
+    "eligibility_source": "Saved UserRecord.SummonCharacterCount, matching the native MissionHelper SummonCharacter branch",
+    "automated_test_result": "PASS",
+    "automated_tests_run": 150,
+    "additional_batch_regressions": 8,
+    "retry_overlap_shared_stacks_flags_eligibility_catalog_auth_overflow_and_rollback_checked": true,
+    "profile_unchanged_across_backend_deployment": true,
+    "original_apk_batch_saved": true,
+    "original_apk_mission_ids": [10, 418, 173, 419, 175, 420, 181],
+    "original_apk_new_receipts": 7,
+    "original_apk_total_beginner_receipts": 10,
+    "original_apk_all_requested_claim_bits_saved": true,
+    "ordinary_controllers_awarded": 20,
+    "selectable_controllers_awarded": 12,
+    "post_claim_gems": 997700,
+    "post_claim_draw_count": 34,
+    "post_claim_draw_receipts": 7,
+    "reported_stage_quest_equipment_pass_tutorial_and_other_balances_preserved": true
   }
 }

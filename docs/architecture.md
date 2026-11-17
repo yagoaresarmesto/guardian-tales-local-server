@@ -31,6 +31,8 @@ flowchart LR
 | `account.py` | SQLite profile, campaign receipts, prologue completion, migrations and attendance claims |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
+| `beginner.py` | Eligibility, atomic multi-mission rewards, claim bits and persistent retry receipts |
+| `items.py` | Shared persistent inventory-row defaults |
 | `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |

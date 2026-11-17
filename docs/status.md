@@ -6,11 +6,14 @@ observations have different scopes.
 
 ## Automated checks
 
-The suite has **142 passing tests**, including eighteen first-chapter entry/progress
+The suite has **150 passing tests**, including eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
 regressions, an empty event-coupon exchange regression and four initial Guardian
 Pass reward regressions and four initial Festival Pass reward regressions.
+Eight additional beginner-batch regressions cover shared stacks, high claim-bit
+indices, mixed old/new receipts, spent-reward retries, eligibility, invalid
+catalogs, authentication, overflow and transaction rollback.
 Eight additional catalog-training regressions cover variable costs, multi-level
 targets, batches, story caps, shared balances, request identity, reconnect,
 sequence reuse, legacy receipts and rollback. Three catalog-tutorial regressions
@@ -409,9 +412,22 @@ were spent, leaving 997,700 gems, 24 owned heroes, 105 hero crystals and 30 mile
 The subsequent single-draw request used type 5, which now consumes its separate
 110015 controller stack. Four single draws succeeded: the saved total is now
 34 with seven receipts, 107 hero crystals and 34 mileage; gems remain 997,700.
-All 142 tests and format/lint checks pass. The next boundary is a batch of seven
-beginner mission claims. Weapon draws, paid/discount/free-event currencies, official pity
-and remaining game systems are unfinished.
+The subsequent seven-mission beginner claim exposed the old handler's
+single-mission limit. The replacement checks all requested conditions before
+granting any rewards, deduplicates IDs, preserves earlier receipts and commits
+the whole batch atomically. An optional external catalog supplies the matching
+hero-draw milestones; the prepared catalog contains 11 public rows with required
+counts from 1 through 50. No mission is marked complete just to dismiss an error.
+
+The original APK retried IDs 10, 418, 173, 419, 175, 420 and 181 with 34 saved
+draws. All seven receipts and claim bits persisted, awarding 20 ordinary
+controllers and 12 selectable controllers. The three older beginner receipts
+remain intact. Gems stayed at 997,700, draws at 34 and hero crystals/mileage at
+107/34; reported stage, quest, equipment, pass and tutorial state was preserved.
+The profile was also unchanged across backend deployment before that retry.
+All 150 tests and Black/Ruff checks pass. Other beginner condition types, weapon
+draws, paid/discount/free-event currencies, official pity and remaining game
+systems are unfinished.
 
 The local administrative CLI can add free gems with a persistent receipt and
 operation ID. It requires the backend to be stopped, updates only the free-gem

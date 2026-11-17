@@ -172,7 +172,7 @@ class InnMissionTests(unittest.TestCase):
         self.assertEqual(self.account.profile(), self.profile)
         charged["Spent"] = 10
         self.save()
-        for ids in ([9, 0], [9, True], [10], [[9]]):
+        for ids in ([9, 999], [9, True], [10], [[9]]):
             with self.subTest(ids=ids), self.assertRaises(PacketError):
                 self.claim(ids)
         self.assertEqual(self.account.profile(), self.profile)

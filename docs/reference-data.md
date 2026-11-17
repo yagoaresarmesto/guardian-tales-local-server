@@ -33,6 +33,7 @@ with `--reference-dir`. The repository does not retrieve these files.
 | `completion_catalog.json` | Configured clear exits after Inn | Verified exit name and local required defeated-monster indices |
 | `summon_selection_catalog.json` | Hero candidates and wishlist registration | Public hero origins and native selection-row fields for a local pool |
 | `summon_draw_catalog.json` | Local hero draw costs, pools and duplicate rewards | Explicit local category weights, matching hero definitions and currency identifiers |
+| `beginner_mission_catalog.json` | Hero-draw beginner milestones | Public mission IDs, required draw counts and supported asset/stackable rewards |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -176,6 +177,43 @@ login starts a new one. Identical stale deltas across a fresh login remain
 ambiguous without an independent client operation ID. Pity, official promotions,
 paid/discount/free-event currencies, weapon draws and general hero training remain
 unfinished. The local draw route is `/summon/select-character`.
+
+## Beginner reward batches
+
+The optional `beginner_mission_catalog.json` extends the built-in Inn, initial
+knight-training and stamina missions with hero-draw milestones. For example,
+this is a **synthetic** row, not a game-content distribution:
+
+```json
+{
+  "missions": {
+    "5": {
+      "summon_count": 7,
+      "rewards": [{"item_id": 110007, "amount": 4, "storage": "stackable"}]
+    }
+  }
+}
+```
+
+Mission keys must be canonical decimal IDs from 1 through 8191 and cannot
+override built-in IDs 0, 1 or 9. `summon_count` is a positive threshold checked
+against saved `UserRecord.SummonCharacterCount`. Rewards have positive integer
+`item_id` and `amount`, with `storage` either `asset` or `stackable`. Asset rewards
+must already exist in the account's asset list. Equipment and other reward kinds
+are unsupported. Supply only verified matching definitions.
+
+`/mission/claim-beginner-all` accepts a `missionIds` array with up to 512 entries.
+It deduplicates IDs, validates every requested mission's eligibility and saved
+receipt/claim bit, then saves all new rewards, receipts and flags in one SQLite
+transaction. Shared stacks merge and unrelated profile state remains intact.
+Already claimed IDs replay their frozen reward notices with current player state;
+they do not replenish spent rewards. A mixed old/new batch grants only new IDs.
+Unknown or incomplete missions reject the whole batch. Without the external
+catalog, only the three built-in missions are supported.
+
+The prepared private catalog has 11 hero-draw milestones from the matching
+client's public mission data, with thresholds between 1 and 50. This covers one
+mission type; other beginner conditions remain unfinished.
 
 ## Preservation manifest
 

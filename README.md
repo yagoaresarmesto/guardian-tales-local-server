@@ -74,7 +74,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Configured later clear exits | External exit/encounter prerequisites, saved completion and earned openings; additional clear rewards pending |
 | Local gem administration | Audited CLI grants, persistent free-gem balances, idempotent operation IDs and exclusive offline writes |
 | Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
-| Mission book | Help acknowledgment and beginner rewards for Inn, knight level 2 and spending 10 stamina persist; other missions pending |
+| Mission book | Inn, knight level 2, stamina and configured hero-draw milestones; atomic batches and persistent reward receipts; other missions pending |
 | First hero collection challenge | Group 200, step 1: 50 free gems once for the saved starting knight |
 | Ad inbox initialization | Returns saved local ad state; ad playback and reward claims remain pending |
 | Summons screen entry | Optional local hero candidate catalog with matching checksums; empty fallback without external data |
