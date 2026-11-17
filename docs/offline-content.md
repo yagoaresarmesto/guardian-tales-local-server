@@ -34,8 +34,8 @@ imported data and working space, plus separate emulator storage.
 ## 2. Download all four content files
 
 From the [3.57.0 European content release](https://github.com/yagoaresarmesto/guardian-tales-local-server/releases/tag/content-3.57.0-eu-20261117),
-download these four attachments and place them together in a new
-`local/downloads/` folder inside the repository:
+download these four attachments and place them together in the included
+[`local/downloads/` folder](../local/downloads/README.md) inside the repository:
 
 ```text
 guardian-tales-local-server/
@@ -43,6 +43,7 @@ guardian-tales-local-server/
   docs/
   local/
     downloads/
+      README.md
       content-manifest.json
       gt357-eu-20261116-part01.zip
       gt357-eu-20261116-part02.zip

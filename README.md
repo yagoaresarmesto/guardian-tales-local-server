@@ -133,7 +133,7 @@ tests/                Behavioral regressions and protocol/synthetic fixtures
 scripts/              Certificate generation and source-package checks
 docs/                 Setup, architecture, protocol and current status
 .github/workflows/    CI configuration
-local/                Your runtime inputs and state; ignored by Git
+local/                Runtime inputs and state; download instructions included
 ```
 
 The source tree excludes account databases, certificate keys, game archives,
@@ -141,6 +141,8 @@ downloaded assets, captured bootstrap payloads, and tools tied to a particular
 computer. Preserved resources and matching reference data are distributed
 separately as Release attachments with a [content notice](docs/content-notice.md).
 The built-in templates contain empty local state, not a reference player's account.
+The tracked [download folder instructions](local/downloads/README.md) keep
+`local/downloads/` present after cloning; its downloaded files remain ignored.
 
 ## License
 

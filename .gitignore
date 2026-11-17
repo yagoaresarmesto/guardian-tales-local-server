@@ -1,5 +1,8 @@
 # Local credentials, reference captures, resources and persistent account state
-/local/
+/local/*
+!/local/downloads/
+/local/downloads/*
+!/local/downloads/README.md
 /work/
 /outputs/
 *.sqlite

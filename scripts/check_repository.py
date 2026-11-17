@@ -50,9 +50,10 @@ def check_repository():
         if not path.is_file():
             problems.append(f"Indexed file is missing: {relative}")
             continue
-        if path.suffix.lower() in FORBIDDEN_SUFFIXES or FORBIDDEN_PARTS.intersection(
-            Path(relative).parts
-        ):
+        forbidden_parts = FORBIDDEN_PARTS.intersection(Path(relative).parts)
+        if relative == "local/downloads/README.md":
+            forbidden_parts.discard("local")
+        if path.suffix.lower() in FORBIDDEN_SUFFIXES or forbidden_parts:
             problems.append(f"Private or generated artifact path: {relative}")
         if path.suffix == ".bin" and relative != "tests/fixtures/pong_real.bin":
             problems.append(f"Unexpected binary response/capture: {relative}")

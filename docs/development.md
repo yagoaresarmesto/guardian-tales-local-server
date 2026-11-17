@@ -74,7 +74,10 @@ bytes for those indexed paths, so stage all intended additions before packaging.
 Game bootstrap `.bin` bodies, full catalogs, captured account responses, emulator
 credentials, local keys and SQLite saves are external inputs, not source files.
 The `.gitignore` also excludes APKs, native libraries, recovered metadata,
-generated caches, build output and `local/`.
+generated caches, build output and runtime files under `local/`. The sole tracked
+exception is `local/downloads/README.md`, which preserves the content drop folder
+in clones and source archives. Repository checks still reject other files under
+`local/`, even if force-added.
 
 ## Contribute changes on GitHub
 
