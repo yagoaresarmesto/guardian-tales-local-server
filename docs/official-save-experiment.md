@@ -514,6 +514,17 @@ the gold clock advanced and full soul-point clocks were retained. Unrelated
 profile/village data, captured seed and earlier summon/preset receipts remained
 unchanged. The following error was the separate base-camp collection request.
 
+## Administrative gem grants
+
+The separate [administrative gem command](administration.md#add-one-million-gems)
+also supports a validated imported account without creating a local prologue row.
+Run it while the backend is stopped against its existing state directory. It adds
+only free-gem asset 70003 and increments `User.Cas`, with an atomic audit receipt;
+import metadata, startup seeds and current preset/village state are preserved.
+This command is an offline administrative action, separate from the network
+mutation allowlist. Imported CLI persistence/replay has synthetic coverage;
+the current imported account has not received a grant during implementation.
+
 ## Fixed mastery rewards in the guardian base camp
 
 The combined village collection then reached the parameterless

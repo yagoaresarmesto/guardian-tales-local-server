@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 348,
+    "tests_run": 352,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -2116,5 +2116,49 @@
     "running_backend_reloaded": false,
     "post_fix_apk_mastery_debug_collection": "pending",
     "ordinary_production_scoring_conversion_tickets_party_changes_and_mastery_upgrades_implemented": false
+  },
+  "imported_account_console_gem_grants": {
+    "date": "2026-11-18",
+    "command": "admin grant-gems 1000000",
+    "scope": "Existing stopped schema-3 imported account; add free gems and user revision with atomic audit receipt",
+    "free_gem_asset": 70003,
+    "validated_import_marker_replaces_local_prologue_requirement": true,
+    "no_prologue_row_created_and_no_account_migration": true,
+    "legacy_completed_accounts_without_import_table_supported": true,
+    "signed_64_bit_user_revision_supported": true,
+    "saved_replay_at_revision_ceiling_supported_new_increment_rejected": true,
+    "profile_import_metadata_startup_seeds_other_tables_and_source_preservation_tested": true,
+    "new_regressions": 4,
+    "focused_windows_checks": 33,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 352,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 352,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "running_backend_state_lock_required": true,
+    "retry_preserves_later_spending_without_duplicate_grant": true,
+    "current_experimental_import_grant_applied": false,
+    "post_command_current_import_apk_display": "pending owner command and reconnect"
   }
 }

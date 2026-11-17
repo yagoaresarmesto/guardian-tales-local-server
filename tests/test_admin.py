@@ -145,6 +145,11 @@ class GemAdministrationTests(unittest.TestCase):
             asyncio.run(server.close())
         self.assertEqual(self.grant()["result"], "applied")
 
+    def test_legacy_completed_account_does_not_require_an_import_marker_table(self):
+        with self.connect() as db:
+            db.execute("DROP TABLE imported_account")
+        self.assertEqual(self.grant()["result"], "applied")
+
     def test_audit_failure_rolls_back_the_balance_update(self):
         self.grant(1, "seed")
         before = self.profile()

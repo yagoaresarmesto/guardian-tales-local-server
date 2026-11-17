@@ -19,18 +19,26 @@ python -m guardian_tales admin grant-gems 1000000 --data-dir local/state --opera
 On Windows, `py -3.11` can replace `python`. An installed package also accepts
 `gt-local admin grant-gems ...`. Replace `local/state` when the server runs with
 a different `--data-dir`. The account must already exist and have completed the
-prologue. A missing database causes an error; this command does not create a
-player or migrate an account.
+local prologue, or be marked as a validated snapshot import. Imported accounts
+do not need a synthetic local prologue-selection row. A missing database causes
+an error; this command does not create a player or migrate an account.
+
+For an imported state directory, use that directory explicitly:
+
+```sh
+python -m guardian_tales admin grant-gems 1000000 --data-dir local/imported-state --operation-id gems-million-001 --reason "Local testing"
+```
 
 This **adds** one million. A balance of 400 becomes 1,000,400. The JSON result
 contains `result: "applied"`, the operation ID, amount, previous/new balances,
 reason, UTC timestamp and current balance. Restart the backend with its usual
-arguments and reopen the game to refresh the displayed amount.
+arguments and reconnect the game to refresh the displayed amount.
 
-The prepared emulator laboratory stores its active database **inside Android**.
-For that setup, run the command in the same Android Python environment against
-the backend's `/runtime` directory after stopping the backend. A Windows folder
-with the same name is a different save. The repository does not include the
+The earlier Android-hosted emulator laboratory stored its database **inside
+Android**. That setup needs the command in the same Android Python environment
+against the backend's `/runtime` directory. A Windows-hosted backend instead needs
+the command on Windows against its actual `--data-dir`. These are separate saves;
+use the location of the backend being tested. The repository does not include
 machine-specific emulator launch/root helpers.
 
 ## Retry and history
@@ -56,6 +64,9 @@ grant; they do not change when gems are spent later. The grant command's separat
   within the command's conservative limit of 2,147,483,647.
 - Gem grants change only asset 70003 and `User.Cas`. Paid currency, spending counters,
   inventory, quests, stage progress and reward receipts remain untouched.
+- Imported snapshot metadata, startup seeds and current preset/village state are
+  preserved. The user revision supports signed-64-bit values; a new grant rejects
+  at its ceiling, while an existing receipt can still replay without incrementing.
 - A failed balance update or receipt insert rolls back the entire grant.
 - The updated backend and grant command hold the same operating-system file
   lock. Grants and a second backend are refused while that state directory is
@@ -75,6 +86,14 @@ Automated checks cover a million-gem grant, persistence, account responses,
 retries after spending, conflicting IDs, invalid input, overflow, rollback,
 cross-process locking and backend lock release after startup errors. The new
 administrative tests pass on Windows and in the isolated Linux suite.
+
+Four additional regressions cover imported CLI grants without a local prologue
+row, exact profile/table/source preservation, reopening, replay after spending,
+signed-64-bit revisions and ceiling behavior, plus older completed accounts that
+have no import-marker table. All 352 tests pass on Python 3.11 and 3.13 with
+external networking disabled. No grant was applied to the current imported
+experimental account during this implementation check; its APK display remains
+pending the owner's command and reconnect.
 
 The prepared laboratory subsequently applied the command to the existing APK
 test account on 2026-11-17, changing 400 free gems to **1,000,400**. The audit

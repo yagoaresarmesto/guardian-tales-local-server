@@ -6,7 +6,12 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **348 passing tests**. Twelve base-camp mastery-debug regressions
+The suite has **352 passing tests**. Four additional gem-administration regressions
+cover imported accounts without a local prologue row, exact state preservation,
+CLI/reopening/replay, signed-64-bit revisions and older databases without an import
+table. The current imported-account gem grant and APK display are pending manual
+command execution with its backend stopped.
+Twelve base-camp mastery-debug regressions
 cover exact rewards and mutation bounds, interval gates, retries/reopening,
 catalog/authentication guards, camp/mastery state, overflow, revisions, rollback,
 interleaving regular collection and changed configuration.

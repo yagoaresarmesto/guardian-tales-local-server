@@ -9,9 +9,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .campaign import FREE_GEMS
+from .snapshots import is_imported
 from .state_lock import StateLock
 
 MAX_GEMS = 0x7FFFFFFF
+MAX_USER_REVISION = 0x7FFFFFFFFFFFFFFF
 AUDIT_COLUMNS = "operation_id,amount,balance_before,balance_after,reason,created_at"
 
 
@@ -51,8 +53,16 @@ def grant_gems(data_dir, amount, operation_id, reason):
                 raise ValueError(
                     "An existing schema-3 local account is required; no migration was performed"
                 )
-            if not db.execute("SELECT 1 FROM prologue_selection WHERE id=1").fetchone():
-                raise ValueError("Complete the prologue before granting gems")
+            imported = db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='imported_account'"
+            ).fetchone() and is_imported(db)
+            if (
+                not imported
+                and not db.execute("SELECT 1 FROM prologue_selection WHERE id=1").fetchone()
+            ):
+                raise ValueError(
+                    "Complete the prologue or import a validated snapshot before granting gems"
+                )
             profile = json.loads(saved[1])
             user = profile["User"]
             matches = [a for a in user["Assets"] if a["Id"] == FREE_GEMS]
@@ -61,7 +71,7 @@ def grant_gems(data_dir, amount, operation_id, reason):
                 or type(matches[0]["Amount"]) is not int
                 or not 0 <= matches[0]["Amount"] <= MAX_GEMS
                 or type(user["Cas"]) is not int
-                or not 0 <= user["Cas"] < MAX_GEMS
+                or not 0 <= user["Cas"] <= MAX_USER_REVISION
             ):
                 raise ValueError("Invalid saved free-gem balance or user revision")
             asset = matches[0]
@@ -82,6 +92,8 @@ def grant_gems(data_dir, amount, operation_id, reason):
                 receipt = dict(zip(AUDIT_COLUMNS.split(","), previous))
                 result = "already_applied"
             else:
+                if user["Cas"] == MAX_USER_REVISION:
+                    raise ValueError("User revision cannot be incremented")
                 before = asset["Amount"]
                 after = before + amount
                 if after > MAX_GEMS:
