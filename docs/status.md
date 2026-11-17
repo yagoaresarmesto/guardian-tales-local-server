@@ -686,6 +686,25 @@ on-demand files still pass SHA-1 checks. The full saved profile digest remained
 identical, including the completed prologue. This observation did not require a
 backend restart or any agent change to the client's files.
 
+## Python 3.13 CI shutdown fix
+
+Seven workflow runs across six commits remained in the Python 3.13 validation
+step after idle game connections were allowed to remain open. Python 3.11 and
+style jobs completed. The standalone idle-connection shutdown test reproduced
+the hang locally on Python 3.13. The server awaited listener shutdown before
+closing accepted clients; newer asyncio versions wait for those clients too.
+
+Shutdown now closes clients and finishes their handlers before awaiting the
+listeners. Existing shutdown regressions bound the close operation itself,
+and timer regressions now accelerate `wait_for` rather than a version-specific
+internal scheduler. The workflow has ten-minute job limits and cancels older
+runs for the same ref. The seven obsolete stuck runs were cancelled.
+
+Both Python 3.11.18 and 3.13.18 pass all 234 tests and the synthetic TLS demo
+with external networking disabled. This is a transport/CI correction; no player
+save or resource content was changed. Hosted results remain recorded per commit
+in [GitHub Actions](https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml).
+
 ## Reproducible content import
 
 The [offline content guide](offline-content.md) documents the matching APK

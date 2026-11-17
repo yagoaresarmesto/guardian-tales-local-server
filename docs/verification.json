@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 227,
+    "tests_run": 234,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -344,7 +344,10 @@
     "route": "/guardian-pass/claim-all",
     "scope": "Only the free level-1 reward of pinned local season 58 at zero experience. An empty pass is initialized on its first claim; no automatic rollover.",
     "contract_evidence": "Parameterless native request, AddedItems callback, native level getter, displayed season and its public reward catalog.",
-    "reward": {"item_id": 70032, "amount": 30},
+    "reward": {
+      "item_id": 70032,
+      "amount": 30
+    },
     "automated_test_result": "PASS",
     "automated_tests_run": 72,
     "atomic_claim_retry_reopening_and_rollback_checked": true,
@@ -371,7 +374,11 @@
     "route": "/festival-pass/claim-all",
     "scope": "Only the free level-1 reward of pinned local season 41 at zero experience. The first claim initializes an empty pass; no automatic rollover.",
     "contract_evidence": "Native parameterless request, AddedPoint/AddedItems callback, free-lane coin selection, displayed season and public reward set 1.",
-    "reward": {"festival_points": 4, "display_item_id": 21484, "inventory_items": []},
+    "reward": {
+      "festival_points": 4,
+      "display_item_id": 21484,
+      "inventory_items": []
+    },
     "automated_test_result": "PASS",
     "automated_tests_run": 76,
     "atomic_claim_retry_reopening_and_rollback_checked": true,
@@ -385,7 +392,10 @@
   "guild_suggestions_update": {
     "date": "2026-11-16",
     "route": "/guild/get-join-suggestion-list/v2",
-    "response": {"Guilds": [], "GuildApplyTo": null},
+    "response": {
+      "Guilds": [],
+      "GuildApplyTo": null
+    },
     "scope": "Empty recommendations for the local account with no guild or pending application; no guild mutations or multiplayer.",
     "contract_evidence": "Native SuggestBy request and callback reading Guilds list and nullable GuildApplyTo.",
     "automated_test_result": "PASS",
@@ -397,7 +407,9 @@
   "guild_invitation_list_update": {
     "date": "2026-11-16",
     "route": "/guild/get-invite-list",
-    "response": {"Guilds": []},
+    "response": {
+      "Guilds": []
+    },
     "scope": "Empty invitation list for the isolated local account; no invitation or membership mutations.",
     "contract_evidence": "Native parameterless request and callback storing the Guilds list before refreshing the guild notification indicator.",
     "automated_test_result": "PASS",
@@ -412,7 +424,11 @@
     "automated_test_result": "PASS",
     "automated_tests_run": 84,
     "request_epoch_sequence_reconnect_and_rollback_checked": true,
-    "original_apk_costs_accepted": [74, 111, 559],
+    "original_apk_costs_accepted": [
+      74,
+      111,
+      559
+    ],
     "post_retry_character_experience": 781,
     "post_retry_unspent_experience": 9,
     "observed_reconnect_flag": true,
@@ -464,14 +480,30 @@
     "date": "2026-11-16",
     "route": "/stage/pick-stage-coins",
     "scope": "All 26 known Inn purple coins and three star pieces, separately deduplicated and atomically credited even in mixed batches.",
-    "observed_mixed_items": [{"Id": 13, "ItemId": 71001}, {"Id": 1, "ItemId": 70005}, {"Id": 14, "ItemId": 71001}],
+    "observed_mixed_items": [
+      {
+        "Id": 13,
+        "ItemId": 71001
+      },
+      {
+        "Id": 1,
+        "ItemId": 70005
+      },
+      {
+        "Id": 14,
+        "ItemId": 71001
+      }
+    ],
     "contract_evidence": "Public tilemap star-piece name table and native HasStarPiece overloads using progress store 3; purple coins use store 2.",
     "automated_test_result": "PASS",
     "automated_tests_run": 96,
     "mixed_retry_native_encoding_boundaries_and_rollback_checked": true,
     "stone_board_puzzle_implemented": false,
     "original_apk_retry_confirmed": true,
-    "later_saved_balances": {"purple_coins": 22, "star_pieces": 2}
+    "later_saved_balances": {
+      "purple_coins": 22,
+      "star_pieces": 2
+    }
   },
   "story_entry_catalog_update": {
     "date": "2026-11-16",
@@ -482,7 +514,10 @@
     "public_tilemap": "alt_forest_1_2_2",
     "stamina_cost": 15,
     "public_previous_stage_id": 100010001,
-    "public_quest_ids": [27, 34],
+    "public_quest_ids": [
+      27,
+      34
+    ],
     "progression_rule": "Local clear prerequisite based on the public previous-stage relation; not a recovered official-server implementation.",
     "automated_test_result": "PASS",
     "automated_tests_run": 103,
@@ -518,7 +553,9 @@
     "public_name": "substage_1_5",
     "public_tilemap": "substage_dragon_knight",
     "stamina_cost": 10,
-    "public_quest_ids": [57],
+    "public_quest_ids": [
+      57
+    ],
     "public_standard_level": 29,
     "observed_client_failure": "NullReferenceException in EnterStage load coroutine before a start-stage request; selected side stage 110010005 had null SelectedStageProgress.",
     "contract_evidence": "Read-only selected UI state, native load coroutine's StageProgress access and matching public StageSpec.",
@@ -560,7 +597,15 @@
     "scope": "Persist a configured clear exit after its saved encounters; preserve assets/quests, refresh earned openings and atomically close the active session. Additional grade rewards pending.",
     "stage_id": 110011001,
     "exit_name": "easy_forest_1_2",
-    "local_required_monster_indices": [2, 4, 5, 6, 7, 8, 9],
+    "local_required_monster_indices": [
+      2,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
     "contract_evidence": "Original-client clear request, matching public tilemap exit name and null StageSpec Rewards/FailRewards.",
     "separate_grade_reward_verified": false,
     "additional_assets_granted": false,
@@ -576,7 +621,10 @@
   },
   "administrative_gem_grants": {
     "date": "2026-11-17",
-    "commands": ["admin grant-gems", "admin gem-history"],
+    "commands": [
+      "admin grant-gems",
+      "admin gem-history"
+    ],
     "scope": "Offline free-gem grants to the existing single account, atomic audit receipts, idempotent operation IDs and shared backend/administrator state-directory locking.",
     "asset_id": 70003,
     "tested_grant_amount": 1000000,
@@ -606,9 +654,15 @@
   },
   "summon_selection_update": {
     "date": "2026-11-17",
-    "routes": ["/summon/enter", "/summon/on-event", "/summon/set-select-character"],
+    "routes": [
+      "/summon/enter",
+      "/summon/on-event",
+      "/summon/set-select-character"
+    ],
     "scope": "External local hero candidates and persistent wishlist registration; no draws, weapon selection, currency spending or inventory grants.",
-    "observed_invalid_origin_ids": [-1],
+    "observed_invalid_origin_ids": [
+      -1
+    ],
     "prepared_local_candidate_count": 122,
     "candidate_source": "Playable Unique-category origin definitions in the matching client's decoded hero cache, retaining service version/date fields",
     "official_promotional_pool_or_rates_verified": false,
@@ -626,15 +680,33 @@
     "date": "2026-11-17",
     "route": "/summon/select-character",
     "scope": "Configured local one/ten hero draws with atomic payment/rewards and frozen request receipts; official promotion, probability and pity logic remain unknown.",
-    "supported_cost_types": [0, 3, 5],
+    "supported_cost_types": [
+      0,
+      3,
+      5
+    ],
     "prepared_base_hero_count": 175,
-    "prepared_local_category_weights": {"Normal": 75, "Story": 20, "Unique": 5},
+    "prepared_local_category_weights": {
+      "Normal": 75,
+      "Story": 20,
+      "Unique": 5
+    },
     "official_probabilities_verified": false,
     "native_gem_cost_one": 300,
     "native_gem_cost_ten": 2700,
-    "native_duplicate_crystals": {"Normal": 1, "Story": 8, "Unique": 50},
-    "ticket_items": {"ordinary": 110007, "selectable": 110015},
-    "reward_assets": {"hero_crystal": 70009, "mileage": 70014},
+    "native_duplicate_crystals": {
+      "Normal": 1,
+      "Story": 8,
+      "Unique": 50
+    },
+    "ticket_items": {
+      "ordinary": 110007,
+      "selectable": 110015
+    },
+    "reward_assets": {
+      "hero_crystal": 70009,
+      "mileage": 70014
+    },
     "automated_test_result": "PASS",
     "automated_tests_run": 142,
     "atomic_cost_results_retry_epoch_and_rollback_checked": true,
@@ -657,7 +729,10 @@
     "route": "/mission/claim-beginner-all",
     "scope": "Atomic batches of built-in beginner missions and configured hero-draw milestones; other condition and reward types remain unsupported.",
     "prepared_external_summon_milestones": 11,
-    "prepared_threshold_range": [1, 50],
+    "prepared_threshold_range": [
+      1,
+      50
+    ],
     "eligibility_source": "Saved UserRecord.SummonCharacterCount, matching the native MissionHelper SummonCharacter branch",
     "automated_test_result": "PASS",
     "automated_tests_run": 150,
@@ -665,7 +740,15 @@
     "retry_overlap_shared_stacks_flags_eligibility_catalog_auth_overflow_and_rollback_checked": true,
     "profile_unchanged_across_backend_deployment": true,
     "original_apk_batch_saved": true,
-    "original_apk_mission_ids": [10, 418, 173, 419, 175, 420, 181],
+    "original_apk_mission_ids": [
+      10,
+      418,
+      173,
+      419,
+      175,
+      420,
+      181
+    ],
     "original_apk_new_receipts": 7,
     "original_apk_total_beginner_receipts": 10,
     "original_apk_all_requested_claim_bits_saved": true,
@@ -679,7 +762,9 @@
   "stamina_gem_purchase_update": {
     "date": "2026-11-17",
     "route": "/user/charge-stamina-by-gem",
-    "observed_request": {"Count": 1},
+    "observed_request": {
+      "Count": 1
+    },
     "scope": "Configured free-gem purchases of stored stamina, tiered batch costs, UTC daily quota and persistent request receipts; paid gems and regeneration unsupported.",
     "prepared_amount_per_charge": 50,
     "prepared_first_price": 100,
@@ -699,7 +784,12 @@
     "pre_retry_gems": 997700,
     "pre_retry_stored_stamina": 115,
     "original_apk_purchase_confirmed": true,
-    "original_apk_purchase_counts": [1, 1, 2, 16],
+    "original_apk_purchase_counts": [
+      1,
+      1,
+      2,
+      16
+    ],
     "original_apk_saved_purchase_receipts": 4,
     "original_apk_gems_spent": 8000,
     "original_apk_stored_stamina_added": 1000,
@@ -711,10 +801,21 @@
   },
   "challenge_batch_update": {
     "date": "2026-11-17",
-    "routes": ["/mission/claim-challenge-all", "/mission/claim-challenge-all-step"],
-    "observed_request": {"missionIds": [200, 206]},
+    "routes": [
+      "/mission/claim-challenge-all",
+      "/mission/claim-challenge-all-step"
+    ],
+    "observed_request": {
+      "missionIds": [
+        200,
+        206
+      ]
+    },
     "scope": "Catalog-backed owned-hero and hero-draw conditions, contiguous next/all-earned-step claims and atomic per-step/per-request receipts; other conditions and non-asset rewards unsupported.",
-    "prepared_groups": [200, 206],
+    "prepared_groups": [
+      200,
+      206
+    ],
     "prepared_steps_per_group": 100,
     "saved_owned_heroes": 26,
     "saved_hero_draws": 34,
@@ -767,16 +868,28 @@
   },
   "festival_shop_update": {
     "date": "2026-11-17",
-    "routes": ["/festival-pass/check-not-redeemable", "/festival-pass/redeem-point-rewards"],
+    "routes": [
+      "/festival-pass/check-not-redeemable",
+      "/festival-pass/redeem-point-rewards"
+    ],
     "availability_response_key": "NotRedeemable",
     "availability_policy": "Explicit local purchase-limit and persistent-item ownership exclusions; full official rules unverified.",
     "prepared_season_id": 41,
     "prepared_shop_set": 2,
     "prepared_catalog_items": 42,
     "prepared_persistent_ownership_rules": 23,
-    "prepared_simple_delivery_shop_ids": [210, 301, 302, 304, 305],
+    "prepared_simple_delivery_shop_ids": [
+      210,
+      301,
+      302,
+      304,
+      305
+    ],
     "scope": "Read-only availability and atomic point redemption into existing assets or ordinary stackables; other deliveries unsupported.",
-    "observed_redemption_request": {"shopItemId": 304, "amount": 1},
+    "observed_redemption_request": {
+      "shopItemId": 304,
+      "amount": 1
+    },
     "expected_point_cost": 1,
     "expected_reward_item_id": 110009,
     "expected_reward_amount": 3,
@@ -919,5 +1032,33 @@
     "ondemand_SHA1_mismatches": 0,
     "complete_profile_digest_unchanged": true,
     "observation_read_only": true
+  },
+  "ci_shutdown_compatibility_update": {
+    "result": "PASS",
+    "local_matrix": [
+      {
+        "python": "3.11.18",
+        "tests_run": 234,
+        "validation": "PASS",
+        "synthetic_demo": "PASS",
+        "external_network_disabled": true
+      },
+      {
+        "python": "3.13.18",
+        "tests_run": 234,
+        "validation": "PASS",
+        "synthetic_demo": "PASS",
+        "external_network_disabled": true
+      }
+    ],
+    "root_cause": "Listener wait_closed awaited idle clients before their writers were closed on Python 3.12+",
+    "client_shutdown_precedes_listener_wait": true,
+    "shutdown_test_bound_seconds": 2,
+    "timer_regressions_use_wait_for_API": true,
+    "workflow_job_timeout_minutes": 10,
+    "superseded_same_ref_runs_cancelled": true,
+    "obsolete_stuck_runs_cancelled": 7,
+    "player_state_or_resources_changed": false,
+    "scope": "Offline local Python matrix; hosted results tracked per commit in GitHub Actions"
   }
 }

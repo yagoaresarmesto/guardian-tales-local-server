@@ -104,3 +104,15 @@ the official [checkout](https://github.com/actions/checkout) and
 [hosted workflow runs](https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml)
 for the result associated with a particular commit; local verification records
 are separate snapshots.
+
+Each job has a ten-minute limit. A newer run cancels an older run of the same
+workflow/ref, so obsolete branch runs do not accumulate. Branch and tag refs
+remain independent.
+
+Shutdown tests bound the close operation itself. Close accepted clients and
+finish their handlers before awaiting a listener's `wait_closed()`:
+[Python 3.12 and newer wait for active connections too](https://docs.python.org/3.13/library/asyncio-eventloop.html#asyncio.Server.wait_closed).
+Waiting on the listener first deadlocks when a game connection is idle. Timer
+regressions accelerate the `wait_for` API rather than patching the event loop's
+internal scheduler, which differs across supported Python versions. Reproduce
+transport changes on both CI versions; a Python 3.11-only pass is insufficient.

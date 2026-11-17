@@ -127,14 +127,14 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         await self.finish(writer)
 
     async def test_idle_authenticated_client_can_resume_without_a_heartbeat(self):
-        loop = asyncio.get_running_loop()
-        schedule = loop.call_later
+        wait_for = asyncio.wait_for
 
-        def accelerated_long_deadline(delay, callback, *args, **kwargs):
-            # Make obsolete long idle timers expire quickly; short I/O/test bounds stay real.
-            return schedule(0.03 if delay >= 60 else delay, callback, *args, **kwargs)
+        async def accelerated_long_deadline(awaitable, timeout):
+            # Accelerate obsolete idle bounds through the API, independently of
+            # how each Python version schedules wait_for's internal timer.
+            return await wait_for(awaitable, 0.03 if timeout >= 60 else timeout)
 
-        with patch.object(loop, "call_later", side_effect=accelerated_long_deadline):
+        with patch("guardian_tales.server.asyncio.wait_for", new=accelerated_long_deadline):
             reader, writer = await self.connect()
             seed = struct.unpack("<I", await reader.readexactly(4))[0]
             body = {"AuthKind": 0, "AccessToken": "TEST_IDLE_GUEST", "Reconnect": False}
@@ -167,21 +167,21 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
     async def test_shutdown_closes_idle_game_connection(self):
         reader, writer = await self.connect()
         await reader.readexactly(4)
-        await self.server.close()
+        await asyncio.wait_for(self.server.close(), 2)
         self.assertEqual(await asyncio.wait_for(reader.read(), 2), b"")
         self.assertFalse(self.server.active)
+        self.assertFalse(self.server.tasks)
         await self.finish(writer)
 
     async def test_started_frame_header_still_has_a_completion_deadline(self):
         reader, writer = await self.connect()
         seed = struct.unpack("<I", await reader.readexactly(4))[0]
-        loop = asyncio.get_running_loop()
-        schedule = loop.call_later
+        wait_for = asyncio.wait_for
 
-        def accelerated_io_deadline(delay, callback, *args, **kwargs):
-            return schedule(0.03 if delay >= 10 else delay, callback, *args, **kwargs)
+        async def accelerated_io_deadline(awaitable, timeout):
+            return await wait_for(awaitable, 0.03 if timeout >= 10 else timeout)
 
-        with patch.object(loop, "call_later", side_effect=accelerated_io_deadline):
+        with patch("guardian_tales.server.asyncio.wait_for", new=accelerated_io_deadline):
             frame = encode_wire(Packet(3, struct.pack("<q", 123), body_type=2), seed)
             writer.write(frame[:1])
             await writer.drain()
@@ -291,7 +291,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         writer.write(b"GET /health ")
         await writer.drain()
         await asyncio.sleep(0.01)
-        await self.server.close()
+        await asyncio.wait_for(self.server.close(), 2)
         self.assertEqual(await asyncio.wait_for(reader.read(), 2), b"")
         await self.finish(writer)
 

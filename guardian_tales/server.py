@@ -311,13 +311,15 @@ class LocalServer:
         self.stopping = True
         for listener in self.listeners:
             listener.close()
-        await asyncio.gather(*(s.wait_closed() for s in self.listeners), return_exceptions=True)
         for writer in list(self.active | self.http_connections):
             writer.close()
         for task in list(self.tasks):
             task.cancel()
         if self.tasks:
             await asyncio.gather(*list(self.tasks), return_exceptions=True)
+        # Python 3.12+ also waits for accepted connections here. Close clients
+        # and finish their handlers first, including idle game connections.
+        await asyncio.gather(*(s.wait_closed() for s in self.listeners), return_exceptions=True)
         try:
             self.db.close()
         finally:
