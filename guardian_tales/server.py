@@ -243,7 +243,11 @@ class LocalServer:
                     response = make_pong(request, int(time.time() * 1000))
                     self.bump("pongs_sent")
                 elif request["api"] in BOOTSTRAP_ROUTES:
-                    response = session.handle(request)
+                    try:
+                        response = session.handle(request)
+                    except PacketError:
+                        self.bump("rejected_api:" + request["api"])
+                        raise
                     self.bump("api:" + request["api"])
                 else:
                     self.bump("unsupported_operations")

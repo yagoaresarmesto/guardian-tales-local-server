@@ -21,7 +21,7 @@ from .lobby import respond as lobby_response
 from .packet_reader import lz4_block
 from .protocol import Packet, PacketError
 from .reference import compressed_empty_list
-from .snapshots import ACCOUNT_READS, is_imported, preserved_read
+from .snapshots import ACCOUNT_READS, is_imported, preserved_read, validate_preserved_request
 
 BOOTSTRAP_ROUTES = (
     "/auth/get-server-info",
@@ -198,8 +198,10 @@ class BootstrapSession:
                 )
             preserved = preserved_read(self.store.db, route)
             if preserved is not None:
-                if body not in (None, {}):
-                    raise PacketError("Preserved startup reads accept no parameters")
+                try:
+                    validate_preserved_request(route, body)
+                except ValueError as error:
+                    raise PacketError(str(error)) from error
                 return json_response(request, preserved)
         if route in LOBBY_ROUTES:
             if not self.signed_in:

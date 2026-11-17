@@ -72,6 +72,29 @@ def preserved_read(db, route):
     return reads[route]["value"] if route in reads else None
 
 
+def validate_preserved_request(route, body):
+    if body in (None, {}):
+        return
+    if (
+        route != "/lobby-village/enter"
+        or not isinstance(body, dict)
+        or set(body) != {"isPartial", "lastLobbyShopUpdated"}
+        or type(body["isPartial"]) is not bool
+        or not isinstance(body["lastLobbyShopUpdated"], str)
+        or not re.fullmatch(
+            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})",
+            body["lastLobbyShopUpdated"],
+        )
+    ):
+        raise ValueError("Unsupported parameters for a preserved startup read")
+    try:
+        datetime.fromisoformat(body["lastLobbyShopUpdated"])
+    except ValueError as error:
+        raise ValueError("Invalid village shop cache timestamp") from error
+    # These are native cache hints. This imported account returns its frozen
+    # full village state without changing the profile or refreshing the shop.
+
+
 def _private_field(key):
     normalized = re.sub(r"[^a-z0-9]", "", key.lower())
     return any(

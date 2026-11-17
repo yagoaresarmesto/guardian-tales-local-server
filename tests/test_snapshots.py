@@ -169,6 +169,50 @@ class SnapshotTests(unittest.TestCase):
                     store = GuestStore(db)
             self.assertEqual(store.account.profile(), self.snapshot["profile"])
 
+    def test_village_cache_hints_return_preserved_state_without_mutation(self):
+        import_snapshot(self.source, self.state)
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            session = BootstrapSession(GuestStore(db))
+            session.signed_in = True
+            before = db.total_changes
+            expected = self.snapshot["startup_reads"]["/lobby-village/enter"]["value"]
+            for partial in (False, True):
+                for timestamp in ("2026-01-01T00:00:00.1234567+00:00", "0001-01-01T00:00:00Z"):
+                    response = session.handle(
+                        request(
+                            "/lobby-village/enter",
+                            {
+                                "isPartial": partial,
+                                "lastLobbyShopUpdated": timestamp,
+                            },
+                        )
+                    )
+                    self.assertEqual(json.loads(response.body), expected)
+            self.assertEqual(db.total_changes, before)
+            self.assertEqual(session.store.account.profile(), self.snapshot["profile"])
+
+    def test_invalid_village_cache_hints_reject_without_changes(self):
+        import_snapshot(self.source, self.state)
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            session = BootstrapSession(GuestStore(db))
+            session.signed_in = True
+            before = db.total_changes
+            valid = {"isPartial": False, "lastLobbyShopUpdated": "2026-01-01T00:00:00Z"}
+            for body in (
+                {**valid, "isPartial": 0},
+                {**valid, "lastLobbyShopUpdated": None},
+                {**valid, "lastLobbyShopUpdated": "2026-99-99T00:00:00Z"},
+                {**valid, "lastLobbyShopUpdated": "2026-01-01T00:00:00"},
+                {**valid, "lastLobbyShopUpdated": "synthetic-private-value"},
+                {**valid, "Extra": True},
+                {"isPartial": False},
+            ):
+                with self.subTest(body=body), self.assertRaises(PacketError) as error:
+                    session.handle(request("/lobby-village/enter", body))
+                self.assertNotIn("synthetic-private-value", str(error.exception))
+            self.assertEqual(db.total_changes, before)
+            self.assertEqual(session.store.account.profile(), self.snapshot["profile"])
+
     def test_existing_state_and_repeat_import_are_never_overwritten(self):
         import_snapshot(self.source, self.state)
         original = (self.state / "server.sqlite3").read_bytes()

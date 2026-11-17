@@ -4,8 +4,9 @@ This research is isolated on `experiment/official-save-import`. It investigates
 preserving an owner's existing 3.57.0 European account for this local backend.
 An experimental importer now loads a validated private snapshot into a new
 SQLite state directory. Account fetch, preserved startup reads and local sign-in
-passed a private input check. **The APK has not yet been tested against the
-imported account.** Unlocked systems are not automatically implemented by import.
+passed a private input check. **The first APK attempt reached account fetch but
+stalled before the imported lobby.** Unlocked systems are not automatically
+implemented by import.
 
 ## Observed sources
 
@@ -105,6 +106,20 @@ validation, transaction and retry tests. A private protocol-level check already
 confirmed profile equality after reopening, local sign-in identity, completed
 prologue state and the preserved startup replies. This is distinct from an APK
 result or a claim of complete account preservation.
+
+The first imported APK attempt stopped at `/lobby-village/enter`: the preserved
+read handler had incorrectly required every startup request to be empty. The
+native `SendEnterLobbyVillage` builder and the live pending request both establish
+`isPartial` as a Boolean and `lastLobbyShopUpdated` as a timestamp with an offset.
+The handler now validates those exact cache hints, including seven-digit .NET
+fractional seconds, and returns the preserved full village without refreshing its
+shop or changing the account. Other preserved reads still reject unexpected
+parameters. Empty bodies remain accepted for existing local probes.
+
+Regressions cover both partial flags, timestamp bounds/types, invalid parameters,
+unchanged profile data and rejection without mutation. Known API validation
+failures now increment `rejected_api:<route>` health counters without storing
+request bodies. The follow-up APK retry remains pending.
 
 ## Host readiness before the APK check
 

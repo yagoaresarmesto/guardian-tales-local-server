@@ -126,6 +126,32 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.server.status()["counters"]["pongs_sent"], 3)
         await self.finish(writer)
 
+    async def test_rejected_registered_api_records_route_without_private_body(self):
+        reader, writer = await self.connect()
+        seed = struct.unpack("<I", await reader.readexactly(4))[0]
+        before = self.server.guests.account.profile()
+        body = {"PrivateField": "synthetic-private-value"}
+        writer.write(
+            encode_wire(
+                Packet(
+                    0,
+                    json.dumps(body).encode(),
+                    body_type=1,
+                    api="/auth/fetch-account",
+                    sequence_id=1,
+                ),
+                seed,
+            )
+        )
+        await writer.drain()
+        self.assertEqual(await asyncio.wait_for(reader.read(), 3), b"")
+        counters = self.server.status()["counters"]
+        self.assertEqual(counters["rejected_api:/auth/fetch-account"], 1)
+        self.assertNotIn("synthetic-private-value", json.dumps(counters))
+        self.assertNotIn("PrivateField", json.dumps(counters))
+        self.assertEqual(self.server.guests.account.profile(), before)
+        await self.finish(writer)
+
     async def test_idle_authenticated_client_can_resume_without_a_heartbeat(self):
         wait_for = asyncio.wait_for
 

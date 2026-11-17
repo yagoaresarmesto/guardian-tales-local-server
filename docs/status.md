@@ -6,10 +6,12 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **249 passing tests**. Eight snapshot-import regressions cover
+The suite has **252 passing tests**. Ten snapshot-import regressions cover
 private-input validation, unchanged source/profile data, local sign-in identity,
 preserved startup reads, restart, mutation/prologue rejection, catalog isolation,
-existing-save protection, directory locking and failed-publication cleanup.
+existing-save protection, directory locking, failed-publication cleanup and valid
+or malformed village cache hints. A TLS integration regression checks that a
+rejected registered API records its route without retaining its private body.
 The existing 241 tests include eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge
@@ -834,7 +836,10 @@ integrity and inventory-reference checks passed. The experimental importer now
 preserves that profile and the selected startup reads in a separate empty state
 directory. Private protocol-level checks passed for local identity,
 completed-prologue state, startup replies and unchanged profile after reopening.
-The APK has not yet run against this imported database. Imported network
+The first APK attempt reached account fetch and then stalled at village entry:
+the preserved read validator rejected the native request's cache hints. Those
+parameters are now validated and covered by regressions; the follow-up APK retry
+is pending. Imported network
 mutations remain disabled until their contracts and retry behavior are validated.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).
