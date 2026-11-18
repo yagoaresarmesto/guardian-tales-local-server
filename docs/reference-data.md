@@ -496,6 +496,11 @@ configuration, not account state.
 The request is exactly `{"Count": positive_integer}`. Prices start at the saved
 type-9 `User.StaminaGemChargeTicket.PlayCount`; a batch sums consecutive price
 tiers and repeats the last price if the configured limit exceeds the price list.
+The route is enabled for both completed fresh accounts and preserved imported
+accounts. The same catalog and transaction apply, without creating a local
+prologue row or modifying the captured seed. Account revisions use the client's
+signed-64-bit range; an exhausted revision rejects a new purchase, while a saved
+receipt still returns current state without writing.
 The saved counter resets at the next UTC midnight. This matches this local
 server's `StartOfDay` configuration; other service reset schedules are unsupported.
 

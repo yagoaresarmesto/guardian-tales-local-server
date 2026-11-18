@@ -87,7 +87,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
 | Configured later clear exits | External exit/encounter prerequisites, saved completion and earned openings; additional clear rewards pending |
 | Local currency administration | Audited gem and season-bound Festival point grants, idempotent operation IDs and exclusive offline writes |
-| Gem stamina purchases | External price tiers, atomic free-gem costs and stored stamina, UTC daily quota and persistent retry receipts |
+| Gem stamina purchases | Fresh/imported accounts: external price tiers, atomic free-gem costs and stored stamina, UTC quota and retry receipts |
 | Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
 | Mission book | Inn, knight level 2, stamina and configured hero-draw milestones; atomic batches and persistent reward receipts; other missions pending |
 | Hero collection/draw challenges | Configured thresholds, next-step or all-earned-step batches, atomic asset rewards and persistent step/request receipts |

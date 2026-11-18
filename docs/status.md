@@ -6,14 +6,25 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **395 passing tests on Windows Python 3.11**. Fourteen daily
+The suite has **401 passing tests on Windows Python 3.11**. Six imported stamina
+purchase regressions cover exact profile/seed preservation, saved/expired price
+tiers and batches, current-state retries after consumption/catalog removal,
+reopening/reconnect/new login, storage/funds/quota/schema/authentication guards
+and signed-64-bit revision limits. The existing purchase handler is now enabled
+for imported accounts. A detached actual-account purchase verified its exact
+gem cost, stored stamina grant and no-write delayed replay; the APK purchase
+retry requires a backend reload and reconnect.
+Fourteen daily
 attendance mock regressions cover no-reward mutation bounds, ignored reward
 catalogs, day/request retry fences, official same-day state, reopening/new login,
 calendar rollover, UTC/.NET timestamps, invalid state, schema/authentication,
 explicit configuration and rollback. The owner selected skipped daily rewards
 for the imported account. Its detached check advanced one calendar day with empty
 notices, preserved assets/inventory and verified a no-write delayed retry. The
-APK mock retry requires a backend reload and reconnect.
+APK subsequently saved one mocked day with the expected calendar/date and login
+record revisions. Accounting for later village/base-camp receipt credits, the
+remaining profile and captured seed matched their pre-retry hashes; no daily
+reward was delivered.
 Two new bridge
 regressions cover restoration after ADB loses its connection, dynamic loopback
 ports and failed reconnect without root/device changes. The latest isolated

@@ -5,6 +5,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from .campaign import FREE_GEMS, RESERVE_STAMINA
+from .stamina_regen import MAX_REVISION
 
 
 def integer(value, minimum, maximum=0x7FFFFFFF):
@@ -56,6 +57,8 @@ def purchase_stamina(account, request, operation_id, now=None):
     now = now.astimezone(timezone.utc)
     profile = account.profile()
     user = profile["User"]
+    if not integer(user.get("Cas"), 0, MAX_REVISION - 1):
+        raise ValueError("Invalid stamina purchase account revision")
     ticket = user["StaminaGemChargeTicket"]
     if (
         not isinstance(ticket, dict)

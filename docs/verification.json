@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 395,
+    "tests_run": 401,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1205,6 +1205,7 @@
       "/summon/select-character",
       "/summon/set-select-character",
       "/user/charge-stamina",
+      "/user/charge-stamina-by-gem",
       "/user/claim-daily-attendance",
       "/user/guardian-mastery-level-up",
       "/user/reset-guardian-mastery-level"
@@ -2387,6 +2388,52 @@
       "all_assets_inventory_and_other_profile_fields_preserved": true,
       "delayed_retry_next_day_does_not_advance_or_write": true
     },
-    "post_fix_apk_mock": "pending backend reload and reconnect"
+    "post_fix_apk_mock": {
+      "result": "PASS",
+      "saved_mock_receipts": 1,
+      "calendar_advanced_once": true,
+      "last_date_matches_daily_fence": true,
+      "login_day_record_and_revision_incremented_once": true,
+      "user_revision_matches_mock_plus_subsequent_collections": true,
+      "no_reward_or_unrelated_profile_change_after_accounting_for_subsequent_collections": true,
+      "captured_seed_preserved": true,
+      "scope": "Saved mock day and counters; profile normalization accounts for later village/basecamp receipt credits."
+    }
+  },
+  "imported_gem_stamina_purchases": {
+    "date": "2026-11-18",
+    "observed_rejected_route": "/user/charge-stamina-by-gem",
+    "change": "Enable existing catalog-priced purchase transaction for imported accounts and validate signed-64-bit user revisions",
+    "native_request": "Count",
+    "prepared_stored_stamina_per_charge": 50,
+    "prepared_first_tier_gem_cost": 100,
+    "prepared_storage_ceiling": 3000,
+    "prepared_daily_quota": 20,
+    "payment_scope": "Free gems only; paid-gem fallback unsupported",
+    "expired_saved_counter_resets_before_pricing": true,
+    "batch_uses_saved_price_tiers_and_rejects_cap_or_quota_crossing": true,
+    "only_free_gem_balance_spending_reserve_balance_purchase_counter_and_user_revision_change": true,
+    "profile_payment_grant_and_receipt_atomic": true,
+    "reconnect_retry_returns_current_state_without_recharge_or_regrant": true,
+    "replay_preserves_later_consumption_and_survives_catalog_removal": true,
+    "no_local_prologue_row_created_and_captured_seed_preserved": true,
+    "signed_64_bit_revision_supported_and_new_mutation_at_ceiling_rejected": true,
+    "saved_receipt_replay_at_revision_ceiling_preserved": true,
+    "new_regressions": 6,
+    "focused_windows_checks": 31,
+    "full_windows_tests": 401,
+    "full_windows_result": "PASS",
+    "external_network_disabled_for_current_suite": false,
+    "private_actual_account_detached_validation": {
+      "result": "PASS",
+      "real_account_mutated": false,
+      "gem_cost": 100,
+      "stored_stamina_granted": 50,
+      "expired_saved_daily_counter_reset_before_pricing": true,
+      "only_free_gem_balance_spent_reserve_balance_ticket_user_revision_changed": true,
+      "charged_stamina_timer_paid_gems_other_assets_roster_inventory_and_record_preserved": true,
+      "delayed_replay_does_not_charge_grant_reset_or_write": true
+    },
+    "post_fix_imported_apk_purchase": "pending backend reload and reconnect"
   }
 }

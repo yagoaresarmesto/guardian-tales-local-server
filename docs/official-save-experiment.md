@@ -98,11 +98,11 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Eleven mutations are now enabled: `/summon/set-select-character`,
+Twelve mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
-`/user/claim-daily-attendance` and
-`/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp` and
+`/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
+`/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp`,
 `/user/guardian-mastery-level-up` and `/user/reset-guardian-mastery-level`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
@@ -123,6 +123,8 @@ Reset clears the skills/total and refunds their catalog investment, charging the
 configured free-gem cost and setting a persisted cooldown with its own receipt.
 Daily attendance uses an explicit no-reward mock: it acknowledges the local day
 and advances calendar/login counters without delivering or parsing any reward.
+Gem stamina purchases use their existing catalog prices, quota, storage ceiling
+and atomic payment/grant receipts for the preserved account as well.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -689,7 +691,36 @@ reopening/new login, group/28-day rollover, UTC and .NET timestamp handling,
 invalid state, authentication/schema/identity, explicit catalog and rollback.
 A detached actual-account check advanced one day with no reward, preserved all
 other profile fields and verified a no-write delayed retry. The saved account was
-unchanged during this check. Actual APK mock verification is pending backend
+unchanged during this check. The subsequent APK claim saved one mocked day with
+the expected calendar/date and login-record revisions. After accounting for later
+village/base-camp receipt credits, the remaining profile and captured seed matched
+their pre-retry hashes; the mocked daily reward was not delivered.
+
+## Imported gem stamina purchases
+
+The next rejected route was `/user/charge-stamina-by-gem`. Its existing handler
+already implemented the matching `Count` request, external prices, free-gem
+payment, stored stamina, UTC quota and retry receipts for fresh accounts. The
+imported mutation guard still rejected it. The route is now enabled for preserved
+accounts using that same transaction; no prologue row, reimport or captured-seed
+change is needed. The user revision additionally enforces the signed-64-bit
+ceiling before a new mutation. Existing receipt replays remain valid at the ceiling.
+
+The prepared catalog grants 50 stored stamina per charge, with its first two
+prices at 100 gems, a 3,000 storage ceiling and 20 purchases per UTC day. A saved
+expired counter resets before pricing; an unexpired counter continues at its
+saved tier. A batch crossing storage, funds or quota limits rejects atomically.
+Paid-gem fallback remains unsupported. Replays return current `User` without
+another debit/grant or restoring stamina consumed later. Other assets, charged
+stamina and its timer, roster, inventory, record and captured seed remain unchanged.
+
+Six new imported-account regressions verify those boundaries through the native
+packet route, reopening/reconnect/new login and signed-64-bit revisions. Existing
+purchase tests retain rollback and daily-reset coverage. The full Windows suite
+has 401 passing tests. A detached actual-account purchase spent exactly the
+configured first-tier cost and added its stored stamina amount, preserved all
+other fields and verified a no-write delayed replay. The real saved account was
+unchanged during the check. The imported APK purchase retry is pending backend
 reload and reconnect.
 
 ## Host readiness before the APK check
