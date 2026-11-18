@@ -39,6 +39,7 @@ flowchart LR
 | `challenges.py`, `challenge_progress.py` | Catalog challenge progress, imported official baselines, contiguous next/all-step claims and atomic rewards/receipts |
 | `punchking.py`, `punchking_static.py` | Dungeon Kingdom Arena practice, rotation/day calendar composition and battle-session receipts |
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
+| `imported_hero_knowledge.py` | Eight native hero-book progress rules, nonpaying official flags, awakening bit decoding and atomic per-objective/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
 | `festival_shop.py` | Local shop exclusions, catalog point prices and atomic asset/stackable redemptions |

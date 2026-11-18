@@ -6,7 +6,19 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **612 passing tests on Windows Python 3.11**. Twelve Dungeon
+The suite has **625 passing tests on Windows Python 3.11**. Thirteen imported
+hero-book regressions cover all eight native objective types, XP thresholds,
+evolution/ascension/myth variants, awakening node masks, official nonpaying
+baselines, incremental growth, exact retries and transaction rollback. The
+matching external catalog has 661 playable specs, 175 origins and 1,329
+objectives. The actual rejected `/collection/claim-hero-knowledge-all` request
+passed on an in-memory account clone, changing only its acquisition flag,
+60 catalog gems and User revision. The exact retry wrote nothing, and an
+all-owned-hero batch also passed. The real database remained unchanged.
+APK claim/reward rendering is pending backend reload and reconnect. See
+[contract and evidence](official-save-experiment.md#dynamic-imported-hero-collection-knowledge).
+
+Twelve earlier Dungeon
 Kingdom Arena regressions cover all three rotations and seven days, consistent
 native seven-day calendars, unrelated-table/service preservation, composition
 with later Raid changes, UTC daily refresh, exact authenticated route schemas,

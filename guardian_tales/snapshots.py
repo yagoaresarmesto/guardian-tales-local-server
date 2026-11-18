@@ -28,6 +28,7 @@ STARTUP_READS = frozenset(
 )
 IMPORTED_MUTATIONS = frozenset(
     (
+        "/collection/claim-hero-knowledge-all",
         "/item/enhance-weapon",
         "/item/engrave-weapon",
         "/item/change-options",

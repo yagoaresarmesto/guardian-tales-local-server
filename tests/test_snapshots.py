@@ -103,6 +103,7 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(
             result["enabled_mutation_routes"],
             [
+                "/collection/claim-hero-knowledge-all",
                 "/item/apply-options",
                 "/item/apply-relic-options",
                 "/item/change-lock-options",

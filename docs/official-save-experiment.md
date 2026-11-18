@@ -1752,6 +1752,51 @@ day 1. These are host/native-contract results. Actual APK scene entry, combat
 and result/menu return require backend reload and full client restart; they have
 not yet been observed and are not established by passing host checks.
 
+## Dynamic imported hero collection knowledge
+
+The next observed rejection was `/collection/claim-hero-knowledge-all`, with one
+owned inventory hero ID. This is the hero knowledge/book claim, rather than item
+or custom collection claims. The imported-account route is now enabled with its
+own bounded external catalog and persistence tables. The existing fresh-guest
+initial-acquisition handler remains unchanged.
+
+Matching native `HeroKnowledgeInfo.GetCurrentValue`, `CheckKnowledgeComplete`
+and `HeroKnowledgeSpec.GetMaxValue` establish eight objective types: Get, Evolve,
+LevelUp, LimitBreak, AwakeningSkill, Ascend, Blessing and Myth. These are evaluated
+from the current owned hero's raw public spec rank, XP, limit breaks, awakening
+bits and blessing level. Ascended rank 5 or myth rank 6 satisfies Ascend; Myth
+requires rank 6. The native level increment cancels between current and maximum
+values, so zero-based total-XP threshold indexing is retained. Saved RankUpgrade
+is not substituted for raw evolution rank.
+
+`CharacterInfo.Apply` treats null/empty awakening trees as empty. The native
+Base64 decoder reads the second `|` part and constructs nodes from the current
+origin's public tree/configuration, using encoded node ID modulo 1000. Only
+those bit positions count; padding bits and short bitsets cannot invent progress.
+The old encoded spec prefix may survive evolution and does not select the node
+map. Invalid nonempty encodings remain guarded.
+
+The prepared external catalog covers 661 playable specs, 175 knowledge origins
+and 1,329 objectives. Rewards in those public rows are gems or empty lists.
+Saved official claim flags are trusted once as nonpaying baselines, including
+flags whose original progress is no longer reconstructible. Later local flags
+must agree with objective receipts and their original baseline; missing receipts
+cannot be silently rebased. Only requested, owned, unique origins are changed.
+Previously claimed and currently unmet objectives give no new reward. Flags,
+balances, revisions, baselines and receipts commit or roll back together.
+Exact request retries return the frozen notices and current User resource.
+
+Thirteen synthetic regressions cover all eight progress types, XP boundaries,
+evolved/ascended/myth specs, sparse awakening bits, old prefixes, null trees,
+official baselines, new progress, no-op claims, authentication, reconnect/reopen,
+catalog removal, numeric/ownership guards and late transaction rollback. The
+actual rejected request passed on an in-memory copy of the saved account: its
+acquisition flag, 60 catalog gems and User revision were the only changes. An
+exact retry wrote nothing. A batch of every owned hero also passed, retaining
+all other profile sections. The real source database had zero writes and its
+profile remained unchanged. These are host/native-contract results; actual APK
+claim/reward rendering remains pending backend reload, reconnect and retry.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

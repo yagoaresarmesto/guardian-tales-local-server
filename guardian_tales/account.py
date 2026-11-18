@@ -50,6 +50,8 @@ from .guild_raid import menu_read as read_raid_menu
 from .guild_raid import rankings as guild_raid_rankings
 from .guild_raid import start_stage as enter_raid_stage
 from .hero_knowledge import claim_hero_knowledge
+from .imported_hero_knowledge import claim as claim_imported_hero_knowledge
+from .imported_hero_knowledge import create_tables as create_imported_knowledge_tables
 from .imported_training import create_tables as create_imported_training_tables
 from .imported_training import train as train_imported_characters
 from .items import inventory_item
@@ -259,6 +261,7 @@ class AccountStore:
             "CREATE TABLE IF NOT EXISTS character_training_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, targets TEXT NOT NULL)"
         )
         create_imported_training_tables(db)
+        create_imported_knowledge_tables(db)
         create_challenge_tables(db)
         create_punchking_tables(db)
         db.execute(
@@ -1122,6 +1125,8 @@ class AccountStore:
         return charge_stamina(self, request, now)
 
     def claim_hero_knowledge(self, request, operation_id):
+        if is_imported(self.db):
+            return claim_imported_hero_knowledge(self, request, operation_id)
         return claim_hero_knowledge(self, request, operation_id)
 
     def redeem_festival_points(self, request, operation_id):

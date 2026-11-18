@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 612,
+    "tests_run": 625,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3284,5 +3284,36 @@
     },
     "initial_local_selection": {"variant": 1, "day": 1},
     "post_fix_apk_lobby_combat_and_result_return": "Pending backend reload and full game restart; reconnect alone does not reload static objects"
+  },
+  "dynamic_imported_hero_collection_knowledge": {
+    "date": "2026-11-18",
+    "observed_rejected_route": "/collection/claim-hero-knowledge-all",
+    "observed_schema": {"CharacterIds": "owned inventory ID list"},
+    "native_contract": "HeroKnowledgeInfo current-value/complete helpers, HeroKnowledgeSpec maximums, CharacterInfo.Apply null-tree handling and AwakeningTree bit decoding",
+    "objective_types": ["Get", "Evolve", "LevelUp", "LimitBreak", "AwakeningSkill", "Ascend", "Blessing", "Myth"],
+    "prepared_playable_specs": 661,
+    "prepared_origins": 175,
+    "prepared_objectives": 1329,
+    "level_rule": "bisect_right(native total-XP thresholds with leading zero, saved Experience) - 1",
+    "awakening_rule": "Null/empty means zero; count only configured node IDs modulo 1000 in second Base64 part, using little-endian bits; preserve old serialized spec prefix",
+    "official_baseline_policy": "Preserve existing flags without paying again; later local claims require both original baseline and matching per-objective receipts",
+    "unknown_original_bits_preserved": true,
+    "rewards": "Only matching public gem rewards or empty lists; no costs",
+    "transaction": "Baselines, objective receipts, gem balances, flags, User revision and request receipt are atomic",
+    "retries": "Frozen reward notices with current User; no second payment or profile restoration",
+    "fresh_guest_acquisition_handler_unchanged": true,
+    "synthetic_regressions": 13,
+    "full_windows_tests": 625,
+    "private_actual_account_clone_check": {
+      "result": "PASS",
+      "actual_pending_request": true,
+      "only_expected_acquisition_flag_60_gems_and_user_revision_changed": true,
+      "exact_retry_writes": 0,
+      "all_owned_hero_batch": "PASS",
+      "other_profile_sections_preserved": true,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_claim_and_reward_rendering": "Pending backend reload, reconnect and retry; item/custom/mastery collection claims remain separate"
   }
 }

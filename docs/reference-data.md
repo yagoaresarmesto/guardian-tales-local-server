@@ -47,6 +47,7 @@ not fetch missing bootstrap files from an official service.
 | `challenge_mission_catalog.json` | Hero collection/draw and gold collection challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
 | `imported_challenge_mission_catalog.json` | Dynamic imported-account achievements | Pinned client, available public challenge groups/steps, verified progress types and explicit reward storage |
 | `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
+| `imported_hero_knowledge_catalog.json` | Imported hero-book objectives | Pinned client, public spec origins/ranks, XP thresholds, awakening node indices and eight native objective types with gem rewards |
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 | `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
 | `orbital_completion_catalog.json` | Opt-in Orbital victory progress without rewards | Matching client and explicit Boolean no-reward policy; uses the separate entry floor catalog |
@@ -817,6 +818,52 @@ request receipts commit together. Failed batches save none of them. Replays
 retain frozen reward notices with current resources, even after catalog removal.
 This extends the two challenge claim routes; beginner, daily and event claims
 remain separate contracts.
+
+## Imported hero collection knowledge
+
+Imported accounts use a separate `imported_hero_knowledge_catalog.json` for
+`/collection/claim-hero-knowledge-all`. The request is exactly `CharacterIds`, a
+list of 1-512 positive inventory IDs. It never accepts public spec IDs as ownership.
+The external catalog is required, limited to 2 MiB and pinned to the matching
+`client`. Its fields are:
+
+- `experience_by_level`: strictly increasing native total-XP thresholds, starting
+  at zero; internal level is `bisect_right(thresholds, Experience) - 1`.
+- `heroes`: public spec IDs mapped to `origin_id` and raw `rank` (0-6).
+- `origins`: origin IDs mapped to sorted unique `nodes` indices and `objectives`.
+  Each objective has a globally unique `id`, native `type`, `value` and `rewards`.
+  Rewards are `{item_id, amount}`; only the verified gem asset 70003 is supported.
+  Empty rewards are valid. Bits use `id % 100 - 1`, preserving sequence gaps.
+
+The prepared matching public catalog contains 661 playable specs, 175 knowledge
+origins and 1,329 objectives. Build it from `heroes`, `knowledgecollection`,
+`exps2`, `charactertreeconfig`, `awakeningtreenodes` and `awakeningnodelayout`.
+The native conditions compare acquisition/ownership; raw evolution rank; internal
+level; saved limit breaks; opened awakening nodes; ascended-or-myth state; blessing
+level; and myth state. Ascend uses a boolean current value, with public target 5
+minus normal maximum rank 4. Myth also uses a boolean, with threshold 1; public
+value 6 identifies its rank rather than requiring six myth upgrades.
+
+Awakening null/empty means no opened nodes, matching `CharacterInfo.Apply`.
+Nonempty trees use two Base64 parts separated by `|`; the first is a four-byte
+spec prefix that can predate evolution. Only configured node bits in the second
+part count, least-significant bit first within each byte. Derive node indices as
+encoded tree node IDs modulo 1000 and bound them by the selected layout. Padding
+and absent bytes cannot increase progress. Malformed encodings are guarded.
+
+On the first local claim, existing official `Knowledge` flags become a nonpaying
+baseline for that unique owned origin. Each newly earned objective then requires
+its own local receipt. Missing baselines/receipts cannot be silently reconstructed
+from current flags. Unknown original bits are preserved. New growth can earn later
+objectives under a new request identity, without paying old objectives again.
+Baselines, new gem balances, flags, User revision and request receipts commit in
+one transaction. Exact retries return frozen notices with current User state,
+even after catalog removal; they never restore an old profile or grant twice.
+Other hero fields, spending counters and all other profile sections are retained.
+This support is specific to hero knowledge; item/custom/mastery collection claims
+have separate contracts.
+
+The existing fresh-guest acquisition path below is unchanged.
 
 ## Initial hero acquisition knowledge
 
