@@ -98,7 +98,7 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Twenty-two mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+Twenty-three mutations are now enabled: `/item/change-options`, `/item/apply-options`,
 `/item/change-relic-options/v2`, `/item/apply-relic-options`,
 `/item/change-lock-options`,
 `/item/engrave-weapon`,
@@ -109,7 +109,8 @@ Twenty-two mutations are now enabled: `/item/change-options`, `/item/apply-optio
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp`,
 `/lobby-village/receive-gift`, `/lobby-village/remove-obstacle`,
-`/user/guardian-mastery-level-up` and `/user/reset-guardian-mastery-level`. The summon routes
+`/user/guardian-mastery-level-up`, `/user/reset-guardian-mastery-level` and
+`/tower-infinity/end-stage`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
@@ -150,6 +151,9 @@ Ordinary option locking/unlocking shares the free option catalog and retains
 all stones, changing only requested lock flags and user revision when necessary.
 Relic option changes also use a separate free proposal/decision flow with public
 per-slot option pools, changing only the selected main or secondary group.
+Orbital non-clear exits change no state; an explicit no-reward completion policy
+also permits recording a client-reported victory's highest floor and progress
+revision without delivering any reward. Actual APK victory is still unverified.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -308,8 +312,9 @@ must have one to four distinct owned characters, with every referenced equipment
 item owned. Invalid requests, missing/ambiguous presets, unknown references and
 unsupported floors reject without writes. Valid entry returns `{}` and performs
 no selected-party migration, payment, attempt recording, floor advancement or
-reward grants. `/tower-infinity/end-stage` and formation edits remain rejected.
-The trial is for loading a phase; winning it does not save progression or rewards.
+reward grants. At this initial checkpoint, `/tower-infinity/end-stage` and
+formation edits remained rejected. The later no-reward completion handler is
+described below; loading alone still does not establish a validated battle.
 
 The prepared lab extracted 1,501 public floor IDs from its matching imported
 static table into the optional external entry catalog. The existing Release pack
@@ -328,8 +333,8 @@ no successful, rejected or unsupported `/tower-infinity/end-stage` request was
 observed in that trial. A private full-profile and draw-receipt comparison still
 matched the pre-deployment state. This establishes loading and the reported
 defeat return, not a persisted battle result. Victory, battle-result validation,
-result persistence and rewards require their own implementation before claiming
-playable saved Orbital progress.
+result persistence and rewards were outside that initial observation. The later
+handler below adds no-reward progress saving; actual APK victory remains pending.
 
 ## Selecting a captured Orbital preset
 
@@ -1069,7 +1074,53 @@ A detached actual-account check generated and accepted the pending secondary
 proposal, generated/discarded a main-group proposal, and verified no-write same
 and delayed retries. All currencies, tickets, materials, jewel slots and unrelated
 fields were preserved. Captured seeds and the actual saved profile remained
-unchanged. The APK relic-option retry is pending backend reload and reconnect.
+unchanged. Two subsequent APK rolls and two discard decisions were saved, with
+no accepted proposal observed. The current relic matches the latest resolution;
+stackable payment/material inventory, jewel slots and the unselected group match
+the private pre-mock baseline. Other assets and later profile actions are outside
+this live comparison. APK acceptance remains unverified.
+
+## Orbital stage closing and victory progress without rewards
+
+The next unsupported request was `/tower-infinity/end-stage`. Its observed
+`isCleared` was false, with four integer damage totals; this was not an APK
+victory. Native `SendTowerInfinityEndStage` sends exactly `floor`, `isCleared`
+and `damages`. `Tower1000Client.SendTower1000End` copies one signed-32-bit damage
+value per party member. Its success callback checks optional `AddedItems` and
+`TowerInfinity`, then can exit/restart without those payloads. No official end
+response was captured.
+
+The authenticated handler accepts configured floors through the absolute saved
+floor plus one, including lower floors. Non-clear exits acknowledge with `{}`
+without changing any table, profile field, attempt record or reward. Victory
+requests require a separate explicit no-reward policy. The owner requested that
+victories save their cleared floor while delivering no rewards. The local policy
+trusts the authenticated client report, records only a newly highest floor and
+increments `UserProgress.Cas`; it does not validate combat outcomes. Older/equal
+clears preserve the existing signed floor/revision. A new highest floor is stored
+positively; legacy formation and all other tower fields remain intact.
+
+No asset, inventory, user revision, mission counter, reward notice or unrelated
+profile/village field changes. No reward is deferred. The victory response
+contains current `UserProgress` and top-level `TowerInfinity`. Profile advancement
+and canonical receipt commit atomically. Old victory retries preserve later
+progress without writes, including after catalog/policy removal. Changed request
+parameters under the same identity reject. Repeating a lower floor under a new
+identity records a receipt without resetting progress or giving anything.
+Existing session-epoch retry limits still apply. No missing attempt is invented
+for a phase already open before backend reload.
+
+Five non-clear exit regressions cover native damage/schema/authentication bounds,
+earlier/signed floors, matching catalog/prologue guards, repeat requests and
+reopening/reconnect/new login without writes. Ten completion regressions cover
+next-floor-only advancement, exact profile/resource boundaries, lower-floor
+repetition, ordered progression/current-state retries, explicit no-reward policy,
+revision ceilings, rollback and catalog removal. The observed actual-account
+non-clear request leaves every saved table unchanged in a detached check. Separate
+**constructed** victory requests advance only the highest floor/progress revision,
+retain progress on earlier floors and preserve later progress on old retries.
+Captured seeds and the real saved account remained unchanged. The APK non-clear
+retry requires backend reload; an actual APK victory still needs to be tested.
 
 ## Host readiness before the APK check
 

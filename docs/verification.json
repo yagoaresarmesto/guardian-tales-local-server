@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 507,
+    "tests_run": 522,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1214,6 +1214,7 @@
       "/preset/set-selected-preset",
       "/summon/select-character",
       "/summon/set-select-character",
+      "/tower-infinity/end-stage",
       "/user/charge-stamina",
       "/user/charge-stamina-by-gem",
       "/user/claim-daily-attendance",
@@ -1570,7 +1571,6 @@
     "profile_selected_party_currency_and_inventory_unchanged": true,
     "attempts_or_results_persisted": false,
     "rewards_granted": false,
-    "end_stage_implemented": false,
     "formation_changes_implemented": false,
     "new_regressions": 6,
     "focused_windows_checks": 47,
@@ -1613,7 +1613,9 @@
       "end_stage_request_observed": false,
       "complete_profile_and_draw_receipts_unchanged": true,
       "victory_progression_or_rewards_verified": false
-    }
+    },
+    "end_stage_implemented_at_loading_trial": false,
+    "later_no_reward_completion_implemented": true
   },
   "orbital_preset_selection": {
     "date": "2026-11-17",
@@ -2808,6 +2810,62 @@
       "original_startup_seed_preserved": true,
       "real_saved_profile_unchanged": true
     },
-    "post_fix_apk_relic_options": "pending backend reload and reconnect"
+    "post_fix_apk_relic_options": {
+      "result": "PASS for generation and discard; acceptance pending actual APK observation",
+      "generated_receipts": 2,
+      "resolved_receipts": 2,
+      "accepted_receipts": 0,
+      "discarded_receipts": 2,
+      "current_relic_options_match_latest_resolution": true,
+      "all_stackables_jewel_slots_and_unselected_group_preserved": true,
+      "scope": "Saved relic result, stackable payment/material inventory, jewels and unselected group; other assets and unrelated later profile actions are outside this comparison"
+    }
+  },
+  "orbital_exit_and_no_reward_completion": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/tower-infinity/end-stage",
+    "observed_is_cleared": false,
+    "native_builder": "Oak.ApiConnection.SendTowerInfinityEndStage",
+    "native_caller": "Oak.Tower1000Client.SendTower1000End",
+    "request_fields": [
+      "floor",
+      "isCleared",
+      "damages"
+    ],
+    "damage_contract": "Ordered list of 0..4 nonnegative signed-32-bit party totals",
+    "official_response_captured": false,
+    "native_callback_can_exit_without_optional_reward_and_tower_payloads": true,
+    "non_clear_policy": "Return empty success without changing any saved table, profile, floor, revision or resource",
+    "victory_policy": "Owner-selected no rewards; trust authenticated client clear report and advance only the highest configured next floor",
+    "explicit_victory_policy_catalog": "orbital_completion_catalog.json",
+    "victory_response_keys": [
+      "UserProgress",
+      "TowerInfinity"
+    ],
+    "no_assets_inventory_user_revision_mission_credit_or_reward_notices_change": true,
+    "new_highest_floor_stored_positively_with_progress_revision_increment": true,
+    "older_or_equal_clears_preserve_existing_signed_floor_and_revision": true,
+    "legacy_formation_and_other_tower_fields_preserved": true,
+    "atomic_profile_and_canonical_victory_receipt": true,
+    "current_state_victory_retry_retains_later_progress_even_without_catalog_or_policy": true,
+    "non_clear_exits_create_no_attempt_damage_or_completion_record": true,
+    "battle_simulation_and_attempt_binding_validated": false,
+    "new_non_clear_regressions": 5,
+    "new_no_reward_completion_regressions": 10,
+    "full_windows_tests": 522,
+    "detached_actual_account_check": {
+      "result": "PASS",
+      "observed_non_clear_exit_keeps_every_saved_table_unchanged": true,
+      "lower_configured_floor_exit_keeps_every_table_unchanged": true,
+      "constructed_victory_changes_only_highest_floor_and_progress_revision": true,
+      "constructed_lower_floor_victory_retains_progress": true,
+      "constructed_following_floor_and_late_retry_preserve_current_progress": true,
+      "no_rewards_assets_inventory_user_revision_or_other_fields_change": true,
+      "original_startup_seed_preserved": true,
+      "real_saved_profile_unchanged": true,
+      "actual_apk_victory_observed": false
+    },
+    "post_fix_apk_non_clear_exit": "pending backend reload and reconnect",
+    "post_fix_apk_victory": "not observed; constructed native request tested separately"
   }
 }

@@ -49,6 +49,7 @@ from .missions import (
     FIRST_HERO_CHALLENGE_STEP,
 )
 from .monsters import record_defeated_monsters
+from .orbital import create_tables as create_orbital_tables
 from .passes import (
     FIRST_FESTIVAL_LEVEL,
     FIRST_FESTIVAL_POINTS,
@@ -200,6 +201,7 @@ class AccountStore:
         create_weapon_engrave_tables(db)
         create_weapon_option_lock_tables(db)
         create_relic_option_tables(db)
+        create_orbital_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )

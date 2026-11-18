@@ -10,7 +10,7 @@ import unittest
 from pathlib import Path
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.orbital import ORBITAL_ENTRY_ROUTE
+from guardian_tales.orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE
 from guardian_tales.packet_reader import parse_packet
 from guardian_tales.protocol import Packet, PacketError, encode_packet
 from guardian_tales.snapshots import CLIENT, import_snapshot
@@ -158,3 +158,94 @@ class OrbitalTests(unittest.TestCase):
         with self.db:
             self.db.execute("DELETE FROM imported_account")
         self.assert_rejected_without_writes({"floor": 3, "presetId": 9})
+
+    def test_non_clear_exits_preserve_every_table_source_and_floor_without_attempt_records(self):
+        before = list(self.db.iterdump())
+        source = self.source.read_bytes()
+        for floor, damages in ((1, []), (2, [0]), (3, [1, 22, 333, 0x7FFFFFFF])):
+            body = {"floor": floor, "isCleared": False, "damages": damages}
+            self.assertEqual(self.call(body, ORBITAL_EXIT_ROUTE), {})
+            self.assertEqual(self.call(body, ORBITAL_EXIT_ROUTE), {})
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.source.read_bytes(), source)
+        self.assertEqual(self.store.account.profile()["UserProgress"]["TowerInfinity"]["Floor"], 2)
+
+    def test_non_clear_exit_authentication_schema_damage_bounds_and_victory_rejection(self):
+        valid = {"floor": 3, "isCleared": False, "damages": [0, 1, 2, 3]}
+        self.session = BootstrapSession(self.store)
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.call(valid, ORBITAL_EXIT_ROUTE)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.login()
+        for body in (
+            None,
+            {},
+            [],
+            dict(valid, floor=True),
+            dict(valid, floor=0),
+            dict(valid, floor=4),
+            dict(valid, floor=99),
+            dict(valid, isCleared=True),
+            dict(valid, isCleared=0),
+            dict(valid, damages=None),
+            dict(valid, damages={}),
+            dict(valid, damages=[True]),
+            dict(valid, damages=[-1]),
+            dict(valid, damages=[1.5]),
+            dict(valid, damages=[0x80000000]),
+            dict(valid, damages=[0] * 5),
+            dict(valid, Claim=True),
+        ):
+            before = list(self.db.iterdump())
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, ORBITAL_EXIT_ROUTE)
+            self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_non_clear_exit_requires_matching_catalog_and_valid_signed_saved_progress(self):
+        valid = {"floor": 3, "isCleared": False, "damages": []}
+        original = self.store.account.profile()
+        for floor in (2, -2):
+            profile = copy.deepcopy(original)
+            profile["UserProgress"]["TowerInfinity"]["Floor"] = floor
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            before = list(self.db.iterdump())
+            self.assertEqual(self.call(valid, ORBITAL_EXIT_ROUTE), {})
+            self.assertEqual(list(self.db.iterdump()), before)
+        self.catalog.unlink()
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.call(valid, ORBITAL_EXIT_ROUTE)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.catalog.write_text(json.dumps({"client": CLIENT, "floors": [1, 2, 3]}))
+        for floor in (True, None, "2", -0x80000000, 0x80000000, 1):
+            profile = copy.deepcopy(original)
+            profile["UserProgress"]["TowerInfinity"]["Floor"] = floor
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            before = list(self.db.iterdump())
+            with self.subTest(saved_floor=floor), self.assertRaises(PacketError):
+                self.call(valid, ORBITAL_EXIT_ROUTE)
+            self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_non_clear_exit_reopening_reconnect_and_new_login_remain_read_only(self):
+        body = {"floor": 3, "isCleared": False, "damages": [1, 2]}
+        self.call(body, ORBITAL_EXIT_ROUTE)
+        self.db.close()
+        self.db = sqlite3.connect(self.state / "server.sqlite3")
+        self.store = GuestStore(self.db, self.references)
+        for reconnect in (True, False):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            before = list(self.db.iterdump())
+            self.assertEqual(self.call(body, ORBITAL_EXIT_ROUTE), {})
+            self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_non_clear_exit_rejects_incomplete_prologue_without_writes(self):
+        with self.db:
+            self.db.execute("DELETE FROM imported_account")
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.call({"floor": 1, "isCleared": False, "damages": []}, ORBITAL_EXIT_ROUTE)
+        self.assertEqual(list(self.db.iterdump()), before)

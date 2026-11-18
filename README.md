@@ -100,7 +100,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Play-menu prerequisites | Read-only cooperative placeholder with captured presets and saved rift settings; both APK reads succeeded after reconnect; mode gameplay unfinished |
 | Infinite-tower entry | Returns the saved floor and formation without changing progress; APK entry observed; battles and rewards unfinished |
 | Infinite-tower rankings | Empty local leaderboard list; APK query succeeded; no official rank or player entries inferred |
-| Orbital phase loading trial | APK loading and owner-confirmed defeat return; no saved-state changes or end request observed; victory/rewards pending |
+| Orbital phase loading trial | APK loading and defeat return observed; guarded known-floor loading preserves saved state |
+| Orbital stage closing | Non-clear exits preserve all state; opt-in victories save highest floor without rewards; actual APK victory pending |
 | Orbital preset selection | Captured owned party choice saved in APK; atomic choice and retry receipts |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
@@ -114,7 +115,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Free equipment option values | Seven APK rolls and one accepted proposal saved with resources retained; existing identities/locks preserved |
 | Free first equipment engraving | One APK engraving saved; gold, hammers, experience and limit breaks retained; matching public attribute tier |
 | Free equipment option locks | Three APK locks saved with selected values retained through later rolls and resources intact |
-| Free relic option changes | Main/subgroup option types and values roll from public slot pools; persistent apply/discard without payment; APK retry pending |
+| Free relic option changes | Two APK rolls/discards observed with material inventory retained; acceptance tested in memory; public slot pools |
 | Guardian mastery skill upgrades | Catalog-backed spending and class limits; 34 APK upgrades matched saved skills and costs |
 | Guardian mastery reset | Refund, configured free-gem payment and cooldown saved atomically; one APK reset verified |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |

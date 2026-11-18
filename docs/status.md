@@ -6,14 +6,26 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **507 passing tests on Windows Python 3.11**. Eighteen relic-option
+The suite has **522 passing tests on Windows Python 3.11**. Five Orbital non-clear
+exit regressions cover read-only exits, native schema/damage bounds, floor/catalog/
+prologue/authentication guards and reconnection. Ten no-reward completion
+regressions cover highest-floor-only progress, exact resource/profile bounds,
+earlier floors, retries/reopening/new login, explicit policy, revision limits,
+rollback and catalog removal. The observed non-clear request and separately
+constructed victories passed against a detached actual account. The real save
+was unchanged. APK exit retry needs backend reload; actual APK victory remains
+unverified. The owner selected progress saving without rewards.
+Eighteen relic-option
 regressions cover free generation/accept/discard, selected main/secondary groups,
 valid slot pools, repeated IDs, locked/unselected rows, persistent current-state
 retries, reopening/reconnect/new login, catalog removal, later jewel edits,
 ownership/authentication/schema/configuration, revision ceilings and rollback.
 The explicit local mock uniformly rolls allowed option IDs and inclusive values
 for selected unlocked slots. The detached actual-account check passed without
-changing the real save; APK retry requires backend reload and reconnect.
+changing the real save. Two APK rolls and two discards were subsequently saved;
+no accepted proposal was observed. Stackable payment/material inventory, jewels
+and the unselected group match the pre-mock baseline. Other assets and later
+profile actions are outside this live comparison; APK acceptance remains unverified.
 Fourteen option-lock
 regressions cover free lock/unlock, exact flag/revision/resource bounds, no-op
 requests, canonical current-state retries, reopening/reconnect/new login,
@@ -148,7 +160,8 @@ cover exact mutation boundaries, retries and identities, reopening/reconnect,
 scope/authentication, ownership, invalid state, overflow and atomic rollback.
 Six Orbital loading regressions cover
 authentication, requests, configured/saved floor limits, preserved presets,
-ownership, invalid inputs, retries/reconnect and unchanged state. Result saving
+ownership, invalid inputs, retries/reconnect and unchanged state. The later
+no-reward completion handler covers client-reported progress; battle validation
 and rewards remain unsupported. An empty tower-ranking regression covers
 repeated fresh/imported reads and unchanged database state; authentication and
 request-shape guards also cover the ranking read. Three infinite-tower entry
@@ -1036,8 +1049,9 @@ attempt recording or rewards. All 276 isolated tests and a private read-only che
 of the actual next floor/preset pass. After reload, the APK loaded the phase, and
 the owner confirmed defeat followed by return to the Orbital menu. No end-stage
 request was observed; the full profile and draw receipts remained unchanged.
-Victory, result persistence, formation edits and rewards remain unsupported;
-this trial does not establish saved Orbital progression.
+That initial trial did not establish saved Orbital progression. The later
+no-reward handler is covered by constructed victory checks; actual APK victory,
+formation edits, battle validation and reward delivery remain unverified or unsupported.
 Changing the preset inside Orbital next failed at
 `/preset/set-selected-preset`. It now selects only existing captured Orbital
 parties, updating the selection pointer and revision with atomic request receipts.

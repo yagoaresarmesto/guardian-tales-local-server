@@ -120,6 +120,7 @@ class SnapshotTests(unittest.TestCase):
                 "/preset/set-selected-preset",
                 "/summon/select-character",
                 "/summon/set-select-character",
+                "/tower-infinity/end-stage",
                 "/user/charge-stamina",
                 "/user/charge-stamina-by-gem",
                 "/user/claim-daily-attendance",

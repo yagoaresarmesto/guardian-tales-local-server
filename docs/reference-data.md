@@ -47,6 +47,7 @@ not fetch missing bootstrap files from an official service.
 | `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 | `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
+| `orbital_completion_catalog.json` | Opt-in Orbital victory progress without rewards | Matching client and explicit Boolean no-reward policy; uses the separate entry floor catalog |
 | `stamina_regen_catalog.json` | Natural stamina recharge | Matching client, base charged-stamina maximum and interval in minutes |
 | `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
@@ -77,12 +78,43 @@ extracted 1,501 IDs from its already imported static data. This additional catal
 is not included in the previously published 19-reference-file content pack.
 Only synthetic subsets belong in tests; keep the prepared catalog external.
 
-This catalog enables only a guarded phase-loading trial with preserved imported
+This catalog enables a guarded phase-loading trial with preserved imported
 party presets. The local eligibility policy permits configured floors through
 the absolute saved floor plus one. The selected preset must contain one to four
 distinct owned characters and owned equipment. Entry does not change the saved
-floor, selected preset, currency or inventory. Combat results, attempts, rewards
-and the separate formation-save route are not implemented by this trial.
+floor, selected preset, currency or inventory. Stage closing uses the separate
+handler below. Attempt records, combat validation, rewards and formation saving
+are outside this loading trial.
+
+`/tower-infinity/end-stage` accepts exactly positive integer `floor`, Boolean
+`isCleared` and `damages`, a list of 0..4 nonnegative signed-32-bit integers in
+party order. It requires sign-in, a completed prologue and a configured floor no
+higher than the absolute saved floor plus one. This includes earlier floors.
+With `isCleared: false`, it returns `{}` and changes no saved table, profile,
+floor, revision or resource. No attempt/damage record is reconstructed. The native
+callback can exit while skipping absent `AddedItems`/`TowerInfinity` payloads.
+
+Victories additionally require `orbital_completion_catalog.json`, limited to
+4 KiB with exactly the matching `client` and Boolean `no_rewards: true`. The
+explicit local policy accepts the authenticated client's clear report; it does
+not validate the battle simulation. A clear higher than the absolute saved floor
+stores that new highest floor positively and increments only `UserProgress.Cas`.
+Earlier/equal clears retain the existing signed floor and revision. Other tower
+fields, including legacy formation, remain intact. The progress revision must
+be a nonnegative signed-64-bit integer; advancement at its ceiling rejects.
+
+The victory response contains current `UserProgress` and top-level `TowerInfinity`
+without reward keys. Assets, inventory, user revision, mission counters and every
+other profile/village field stay unchanged. No reward is granted, queued or
+claimed. Profile advancement and the canonical victory receipt commit atomically.
+Old victory retries return current progress, preserving later floors even after
+catalog/policy removal; changed parameters under the same operation ID reject.
+New clears of older floors save a receipt without resetting progress or giving
+rewards. These receipts use the existing session epoch/sequence identity and
+its limits across new logins. Non-clear exits remain read-only and create no
+completion receipt. The explicit policy file is additional to the content pack.
+Actual APK victory behavior remains unverified; its constructed native request
+and state boundaries are covered by automated/detached checks.
 
 The separate `/preset/set-selected-preset` mutation can select an existing saved
 Orbital party without editing its definition. It requires no additional public
