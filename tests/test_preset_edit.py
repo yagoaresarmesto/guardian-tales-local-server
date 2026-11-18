@@ -103,7 +103,13 @@ class PresetEditTests(PresetFixture, unittest.TestCase):
         expected = copy.deepcopy(self.initial_group)
         expected["Cas"] += 1
         expected["Presets"][2]["Name"] = "Edited team"
-        self.assertEqual(response, {"UserPartyPreset2": expected, "User": profile["User"]})
+        self.assertEqual(
+            response,
+            {
+                "UserPartyPreset2": expected,
+                "User": {key: profile["User"][key] for key in ("Id", "Cas", "SelectedPresetId")},
+            },
+        )
         self.assertEqual(self.store.account.profile(), profile)
         self.assertEqual(current_group(self.db), expected)
         after_reads = preserved_read(self.db, "/preset/get-presets")
@@ -125,7 +131,10 @@ class PresetEditTests(PresetFixture, unittest.TestCase):
         expected["User"]["SelectedPresetId"]["InfiniteTower"] = 402
         expected["User"]["Cas"] += 1
         self.assertEqual(self.store.account.profile(), expected)
-        self.assertEqual(response["User"], expected["User"])
+        self.assertEqual(
+            response["User"],
+            {key: expected["User"][key] for key in ("Id", "Cas", "SelectedPresetId")},
+        )
         self.assertEqual(current_group(self.db)["Presets"][:2], self.initial_group["Presets"][:2])
         self.assertEqual(current_group(self.db)["Cas"], 8)
 

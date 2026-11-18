@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 584,
+    "tests_run": 588,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3208,5 +3208,27 @@
       "real_source_profile_unchanged": true
     },
     "post_fix_apk_leveling": "Pending backend reload, reconnect and retry"
+  },
+  "compact_preset_responses": {
+    "date": "2026-11-18",
+    "reported_issue": "Pauses selecting, editing and deleting presets",
+    "native_contract": "NetResMediator routes User by Id; User.Apply preserves omitted fields and guards hero/item parsing; SelectedPresetId map is replaced",
+    "user_response_fields": ["Id", "Cas", "SelectedPresetId"],
+    "complete_current_mode_map_and_full_definition_group_retained": true,
+    "persistence_ownership_atomicity_and_receipts_unchanged": true,
+    "synthetic_regressions": 4,
+    "full_windows_tests": 588,
+    "private_actual_account_clone_benchmark": {
+      "result": "PASS",
+      "repetitions_per_operation_and_version": 7,
+      "select": {"previous_json_bytes": 657376, "compact_json_bytes": 383, "previous_median_ms": 85.507, "compact_median_ms": 11.431},
+      "edit": {"previous_json_bytes": 676045, "compact_json_bytes": 19052, "previous_median_ms": 87.582, "compact_median_ms": 19.067},
+      "delete": {"previous_json_bytes": 675525, "compact_json_bytes": 18532, "previous_median_ms": 81.879, "compact_median_ms": 7.765},
+      "scope": "Handler plus JSON/wire encoding on in-memory clones; excludes disk flush, network and APK rendering",
+      "resulting_full_profiles_groups_and_retries_match_previous_implementation": true,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_responsiveness_and_partial_resource_handling": "Pending backend reload, reconnect and select/save/delete trial"
   }
 }

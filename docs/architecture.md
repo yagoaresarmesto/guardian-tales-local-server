@@ -267,6 +267,18 @@ its saved receipt, pointer and revision matched, with unrelated state preserved.
 Raid selection was tested through the protocol against an in-memory clone of
 the actual account; its first post-fix APK change remains unverified.
 
+All preset mutations and their receipt replays now return a compact `User`
+resource containing only `Id`, `Cas` and the complete `SelectedPresetId` map.
+Native `NetResMediator.HasMyResource` requires the owner ID. `User.Apply` retains
+absent scalar fields and guards hero/inventory parsing on property presence;
+its selected-mode map uses replacement semantics, so all mode pointers are
+included. The full current `UserPartyPreset2` group is still returned for save,
+creation and deletion, since the client replaces the preset dictionary. The
+saved profile and transactions are unchanged. This avoids transferring and
+reprocessing unrelated heroes/equipment on each small preset action. Cloned
+actual-account response/encoding measurements passed; APK latency and compact
+resource handling remain pending reload and reconnect.
+
 The following `/user/charge-stamina` failure was a separate parameterless natural
 recharge request. Its local policy mirrors the native client arithmetic: below
 `MaxStaminaDefault + MaxAdj`, credit due ticks from `NextCharge` at the configured
@@ -287,7 +299,7 @@ nullable character equipment fields are omitted and normalize to unequipped
 slots. The handler validates the existing mode ID, preserved order, bounded name,
 distinct owned members and owned equipment. Empty nonselected teams can be stored,
 but selection/entry still require a nonempty team. It returns the full current
-`UserPartyPreset2` group and current `User`, retaining other presets.
+`UserPartyPreset2` group and compact current `User` selection, retaining other presets.
 
 `party_preset_state` holds the current group; the original imported startup seed
 remains unchanged. Preserved reads overlay that group so later menus, selection

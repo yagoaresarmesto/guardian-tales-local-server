@@ -109,6 +109,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Own profile card | Card request completed; empty friend prerequisite added; uncaptured decorations/social fields empty; APK rendering pending |
 | Friend menu reads | Empty friend/recommendation views; saved social settings, counts and gifts retained; social writes unavailable |
 | Orbital preset creation/application | Two APK creations persisted; current state matches save/delete history and selections |
+| Preset response performance | Compact selection resources avoid resending heroes/inventory; cloned-account responses shrink by 97–99.9%; APK latency check pending |
 | Village resource collection | APK gold collection verified; full soul points retained; saved clocks and retry receipts |
 | Guardian base-camp debug collection | Opt-in fixed mastery-point reward; four APK collections credited the requested 100 million each |
 | Princess gift | No-reward mock; one APK acknowledgment saved its timer/revision with other village fields preserved |

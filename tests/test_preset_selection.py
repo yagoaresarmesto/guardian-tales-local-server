@@ -84,7 +84,10 @@ class PresetSelectionTests(unittest.TestCase):
         expected = copy.deepcopy(before)
         expected["User"]["SelectedPresetId"]["InfiniteTower"] = 402
         expected["User"]["Cas"] += 1
-        self.assertEqual(self.call({"PresetId": 402}), {"User": expected["User"]})
+        self.assertEqual(
+            self.call({"PresetId": 402}),
+            {"User": {key: expected["User"][key] for key in ("Id", "Cas", "SelectedPresetId")}},
+        )
         self.assertEqual(self.store.account.profile(), expected)
         self.assertEqual(self.source.read_bytes(), source)
         self.assertEqual(
@@ -212,7 +215,10 @@ class PresetSelectionTests(unittest.TestCase):
         expected = copy.deepcopy(initial)
         expected["User"]["SelectedPresetId"]["GuildRaidAndConquest"] = 713
         expected["User"]["Cas"] += 1
-        self.assertEqual(self.call({"PresetId": 713}), {"User": expected["User"]})
+        self.assertEqual(
+            self.call({"PresetId": 713}),
+            {"User": {key: expected["User"][key] for key in ("Id", "Cas", "SelectedPresetId")}},
+        )
         self.assertEqual(self.store.account.profile(), expected)
         self.assertEqual(self.source.read_bytes(), source)
         self.assertEqual(

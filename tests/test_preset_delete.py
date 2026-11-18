@@ -89,7 +89,13 @@ class PresetDeleteTests(unittest.TestCase):
         expected = copy.deepcopy(self.initial_group)
         expected["Cas"] += 1
         expected["Presets"].pop()
-        self.assertEqual(response, {"UserPartyPreset2": expected, "User": profile["User"]})
+        self.assertEqual(
+            response,
+            {
+                "UserPartyPreset2": expected,
+                "User": {key: profile["User"][key] for key in ("Id", "Cas", "SelectedPresetId")},
+            },
+        )
         self.assertEqual(current_group(self.db), expected)
         self.assertEqual(
             preserved_read(self.db, "/preset/get-presets"),
@@ -113,7 +119,10 @@ class PresetDeleteTests(unittest.TestCase):
         expected["User"]["Cas"] += 1
         response = self.call({"PresetId": 401})
         self.assertEqual(self.store.account.profile(), expected)
-        self.assertEqual(response["User"], expected["User"])
+        self.assertEqual(
+            response["User"],
+            {key: expected["User"][key] for key in ("Id", "Cas", "SelectedPresetId")},
+        )
         self.assertEqual(current_group(self.db)["Cas"], 8)
         self.assertEqual([p["Id"] for p in current_group(self.db)["Presets"]], [101, 402])
 
@@ -139,7 +148,10 @@ class PresetDeleteTests(unittest.TestCase):
         self.call({"PartyPreset": edited, "SetSelected": True}, "/preset/set-presets", 42)
         expected = {
             "UserPartyPreset2": current_group(self.db),
-            "User": self.store.account.profile()["User"],
+            "User": {
+                key: self.store.account.profile()["User"][key]
+                for key in ("Id", "Cas", "SelectedPresetId")
+            },
         }
         before = list(self.db.iterdump())
         self.assertEqual(self.call(body), expected)

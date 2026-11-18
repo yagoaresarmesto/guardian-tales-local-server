@@ -33,7 +33,13 @@ class PresetCreateTests(PresetFixture, unittest.TestCase):
         expected["User"]["Cas"] += 1
         group = current_group(self.db)
         self.assertEqual(self.store.account.profile(), expected)
-        self.assertEqual(response, {"UserPartyPreset2": group, "User": expected["User"]})
+        self.assertEqual(
+            response,
+            {
+                "UserPartyPreset2": group,
+                "User": {key: expected["User"][key] for key in ("Id", "Cas", "SelectedPresetId")},
+            },
+        )
         self.assertEqual(group["Presets"][:3], self.initial_group["Presets"])
         self.assertEqual(group["Cas"], self.initial_group["Cas"] + 1)
         self.assertEqual(group["Presets"][3]["Order"], 3)

@@ -1606,6 +1606,47 @@ original, and the real read-only source had zero writes and unchanged profile.
 The external public policy is installed locally. Actual APK leveling and UI
 refresh still require backend reload, reconnect and the user's retry.
 
+## Compact preset responses
+
+The user reported pauses when selecting, editing and deleting presets. Every
+mutation and receipt replay returned the complete `User`, even though only the
+selected-mode map and revision could change. In the saved account that added
+657,376 bytes of hero/inventory JSON to selection responses and approximately
+the same amount to definition responses. The transport's uncompressed framing
+also encodes/checksums every byte, before the APK parses and reapplies them.
+
+Native `NetResMediator.HasMyResource` routes `User` by `Id`. `User.Apply` uses
+existing values as Populate defaults and checks presence before parsing full
+hero/item collections. The `SelectedPresetId` map itself is replaced when
+provided. Preset mutations now return only `User.Id`, `User.Cas` and the complete
+current selected-mode map. Save/create/delete retain the full current
+`UserPartyPreset2` group because its dictionary is replaced, including removals.
+Retries use current selection/group resources, preserving later changes. No
+persistence, ownership, transaction, revision or receipt policy was removed.
+The original official preset responses were not captured; partial-resource
+compatibility is inferred from the preserved matching native client.
+
+Seven independent in-memory clones per operation/version compared the previous
+implementation with the compact responses, including encoding and receipt
+replays. The resulting full profiles/groups matched exactly, all omitted User
+fields survived a merge, and source writes remained zero. Median host results:
+
+| Operation | Previous JSON bytes | Compact JSON bytes | Previous host work | Compact host work |
+| --- | ---: | ---: | ---: | ---: |
+| Select | 657,376 | 383 | 85.5 ms | 11.4 ms |
+| Save/apply | 676,045 | 19,052 | 87.6 ms | 19.1 ms |
+| Delete | 675,525 | 18,532 | 81.9 ms | 7.8 ms |
+
+Host work measures handler plus JSON/wire encoding with in-memory SQLite. It
+excludes persistent disk flushes, the bridge/network and APK deserialization/UI
+work, so these numbers do not establish total interaction latency. Four added
+regressions enforce response size independent of inventory size, complete group
+replacement, independent mode preservation, wire decoding, creation/application
+and reconnect/stale receipt behavior. Existing ownership/rollback tests remain.
+Actual APK response handling and perceived speed require backend reload and a
+new select/save/delete trial; no emulator or live account state was changed by
+these measurements.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

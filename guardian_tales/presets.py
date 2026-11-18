@@ -97,6 +97,12 @@ def choose_orbital(user, preset_id):
     return choose_preset(user, preset_id, "InfiniteTower", 400)
 
 
+def selection_resource(user):
+    # User.Apply preserves absent fields. Include the owner ID for resource
+    # routing and the complete mode map, whose native Populate replaces it.
+    return {key: user[key] for key in ("Id", "Cas", "SelectedPresetId")}
+
+
 def set_selected(account, body, operation_id):
     if (
         not isinstance(body, dict)
@@ -120,7 +126,7 @@ def set_selected(account, body, operation_id):
         if previous[0] != encoded:
             raise ValueError("Preset selection request identity was reused with different data")
         # A delayed retry must not undo a later choice or restore an old profile.
-        return {"User": profile["User"]}
+        return {"User": selection_resource(profile["User"])}
     owned_party_preset(account.db, profile, body["PresetId"])
     user = profile["User"]
     changed = choose_preset(user, body["PresetId"], field, base)
@@ -133,7 +139,7 @@ def set_selected(account, body, operation_id):
         account.db.execute(
             "INSERT INTO preset_selection_requests VALUES(?,?)", (operation_id, encoded)
         )
-    return {"User": user}
+    return {"User": selection_resource(user)}
 
 
 def new_definition(references, group, incoming):
@@ -203,7 +209,7 @@ def save_party(account, body, operation_id):
     if previous:
         if previous[0] != encoded:
             raise ValueError("Preset edit request identity was reused with different data")
-        return {"UserPartyPreset2": group, "User": profile["User"]}
+        return {"UserPartyPreset2": group, "User": selection_resource(profile["User"])}
     incoming = body["PartyPreset"]
     matches = [
         i
@@ -282,7 +288,7 @@ def save_party(account, body, operation_id):
                 (json.dumps(profile, separators=(",", ":")),),
             )
         account.db.execute("INSERT INTO preset_edit_requests VALUES(?,?)", (operation_id, encoded))
-    return {"UserPartyPreset2": group, "User": profile["User"]}
+    return {"UserPartyPreset2": group, "User": selection_resource(profile["User"])}
 
 
 def delete_existing(account, body, operation_id):
@@ -307,7 +313,7 @@ def delete_existing(account, body, operation_id):
             raise ValueError("Preset deletion request identity was reused with different data")
         # A delayed retry returns current state, without deleting another preset
         # or resurrecting definitions from the immutable captured seed.
-        return {"UserPartyPreset2": group, "User": profile["User"]}
+        return {"UserPartyPreset2": group, "User": selection_resource(profile["User"])}
     matches = [
         i
         for i, preset in enumerate(group["Presets"])
@@ -339,4 +345,4 @@ def delete_existing(account, body, operation_id):
         account.db.execute(
             "INSERT INTO preset_delete_requests VALUES(?,?)", (operation_id, encoded)
         )
-    return {"UserPartyPreset2": group, "User": user}
+    return {"UserPartyPreset2": group, "User": selection_resource(user)}

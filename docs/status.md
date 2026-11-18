@@ -6,7 +6,20 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **584 passing tests on Windows Python 3.11**. Seven imported-hero
+The suite has **588 passing tests on Windows Python 3.11**. Four preset response
+regressions cover large inventories, compact current selections, full definition
+replacement on save/create/delete, independent mode pointers, wire round trips
+and stale/reconnect retries. Preset responses now send only owner ID, revision
+and the complete selected-mode map in `User`, preserving absent hero/inventory
+fields under the native partial-resource contract. The actual-account clone
+benchmark reduced selection JSON from 657,376 to 383 bytes and edit/delete JSON
+from roughly 676 KB to 19 KB. Median host handler/JSON/wire work dropped from
+82–88 ms to 8–19 ms; these timings exclude disk flush, network and APK rendering.
+Resulting saved profiles/groups and retries matched the previous implementation;
+the real database was read-only. APK responsiveness remains pending reload and
+reconnect. See [contract and measurements](official-save-experiment.md#compact-preset-responses).
+
+Seven earlier imported-hero
 training regressions cover free XP with an empty balance, non-knights, break/
 blessing/myth caps, native threshold indexing, partial growth, story unlocks,
 atomic batches/rollback, saved-state guards and request/reconnect receipts.
