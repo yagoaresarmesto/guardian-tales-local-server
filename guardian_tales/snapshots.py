@@ -63,6 +63,7 @@ ACCOUNT_READS = frozenset(
         "/guild-raid2/reset",
         "/guild-raid2/enter",
         "/guild-raid2/start-stage",
+        "/guild-raid2/end-stage",
         "/guild-raid2/update-status",
         "/guild-raid2/get-battle-status",
         "/guild-raid2/get-battle-records/latest",

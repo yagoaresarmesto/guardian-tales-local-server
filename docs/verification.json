@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 566,
+    "tests_run": 569,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3118,7 +3118,28 @@
       "sqlite_writes": 0,
       "full_account_and_selection_unchanged": true
     },
-    "battle_results_progress_persistence_and_end_abandon_handlers_implemented": false,
-    "post_fix_apk_stage_loading_and_combat": "Pending backend reload and reconnect"
+    "battle_result_validation_and_progress_persistence_implemented": false,
+    "separate_abandon_handler_implemented": false,
+    "post_fix_apk_stage_loading_and_combat": "Start handled once; user reached combat end; next unsupported request was end-stage"
+  },
+  "raid_completion_without_rewards_or_progress": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/guild-raid2/end-stage",
+    "observed_request_shape": "Damages only: four nonnegative int64 values; private values excluded",
+    "native_consumer": "GuildRaid2Stage.EndRoutine success callback reads Cancelled and AddedItems before emitting GuildRaid2EndEvent with existing client result/damage state",
+    "response": {"Cancelled": false, "AddedItems": []},
+    "validation": "Exact Damages list, zero to four nonnegative int64 entries and int64 aggregate bound; authentication, prologue, owned membership, matching selected fresh catalog and saved raid-progress guard",
+    "policy": "Acknowledge the free local trial without resources, rewards, attempts, persistent damage/rounds/history, receipts or selection changes",
+    "request_contains_clear_or_victory_field": false,
+    "synthetic_regressions": 3,
+    "full_windows_tests": 569,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "pending_end_request_repetitions": 2,
+      "sqlite_writes": 0,
+      "full_profile_and_operator_selection_unchanged": true
+    },
+    "persistent_raid_result_validation_and_abandon_handler_implemented": false,
+    "post_fix_apk_result_and_menu_return": "Pending backend reload and reconnect"
   }
 }

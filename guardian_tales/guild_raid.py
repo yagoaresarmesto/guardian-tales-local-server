@@ -13,6 +13,8 @@ from .snapshots import CLIENT
 
 ENTRY_ROUTE = "/guild-raid2/enter"
 START_STAGE = "/guild-raid2/start-stage"
+END_STAGE = "/guild-raid2/end-stage"
+MAX_STAGE_DAMAGE = 0x7FFFFFFFFFFFFFFF
 GUILD_RANKINGS = "/guild-raid2/get-guild-rankings"
 MEMBER_RANKINGS = "/guild-raid2/get-member-rankings"
 RANKING_ROUTES = (GUILD_RANKINGS, MEMBER_RANKINGS)
@@ -208,6 +210,26 @@ def start_stage(account, request):
     # Native success uses its existing boss, round and party to load the stage
     # when Cancelled is false. This trial has no cost or persisted attempt.
     return {"Cancelled": False}
+
+
+def end_stage(account, request):
+    if (
+        not isinstance(request, dict)
+        or set(request) != {"Damages"}
+        or not isinstance(request["Damages"], list)
+        or len(request["Damages"]) > 4
+        or any(
+            type(value) is not int or not 0 <= value <= MAX_STAGE_DAMAGE
+            for value in request["Damages"]
+        )
+        or sum(request["Damages"]) > MAX_STAGE_DAMAGE
+    ):
+        raise ValueError("Local raid completion requires up to four nonnegative int64 damages")
+    selected_season(account.references, local_context(account))
+    fresh_profile(account)
+    # Native end success passes AddedItems to the result event. An empty list
+    # closes the free trial without inventory, attempts or raid-progress updates.
+    return {"Cancelled": False, "AddedItems": []}
 
 
 def menu_read(account, route, request):

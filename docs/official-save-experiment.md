@@ -1305,8 +1305,8 @@ The original external body is never overwritten. The selected calendar and
 revisions; bootstrap serves the prepared body and a consistent update checksum.
 The native date guard then sees an active period without a global clock change.
 
-Combat loading has the guarded trial described below; results and reward claims
-remain unsupported. The native off-season practice loader was inspected,
+Combat entry/exit has the guarded trial described below; persistent raid results
+and reward claims remain unsupported. The native off-season practice loader was inspected,
 but it does not bypass the effective-season getter used by the boss menu.
 Ranking reads use the empty local view described below. The corrected historic
 boss display and combat still require an actual APK check after full restart.
@@ -1401,7 +1401,8 @@ known cached seasons and repeated/reconnect history reads with SQLite writes
 disabled. The actual account passed all three protocol reads through a read-only
 connection, with zero writes and unchanged full profile and selection. Post-fix
 APK log opening and boss refresh remain pending backend reload and reconnect.
-End/abandon fight handling and nonempty battle history remain unsupported.
+Normal completion has the no-reward acknowledgment below. The separate abandon
+route, nonempty battle history and persistent raid progress remain unsupported.
 
 ## Empty raid history by boss and own member
 
@@ -1461,11 +1462,45 @@ both fever flags, reconnect/retry behavior, invalid catalogs/membership and
 preserved raid progress. All saved tables and selection remain unchanged with
 SQLite writes disabled. The actual pending request passed twice through the
 read-only protocol session with false cancellation, zero writes and unchanged
-full account/selection. This establishes the host authorization shape only:
-actual APK stage loading, combat and its later end/abandon requests still need
-incremental verification. No result validation or raid progress persistence is
+full account/selection. Those checks established the host authorization shape.
+The APK subsequently advanced through start to its completion request. The normal
+exit acknowledgment is described below; the separate abandon route remains
+unverified/unsupported. No result validation or raid progress persistence is
 implemented by this trial. Reload the backend and reconnect to retry entry;
 another full APK restart is needed only after changing the selected calendar.
+
+## No-reward local raid completion acknowledgment
+
+The APK handled the start request and the user reached the end of combat. The
+next unsupported operation was `/guild-raid2/end-stage`. Its pending body
+contained only `Damages`, a four-element list of nonnegative int64 values.
+Native `EndRoutine` obtains this array from `PartyDamageRecorder`, sends it,
+and checks network success. Its success callback reads Boolean `Cancelled` and
+the `AddedItems` list. False cancellation continues to `GuildRaid2EndEvent`,
+carrying the client's existing result/party damage data and the returned item
+list; true instead shows a reset/cancellation notice.
+
+The handler now validates exactly `Damages`: zero to four nonnegative native
+int64 values, with the total also within int64 range. It requires authentication,
+completed prologue, owned membership and the matching selected fresh local raid
+catalog. Preserved non-null saved raid progress rejects rather than being
+replaced. The acknowledgment is `{"Cancelled":false,"AddedItems":[]}`. No
+account resources, rewards, attempts, history, damage or round progress are
+written. There is no persistent attempt to release in this free trial, so retries
+and reconnects need no receipt or account reset. The client's existing statistics
+remain available for the result flow; damage is not validated as an official
+score or persisted raid achievement. The request has no clear/victory field, and
+this change does not infer a clear or grant rewards from damage alone.
+
+Three regressions cover authenticated exact native schema, int64 and party-size
+bounds, aggregate overflow, saved progress/catalog/membership guards and repeated
+entry/exit acknowledgments across reconnects with SQLite writes disabled. Full
+account tables, currencies, pending rewards and operator selection remain
+unchanged. The actual pending request passed twice through a read-only protocol
+session with false cancellation, an empty reward list and zero database writes.
+The actual result screen/menu return still needs APK confirmation after backend
+reload and reconnect. Separate abandon handling and persistent raid results are
+outside this acknowledgment.
 
 ## Host readiness before the APK check
 

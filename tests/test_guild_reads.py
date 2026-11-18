@@ -165,7 +165,7 @@ class GuildReadTests(unittest.TestCase):
                 before = list(self.db.iterdump())
                 for route in (
                     "/guild-raid2/claim-season-rewards",
-                    "/guild-raid2/end-stage",
+                    "/guild-raid2/abandon-stage",
                 ):
                     with self.subTest(route=route), self.assertRaises(PacketError):
                         self.call({}, route)

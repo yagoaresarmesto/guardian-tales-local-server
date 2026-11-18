@@ -6,7 +6,19 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **566 passing tests on Windows Python 3.11**. Three combat-entry
+The suite has **569 passing tests on Windows Python 3.11**. Three completion
+regressions cover the exact `Damages` array, nonnegative int64 values, four-member
+and aggregate bounds, ownership/catalog/progress guards and no-write retries
+across reconnects. The APK reached `/guild-raid2/end-stage` after start succeeded.
+The local acknowledgment now returns `Cancelled: false` and `AddedItems: []`,
+matching the native success callback/result event. It leaves attempts, profile,
+rewards, damage, round progress, history and operator selection unchanged. The
+actual pending request passed twice through a read-only protocol session with
+zero writes. Result rendering/menu return remain pending APK verification;
+persistent raid results and the separate abandon endpoint are unsupported. See
+[completion contract and scope](official-save-experiment.md#no-reward-local-raid-completion-acknowledgment).
+
+Three earlier combat-entry
 regressions cover exact boss-slot/Boolean requests, four configured slots,
 both experimental fever flags, reconnects, membership/catalog guards and saved
 raid-progress protection without writes or selection changes. The actual blocked
@@ -14,9 +26,9 @@ request was `/guild-raid2/start-stage` with `BossIdx=3`, `IsFever=false`. Native
 success checks `Cancelled`; false invokes the existing boss/stage scene loader.
 The guarded local loading trial now returns that false flag without resources,
 costs, attempt records, rewards or party migration. The actual request passed
-twice in a read-only session with full profile and selection unchanged. APK
-stage loading/combat remain pending; end/abandon handling and result persistence
-are not implemented. See
+twice in a read-only session with full profile and selection unchanged. The APK
+subsequently advanced to the completion request; completion acknowledgment is
+described above. Separate abandon handling and result persistence are pending. See
 [contract and scope](official-save-experiment.md#guarded-local-raid-combat-loading-trial).
 
 Three earlier raid

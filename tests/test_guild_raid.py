@@ -19,6 +19,7 @@ from guardian_tales.guild_raid import (
     BATTLE_STATUS,
     BOSS_RECORDS,
     CATALOG,
+    END_STAGE,
     ENTRY_ROUTE,
     GUILD_RANKINGS,
     LATEST_RECORDS,
@@ -277,7 +278,7 @@ class GuildRaidTests(unittest.TestCase):
         self.save(profile)
         before = list(self.db.iterdump())
         for route in (
-            "/guild-raid2/end-stage",
+            "/guild-raid2/abandon-stage",
             "/guild-raid2/claim-season-rewards",
         ):
             with self.assertRaises(PacketError):
@@ -678,3 +679,68 @@ class GuildRaidTests(unittest.TestCase):
             self.assert_rejected(body, START_STAGE)
         (self.root / CATALOG).unlink()
         self.assert_rejected(body, START_STAGE)
+
+    def test_stage_exit_requires_authentication_exact_damage_array_and_native_int64_bounds(self):
+        self.assert_rejected({"Damages": [1, 2, 3, 4]}, END_STAGE)
+        self.login()
+        self.assert_rejected({"Damages": [1, 2, 3, 4]}, END_STAGE)
+        self.install_import()
+        for value in (
+            None,
+            {},
+            [],
+            {"Damage": [1]},
+            {"Damages": [1], "Claim": True},
+            {"Damages": None},
+            {"Damages": 1},
+            {"Damages": [1, 2, 3, 4, 5]},
+            {"Damages": [-1]},
+            {"Damages": [True]},
+            {"Damages": [1.0]},
+            {"Damages": ["1"]},
+            {"Damages": [0x8000000000000000]},
+            {"Damages": [0x7FFFFFFFFFFFFFFF, 1]},
+        ):
+            self.assert_rejected(value, END_STAGE)
+
+    def test_stage_exit_acknowledges_local_damage_without_rewards_attempts_progress_or_receipts(
+        self,
+    ):
+        profile = self.install_import()
+        select_season(self.references, 1)
+        selection = (self.root / SELECTION).read_bytes()
+        for reconnect in (False, True):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            self.db.execute("PRAGMA query_only=ON")
+            before = list(self.db.iterdump())
+            changes = self.db.total_changes
+            self.call({"BossIdx": 3, "IsFever": False}, START_STAGE)
+            for damages in ([], [0], [1, 2, 3, 4], [0x7FFFFFFFFFFFFFFF], [1, 2, 3, 4]):
+                reply = self.call({"Damages": damages}, END_STAGE)
+                self.assertEqual(reply, {"Cancelled": False, "AddedItems": []})
+                self.assertIs(reply["Cancelled"], False)
+            self.assertEqual(self.db.total_changes, changes)
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.store.account.profile(), profile)
+            self.assertEqual((self.root / SELECTION).read_bytes(), selection)
+            self.db.execute("PRAGMA query_only=OFF")
+
+    def test_stage_exit_rejects_foreign_membership_catalog_and_saved_raid_progress_without_reset(
+        self,
+    ):
+        profile = self.install_import()
+        self.login()
+        body = {"Damages": [1, 2, 3, 4]}
+        for member in (None, {"UserId": 9401, "GuildId": 7}):
+            self.save(dict(profile, GuildMember=member))
+            self.assert_rejected(body, END_STAGE)
+        self.save(
+            dict(profile, UserRaid={"Raid": {"SeasonId": 1, "TotalDamage": 999, "PlayCount": 2}})
+        )
+        self.assert_rejected(body, END_STAGE)
+        self.save(profile)
+        self.write_catalog(dict(self.catalog, client={"version": "other"}))
+        self.assert_rejected(body, END_STAGE)
+        (self.root / CATALOG).unlink()
+        self.assert_rejected(body, END_STAGE)
