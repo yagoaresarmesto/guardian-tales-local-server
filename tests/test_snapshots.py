@@ -103,6 +103,7 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(
             result["enabled_mutation_routes"],
             [
+                "/item/enhance-weapon",
                 "/lobby-village/harvest-all",
                 "/lobby-village/harvest-basecamp",
                 "/lobby-village/receive-gift",

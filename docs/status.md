@@ -6,7 +6,15 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **418 passing tests on Windows Python 3.11**. Eight regenerating
+The suite has **430 passing tests on Windows Python 3.11**. Twelve free equipment
+enhancement regressions cover exact target experience/revision changes, retained
+gold and hammers, locked targets, level caps, discount flags, retry persistence,
+ownership/configuration/authentication/schema guards, overflow and rollback.
+The owner selected a free local policy; the detached actual-account check gained
+the expected experience while preserving every resource and unrelated field.
+Engraved targets and weapon sacrifice materials remain unsupported. APK retry
+requires backend reload and reconnect.
+Eight regenerating
 obstacle mock regressions cover exact profile/village preservation, available
 and future regeneration, old retries after later collection/regeneration,
 reopening/reconnect/new login, ownership/spec/status/clock/revision bounds,

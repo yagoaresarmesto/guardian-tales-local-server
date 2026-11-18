@@ -28,6 +28,7 @@ STARTUP_READS = frozenset(
 )
 IMPORTED_MUTATIONS = frozenset(
     (
+        "/item/enhance-weapon",
         "/summon/set-select-character",
         "/summon/select-character",
         "/preset/set-selected-preset",

@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 418,
+    "tests_run": 430,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -62,7 +62,7 @@
     "record_scope": "Latest local checkpoint; earlier installation/prologue records retain their original scope. Hosted results are recorded per commit on GitHub Actions.",
     "runs_url": "https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml"
   },
-  "gameplay_limit": "Inn main clear path, saved 50-free-gem reward and completion tutorial; optional collectibles, general hero training, later phases, equipment mutations and battle validation unfinished.",
+  "gameplay_limit": "Inn main clear path, saved 50-free-gem reward and completion tutorial; optional collectibles, general hero training, later phases, general equipment mutations and battle validation unfinished.",
   "source_package_scope": "Project code, English documentation, empty templates and regression fixtures. External game/bootstrap files, local keys, account saves and machine-specific lab tools are excluded.",
   "campaign_update": {
     "date": "2026-11-16",
@@ -1197,6 +1197,7 @@
     },
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
+      "/item/enhance-weapon",
       "/lobby-village/harvest-all",
       "/lobby-village/harvest-basecamp",
       "/lobby-village/receive-gift",
@@ -2533,5 +2534,37 @@
       "prepared_regeneration_seconds": 57600
     },
     "post_fix_apk_obstacle_mock": "pending backend reload and reconnect"
+  },
+  "free_equipment_hammer_enhancement": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/enhance-weapon",
+    "native_builder": "Oak.ApiConnection.SendEnhanceWeapon",
+    "request_fields": [
+      "TargetWeaponId",
+      "SourceItems",
+      "discountBuff"
+    ],
+    "official_response_captured": false,
+    "policy": "Owner-selected opt-in free experience from owned unlocked hammers; retain gold and every material",
+    "explicit_external_catalog": "weapon_enhance_debug_catalog.json",
+    "scope": "Owned unengraved targets, matching hammer experience/rarity/level tables; only target Experience and User.Cas change",
+    "cap_policy": "Saved User.Unlocked.MaxLevel.Weapon plus verified public limit-break/myth coefficients; native stage-gated cap calculation not implemented",
+    "gold_hammers_account_buffs_and_missions_unchanged": true,
+    "locked_target_supported": true,
+    "engraving_and_equipment_sacrifice_materials_supported": false,
+    "atomic_profile_and_canonical_receipt": true,
+    "current_state_retry_after_later_improvement_and_catalog_removal": true,
+    "synthetic_regressions": 12,
+    "full_windows_tests": 430,
+    "detached_actual_account_check": {
+      "result": "PASS",
+      "experience_gain": 422750,
+      "only_target_experience_and_user_revision_changed": true,
+      "gold_and_all_hammer_quantities_preserved": true,
+      "same_and_delayed_retries_without_writes": true,
+      "original_startup_seed_preserved": true,
+      "real_saved_profile_unchanged": true
+    },
+    "post_fix_apk_enhancement": "pending backend reload and reconnect"
   }
 }

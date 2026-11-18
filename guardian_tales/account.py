@@ -78,6 +78,8 @@ from .village_gift import create_tables as create_village_gift_tables
 from .village_gift import receive as receive_village_gift
 from .village_obstacle import create_tables as create_village_obstacle_tables
 from .village_obstacle import remove as remove_village_obstacle
+from .weapon_enhance import create_tables as create_weapon_enhance_tables
+from .weapon_enhance import enhance as enhance_weapon
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -114,6 +116,7 @@ ACCOUNT_ROUTES = (
     "/lobby-village/harvest-basecamp",
     "/lobby-village/receive-gift",
     "/lobby-village/remove-obstacle",
+    "/item/enhance-weapon",
     "/user/guardian-mastery-level-up",
     "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
@@ -174,6 +177,7 @@ class AccountStore:
         create_attendance_tables(db)
         create_village_gift_tables(db)
         create_village_obstacle_tables(db)
+        create_weapon_enhance_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1030,6 +1034,9 @@ class AccountStore:
 
     def remove_village_obstacle(self, request, operation_id, now=None):
         return remove_village_obstacle(self, request, operation_id, now)
+
+    def enhance_weapon(self, request, operation_id):
+        return enhance_weapon(self, request, operation_id)
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)

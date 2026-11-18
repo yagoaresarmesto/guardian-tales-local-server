@@ -280,6 +280,15 @@ class BootstrapSession:
                     return json_response(request, self.store.account.charge_stamina(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/item/enhance-weapon":
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.enhance_weapon(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/user/charge-stamina-by-gem":
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)

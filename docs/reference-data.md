@@ -52,6 +52,7 @@ not fetch missing bootstrap files from an official service.
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
 | `village_gift_mock_catalog.json` | Princess gift acknowledgment without rewards | Matching client and explicit local cooldown; no reward pool is read |
 | `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
+| `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 | `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
@@ -176,6 +177,41 @@ an explicit local mock, not the official obstacle exchange. The entire user
 profile stays unchanged. The village overlay and receipt commit together;
 replays preserve later timers and other village actions, including after catalog
 removal. A different building under an existing operation identity rejects.
+
+`/item/enhance-weapon` requires a separate, explicit free debug catalog, limited
+to 1 MiB. Its exact keys are `client`, `free`, `level_total_exps`, `weapons`,
+`hammer_exp`, `limit_break_coef`, `max_limit_breaks` and `myth_coef`. The client
+must match the pinned build and `free` must be Boolean true. The experience table
+contains 1..1,000 strictly increasing positive signed-32-bit totals. Each spec
+map contains 1..30,000 canonical positive decimal IDs: weapon values are rarities
+0..5, and hammer values are positive signed-32-bit experience amounts. The maps
+must be disjoint; coefficients and the maximum limit-break count are integers
+0..100. The prepared catalog derives totals and hammer experience from the
+matching default `weaponenhance.LevelExps`, using each public hammer's declared
+level and rarity. Weapon rarities come from `items`; the matching limit-break
+coefficient, maximum count and myth coefficient are 3, 5 and 20. This opt-in file
+is additional to the published content pack.
+
+The request has exactly `TargetWeaponId`, `SourceItems` and `discountBuff`.
+The target is one owned, unengraved equipment item; a locked target is supported.
+`SourceItems` identifies 1..256 owned, unlocked hammer stacks and positive counts
+within their saved quantities. Weapon sacrifice materials are unsupported. Each
+hammer contributes its configured experience without being removed or consumed.
+The explicit local cap policy uses saved `User.Unlocked.MaxLevel.Weapon`, plus
+limit-break count times its coefficient, plus the myth coefficient for rarity
+above 4; total experience is clipped at that level's table threshold. This uses
+the preserved saved cap rather than implementing the original stage-gated cap
+calculation. Already capped targets reject new enhancements.
+
+Only the target's `Experience` and user revision change. Gold, all materials,
+options, account buffs, missions and all unrelated profile/village state remain
+unchanged. `discountBuff` is validated but consumes no buff under this free
+policy. The response contains current `User`. Profile and retry receipt commit
+atomically; a replay returns current state, preserving later improvements even
+after catalog removal. Different parameters under the same request identity
+reject. A new operation can reuse the retained hammers until the cap is reached.
+Evolution, engraving, limit-breaking and general equipment mutations remain
+outside this handler.
 
 `/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
 reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,

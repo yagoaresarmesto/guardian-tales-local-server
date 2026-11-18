@@ -98,7 +98,7 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Fourteen mutations are now enabled: `/summon/set-select-character`,
+Fifteen mutations are now enabled: `/item/enhance-weapon`, `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
@@ -130,6 +130,9 @@ Princess gifts use an explicit no-reward acknowledgment that advances only the
 village gift timer/revision and omits the reward notice.
 The configured regenerating obstacle also skips rewards/payment while retaining
 the building and restarting its regeneration timer.
+Equipment enhancement has an explicit free policy for owned hammers and
+unengraved targets: only equipment experience and user revision change, retaining
+gold and every material. It requires its own matching public-derived catalog.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -792,6 +795,44 @@ regeneration and village revision, retained the building/position and verified a
 no-write old replay after a later regeneration. The real saved account was
 unchanged during the check. The APK obstacle mock retry is pending backend reload
 and reconnect.
+
+## Free equipment experience from owned hammers
+
+The next APK failure was the unsupported `/item/enhance-weapon` route. The owner
+requested an actual improvement without spending anything. The matching native
+`SendEnhanceWeapon` builder sends exactly `TargetWeaponId`, `SourceItems` and
+`discountBuff`. Its success callback consumes the global account update and
+requests the existing training-mission check; no special reward payload was
+identified. The matching native hammer calculation selects experience by the
+material's declared public level and rarity. No original official response was
+captured, and the free behavior is an explicit local policy.
+
+The separate opt-in catalog supplies matching weapon rarities, hammer experience,
+experience thresholds and limit-break/myth coefficients. The handler validates
+one owned target and sufficient unlocked owned hammers, then changes only target
+experience and user revision. Gold and selected materials are retained. Locked
+targets are supported, but engraved targets and sacrificing equipment as material
+remain unsupported. The local cap uses the preserved weapon maximum plus matching
+limit-break/myth coefficients; it does not reconstruct the native stage-opening
+eligibility calculation. Excess experience is clipped at the supported cap.
+Account buffs and mission/progression credit are unchanged.
+
+The profile and canonical operation receipt commit atomically. Reconnect replays
+return current state, preserving later improvements without applying experience
+twice. A different body under the same identity rejects. A genuinely new operation
+can reuse the retained hammers. These receipts retain the existing session-epoch
+limitations described for other mutations; they do not identify arbitrary stale
+requests across a new login.
+
+Twelve regressions cover exact free mutation bounds, locked targets, myth and
+limit-break caps, discount flags, retained materials, current-state retries,
+reopening/reconnect/new login, catalog and ownership guards, strict request/auth
+validation, revision/experience overflow and transaction rollback. A detached
+actual-account check of the pending request computed 422,750 experience from
+19 hammers, changing only target experience from 1,335,460 to 1,758,210 and user
+revision. Gold, hammer quantities, all unrelated profile fields and captured seeds
+were preserved; same-operation and delayed retries made no writes. The actual
+saved account was unchanged. The APK retry is pending backend reload/reconnect.
 
 ## Host readiness before the APK check
 
