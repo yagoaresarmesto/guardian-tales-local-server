@@ -1305,8 +1305,8 @@ The original external body is never overwritten. The selected calendar and
 revisions; bootstrap serves the prepared body and a consistent update checksum.
 The native date guard then sees an active period without a global clock change.
 
-Normal battle authorization, results and reward claims remain unsupported;
-test these incrementally. The native off-season practice loader was inspected,
+Combat loading has the guarded trial described below; results and reward claims
+remain unsupported. The native off-season practice loader was inspected,
 but it does not bypass the effective-season getter used by the boss menu.
 Ranking reads use the empty local view described below. The corrected historic
 boss display and combat still require an actual APK check after full restart.
@@ -1401,7 +1401,7 @@ known cached seasons and repeated/reconnect history reads with SQLite writes
 disabled. The actual account passed all three protocol reads through a read-only
 connection, with zero writes and unchanged full profile and selection. Post-fix
 APK log opening and boss refresh remain pending backend reload and reconnect.
-Start/end/abandon fight handling and nonempty battle history remain unsupported.
+End/abandon fight handling and nonempty battle history remain unsupported.
 
 ## Empty raid history by boss and own member
 
@@ -1435,6 +1435,37 @@ companion passed through a read-only protocol session with zero writes and the
 full profile/selection unchanged. Post-fix APK boss/member history rendering
 remains pending reload and reconnect. Nonempty history and combat remain
 unsupported.
+
+## Guarded local raid combat-loading trial
+
+The APK advanced through four boss-history queries and two boss-status refreshes
+to `/guild-raid2/start-stage`. Read-only inspection of its pending request found
+exactly `{"BossIdx":3,"IsFever":false}`. Native `StartStageRoutine` obtains the
+boss from its existing set/slot, sends that request for normal combat, and checks
+`Cancelled` after network success. False continues to `StartStageInner`, which
+resolves the preserved boss detail/stage ID and calls the normal scene transition.
+The response is not a stage descriptor, party selection or damage result.
+
+The local handler now accepts exact integer boss slots 1–4 and a Boolean
+`IsFever`, using the matching selected four-boss catalog, completed prologue,
+owned guild membership and fresh local raid policy. Both Boolean fever settings
+are accepted for this experimental loading trial; this does not establish
+official fever eligibility/rules. Existing non-null saved raid progress rejects
+instead of being reset. The response is `{"Cancelled":false}` with no account
+resources, costs, attempt record or reward. The client retains its existing boss,
+round and party; the server does not migrate or replace the saved party. Native
+off-season practice remains a separate direct loader path.
+
+Three regressions cover authenticated exact request shapes, all configured slots,
+both fever flags, reconnect/retry behavior, invalid catalogs/membership and
+preserved raid progress. All saved tables and selection remain unchanged with
+SQLite writes disabled. The actual pending request passed twice through the
+read-only protocol session with false cancellation, zero writes and unchanged
+full account/selection. This establishes the host authorization shape only:
+actual APK stage loading, combat and its later end/abandon requests still need
+incremental verification. No result validation or raid progress persistence is
+implemented by this trial. Reload the backend and reconnect to retry entry;
+another full APK restart is needed only after changing the selected calendar.
 
 ## Host readiness before the APK check
 

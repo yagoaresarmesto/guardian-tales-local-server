@@ -25,6 +25,7 @@ from guardian_tales.guild_raid import (
     MEMBER_RANKINGS,
     MEMBER_RECORDS,
     SELECTION,
+    START_STAGE,
     UPDATE_STATUS,
     load_catalog,
     main,
@@ -276,7 +277,6 @@ class GuildRaidTests(unittest.TestCase):
         self.save(profile)
         before = list(self.db.iterdump())
         for route in (
-            "/guild-raid2/start-stage",
             "/guild-raid2/end-stage",
             "/guild-raid2/claim-season-rewards",
         ):
@@ -611,3 +611,70 @@ class GuildRaidTests(unittest.TestCase):
             self.assertEqual(self.store.account.profile(), profile)
             self.assertEqual((self.root / SELECTION).read_bytes(), selection)
             self.db.execute("PRAGMA query_only=OFF")
+
+    def test_stage_entry_requires_authentication_exact_slot_and_boolean_schema(self):
+        body = {"BossIdx": 3, "IsFever": False}
+        self.assert_rejected(body, START_STAGE)
+        self.login()
+        self.assert_rejected(body, START_STAGE)
+        self.install_import()
+        for invalid in (
+            None,
+            {},
+            [],
+            {"BossIdx": 3},
+            {"IsFever": False},
+            {"BossIdx": 3, "IsFever": False, "Cost": 0},
+            {"BossIdx": 3, "IsFever": False, "PresetId": 1},
+        ):
+            self.assert_rejected(invalid, START_STAGE)
+        for slot in (True, 0, -1, 5, "3", 3.0, 0x80000000):
+            self.assert_rejected({"BossIdx": slot, "IsFever": False}, START_STAGE)
+        for flag in (0, 1, "false", None):
+            self.assert_rejected({"BossIdx": 3, "IsFever": flag}, START_STAGE)
+
+    def test_stage_loading_trial_authorizes_all_configured_slots_without_cost_attempt_or_profile_changes(
+        self,
+    ):
+        profile = self.install_import()
+        for reconnect in (False, True):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            select_season(self.references, 1 if reconnect else 2)
+            selection = (self.root / SELECTION).read_bytes()
+            self.db.execute("PRAGMA query_only=ON")
+            before = list(self.db.iterdump())
+            changes = self.db.total_changes
+            for slot in range(1, 5):
+                for fever in (False, True):
+                    reply = self.call({"BossIdx": slot, "IsFever": fever}, START_STAGE)
+                    self.assertEqual(reply, {"Cancelled": False})
+                    self.assertIs(reply["Cancelled"], False)
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, changes)
+            self.assertEqual(self.store.account.profile(), profile)
+            self.assertEqual((self.root / SELECTION).read_bytes(), selection)
+            self.db.execute("PRAGMA query_only=OFF")
+
+    def test_stage_entry_preserves_existing_raid_progress_and_rejects_invalid_catalog_or_membership(
+        self,
+    ):
+        profile = self.install_import()
+        self.login()
+        body = {"BossIdx": 3, "IsFever": False}
+        self.save(
+            dict(profile, UserRaid={"Raid": {"SeasonId": 1, "TotalDamage": 123, "PlayCount": 2}})
+        )
+        self.assert_rejected(body, START_STAGE)
+        self.save(dict(profile, GuildMember={"UserId": 9401, "GuildId": 7}))
+        self.assert_rejected(body, START_STAGE)
+        self.save(profile)
+        for value in (
+            dict(self.catalog, client={"version": "other"}),
+            dict(self.catalog, fresh_local=False),
+            dict(self.catalog, default_season_id=3),
+        ):
+            self.write_catalog(value)
+            self.assert_rejected(body, START_STAGE)
+        (self.root / CATALOG).unlink()
+        self.assert_rejected(body, START_STAGE)

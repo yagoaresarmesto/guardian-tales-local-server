@@ -6,7 +6,20 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **563 passing tests on Windows Python 3.11**. Three additional raid
+The suite has **566 passing tests on Windows Python 3.11**. Three combat-entry
+regressions cover exact boss-slot/Boolean requests, four configured slots,
+both experimental fever flags, reconnects, membership/catalog guards and saved
+raid-progress protection without writes or selection changes. The actual blocked
+request was `/guild-raid2/start-stage` with `BossIdx=3`, `IsFever=false`. Native
+success checks `Cancelled`; false invokes the existing boss/stage scene loader.
+The guarded local loading trial now returns that false flag without resources,
+costs, attempt records, rewards or party migration. The actual request passed
+twice in a read-only session with full profile and selection unchanged. APK
+stage loading/combat remain pending; end/abandon handling and result persistence
+are not implemented. See
+[contract and scope](official-save-experiment.md#guarded-local-raid-combat-loading-trial).
+
+Three earlier raid
 history regressions cover boss/season relationships, the native day/user schema,
 owned-user restriction and read-only reconnects without progress, reward or
 selection changes. General battle-status/latest reads each completed two actual
@@ -14,8 +27,9 @@ APK requests; the next blocked route was `/guild-raid2/get-battle-records/boss`
 for season 1 and public boss ID 1790004. It now returns `BattleRecords: []` only
 for a boss present in the requested catalog season. The native companion member
 detail read returns the same empty list for the saved local user. Both passed
-read-only actual-account protocol checks. Post-fix boss/member history rendering
-and combat remain unverified. See
+read-only actual-account protocol checks. The boss-history route later completed
+four APK queries and boss refresh completed two, advancing to combat entry;
+member-detail rendering and combat remain unverified. See
 [contracts and evidence](official-save-experiment.md#empty-raid-history-by-boss-and-own-member).
 
 Four earlier raid

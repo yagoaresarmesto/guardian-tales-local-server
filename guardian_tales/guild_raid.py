@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Opt-in fresh local raid menu; battle authorization/results are separate."""
+"""Opt-in fresh raid views, combat-loading trial and external season selection."""
 
 import argparse
 import json
@@ -12,6 +12,7 @@ from .reference import ReferenceData
 from .snapshots import CLIENT
 
 ENTRY_ROUTE = "/guild-raid2/enter"
+START_STAGE = "/guild-raid2/start-stage"
 GUILD_RANKINGS = "/guild-raid2/get-guild-rankings"
 MEMBER_RANKINGS = "/guild-raid2/get-member-rankings"
 RANKING_ROUTES = (GUILD_RANKINGS, MEMBER_RANKINGS)
@@ -189,6 +190,24 @@ def fresh_profile(account):
             "Preserved raid progress needs its own validated contract; it is not reset"
         )
     return profile
+
+
+def start_stage(account, request):
+    if (
+        not isinstance(request, dict)
+        or set(request) != {"BossIdx", "IsFever"}
+        or not integer(request["BossIdx"])
+        or request["BossIdx"] > 4
+        or type(request["IsFever"]) is not bool
+    ):
+        raise ValueError("Local raid stage entry requires boss slot 1-4 and Boolean IsFever")
+    season = selected_season(account.references, local_context(account))
+    fresh_profile(account)
+    if not any(b["slot"] == request["BossIdx"] for b in season["bosses"]):
+        raise ValueError("Requested raid boss slot is not configured")
+    # Native success uses its existing boss, round and party to load the stage
+    # when Cancelled is false. This trial has no cost or persisted attempt.
+    return {"Cancelled": False}
 
 
 def menu_read(account, route, request):

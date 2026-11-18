@@ -41,9 +41,11 @@ from .guild_menu import GUILD_MENU_ROUTES
 from .guild_menu import read as read_guild_menu
 from .guild_raid import MENU_READ_ROUTES as RAID_MENU_READ_ROUTES
 from .guild_raid import RANKING_ROUTES as RAID_RANKING_ROUTES
+from .guild_raid import START_STAGE as RAID_STAGE_ENTRY_ROUTE
 from .guild_raid import enter as enter_guild_raid
 from .guild_raid import menu_read as read_raid_menu
 from .guild_raid import rankings as guild_raid_rankings
+from .guild_raid import start_stage as enter_raid_stage
 from .hero_knowledge import claim_hero_knowledge
 from .items import inventory_item
 from .mastery import create_tables as create_mastery_tables
@@ -108,6 +110,7 @@ ACCOUNT_ROUTES = (
     "/guild/red-dot",
     "/guild-raid2/reset",
     "/guild-raid2/enter",
+    RAID_STAGE_ENTRY_ROUTE,
     *RAID_MENU_READ_ROUTES,
     *RAID_RANKING_ROUTES,
     "/chat/guild-history/v2",
@@ -1111,6 +1114,8 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route == RAID_STAGE_ENTRY_ROUTE:
+            return enter_raid_stage(self, request)
         if route in RAID_MENU_READ_ROUTES:
             return read_raid_menu(self, route, request)
         if route in RAID_RANKING_ROUTES:

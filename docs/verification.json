@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 563,
+    "tests_run": 566,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3099,6 +3099,26 @@
       "sqlite_writes": 0,
       "full_profile_and_operator_selection_unchanged": true
     },
-    "post_fix_apk_boss_and_member_history": "Pending backend reload and reconnect"
+    "post_fix_apk_boss_and_member_history": "Boss history completed four APK queries and boss refresh completed two, then combat start was unsupported; member detail rendering remains unverified"
+  },
+  "raid_combat_loading_trial": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/guild-raid2/start-stage",
+    "observed_request": {"BossIdx": 3, "IsFever": false},
+    "native_consumer": "GuildRaid2Stage.StartStageRoutine checks Cancelled after success, then calls StartStageInner with existing boss/round/practice/fever state",
+    "response": {"Cancelled": false},
+    "policy": "Explicit matching fresh local catalog and owned membership; slots 1-4, Boolean fever flag; existing saved raid progress rejects; no costs, attempts, rewards, account resources or party migration",
+    "native_boss_stage_ids_retained": true,
+    "experimental_fever_flags": "Both Boolean settings accepted for loading; official eligibility/rules are not validated",
+    "synthetic_regressions": 3,
+    "full_windows_tests": 566,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "pending_start_request_repetitions": 2,
+      "sqlite_writes": 0,
+      "full_account_and_selection_unchanged": true
+    },
+    "battle_results_progress_persistence_and_end_abandon_handlers_implemented": false,
+    "post_fix_apk_stage_loading_and_combat": "Pending backend reload and reconnect"
   }
 }
