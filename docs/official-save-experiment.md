@@ -1146,9 +1146,35 @@ user and record preservation, later edits, signed floors, reconnect/reopening,
 unknown/invalid records, unsupported writes and successful reads while SQLite
 writes are disabled. A private protocol check read the actual account twice
 through a read-only SQLite connection, retaining the saved user/floor with zero
-writes and unchanged profile. APK display still requires backend reload and
-retry. Opening the card does not spend resources, change revisions, save a
+writes and unchanged profile. After reload, one APK card request completed, then
+the popup's friend refresh failed at `/friend2/enter` before rendering. Opening
+the card does not spend resources, change revisions, save a
 receipt, grant rewards or migrate the account.
+
+## Empty friend refresh required by the profile popup
+
+The native profile popup waits for `FriendClient.UpdateFriendDict` before setting
+up the visible card. `SendEnterFriend2` sends `/friend2/enter` without a body. Its
+success callback consumes `FriendInfos` as a dictionary keyed by integer user ID
+and a Boolean `IsMigrated`; the latter can enable a first-entry migration notice.
+Only this local prerequisite is implemented. No official response or peer
+records were captured.
+
+Authenticated parameterless entry now returns `FriendInfos={}` and
+`IsMigrated=false`. This explicit empty local view does not claim restored
+official friends or an executed migration. The saved `UserFriend`, including
+friend/request counts, settings, gift dates/counters and revision, remains
+unchanged and is not sent back as a replacement. No resources, requests,
+receipts, rewards or migration state are saved. Friend mutations and other-player
+lookup remain unsupported.
+
+Three regressions verify sign-in/native empty-body/exact-schema handling,
+imported-count/settings/gift preservation, social-write rejection and the
+profile-then-friend sequence across reconnects while SQLite writes are disabled.
+The same sequence passed twice against the actual database opened read-only with
+zero writes and unchanged full profile. The complete popup and subsequent friend
+UI still need APK retry after backend reload; a completed profile-card API call
+alone is not evidence of a rendered popup or working social features.
 
 ## Host readiness before the APK check
 

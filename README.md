@@ -105,7 +105,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Orbital preset selection | Captured owned party choice saved in APK; atomic choice and retry receipts |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
-| Own profile card | Read-only local user and saved records; uncaptured stickers/social fields empty; APK retry pending |
+| Own profile card | Card request completed; empty friend prerequisite added; uncaptured decorations/social fields empty; APK rendering pending |
 | Orbital preset creation/application | Two APK creations persisted; current state matches save/delete history and selections |
 | Village resource collection | APK gold collection verified; full soul points retained; saved clocks and retry receipts |
 | Guardian base-camp debug collection | Opt-in fixed mastery-point reward; four APK collections credited the requested 100 million each |

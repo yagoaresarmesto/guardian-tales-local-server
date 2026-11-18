@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Local profile cards reflect saved state and never write or impersonate users."""
+"""Own cards and their empty friend prerequisite preserve all saved state."""
 
 import copy
 import json
@@ -12,6 +12,7 @@ from guardian_tales.protocol import Packet, PacketError, encode_packet
 from tests.test_snapshots import synthetic_snapshot
 
 ROUTE = "/user/get-user-profile-card"
+FRIEND_ROUTE = "/friend2/enter"
 
 
 class ProfileCardTests(unittest.TestCase):
@@ -54,11 +55,11 @@ class ProfileCardTests(unittest.TestCase):
         self.save(snapshot["profile"])
         return snapshot["profile"]
 
-    def assert_rejected_without_writes(self, body):
+    def assert_rejected_without_writes(self, body, route=ROUTE):
         before = list(self.db.iterdump())
         changes = self.db.total_changes
         with self.assertRaises(PacketError):
-            self.call(body)
+            self.call(body, route)
         self.assertEqual(list(self.db.iterdump()), before)
         self.assertEqual(self.db.total_changes, changes)
 
@@ -216,3 +217,66 @@ class ProfileCardTests(unittest.TestCase):
                 self.call({"UserId": 9400}, route)
         self.assertEqual(list(self.db.iterdump()), before)
         self.assert_rejected_without_writes({"UserId": 9401})
+
+    def test_friend_prerequisite_requires_sign_in_and_an_empty_native_body(self):
+        self.assert_rejected_without_writes(None, FRIEND_ROUTE)
+        self.login()
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        packet = parse_packet(
+            encode_packet(Packet(0, b"", body_type=0, api=FRIEND_ROUTE, sequence_id=25))
+        )
+        self.assertEqual(
+            json.loads(self.session.handle(packet).body),
+            {"FriendInfos": {}, "IsMigrated": False},
+        )
+        for body in (None, {}):
+            self.assertEqual(
+                self.call(body, FRIEND_ROUTE), {"FriendInfos": {}, "IsMigrated": False}
+            )
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        for invalid in ([], False, 0, "", {"UserId": 1}, {"Claim": True}):
+            with self.subTest(body=invalid):
+                self.assert_rejected_without_writes(invalid, FRIEND_ROUTE)
+
+    def test_imported_friend_view_preserves_saved_counts_settings_and_gifts(self):
+        profile = self.install_import()
+        profile["UserFriend"].update(
+            Enabled=True, AllowRequest=True, NumFriends=17, NumRequests=3, GiftCount=5, Cas=41
+        )
+        self.save(profile)
+        self.login()
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        for _ in range(2):
+            reply = self.call(None, FRIEND_ROUTE)
+            self.assertIs(type(reply["FriendInfos"]), dict)
+            self.assertEqual(reply["FriendInfos"], {})
+            self.assertIs(reply["IsMigrated"], False)
+            self.assertNotIn("UserFriend", reply)
+            self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        for route in ("/friend2/request", "/friend2/send-gift", "/friend2/receive-gift"):
+            with self.subTest(route=route), self.assertRaises(PacketError):
+                self.call({}, route)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_card_followed_by_friend_read_survives_reconnect_with_writes_disabled(self):
+        profile = self.install_import()
+        for reconnect in (False, True):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            self.db.execute("PRAGMA query_only=ON")
+            before = list(self.db.iterdump())
+            changes = self.db.total_changes
+            self.assertEqual(
+                self.call({"UserId": 9400})["UserProfileCard"]["User"], profile["User"]
+            )
+            self.assertEqual(
+                self.call(None, FRIEND_ROUTE), {"FriendInfos": {}, "IsMigrated": False}
+            )
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, changes)
+            self.db.execute("PRAGMA query_only=OFF")

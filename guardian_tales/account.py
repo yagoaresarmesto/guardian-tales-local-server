@@ -105,6 +105,7 @@ ACCOUNT_ROUTES = (
     "/collection/claim-hero-knowledge-all",
     "/heavenholdfarm/collection-all",
     "/pasture/collection-all",
+    "/friend2/enter",
     "/friend2/has-changes",
     "/mission/get-user-mission",
     "/mission/claim-beginner-all",
@@ -1175,6 +1176,13 @@ class AccountStore:
                 "NewPastureMonsters": [],
                 "MaxPastureMonsters": [],
             }
+        if route == "/friend2/enter":
+            if request is not None and (not isinstance(request, dict) or request):
+                raise ValueError("Local empty friend entry accepts no parameters")
+            # The profile popup refreshes this dictionary before rendering.
+            # Peer records were not captured; do not reset saved UserFriend
+            # counters, grant gifts or report an executed social migration.
+            return {"FriendInfos": {}, "IsMigrated": False}
         if route == "/friend2/has-changes":
             return {"Changed": False, "Gift": False}
         raise KeyError("Unsupported account route")

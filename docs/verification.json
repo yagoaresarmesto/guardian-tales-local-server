@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 530,
+    "tests_run": 533,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -2891,6 +2891,29 @@
       "saved_user_and_records_retained": true,
       "real_profile_unchanged": true
     },
-    "post_fix_apk_display": "pending backend reload and reconnect"
+    "post_fix_apk_display": "One card request completed, then the unsupported friend-entry prerequisite blocked rendering; visible card remains unverified"
+  },
+  "empty_friend_entry_for_profile": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/friend2/enter",
+    "native_builder": "Oak.ApiConnection.SendEnterFriend2",
+    "native_consumer": "Oak.FriendClient.UpdateFriendDict success callback",
+    "native_request_body": "None",
+    "response": {"FriendInfos": {}, "IsMigrated": false},
+    "native_friend_infos_type": "Dictionary<int32, FriendInfo>",
+    "official_response_and_peer_records_captured": false,
+    "scope": "Authenticated empty local social view needed by the profile popup",
+    "saved_UserFriend_counts_settings_gift_state_and_revision_preserved": true,
+    "no_profile_resources_receipts_rewards_or_migration_state_written": true,
+    "friend_mutations_and_other_player_lookup_supported": false,
+    "synthetic_regressions": 3,
+    "full_windows_tests": 533,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "card_then_friend_read_repetitions": 2,
+      "sqlite_writes": 0,
+      "real_profile_and_UserFriend_unchanged": true
+    },
+    "post_fix_apk_rendering": "pending backend reload and reconnect"
   }
 }

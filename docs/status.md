@@ -6,7 +6,16 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **530 passing tests on Windows Python 3.11**. Eight own-profile-card
+The suite has **533 passing tests on Windows Python 3.11**. Three empty-friend-entry
+regressions cover authenticated native empty requests, current imported friend
+settings/count/gift preservation, unsupported social mutations and the profile/
+friend sequence across reconnects with SQLite writes disabled. The APK completed
+one profile-card request, then stopped at the unsupported `/friend2/enter`
+prerequisite before rendering. That follow-up now returns an empty `FriendInfos`
+dictionary and `IsMigrated=false` without replacing the saved `UserFriend` record.
+The actual-account read-only protocol check passed twice with no writes. APK
+rendering remains unverified and requires backend reload/reconnect.
+Eight own-profile-card
 regressions cover sign-in, exact own-user requests, current saved user/records,
 signed tower floors, reconnect/reopening, absent or invalid optional records,
 unsupported customization/other users and reads with SQLite writes disabled.
@@ -15,8 +24,9 @@ read against the actual database opened in read-only mode passed twice with
 zero writes and unchanged saved profile. Native callbacks require top-level
 `UserProfileCard` and `UserStickerPacks`; uncaptured decorations/social fields
 are explicitly empty/unknown in this local view. The own-user native callback
-uses the current representative avatar and device-local badge. Backend reload
-and APK retry remain pending; no original profile-card response was captured.
+uses the current representative avatar and device-local badge. No original
+profile-card response was captured; completing the card request alone does not
+establish a rendered popup.
 Five Orbital non-clear
 exit regressions cover read-only exits, native schema/damage bounds, floor/catalog/
 prologue/authentication guards and reconnection. Ten no-reward completion
