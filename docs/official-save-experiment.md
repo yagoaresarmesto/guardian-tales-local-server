@@ -1172,9 +1172,30 @@ Three regressions verify sign-in/native empty-body/exact-schema handling,
 imported-count/settings/gift preservation, social-write rejection and the
 profile-then-friend sequence across reconnects while SQLite writes are disabled.
 The same sequence passed twice against the actual database opened read-only with
-zero writes and unchanged full profile. The complete popup and subsequent friend
-UI still need APK retry after backend reload; a completed profile-card API call
-alone is not evidence of a rendered popup or working social features.
+zero writes and unchanged full profile. After reload, one APK friend-entry request
+completed. Visible profile rendering and the complete friend UI remain unconfirmed;
+successful API calls alone do not establish working social features.
+
+## Guild menu notification indicators
+
+The next unsupported APK request was `/guild/red-dot` while entering the guild
+area. `SendGuildRedDot` sends no body. The guild-entry success callback reads four
+top-level Boolean fields: `Raid`, `Meteor`, `PunchKing` and `GuildWar`. Closing the
+Punch King and guild-war reward shop overlays reuses the same endpoint and their
+respective flags. No official response was captured.
+
+The authenticated parameterless read now returns all four flags as false. These
+are explicit inactive local-mode indicators, not recovered official notification
+state. The response does not replace membership, clear pending rewards, mark
+attendance, grant anything or change profile revisions. Guild gameplay,
+membership mutations and reward claims remain unsupported.
+
+Two regressions cover authentication/request bounds, native empty-body framing,
+all four Boolean flags, fresh/imported accounts, reconnects and no-write reads
+with positive synthetic membership/pending-reward state retained. Three request
+variants passed against the actual account opened read-only with zero writes
+and unchanged full profile. Visible guild-menu entry and shop-return behavior
+remain pending APK retry after backend reload/reconnect.
 
 ## Host readiness before the APK check
 

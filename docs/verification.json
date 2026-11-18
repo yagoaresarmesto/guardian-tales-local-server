@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 533,
+    "tests_run": 535,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -2914,6 +2914,27 @@
       "sqlite_writes": 0,
       "real_profile_and_UserFriend_unchanged": true
     },
-    "post_fix_apk_rendering": "pending backend reload and reconnect"
+    "post_fix_apk_rendering": "One actual APK friend-entry request completed; visible profile rendering remains unconfirmed"
+  },
+  "guild_menu_notification_read": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/guild/red-dot",
+    "native_builder": "Oak.ApiConnection.SendGuildRedDot",
+    "native_consumers": "GuildEnter scene load; Punch King and guild-war reward shop close callbacks",
+    "native_request_body": "None",
+    "response": {"Raid": false, "Meteor": false, "PunchKing": false, "GuildWar": false},
+    "official_response_captured": false,
+    "policy": "Inactive local-mode notification indicators only",
+    "membership_pending_rewards_attendance_resources_and_revisions_preserved": true,
+    "guild_gameplay_membership_mutations_and_reward_claims_implemented": false,
+    "synthetic_regressions": 2,
+    "full_windows_tests": 535,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "request_variants": 3,
+      "sqlite_writes": 0,
+      "real_profile_membership_and_rewards_unchanged": true
+    },
+    "post_fix_apk_guild_menu_and_shop_return": "pending backend reload and reconnect"
   }
 }

@@ -98,6 +98,7 @@ ACCOUNT_ROUTES = (
     "/user/get-user-profile-card",
     "/guild/list-item-request",
     "/guild/get-my-guild",
+    "/guild/red-dot",
     "/chat/guild-history/v2",
     "/chat/listen-channel",
     "/collection/list-all",
@@ -1146,6 +1147,12 @@ class AccountStore:
             return {"Requests": []}
         if route == "/guild/get-my-guild":
             return {"Hash": 0, "Guild": None, "GuildMember": None, "GuildMembers": []}
+        if route == "/guild/red-dot":
+            if request is not None and (not isinstance(request, dict) or request):
+                raise ValueError("Local guild notification reads accept no parameters")
+            # These are menu indicators only. Hiding unavailable local-mode
+            # notices does not claim rewards or clear any saved guild state.
+            return {"Raid": False, "Meteor": False, "PunchKing": False, "GuildWar": False}
         if route == "/chat/guild-history/v2":
             return {"History": []}
         if route == "/chat/listen-channel":

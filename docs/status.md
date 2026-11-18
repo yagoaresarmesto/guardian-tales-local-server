@@ -6,15 +6,26 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **533 passing tests on Windows Python 3.11**. Three empty-friend-entry
+The suite has **535 passing tests on Windows Python 3.11**. Two guild-notice-read
+regressions cover authentication, exact empty/native request bodies, Boolean
+notice types, repeated fresh/imported reads, reconnects and saved membership/
+pending-reward preservation while SQLite writes are disabled. The unsupported
+`/guild/red-dot` menu query now returns `Raid`, `Meteor`, `PunchKing` and `GuildWar`
+as false for unavailable local-mode notices. It does not claim rewards or reset
+saved guild state. Native scene/shop callbacks establish these response keys;
+no official response was captured. Three actual-account request variants passed
+through a read-only connection with zero writes and unchanged full profile.
+Guild-menu APK retry still requires backend reload/reconnect.
+Three empty-friend-entry
 regressions cover authenticated native empty requests, current imported friend
 settings/count/gift preservation, unsupported social mutations and the profile/
 friend sequence across reconnects with SQLite writes disabled. The APK completed
 one profile-card request, then stopped at the unsupported `/friend2/enter`
 prerequisite before rendering. That follow-up now returns an empty `FriendInfos`
 dictionary and `IsMigrated=false` without replacing the saved `UserFriend` record.
-The actual-account read-only protocol check passed twice with no writes. APK
-rendering remains unverified and requires backend reload/reconnect.
+The actual-account read-only protocol check passed twice with no writes. After
+reload, one actual APK friend-entry request completed. Visible profile rendering
+remains unconfirmed; the later guild-notice failure is tracked separately.
 Eight own-profile-card
 regressions cover sign-in, exact own-user requests, current saved user/records,
 signed tower floors, reconnect/reopening, absent or invalid optional records,
