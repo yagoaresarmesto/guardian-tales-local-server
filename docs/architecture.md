@@ -41,6 +41,7 @@ flowchart LR
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `imported_hero_knowledge.py` | Eight native hero-book progress rules, nonpaying official flags, awakening bit decoding and atomic per-objective/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
+| `jewel_decompose.py` | Explicit source-preserving jewel batches, public per-grade powder yields and atomic reward/request receipts |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
 | `festival_shop.py` | Local shop exclusions, catalog point prices and atomic asset/stackable redemptions |
 | `admin.py`, `admin_festival.py` | Exclusive audited grants of gems and active-season Festival points |

@@ -6,7 +6,19 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **625 passing tests on Windows Python 3.11**. Thirteen imported
+The suite has **636 passing tests on Windows Python 3.11**. Eleven jewel
+decomposition regressions cover mixed grades, catalog-driven rewards, source
+and socket retention, new free operations, exact retries, authentication,
+ownership/locks, bounds and atomic rollback. The actual rejected
+`/item/decompose-jewel` request passed on an in-memory account clone: only
+798,720 powder and the User revision changed. All source jewels and other
+profile fields remained equal; the exact retry wrote nothing. The actual
+public catalog also passed all 20 grades on synthetic memory state. The real
+source database was unchanged. APK result rendering and jewel retention are
+pending backend reload/reconnect. See
+[contract and evidence](official-save-experiment.md#jewel-decomposition-without-consuming-the-jewels).
+
+Thirteen earlier imported
 hero-book regressions cover all eight native objective types, XP thresholds,
 evolution/ascension/myth variants, awakening node masks, official nonpaying
 baselines, incremental growth, exact retries and transaction rollback. The

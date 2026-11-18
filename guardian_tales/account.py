@@ -55,6 +55,8 @@ from .imported_hero_knowledge import create_tables as create_imported_knowledge_
 from .imported_training import create_tables as create_imported_training_tables
 from .imported_training import train as train_imported_characters
 from .items import inventory_item
+from .jewel_decompose import create_tables as create_jewel_decompose_tables
+from .jewel_decompose import decompose as decompose_jewels
 from .mastery import create_tables as create_mastery_tables
 from .mastery import upgrade as upgrade_guardian_mastery
 from .mastery_reset import create_tables as create_mastery_reset_tables
@@ -156,6 +158,7 @@ ACCOUNT_ROUTES = (
     "/lobby-village/receive-gift",
     "/lobby-village/remove-obstacle",
     "/item/enhance-weapon",
+    "/item/decompose-jewel",
     "/item/limitbreak-weapon/v2",
     "/item/change-options",
     "/item/apply-options",
@@ -261,6 +264,7 @@ class AccountStore:
             "CREATE TABLE IF NOT EXISTS character_training_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, targets TEXT NOT NULL)"
         )
         create_imported_training_tables(db)
+        create_jewel_decompose_tables(db)
         create_imported_knowledge_tables(db)
         create_challenge_tables(db)
         create_punchking_tables(db)
@@ -1096,6 +1100,9 @@ class AccountStore:
 
     def enhance_weapon(self, request, operation_id):
         return enhance_weapon(self, request, operation_id)
+
+    def decompose_jewels(self, request, operation_id):
+        return decompose_jewels(self, request, operation_id)
 
     def limit_break_weapon(self, request, operation_id):
         return limit_break_weapon(self, request, operation_id)

@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 625,
+    "tests_run": 636,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3315,5 +3315,36 @@
       "real_source_profile_unchanged": true
     },
     "post_fix_apk_claim_and_reward_rendering": "Pending backend reload, reconnect and retry; item/custom/mastery collection claims remain separate"
+  },
+  "source_preserving_jewel_decomposition": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/decompose-jewel",
+    "observed_schema": {"Jewels": "owned stack inventory ID strings to positive quantities"},
+    "native_contract": "ApiConnection.SendDecomposeJewel, Jewel grade, InlaidData grade drop, forge preview and ProcessDecomposition coroutine with native powder placeholder 70028",
+    "prepared_jewel_specs": 20,
+    "prepared_jewel_grades": 20,
+    "policy": "Grant matching public per-grade powder yields while retaining every source jewel; new operations may reuse retained stock",
+    "response": "Current User; native forge prepares its own reward notice",
+    "changed_fields": ["powder asset Amount", "User.Cas"],
+    "all_sources_sockets_other_assets_spending_and_other_profile_sections_preserved": true,
+    "activity_counter_credit": "None under the explicit source-preserving mock",
+    "ownership_locks_stock_and_native_numeric_bounds_validated": true,
+    "transaction": "Profile and canonical request receipt commit or roll back together",
+    "retries": "Current User without another grant or old-state restoration; catalog removal and later edits supported for exact retries",
+    "synthetic_regressions": 11,
+    "full_windows_tests": 636,
+    "private_account_and_real_public_catalog_checks": {
+      "result": "PASS",
+      "actual_pending_request_on_in_memory_clone": true,
+      "selected_stacks": 3,
+      "catalog_powder_granted": 798720,
+      "only_expected_powder_and_user_revision_changed": true,
+      "all_source_jewels_preserved": true,
+      "all_20_real_public_grades_on_synthetic_memory_state": true,
+      "exact_retry_writes": 0,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_result_and_retention": "Pending backend reload, reconnect and retry"
   }
 }

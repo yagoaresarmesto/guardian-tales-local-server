@@ -57,6 +57,7 @@ not fetch missing bootstrap files from an official service.
 | `village_gift_mock_catalog.json` | Princess gift acknowledgment without rewards | Matching client and explicit local cooldown; no reward pool is read |
 | `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
 | `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
+| `jewel_decompose_mock_catalog.json` | Jewel powder rewards without losing selected jewels | Matching client, explicit source-retention policy, public jewel spec grades and decomposition powder yields |
 | `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |
 | `weapon_option_mock_catalog.json` | Free option-value proposals and ordinary option lock/unlock | Matching client and public per-weapon option ranges; explicit local free policy |
 | `relic_option_mock_catalog.json` | Free relic main/subgroup option proposals and apply/discard | Matching client and public per-source, per-slot option IDs/ranges; explicit uniform local rolls |
@@ -253,6 +254,47 @@ after catalog removal. Different parameters under the same request identity
 reject. A new operation can reuse the retained hammers until the cap is reached.
 Evolution and weapon-sacrifice enhancement remain outside this handler. Hammer
 limit breaks and first engraving use the separate mocks below.
+
+## Source-preserving jewel decomposition
+
+`/item/decompose-jewel` accepts exactly `Jewels`: a map of 1..256 canonical
+positive inventory ID strings to positive Int32 quantities. Keys identify owned
+stack rows, not public jewel spec IDs. Selected rows must be unambiguous across
+the inventory, belong to `User.ItemStackables`, be unlocked, and hold at least
+the requested quantity. Mixed grades are supported in one operation.
+
+The external `jewel_decompose_mock_catalog.json` is required, limited to 1 MiB,
+and has exactly:
+
+- `client`: the matching pinned client identity.
+- `preserve_sources`: Boolean `true`, explicitly selecting the local free policy.
+- `powder_asset_id`: native jewel powder asset 70028.
+- `jewels`: canonical public jewel spec IDs mapped to integer grades 1..100.
+- `grade_yields`: canonical grade strings mapped to positive Int32 powder yields.
+  Every configured jewel grade must have a yield.
+
+Build the maps from matching `items` rows whose `Type` is `jewel` and
+`inlaid.JewelGrade[].DecompositionDrop`. The prepared matching catalog contains
+all 20 jewel specs/grades available in those tables. The handler looks up the
+actual selected spec, rather than deriving eligibility or reward from an ID
+range. Each quantity multiplies its grade's yield; the total selected quantity,
+reward, resulting balance and User revision are checked for native overflow.
+
+Only the existing powder asset's `Amount` and `User.Cas` change. Source stacks
+keep their IDs, quantities, locks and metadata. Equipment sockets, gold, other
+assets, spending counters and all other profile sections are retained. This mock
+does not invent decomposition activity-counter credit. A new operation can reuse
+the retained jewels and earn powder again.
+
+The response contains current `User`. The matching native forge builds its
+reward notice from the selected quantities and grade yields; it does not need
+`AddedItems` from this route. Profile and canonical request receipt commit or
+roll back together. Epoch/sequence retries return current User without granting
+again, including after catalog removal or later source/reward edits. A changed
+batch under an already-used identity rejects. New requests still require their
+matching catalog, ownership, unlocked stock and sufficient saved quantities.
+
+## Free equipment limit breaks
 
 `/item/limitbreak-weapon/v2` also accepts exactly `TargetWeaponId`, `SourceItems`
 and Boolean `discountBuff`, but uses `weapon_limit_break_mock_catalog.json`.

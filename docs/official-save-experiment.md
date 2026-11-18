@@ -1797,6 +1797,49 @@ all other profile sections. The real source database had zero writes and its
 profile remained unchanged. These are host/native-contract results; actual APK
 claim/reward rendering remains pending backend reload, reconnect and retry.
 
+## Jewel decomposition without consuming the jewels
+
+The next unsupported route was `/item/decompose-jewel`. Its captured request had
+exactly `Jewels`, mapping three owned stack inventory IDs to selected quantities.
+The owner requested that decomposition preserve the jewels, including types
+beyond the currently selected ones. The explicit local mock now grants the
+matching powder reward while retaining every source stack.
+
+Matching native `ApiConnection.SendDecomposeJewel` establishes the request shape.
+`Jewel.get_Grade` and `InlaidData.GetJewelDecompositionDrop` use the public jewel
+grade and its decomposition drop. `ForgeJewelDecomposition.SetUI` sums those
+drops times the selected amounts. Its `ProcessDecomposition` coroutine awaits
+the response, clears the temporary selection, refreshes the inventory and
+displays a locally prepared powder reward notice. The native result placeholder
+identifies item 70028. Returning current `User` updates the powder balance and
+restores selected source quantities under the requested retention policy.
+
+The prepared external catalog uses all 20 matching `items` jewel rows and all
+20 `inlaid.JewelGrade` powder yields, rather than a special case for the three
+observed grades. Each new batch requires owned, unlocked stack IDs, positive
+quantities within saved stock, configured specs and a valid existing powder
+asset. Ambiguous inventory IDs and numeric overflows reject without writes.
+Only powder amount and User revision change. Jewels, attached sockets, all
+other inventory/assets, spending, activity counters and every other profile
+section remain equal. The mock does not consume resources or simulate item loss.
+
+The profile and canonical request receipt are one transaction. A retry of the
+same epoch/sequence and quantities returns current User without paying twice,
+including after reopening, catalog removal or later inventory edits. Different
+quantities under that identity reject. A genuinely new operation may reuse the
+retained jewels and receive the normal catalog yield again.
+
+Eleven synthetic regressions cover mixed grades, 20 data-driven grade entries,
+source/socket/profile preservation, repeated free operations, ownership/locks,
+malformed input/catalogs, bounds, atomic rollback, authentication and reconnect.
+An independent check used the actual public catalog for all 20 grades on a
+synthetic memory account. The actual rejected request also passed on an in-memory
+copy of the saved account, adding 798,720 powder and one User revision while
+retaining all selected sources and every other profile field. Exact retries
+wrote nothing. The real source database remained unchanged with zero writes.
+These are native-contract and host results; actual APK result rendering and
+retained quantities remain pending backend reload, reconnect and retry.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all
