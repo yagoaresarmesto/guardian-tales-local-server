@@ -11,7 +11,7 @@ exact refund/payment and mutation bounds, upgrade/reset retry interleaving,
 reopening/new login, cooldown/null/ancient/.NET timestamp boundaries,
 authentication/schema/catalog guards, empty/maximized skills, currency/revision
 limits, rollback and camp collection after reset. A detached actual-account reset
-passed; the APK reset retry requires a backend reload.
+passed. One subsequent APK reset matched its saved refund, payment and timer.
 Thirteen guardian-mastery regressions cover
 single-skill spending, exact costs, class/skill limits, preserved state, retries,
 reopening/new login, schema/authentication/catalog guards, invalid saved state,
@@ -1027,7 +1027,9 @@ retries preserve subsequent work, and the upgraded camp can collect with zero
 skills after a reset. Fourteen new regressions and all 379 tests pass on isolated
 Python 3.11/3.13. A detached actual-account reset verified the refund, payment,
 cooldown, narrow mutation bounds and both retry directions without changing the
-saved account. The APK reset retry remains pending backend reload. Other village
+saved account. One subsequent APK reset saved the exact refund, gem cost and
+cooldown, cleared the skill map/total and incremented the revision once. Unrelated
+profile, village and captured seed hashes matched; SQLite quick-check returned ok. Other village
 actions and ordinary camp production remain unfinished.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

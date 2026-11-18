@@ -647,7 +647,10 @@ retry interleaving and zero-level camp collection. All 379 tests pass on isolate
 Python 3.11/3.13. A detached actual-account reset verified exact refund/payment,
 cooldown and narrow mutation bounds, then verified an old upgrade retry and a
 reset retry after a new skill purchase. The real saved account was unchanged.
-APK reset verification remains pending backend reload.
+A subsequent APK reset produced one saved receipt. The cleared skills/total,
+mastery refund and reversed spending, gem payment/spending, next-reset time and
+single revision increment matched that receipt. Unrelated profile, village and
+captured seed hashes were unchanged, and SQLite quick-check returned ok.
 
 ## Host readiness before the APK check
 

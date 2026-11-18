@@ -2305,6 +2305,20 @@
       "old_upgrade_retry_does_not_restore_skill": true,
       "reset_replay_preserves_later_upgrade_without_second_payment_or_refund": true
     },
-    "post_fix_apk_reset": "pending backend reload"
+    "post_fix_apk_reset": {
+      "result": "PASS",
+      "saved_reset_receipts": 1,
+      "refund": 228964000,
+      "gem_cost": 300,
+      "skills_and_total_zero": true,
+      "mastery_balance_and_spending_match_receipt": true,
+      "gem_balance_and_spending_match_receipt": true,
+      "reset_time_matches_receipt": true,
+      "user_revision_incremented_once": true,
+      "unrelated_profile_preserved": true,
+      "village_preserved": true,
+      "captured_seed_preserved": true,
+      "sqlite_quick_check": "ok"
+    }
   }
 }
