@@ -29,6 +29,7 @@ STARTUP_READS = frozenset(
 IMPORTED_MUTATIONS = frozenset(
     (
         "/item/enhance-weapon",
+        "/item/engrave-weapon",
         "/item/change-options",
         "/item/apply-options",
         "/item/limitbreak-weapon/v2",

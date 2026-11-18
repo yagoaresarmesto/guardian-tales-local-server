@@ -109,9 +109,10 @@ snapshot. Other versions and distributions have not been validated. See the
 | Guardian base-camp debug collection | Opt-in fixed mastery-point reward; four APK collections credited the requested 100 million each |
 | Princess gift | No-reward mock; one APK acknowledgment saved its timer/revision with other village fields preserved |
 | Regenerating village obstacle | Explicit no-reward/no-payment mock restarts the configured machine's regeneration; APK retry pending |
-| Free equipment enhancement | Opt-in experience from owned hammers; three APK upgrades saved with all hammer stacks retained; unengraved targets only |
+| Free equipment enhancement | Opt-in experience from owned hammers; three APK upgrades saved with all hammer stacks retained; validated engraving bonus supported |
 | Free equipment limit breaks | Two APK operations reached 5 breaks with gold, hammers, experience and other profile fields retained |
-| Free equipment option values | Local rolls preserve option identities/locks; persistent apply/discard without consuming stones; APK retry pending |
+| Free equipment option values | Seven APK rolls and one accepted proposal saved with resources retained; existing identities/locks preserved |
+| Free first equipment engraving | Explicit first-engraving mock retains hammer/gold and uses matching public option tiers; APK retry pending |
 | Guardian mastery skill upgrades | Catalog-backed spending and class limits; 34 APK upgrades matched saved skills and costs |
 | Guardian mastery reset | Refund, configured free-gem payment and cooldown saved atomically; one APK reset verified |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |

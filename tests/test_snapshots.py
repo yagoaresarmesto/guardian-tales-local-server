@@ -105,6 +105,7 @@ class SnapshotTests(unittest.TestCase):
             [
                 "/item/apply-options",
                 "/item/change-options",
+                "/item/engrave-weapon",
                 "/item/enhance-weapon",
                 "/item/limitbreak-weapon/v2",
                 "/lobby-village/harvest-all",

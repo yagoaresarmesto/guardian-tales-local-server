@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 461,
+    "tests_run": 475,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1199,6 +1199,7 @@
     "enabled_mutation_routes": [
       "/item/apply-options",
       "/item/change-options",
+      "/item/engrave-weapon",
       "/item/enhance-weapon",
       "/item/limitbreak-weapon/v2",
       "/lobby-village/harvest-all",
@@ -2554,7 +2555,6 @@
     "cap_policy": "Saved User.Unlocked.MaxLevel.Weapon plus verified public limit-break/myth coefficients; native stage-gated cap calculation not implemented",
     "gold_hammers_account_buffs_and_missions_unchanged": true,
     "locked_target_supported": true,
-    "engraving_and_equipment_sacrifice_materials_supported": false,
     "atomic_profile_and_canonical_receipt": true,
     "current_state_retry_after_later_improvement_and_catalog_removal": true,
     "synthetic_regressions": 12,
@@ -2575,7 +2575,9 @@
       "continuous_experience_changes_match_current_target": true,
       "all_saved_hammer_stacks_equal_pre_enhancement_hash": true,
       "scope": "Live experience/hammer inventory comparison; complete profile/currency bounds verified separately in detached and synthetic checks"
-    }
+    },
+    "equipment_sacrifice_materials_supported": false,
+    "validated_saved_engraving_and_matching_cap_coefficient_supported": true
   },
   "free_equipment_hammer_limit_break_mock": {
     "date": "2026-11-18",
@@ -2643,7 +2645,6 @@
     "discard_preserves_entire_profile_and_revision": true,
     "stones_currency_and_inventory_quantities_preserved": true,
     "locked_target_and_existing_locked_options_supported": true,
-    "engraved_targets_and_option_lock_creation_supported": false,
     "proposal_original_options_spec_and_persisted_ranges_validated": true,
     "later_experience_and_limit_break_changes_retained": true,
     "atomic_proposals_resolution_and_canonical_receipts": true,
@@ -2662,6 +2663,50 @@
       "original_startup_seed_preserved": true,
       "real_saved_profile_unchanged": true
     },
-    "post_fix_apk_option_values": "pending backend reload and reconnect"
+    "post_fix_apk_option_values": {
+      "result": "PASS",
+      "generated_receipts": 7,
+      "accepted_receipts": 1,
+      "saved_options_equal_accepted_proposal": true,
+      "assets_stackables_and_misc_inventory_equal_pre_mock_baseline": true,
+      "all_other_profile_fields_except_user_revision_equal_pre_mock_baseline": true
+    },
+    "option_lock_creation_supported": false,
+    "validated_saved_engraving_preserved": true
+  },
+  "free_first_equipment_engraving_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/engrave-weapon",
+    "native_builder": "Oak.ApiConnection.SendEngraveWeapon",
+    "request_fields": [
+      "TargetWeaponId",
+      "MaterialWeaponId"
+    ],
+    "official_response_captured": false,
+    "explicit_external_catalog": "weapon_engrave_mock_catalog.json",
+    "scope": "First engraving only; eligible exclusive target and compatible owned unlocked limit-break hammer; no duplicate weapon sacrifice or engraving rerolls",
+    "policy": "Retain hammer and gold; uniform local public-tier selection, one EngraveOptions pair and initial EngraveCeiling of 1",
+    "official_rates_and_subsequent_ceiling_progression_implemented": false,
+    "only_engrave_options_ceiling_and_user_revision_change": true,
+    "native_client_derives_fixed_engraving_options_from_matching_spec": true,
+    "omitted_returned_items_skip_optional_native_refund_popup": true,
+    "atomic_profile_and_canonical_receipt": true,
+    "current_state_retry_after_later_work_material_or_catalog_removal": true,
+    "new_first_engraving_on_already_engraved_target_rejected": true,
+    "validated_saved_engraving_preserved_by_normal_option_changes": true,
+    "matching_engraving_level_coefficient_included_in_enhancement_cap": true,
+    "synthetic_regressions": 14,
+    "full_windows_tests": 475,
+    "detached_actual_account_check": {
+      "result": "PASS",
+      "only_engrave_options_ceiling_and_user_revision_changed": true,
+      "gold_hammers_experience_regular_options_and_other_fields_preserved": true,
+      "normal_option_generation_and_apply_after_engraving_preserve_attribute": true,
+      "enhancement_after_engraving_includes_public_cap_bonus_and_preserves_attribute": true,
+      "same_and_delayed_retries_preserve_current_state_without_writes": true,
+      "original_startup_seed_preserved": true,
+      "real_saved_profile_unchanged": true
+    },
+    "post_fix_apk_first_engraving": "pending backend reload and reconnect"
   }
 }

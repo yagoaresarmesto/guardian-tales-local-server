@@ -98,7 +98,8 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Eighteen mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+Nineteen mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+`/item/engrave-weapon`,
 `/item/enhance-weapon`,
 `/item/limitbreak-weapon/v2`, `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
@@ -133,7 +134,7 @@ village gift timer/revision and omits the reward notice.
 The configured regenerating obstacle also skips rewards/payment while retaining
 the building and restarting its regeneration timer.
 Equipment enhancement has an explicit free policy for owned hammers and
-unengraved targets: only equipment experience and user revision change, retaining
+supported targets: only equipment experience and user revision change, retaining
 gold and every material. It requires its own matching public-derived catalog.
 Hammer limit breaks use a separate free mock: compatible owned hammers increase
 the saved break count up to its configured maximum without consuming materials,
@@ -141,6 +142,8 @@ gold or experience.
 Equipment option-value proposals and their apply/discard step also have an
 explicit free mock, retaining all stones and changing only supported unlocked
 option levels when the owner accepts the proposal.
+First engraving also has a free mock using a compatible owned hammer and one
+matching public attribute tier; gold/materials remain intact.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -819,8 +822,9 @@ The separate opt-in catalog supplies matching weapon rarities, hammer experience
 experience thresholds and limit-break/myth coefficients. The handler validates
 one owned target and sufficient unlocked owned hammers, then changes only target
 experience and user revision. Gold and selected materials are retained. Locked
-targets are supported, but engraved targets and sacrificing equipment as material
-remain unsupported. The local cap uses the preserved weapon maximum plus matching
+targets are supported; validated engraving now adds its separately configured
+level coefficient. Sacrificing equipment as material remains unsupported.
+The local cap uses the preserved weapon maximum plus matching
 limit-break/myth coefficients; it does not reconstruct the native stage-opening
 eligibility calculation. Excess experience is clipped at the supported cap.
 Account buffs and mission/progression credit are unchanged.
@@ -898,7 +902,8 @@ The explicit matching external catalog supplies public per-weapon option ranges.
 This local mock keeps existing option identities, count, order, locks and source,
 rolling unlocked levels uniformly within those ranges. It does not reconstruct
 official option-presence probabilities or add/remove optional attributes. Only
-owned unengraved weapons with supported ordinary option rows are accepted. A
+owned weapons with supported ordinary option rows and validated saved engraving,
+if present, are accepted. A
 locked target is supported, existing locked option values remain fixed, and
 option-lock creation/removal remains a separate unsupported operation.
 
@@ -926,7 +931,54 @@ transaction rollback. A detached actual-account check generated all five current
 option values, applied a proposal and discarded a later proposal while retaining
 all stones, currency, inventory quantities and other fields. Same and delayed
 retries made no writes; captured seeds and the actual saved profile remained
-unchanged. The APK option-value retry is pending backend reload and reconnect.
+unchanged. Seven subsequent APK rolls and one accepted proposal were saved.
+The equipped options match that accepted proposal; all currencies, stackables,
+misc inventory and other profile fields apart from user revision match the
+private pre-mock baseline. Known engraving attributes are now validated and
+retained by this handler as described below.
+
+## Free first engraving with a retained hammer
+
+The next unsupported APK route was `/item/engrave-weapon`; the owner explicitly
+requested retaining the hammer. Native `SendEngraveWeapon` sends exactly
+`TargetWeaponId` and `MaterialWeaponId`. The matching `Weapon.Apply` reads
+`EngraveOptions` as option-ID/level pairs and derives fixed engraving options from
+the public weapon spec. Its success callback can read optional returned items;
+the later refund coroutine skips a null/empty list. No official response was
+captured.
+
+The explicit free first-engraving catalog supplies matching eligible exclusive
+weapons, public random-option tiers, compatible hammer origin rarities, the
+experience gate and engraving coefficient. The target must have five limit
+breaks, sufficient experience and no prior engraving. One unlocked owned
+compatible hammer stack is required but retained. The local mock uniformly
+chooses one public tier, stores one engraving pair and sets the initial ceiling
+counter to 1. This is an explicit local initial-roll policy, not an implementation
+of official rates or subsequent ceiling/pity progression. Only engraving options,
+the ceiling and user revision change; gold, hammers, experience, ordinary options
+and every unrelated field remain intact. No refund reward is fabricated.
+
+The profile and retry receipt commit atomically. Reconnect replays return current
+state without rolling again or overwriting later changes, including after catalog
+or material removal. Changed request parameters under one identity reject. A new
+first-engraving request on an already engraved target rejects. Duplicate weapons
+as materials, engraving rerolls and their separate apply/discard routes remain
+outside this handler.
+
+Existing ordinary option changes now validate and retain supported saved engraving.
+Experience enhancement also includes the matching additional level coefficient
+of 15. Neither operation requires an engraving catalog for unengraved targets.
+This avoids making the newly engraved weapon unusable by those existing handlers.
+
+Fourteen regressions cover exact free mutation bounds, valid tiers, ownership,
+origin-rarity compatibility, eligibility/schema/configuration/authentication,
+persistent current-state retries, revision limits, rollback and coexistence with
+ordinary options/experience after engraving. A detached actual-account check
+confirmed the pending first engraving, retained all resources and other fields,
+then verified ordinary option acceptance and experience enhancement preserved the
+attribute. Same and delayed retries made no writes; captured seeds and the actual
+saved account remained unchanged. The APK first-engraving retry is pending backend
+reload and reconnect.
 
 ## Host readiness before the APK check
 

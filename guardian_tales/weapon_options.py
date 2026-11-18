@@ -83,7 +83,9 @@ def load_catalog(references):
     return value
 
 
-def target_item(user, item_id):
+def target_item(user, item_id, references):
+    from .weapon_engrave import saved_engrave_bonus
+
     weapons = user.get("ItemWeapons")
     if not isinstance(weapons, list):
         raise ValueError("Invalid saved equipment inventory")
@@ -96,11 +98,11 @@ def target_item(user, item_id):
         or not integer(target.get("ItemId"), minimum=1)
         or not integer(target.get("Amount"), 1, 1)
         or type(target.get("Locked")) is not bool
-        or target.get("EngraveOptions") not in (None, [])
         or not valid_options(target.get("Options"))
         or not integer(user.get("Cas"), MAX_REVISION)
     ):
         raise ValueError("Unsupported saved equipment, options, engraving or user revision")
+    saved_engrave_bonus(target, references)
     return target
 
 
@@ -154,7 +156,7 @@ def change_or_apply(account, body, operation_id, route):
         raise ValueError("Option retry differs from the saved request")
     if receipt and route == APPLY:
         return {"User": user}
-    target = target_item(user, body["ItemId"])
+    target = target_item(user, body["ItemId"], account.references)
     pending = account.db.execute(
         "SELECT request_id,spec_id,before_options,after_options,option_ranges "
         "FROM weapon_option_proposals WHERE item_id=?",

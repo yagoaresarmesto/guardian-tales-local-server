@@ -75,6 +75,9 @@ def load_catalog(references):
 
 
 def enhance(account, body, operation_id):
+    # The engraving catalog depends on the shared canonical-ID validator here.
+    from .weapon_engrave import saved_engrave_bonus
+
     if (
         not isinstance(body, dict)
         or set(body) != {"TargetWeaponId", "SourceItems", "discountBuff"}
@@ -116,7 +119,6 @@ def enhance(account, body, operation_id):
         or not integer(target.get("Experience"))
         or not integer(target.get("LimitBreaks"), catalog["max_limit_breaks"])
         or type(target.get("Locked")) is not bool
-        or target.get("EngraveOptions") not in (None, [])
         or not integer(user.get("Cas"), MAX_REVISION - 1)
     ):
         raise ValueError("Unsupported target equipment, engraving or account revision")
@@ -126,6 +128,7 @@ def enhance(account, body, operation_id):
     if not integer(base, len(catalog["level_total_exps"]), 1):
         raise ValueError("Invalid saved weapon level cap")
     cap_level = base + target["LimitBreaks"] * catalog["limit_break_coef"]
+    cap_level += saved_engrave_bonus(target, account.references)
     if catalog["weapons"][str(target["ItemId"])] > 4:
         cap_level += catalog["myth_coef"]
     if cap_level > len(catalog["level_total_exps"]):

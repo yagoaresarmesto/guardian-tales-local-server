@@ -289,6 +289,15 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == "/item/engrave-weapon":
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.engrave_weapon(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route in ("/item/change-options", "/item/apply-options"):
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)

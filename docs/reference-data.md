@@ -55,6 +55,7 @@ not fetch missing bootstrap files from an official service.
 | `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
 | `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |
 | `weapon_option_mock_catalog.json` | Free proposals to change existing option values | Matching client and public per-weapon option ranges; explicit local uniform value rolls |
+| `weapon_engrave_mock_catalog.json` | Free first engraving and validation of saved engraving | Matching eligible exclusive specs, origin/hammer rarities, option tiers, experience gate and level coefficient |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 | `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
@@ -195,14 +196,16 @@ coefficient, maximum count and myth coefficient are 3, 5 and 20. This opt-in fil
 is additional to the published content pack.
 
 The request has exactly `TargetWeaponId`, `SourceItems` and `discountBuff`.
-The target is one owned, unengraved equipment item; a locked target is supported.
+The target is one owned equipment item; a locked target is supported. A saved
+engraving matching the separate engraving catalog below is also supported.
 `SourceItems` identifies 1..256 owned, unlocked hammer stacks and positive counts
 within their saved quantities. Weapon sacrifice materials are unsupported. Each
 hammer contributes its configured experience without being removed or consumed.
 The explicit local cap policy uses saved `User.Unlocked.MaxLevel.Weapon`, plus
 limit-break count times its coefficient, plus the myth coefficient for rarity
-above 4; total experience is clipped at that level's table threshold. This uses
-the preserved saved cap rather than implementing the original stage-gated cap
+above 4, plus the engraving coefficient for a validated engraved target. Total
+experience is clipped at that level's table threshold. It uses the preserved
+saved cap rather than implementing the original stage-gated cap
 calculation. Already capped targets reject new enhancements.
 
 Only the target's `Experience` and user revision change. Gold, all materials,
@@ -212,8 +215,8 @@ policy. The response contains current `User`. Profile and retry receipt commit
 atomically; a replay returns current state, preserving later improvements even
 after catalog removal. Different parameters under the same request identity
 reject. A new operation can reuse the retained hammers until the cap is reached.
-Evolution, engraving and weapon-sacrifice enhancement remain outside this
-handler. Hammer limit breaks use the separate mock below.
+Evolution and weapon-sacrifice enhancement remain outside this handler. Hammer
+limit breaks and first engraving use the separate mocks below.
 
 `/item/limitbreak-weapon/v2` also accepts exactly `TargetWeaponId`, `SourceItems`
 and Boolean `discountBuff`, but uses `weapon_limit_break_mock_catalog.json`.
@@ -254,10 +257,11 @@ to 1..32 canonical option IDs, each with `[minimum, maximum]` integer levels in
 This is a local **option-value mock**: it preserves each existing option ID,
 count, order, lock flag and source, rolling only unlocked levels uniformly within
 their configured inclusive ranges. It does not reproduce official probabilities
-or add/remove optional attributes. The target must be owned, unengraved equipment
+or add/remove optional attributes. The target must be owned equipment
 with distinct supported ordinary (`OptionSource: 0`) options in range and at least
 one unlocked option. Locked equipment itself is supported. Existing option locks
 are retained; creating/removing locks uses a separate unsupported operation.
+Saved engraving matching the separate engraving catalog is validated and retained.
 No option stones, lock stones, other inventory or currency are consumed or required
 by this server policy. Client UI resource checks are outside this handler.
 
@@ -278,6 +282,51 @@ return current profile without consuming a newer proposal. A changed body or
 route under one request identity rejects. The wire carries no proposal ID:
 new apply/discard requests resolve the latest pending proposal for that item.
 Session-epoch retry limits across new logins remain the same as other mutations.
+
+`/item/engrave-weapon` accepts exactly positive integer `TargetWeaponId` and
+`MaterialWeaponId`, identifying different owned inventory instances. The opt-in
+`weapon_engrave_mock_catalog.json` is limited to 1 MiB, with exactly matching
+`client`, Boolean `free: true`, `min_experience`, `required_limit_breaks`,
+`engrave_coef`, `max_ceiling`, `weapons` and `hammers`. The experience gate is a
+positive signed-32-bit value, required breaks and maximum ceiling are in 1..100,
+and the coefficient is in 0..100. The disjoint canonical spec maps contain
+1..30,000 weapons and 1..64 hammers. Each weapon has exactly `origin_rarity`
+(3 or 4) and `options`, 1..32 distinct positive `OptionId`/`Level` pairs sharing
+one option ID, with levels in 1..1,000. Hammer values are rarity 3 or 4.
+
+The prepared catalog uses matching exclusive weapons with rarity at least 4,
+origin rarity 3 or 4 and nonempty public static/random engraving options. It
+derives the minimum experience from `WeaponLevelToExp`'s public threshold for
+the configured engraving requirement: 1,462,850 experience. Required limit breaks
+are 5, the added level coefficient is 15, and the configured ceiling is 5. This
+optional catalog is additional to the published content pack.
+
+This handler supports **first engraving only**: the owned target must meet the
+experience gate, have exactly the required limit breaks, no engraving options
+and zero engraving ceiling. A locked target is supported. The material must be
+one unlocked, nonempty owned limit-break hammer stack whose rarity matches the
+target's origin rarity. Duplicate-weapon sacrifice is unsupported. The local
+mock chooses one public random-option tier uniformly, stores one `EngraveOptions`
+pair, sets `EngraveCeiling` to 1 and increments user revision. This uniform roll
+and initial counter are explicit local policy, not verified official response
+behavior or rates. The native client derives fixed engraving options from its
+matching weapon spec. The response contains current `User`, omitting returned
+`AddedItems`; no refund/reward is fabricated.
+
+No hammer or gold is consumed. Experience, limit breaks, ordinary options,
+inventory quantities, buffs, missions, village and all unrelated fields remain
+unchanged. Profile and canonical receipt commit together. Old retries return
+current state without rolling or overwriting later work, including after catalog
+or material removal; changed parameters under the same identity reject. New
+first-engraving requests on an already engraved target reject. Engraving rerolls,
+their apply/discard routes and repeated ceiling progression remain unsupported.
+
+Subsequent ordinary option changes validate and preserve the saved engraving.
+Subsequent experience enhancement includes its configured level coefficient.
+These operations require the matching engraving catalog for a saved engraved
+target, accepting one public tier with ceiling in 1..`max_ceiling`. Malformed or
+unknown engraving data rejects before writes; unengraved accounts need no new
+catalog for the existing operations.
 
 `/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
 reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,

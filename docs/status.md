@@ -6,14 +6,22 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **461 passing tests on Windows Python 3.11**. Eighteen equipment
+The suite has **475 passing tests on Windows Python 3.11**. Fourteen first-engraving
+regressions cover free hammer/gold preservation, valid public tiers, eligibility,
+origin rarity, ownership/authentication/schema/configuration, persistent retries,
+revision limits, rollback and follow-up ordinary option/experience changes. The
+explicit first-engraving mock retains materials, uses a local uniform tier roll
+and sets the initial counter to 1. The detached actual-account check passed;
+the real save was unchanged. APK retry requires backend reload and reconnect.
+Eighteen equipment
 option-value regressions cover free generation/apply/discard, locked values,
 later rerolls/upgrades, persistent current-state retries, original option/range
 guards, catalog removal, ownership/authentication/schema/configuration, revision
 ceilings and rollback. The explicit local mock preserves option identities/count
 and rolls only unlocked values within matching public ranges. A detached
-actual-account check passed without changing the real save. APK retry requires
-backend reload and reconnect.
+actual-account check passed without changing the real save. Seven APK rolls and
+one accepted proposal subsequently persisted with all resources and other profile
+fields apart from user revision equal to their private pre-mock baseline.
 Thirteen free hammer
 limit-break regressions cover exact break/revision mutation bounds, retained
 resources and experience, origin-rarity compatibility, maximum clipping,
@@ -28,7 +36,8 @@ gold and hammers, locked targets, level caps, discount flags, retry persistence,
 ownership/configuration/authentication/schema guards, overflow and rollback.
 The owner selected a free local policy; the detached actual-account check gained
 the expected experience while preserving every resource and unrelated field.
-Engraved targets and weapon sacrifice materials remain unsupported. Three APK
+Known saved engraving is now validated and its cap coefficient supported through
+the separate first-engraving catalog; weapon sacrifice remains unsupported. Three APK
 enhancements subsequently saved continuous experience changes matching the
 current target, with all hammer stacks equal to their pre-enhancement hash.
 Eight regenerating

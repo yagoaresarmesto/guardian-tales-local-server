@@ -78,6 +78,8 @@ from .village_gift import create_tables as create_village_gift_tables
 from .village_gift import receive as receive_village_gift
 from .village_obstacle import create_tables as create_village_obstacle_tables
 from .village_obstacle import remove as remove_village_obstacle
+from .weapon_engrave import create_tables as create_weapon_engrave_tables
+from .weapon_engrave import engrave as engrave_weapon
 from .weapon_enhance import create_tables as create_weapon_enhance_tables
 from .weapon_enhance import enhance as enhance_weapon
 from .weapon_limit_break import create_tables as create_weapon_limit_break_tables
@@ -124,6 +126,7 @@ ACCOUNT_ROUTES = (
     "/item/limitbreak-weapon/v2",
     "/item/change-options",
     "/item/apply-options",
+    "/item/engrave-weapon",
     "/user/guardian-mastery-level-up",
     "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
@@ -187,6 +190,7 @@ class AccountStore:
         create_weapon_enhance_tables(db)
         create_weapon_limit_break_tables(db)
         create_weapon_option_tables(db)
+        create_weapon_engrave_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1052,6 +1056,9 @@ class AccountStore:
 
     def change_or_apply_weapon_options(self, request, operation_id, route):
         return change_or_apply_weapon_options(self, request, operation_id, route)
+
+    def engrave_weapon(self, request, operation_id):
+        return engrave_weapon(self, request, operation_id)
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)
