@@ -11,6 +11,8 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+from .attendance import claim as claim_imported_attendance
+from .attendance import create_tables as create_attendance_tables
 from .basecamp import create_tables as create_basecamp_tables
 from .basecamp import harvest as harvest_basecamp
 from .beginner import claim_beginner
@@ -163,6 +165,7 @@ class AccountStore:
         create_basecamp_tables(db)
         create_mastery_tables(db)
         create_mastery_reset_tables(db)
+        create_attendance_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -322,8 +325,12 @@ class AccountStore:
             )
         return profile
 
-    def claim_attendance(self, now=None):
-        """Grant catalog ASSET rewards once per UTC day; item rolls are pending."""
+    def claim_attendance(self, now=None, request=None, operation_id=None):
+        """Claim fresh-account assets or explicitly mock the imported account's day."""
+        if request not in (None, {}):
+            raise ValueError("Daily attendance accepts no parameters")
+        if is_imported(self.db):
+            return claim_imported_attendance(self, request, operation_id, now)
         now = now or datetime.now(timezone.utc)
         if now.tzinfo is None:
             raise ValueError("Attendance clock must have a timezone")

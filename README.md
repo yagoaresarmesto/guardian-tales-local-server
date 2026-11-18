@@ -78,7 +78,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | New account, prologue name/avatar/weapon selection | Persistent in SQLite; repeated completion is idempotent |
 | Lobby, collection, inbox and catalog reads | Initial empty responses; no social or purchase functionality |
 | World map and stage entry | Catalog prerequisites, one-time stamina and free reentry; prepared catalog covers Inn, the first passage, the second main phase and one discovered side stage |
-| Daily attendance | External catalog required; supported asset rewards once per UTC day |
+| Daily attendance | Fresh accounts: catalog asset rewards; imported accounts: explicit no-reward mock, once per UTC day |
 | Resource delivery | Read-only manifest allowlist; ETags, HEAD and single byte ranges |
 | Quest registration | Known chapter quests can be registered in Inn with an external catalog; early main-quest checkpoints persist; other progression pending |
 | Side-stage map discovery | Verified map targets persist as discovered; configured entry can require finding the map; side-stage gameplay remains pending |

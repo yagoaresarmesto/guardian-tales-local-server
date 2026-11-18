@@ -31,6 +31,7 @@ not fetch missing bootstrap files from an official service.
 | `static_data_get.bin` | `/static-data/get` | Body type 2; clean clients require full matching static tables, not only version/checksum data |
 | `static_data_check.bin` | `/static-data/check-update` | Body type 1 reference body |
 | `attendance_catalog.json` | Daily attendance reward lookup | Parsed public attendance catalog, not account state |
+| `attendance_mock_catalog.json` | Explicit no-reward attendance for imported accounts | Matching client, group IDs and 28-day cycle; owner-selected debug policy |
 | `training_catalog.json` | Knight experience targets and story caps | Parsed public experience catalog for the matching build |
 | `tutorial_catalog.json` | Known UI completion markers after Inn | Parsed public tutorial ID list for the matching build |
 | `quest_catalog.json` | Known chapter quest registration in Inn | Parsed mapping of chapter codes to quest IDs |
@@ -206,10 +207,34 @@ erase newer skills. An older upgrade replay cannot restore reset skills. Catalog
 are unnecessary for an existing receipt. Ordinary camp production remains outside
 these operations.
 
-The attendance reader expects `origin_group`, `active_group`, and `groups`, where
+The fresh-account attendance reader expects `origin_group`, `active_group`, and `groups`, where
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.
 `tests/fixtures/reference/attendance_catalog.json` illustrates that structure with
 synthetic test rows. It is intentionally not a complete monthly catalog.
+
+Imported accounts instead require an explicit `attendance_mock_catalog.json` to
+skip an eligible daily reward. The file is limited to 4 KiB and contains exactly
+`client`, `origin_group`, `active_group` and `days`. Match the pinned client and
+its monthly group constants; positive group IDs must fit the encoded signed-32-bit
+counter. `days` must be integer 28. The prepared experiment uses origin group 1
+and active group 3. This is an opt-in debug policy requested by the owner; without
+the catalog an eligible imported claim rejects before changing state.
+
+The parameterless `/user/claim-daily-attendance` response contains current `User`,
+current `UserRecord` and `AddedItems: []`. The mock never loads reward rows or
+interprets item types. It advances the calendar count/date, login-day record and
+both model revisions once per UTC day. Existing assets, inventory and item counters
+remain unchanged. A completed 28-day cycle restarts at day one of the active group;
+this rollover is a local policy. A same-day official capture or existing daily
+receipt is already claimed. Future/malformed dates, invalid counters/ownership
+and revision overflow reject without writes.
+
+The calendar changes, daily fence and request receipt commit together. A reconnect
+replay returns current state without advancing again, even on a later day or after
+catalog removal. A different request on an already claimed day also leaves the
+profile unchanged. A skipped reward is not deferred or placed in an inbox: that
+local day's reward is deliberately omitted. Fresh-account asset rewards retain
+their existing implementation; this mock does not add inventory/random rewards.
 
 The optional training catalog contains `experience_by_level`, an increasing
 integer array whose index 0 is level 1's zero experience, and `caps`, ordered

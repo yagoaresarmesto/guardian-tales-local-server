@@ -6,7 +6,15 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **381 passing tests on Windows Python 3.11**. Two new bridge
+The suite has **395 passing tests on Windows Python 3.11**. Fourteen daily
+attendance mock regressions cover no-reward mutation bounds, ignored reward
+catalogs, day/request retry fences, official same-day state, reopening/new login,
+calendar rollover, UTC/.NET timestamps, invalid state, schema/authentication,
+explicit configuration and rollback. The owner selected skipped daily rewards
+for the imported account. Its detached check advanced one calendar day with empty
+notices, preserved assets/inventory and verified a no-write delayed retry. The
+APK mock retry requires a backend reload and reconnect.
+Two new bridge
 regressions cover restoration after ADB loses its connection, dynamic loopback
 ports and failed reconnect without root/device changes. The latest isolated
 Python 3.11/3.13 matrix contains the preceding 379 tests; Docker was unavailable

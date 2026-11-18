@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 381,
+    "tests_run": 395,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1205,6 +1205,7 @@
       "/summon/select-character",
       "/summon/set-select-character",
       "/user/charge-stamina",
+      "/user/claim-daily-attendance",
       "/user/guardian-mastery-level-up",
       "/user/reset-guardian-mastery-level"
     ]
@@ -2342,5 +2343,50 @@
       "recovery_used_explicit_adb_connect_before_restore": true,
       "new_run_left_for_owner_terminal": true
     }
+  },
+  "imported_daily_attendance_mock": {
+    "date": "2026-11-18",
+    "observed_rejected_route": "/user/claim-daily-attendance",
+    "owner_explicitly_selected_no_reward_mock": true,
+    "scope": "Acknowledge the imported local attendance day and calendar/login counters without granting any reward",
+    "native_parameterless_builder_inspected": true,
+    "native_calendar_and_special_calendar_AddedItems_callbacks_inspected": true,
+    "native_group_day_encoding_helpers_inspected": true,
+    "original_official_claim_response_captured": false,
+    "explicit_external_catalog": "attendance_mock_catalog.json",
+    "prepared_origin_group": 1,
+    "prepared_active_group": 3,
+    "cycle_days": 28,
+    "response_models": [
+      "User",
+      "UserRecord"
+    ],
+    "added_items": [],
+    "normal_reward_catalog_never_loaded_or_parsed": true,
+    "only_attendance_date_count_login_days_and_model_revisions_change": true,
+    "all_assets_inventory_and_item_counters_preserved": true,
+    "same_utc_day_and_saved_official_claim_prevent_second_advance": true,
+    "profile_daily_fence_and_operation_receipt_atomic": true,
+    "delayed_reconnect_retry_returns_current_state_without_advancing_next_day": true,
+    "receipt_replay_survives_catalog_removal": true,
+    "skipped_rewards_not_deferred_or_queued": true,
+    "fresh_account_asset_delivery_preserved": true,
+    "new_regressions": 14,
+    "focused_windows_checks": 47,
+    "full_windows_tests": 395,
+    "full_windows_result": "PASS",
+    "external_network_disabled_for_current_suite": false,
+    "private_actual_account_detached_validation": {
+      "result": "PASS",
+      "real_account_mutated": false,
+      "owner_selected_no_reward_mock": true,
+      "monthly_count_before": 318,
+      "monthly_count_after": 319,
+      "added_items": [],
+      "only_attendance_date_count_login_days_and_revisions_changed": true,
+      "all_assets_inventory_and_other_profile_fields_preserved": true,
+      "delayed_retry_next_day_does_not_advance_or_write": true
+    },
+    "post_fix_apk_mock": "pending backend reload and reconnect"
   }
 }

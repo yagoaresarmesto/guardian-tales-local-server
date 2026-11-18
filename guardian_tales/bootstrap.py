@@ -363,7 +363,14 @@ class BootstrapSession:
                     raise PacketError(str(exc)) from exc
             if route == "/user/claim-daily-attendance":
                 try:
-                    return json_response(request, self.store.account.claim_attendance())
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request,
+                        self.store.account.claim_attendance(
+                            request=body, operation_id=operation_id
+                        ),
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/stage/start-stage":

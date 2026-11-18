@@ -98,9 +98,10 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Ten mutations are now enabled: `/summon/set-select-character`,
+Eleven mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
-`/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina` and
+`/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
+`/user/claim-daily-attendance` and
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp` and
 `/user/guardian-mastery-level-up` and `/user/reset-guardian-mastery-level`. The summon routes
 use the existing local selection/draw catalogs,
@@ -120,6 +121,8 @@ Mastery skill upgrades spend the catalog's next-level cost and persist one skill
 the total mastery level and the corresponding payment with retry protection.
 Reset clears the skills/total and refunds their catalog investment, charging the
 configured free-gem cost and setting a persisted cooldown with its own receipt.
+Daily attendance uses an explicit no-reward mock: it acknowledges the local day
+and advances calendar/login counters without delivering or parsing any reward.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -651,6 +654,43 @@ A subsequent APK reset produced one saved receipt. The cleared skills/total,
 mastery refund and reversed spending, gem payment/spending, next-reset time and
 single revision increment matched that receipt. Unrelated profile, village and
 captured seed hashes were unchanged, and SQLite quick-check returned ok.
+
+## Explicit daily attendance mock
+
+The imported account's `/user/claim-daily-attendance` request was rejected by its
+mutation guard. Its next catalog reward was an inventory material, beyond the
+existing fresh-account asset-only delivery. The owner explicitly selected a
+no-reward mock for imported attendance. The matching native builder is
+parameterless; both calendar callbacks consume `AddedItems` and the updated
+global models. Native group/day helpers establish the encoded calendar counter.
+No original official claim response was captured.
+
+An external `attendance_mock_catalog.json` explicitly enables the policy and pins
+the client, origin/active group IDs and 28-day cycle. The handler returns current
+`User`, current `UserRecord` and an empty `AddedItems` list. It never reads the
+normal reward catalog, so unsupported inventory or random reward types cannot
+cause delivery errors. An eligible new UTC day advances only the saved calendar
+count/date, login-day count and their two revisions. Every skipped reward is
+deliberately omitted rather than queued for future delivery. All assets, owned
+heroes/gear, inventory counters, other profile fields and captured seed remain
+unchanged. Cycle rollover to the active group is a local policy.
+
+A saved same-day official claim is already complete. Invalid/future dates,
+invalid counters/owner and revision overflow reject without writes. Calendar
+changes, the daily fence and an epoch-based request receipt commit together.
+Retries return current models without advancing, including after another day,
+reopening or catalog removal. A new request on the same day is also a no-op;
+fresh login retains the existing request-epoch limitations. Fresh-account asset
+rewards use their prior implementation.
+
+Fourteen regressions cover exact mutation bounds and empty notices, absent or
+malformed reward catalogs, cross-day retries, same-day/official/daily guards,
+reopening/new login, group/28-day rollover, UTC and .NET timestamp handling,
+invalid state, authentication/schema/identity, explicit catalog and rollback.
+A detached actual-account check advanced one day with no reward, preserved all
+other profile fields and verified a no-write delayed retry. The saved account was
+unchanged during this check. Actual APK mock verification is pending backend
+reload and reconnect.
 
 ## Host readiness before the APK check
 

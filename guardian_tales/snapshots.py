@@ -34,6 +34,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/preset/set-presets",
         "/preset/delete-preset",
         "/user/charge-stamina",
+        "/user/claim-daily-attendance",
         "/lobby-village/harvest-all",
         "/lobby-village/harvest-basecamp",
         "/user/guardian-mastery-level-up",
