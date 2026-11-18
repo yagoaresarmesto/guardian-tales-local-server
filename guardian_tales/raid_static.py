@@ -19,6 +19,17 @@ LOCAL_REWARD_UNTIL = "2099-12-31T23:59:59+00:00"
 MANIFEST_KEYS = {"static_data_sha256", "static_data_checksum", "static_data_revision"}
 
 
+def atomic_replace(source, target):
+    """Keep atomic publication while tolerating brief Windows sharing locks."""
+    for attempt in range(6):
+        try:
+            return os.replace(source, target)
+        except PermissionError as error:
+            if getattr(error, "winerror", None) not in (32, 33) or attempt == 5:
+                raise
+            time.sleep(0.05 * (attempt + 1))
+
+
 def digest(data):
     return base64.b64encode(hashlib.sha256(data).digest()).decode("ascii")
 
@@ -192,7 +203,7 @@ def prepare(references, season, previous_revision=0):
             stream.write(body)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, path)
+        atomic_replace(temporary, path)
         temporary = None
     finally:
         if temporary is not None:

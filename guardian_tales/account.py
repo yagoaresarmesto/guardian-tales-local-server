@@ -40,6 +40,8 @@ from .discovery import discover_substage
 from .festival_shop import check_not_redeemable, redeem_points
 from .guild_menu import GUILD_MENU_ROUTES
 from .guild_menu import read as read_guild_menu
+from .guild_meteor import ROUTE as METEOR_ENTRY
+from .guild_meteor import enter as enter_guild_meteor
 from .guild_raid import END_STAGE as RAID_STAGE_EXIT_ROUTE
 from .guild_raid import MENU_READ_ROUTES as RAID_MENU_READ_ROUTES
 from .guild_raid import RANKING_ROUTES as RAID_RANKING_ROUTES
@@ -49,6 +51,18 @@ from .guild_raid import enter as enter_guild_raid
 from .guild_raid import menu_read as read_raid_menu
 from .guild_raid import rankings as guild_raid_rankings
 from .guild_raid import start_stage as enter_raid_stage
+from .guild_war import CASTLES as GUILD_WAR_CASTLES
+from .guild_war import END_COOP as GUILD_WAR_END_COOP
+from .guild_war import RECORDS as GUILD_WAR_RECORDS
+from .guild_war import ROUTE as GUILD_WAR_ENTRY
+from .guild_war import START_COOP as GUILD_WAR_START_COOP
+from .guild_war import UNLOCK as GUILD_WAR_UNLOCK
+from .guild_war import battle_records as guild_war_battle_records
+from .guild_war import castle_infos as guild_war_castle_infos
+from .guild_war import end_coop as end_guild_war_coop
+from .guild_war import enter as enter_guild_war
+from .guild_war import start_coop as start_guild_war_coop
+from .guild_war import unlock as unlock_guild_war
 from .hero_knowledge import claim_hero_knowledge
 from .imported_hero_knowledge import claim as claim_imported_hero_knowledge
 from .imported_hero_knowledge import create_tables as create_imported_knowledge_tables
@@ -125,6 +139,13 @@ ACCOUNT_ROUTES = (
     "/guild/get-my-guild",
     "/guild/red-dot",
     "/guild/claim-guild-daily-attendance",
+    METEOR_ENTRY,
+    GUILD_WAR_ENTRY,
+    GUILD_WAR_CASTLES,
+    GUILD_WAR_START_COOP,
+    GUILD_WAR_END_COOP,
+    GUILD_WAR_RECORDS,
+    GUILD_WAR_UNLOCK,
     "/guild-raid2/reset",
     "/guild-raid2/enter",
     RAID_STAGE_ENTRY_ROUTE,
@@ -969,6 +990,10 @@ class AccountStore:
             raise ValueError(
                 "Only tutorial IDs from the configured catalog or built-in help are supported"
             )
+        if is_imported(self.db) and any(
+            value not in PASSIVE_HELP_TUTORIALS for value in request["tutorialIds"]
+        ):
+            raise ValueError("Imported accounts accept only passive help acknowledgments")
         profile = self.profile()
         progress = profile["UserProgress"]
         if self.needs_prologue():
@@ -1158,6 +1183,20 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route == GUILD_WAR_RECORDS:
+            return guild_war_battle_records(self, request)
+        if route == GUILD_WAR_END_COOP:
+            return end_guild_war_coop(self, request)
+        if route == GUILD_WAR_START_COOP:
+            return start_guild_war_coop(self, request)
+        if route == GUILD_WAR_CASTLES:
+            return guild_war_castle_infos(self, request)
+        if route == GUILD_WAR_UNLOCK:
+            return unlock_guild_war(self, request)
+        if route == GUILD_WAR_ENTRY:
+            return enter_guild_war(self, request)
+        if route == METEOR_ENTRY:
+            return enter_guild_meteor(self, request)
         if route == RAID_STAGE_EXIT_ROUTE:
             return exit_raid_stage(self, request)
         if route == RAID_STAGE_ENTRY_ROUTE:

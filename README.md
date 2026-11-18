@@ -107,6 +107,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Orbital/Raid preset selection | Orbital verified in APK; saved Raid/Conquest selection host-tested with atomic choice and retry receipts |
 | Normal-party members | Ordered one-to-four owned heroes, leader changes and trailing-slot removal persist with compact responses and retry receipts; equipment and mode presets retained; APK save check pending |
 | Dungeon Kingdom Arena practice | Three rotations and days 1–7 selectable by command; entry/start/end and saved arena teams host-tested; no rewards or saved scores; APK combat pending |
+| Guild meteor entry | Fresh local meteor menu loads in the APK; native empty progress lists/maps, automatic season selection and no rewards; excavation actions pending |
+| Guild War season trial | Reversible season commands and valid seven-day calendar; APK menu and cooperative stage load, empty castle list, free combat-exit mock added; persistent score/progression and rewards unfinished |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
 | Own profile card | Card request completed; empty friend prerequisite added; uncaptured decorations/social fields empty; APK rendering pending |
@@ -154,6 +156,7 @@ server, not a service for public hosting.
 - [Verified behavior and limitations](docs/status.md)
 - [Experimental private-account snapshot import](docs/official-save-experiment.md)
 - [Temporal-event families and offline integration](docs/live-events.md)
+- [Guild meteor entry and Guild War activation commands](docs/guild-war.md)
 - [API inventory and implementation plan](docs/implementation-plan.md)
 - [Inn checkpoint and next steps](docs/first-phase-checkpoint.md)
 - [Development, tests, CI and GitHub preparation](docs/development.md)

@@ -11,7 +11,15 @@ from datetime import datetime
 from .guild_raid import load_selection as raid_selection
 from .packet_reader import MAX_PACKET
 from .punchking import SELECTION, integer, load_catalog, utc_now, window
-from .raid_static import MANIFEST_KEYS, compress, decode, digest, records, validate_manifest
+from .raid_static import (
+    MANIFEST_KEYS,
+    atomic_replace,
+    compress,
+    decode,
+    digest,
+    records,
+    validate_manifest,
+)
 from .raid_static import bootstrap_override as raid_override
 from .snapshots import CLIENT
 
@@ -24,7 +32,7 @@ def atomic_write(path, data):
             stream.write(data)
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, path)
+        atomic_replace(temporary, path)
         temporary = None
     finally:
         if temporary is not None:

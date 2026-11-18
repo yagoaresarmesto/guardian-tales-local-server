@@ -1983,6 +1983,79 @@ aliases and a repeat. All saved state remained equal with zero source writes.
 These are native-contract and host checks; the actual APK retry and any empty
 reward-popup behavior remain pending backend reload and reconnect.
 
+## Meteor menu and opt-in Guild War season trial
+
+The actual pending `/guild-meteor/enter` request now returns fresh native menu
+resources: meteor-specific UserRaid fields, a GuildRaid view with a status list
+and excavation dictionary, and empty integer excavation/reward arrays. The
+external catalog selects the latest started public season without spending
+pickaxes or replacing saved progress. The real packet/full-partial-repeat check
+passed read-only with zero writes. After backend reload the user confirmed the
+APK menu loads, and one completed entry was recorded by the running API.
+
+The user then requested activation commands for Guild War. `guild-war enable`,
+`status` and `disable` now control a reversible static-calendar overlay for season
+1. Native client inspection establishes its separate castle/shortcut entrances,
+the active-season check and Raid's priority in the lobby button. Activation makes
+War valid for seven UTC days and Global Raid calendars inactive in the derived
+response, preserving parent Raid/arena selection files, other tables/services and
+the immutable source. Disable restores the parent bootstrap. The actual composed
+source check passed for 47 affected rows without account writes.
+
+The guarded `/guild-war/enter` trial accepts native lowercase `isPartial` and
+returns correctly typed fresh UserRaid.GuildWar / GuildWarInfo collections in
+phase 1 for the cooperative lobby. It preserves existing account state and
+rejects nonempty saved War progress; battles, claims, purchases and other War
+APIs remain unfinished. Twenty-eight new regressions and read-only real-account wire
+checks cover these contracts. The first APK trial reached the basic-course
+prerequisite popup and redirected to Play > Others, where the entry was absent.
+Metadata identifies the missing GuildWarSingle feature as 126. The derived static
+data now appends only its Global no-reward unlock rule, and a scoped client-only
+acknowledgment retains all saved bits while setting bit 126 in the response.
+Neither acknowledgment nor activation writes progression or marks stages clear.
+The original source and database remain unchanged; disabling restores the parent
+feature table too. The course remained absent after restart, despite its native
+checker being present/open in read-only runtime inspection. An explicit optional
+`--skip-basic` now waives only the source clear-ID prerequisite in the derived War
+table, retaining every saved stage/progress field. Normal enable/disable restores
+the source rule; the flag is retained on parent/calendar refresh. This lab trial
+uses the flag to attempt War entry. The corrected native stage-list waiver
+completed one `/guild-war/enter` and began rendering the cooperative screen.
+The next rejected pending packet was `/user/mark-tutorial` with tutorialIds [1037],
+the already catalogued passive cooperative-help ID. Imported mutation gating
+now permits only built-in passive help acknowledgments through this handler;
+gameplay/configured IDs still reject. The actual packet passed on an in-memory
+copy with only the seen-help list and its revision changing once, no duplicate
+writes, and unchanged real source data. The basic-course UI remains unresolved.
+After the help fix the user confirmed
+the mode starts; the next Multi-lobby request was
+`/guild-war/get-all-castle-simple-infos` with native lowercase seasonId 1.
+The guarded read now returns an empty native CastleSimpleInfos array, without
+invented other-guild ownership/markings or account writes; its real-account wire
+and repeat checks passed read-only. The user confirmed that fix passes. The next
+actual pending call, `/guild-war/start-coop-stage`, now acknowledges loading with
+an empty object after validating the source season's cooperative stages and an
+owned captured Raid/Conquest preset. Native success creates the stage locally
+without reading response fields. The real request for public stage 850030005
+and a repeat passed with zero source writes or profile differences; it does not
+save selections, costs, attempts, locks, battle results or rewards. APK stage
+loading passed: the user confirmed the phase opens. The actual pending completion
+`/guild-war/end-coop-stage/v2` now validates native stageId/damages/additionalDamage
+and acknowledges the free result with Cancelled false, fresh GuildWarInfo and
+empty AddedItems. The real packet/retry passed read-only without writes or profile
+changes; damage/score/progression, attempts, locks, costs and rewards are not
+persisted. Native result display adds a static participation item locally; this
+does not grant inventory in the server database. The running API accepted the
+end request; the next failure was `/guild-war/get-battle-records` during menu
+synchronization. It now returns native empty LatestBattleRecords,
+CoopDefenseInGuildRanking and DailyBattleStatus arrays for season 1, without
+inventing records/rankings or writing state. The actual request/retry passed
+read-only. The API then accepted the follow-up, with no queued request remaining;
+visual confirmation of full result/menu return is pending.
+Bounded Windows sharing-lock retries
+also retain atomic selector publication after repeated transient test failures.
+See [usage and detailed limitations](guild-war.md).
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

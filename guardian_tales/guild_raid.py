@@ -149,7 +149,7 @@ def find_season(catalog, season_id):
 
 
 def select_season(references, season_id):
-    from .raid_static import prepare
+    from .raid_static import atomic_replace, prepare
 
     season = find_season(load_catalog(references), season_id)
     previous = load_selection(references)
@@ -166,7 +166,7 @@ def select_season(references, season_id):
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, references.directory / SELECTION)
+        atomic_replace(temporary, references.directory / SELECTION)
         temporary = None
     finally:
         if temporary is not None:

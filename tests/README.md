@@ -32,7 +32,7 @@ Execution stays sequential; this change does not introduce parallel workers.
 | `rewards` | Missions, challenges, knowledge, passes, temporal events, stamina and attendance |
 | `summons` | Wishlist, draws and imported summon state |
 | `village` | Harvest, gifts, obstacles, basecamp and guardian mastery |
-| `guild` | Guild reads, Raid and Dungeon Kingdom Arena |
+| `guild` | Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War |
 | `orbital` | Orbital entry, progress and completion |
 | `android` | Temporary Android bridge configuration and restoration |
 | `integration` | Loopback TLS/transport, packet codec and resource serving |

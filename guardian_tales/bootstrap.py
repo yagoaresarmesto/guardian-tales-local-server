@@ -16,6 +16,7 @@ import uuid
 from datetime import datetime, timezone
 
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
+from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
 from .jewel_upgrade import ROUTES as JEWEL_UPGRADE_ROUTES
 from .lobby import LOBBY_ROUTES
 from .lobby import respond as lobby_response
@@ -641,7 +642,9 @@ class BootstrapSession:
         if route in STATIC_SEEDS:
             filename, kind = STATIC_SEEDS[route]
             try:
-                seed = punchking_bootstrap_override(self.store.references, filename, body)
+                seed = guild_war_bootstrap_override(self.store.references, filename, body)
+                if seed is None:
+                    seed = punchking_bootstrap_override(self.store.references, filename, body)
                 if seed is None:
                     seed = raid_bootstrap_override(self.store.references, filename, body)
                 if seed is None:

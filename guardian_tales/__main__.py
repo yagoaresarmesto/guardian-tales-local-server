@@ -10,6 +10,7 @@ COMMANDS = {
     "admin": ("admin", "Grant local gems/Festival points with audit receipts or inspect history"),
     "raid-season": ("guild_raid", "List/select experimental local raid seasons"),
     "dka-season": ("punchking", "List/select Dungeon Kingdom Arena variants and days"),
+    "guild-war": ("guild_war", "Enable/disable an experimental local Guild War season"),
     "assets": ("assets", "Serve manifest-listed local resources"),
     "content": (
         "content_pack",

@@ -1,13 +1,13 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-18**. The public source tree reorganizes the working
+Status recorded on **2026-11-19**. The public source tree reorganizes the working
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
 ## Automated checks
 
-The suite has **674 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 69 modules. `validate --list-groups` reports
+The suite has **702 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -15,6 +15,48 @@ retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
+
+Four guild meteor and twenty-two Guild War regressions cover native entry schemas,
+fresh/imported account preservation, membership/progress guards, season rollover,
+reconnect, reversible calendar activation, parent composition, cache consistency,
+corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
+backend reload; the user confirmed its menu loads. The War season-1 trial is
+enabled for a valid seven-day period and exposes enable/status/disable commands.
+It retains Raid/arena selections while overriding Global War/Raid calendars and
+appending one explicit no-reward Global rule for the missing basic-course feature
+126. Its acknowledgment changes only bit 126 in a client-only response bitmap.
+The actual composed-table audit checked 47 affected rows; other tables, services
+and modes retained their parent content, apart from that added rule. Both entry
+sequences passed against the real write-disabled source database without profile
+changes. The first APK War access reached the basic-course prerequisite popup
+and redirected to Play > Others; the missing feature rule was then identified
+and added. A further APK restart still showed no course; read-only runtime
+inspection confirmed its feature checker was loaded/open. Optional `--skip-basic`
+now waives only the source prerequisite without writing clears; the lab trial is
+enabled with this flag. The corrected waiver reached a completed War entry and
+partial cooperative screen load in the APK, then stopped at passive help 1037.
+Imported accounts now accept only built-in passive help acknowledgments; gameplay
+tutorials stay blocked. The actual packet passed on an in-memory source-account
+clone, changing only seen help and UserProgress revision once, with zero retry
+writes and no real source writes. Two file-publication regressions cover bounded
+Windows sharing-lock retries and preserved output on failure. The user then
+confirmed War starts; its next Multi-lobby call now returns a typed empty
+CastleSimpleInfos array for native seasonId 1 without resources or writes.
+The user confirmed that fix passes. The next cooperative start request now gets
+an empty acknowledgment after validating the source season's cooperative stages
+and an owned captured Raid/Conquest preset. Actual stage 850030005 passed with
+its owned team on read-only source SQLite twice without profile changes or writes.
+The user confirmed the APK loads the cooperative phase. Its actual completion
+request now returns Cancelled false, fresh GuildWarInfo and no AddedItems after
+validating native damage fields and the source stage. The actual request/retry
+passed read-only without writes; no score, progress, costs or rewards are saved.
+The running API accepted the end request, then the client requested battle-record
+synchronization. That follow-up now returns three typed empty arrays for records,
+guild defense rankings and daily status; the real request/retry passed without
+writes. The API accepted the follow-up after reload with no pending request;
+visual confirmation of result/menu return remains pending. Single/Multi combat
+and the basic-course UI remain unfinished. See
+[commands, contracts and boundaries](guild-war.md).
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

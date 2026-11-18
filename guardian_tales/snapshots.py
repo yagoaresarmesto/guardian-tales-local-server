@@ -59,6 +59,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/guardian-mastery-level-up",
         "/user/reset-guardian-mastery-level",
         "/user/save-party-member/v2",
+        "/user/mark-tutorial",
     )
 )
 ACCOUNT_READS = frozenset(
@@ -69,6 +70,13 @@ ACCOUNT_READS = frozenset(
         "/guild/get-my-guild",
         "/guild/red-dot",
         "/guild/claim-guild-daily-attendance",
+        "/guild-meteor/enter",
+        "/guild-war/enter",
+        "/guild-war/get-all-castle-simple-infos",
+        "/guild-war/start-coop-stage",
+        "/guild-war/end-coop-stage/v2",
+        "/guild-war/get-battle-records",
+        "/user/claim-unlock-feature-rewards",
         "/guild-raid2/reset",
         "/guild-raid2/enter",
         "/guild-raid2/start-stage",

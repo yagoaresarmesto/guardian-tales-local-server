@@ -50,6 +50,7 @@ not fetch missing bootstrap files from an official service.
 | `imported_hero_knowledge_catalog.json` | Imported hero-book objectives | Pinned client, public spec origins/ranks, XP thresholds, awakening node indices and eight native objective types with gem rewards |
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 | `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
+| `guild_meteor_entry_catalog.json` | Fresh guild meteor menu | Pinned client, explicit fresh-local policy and distinct positive season IDs with timezone-aware start dates |
 | `orbital_completion_catalog.json` | Opt-in Orbital victory progress without rewards | Matching client and explicit Boolean no-reward policy; uses the separate entry floor catalog |
 | `stamina_regen_catalog.json` | Natural stamina recharge | Matching client, base charged-stamina maximum and interval in minutes |
 | `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
@@ -80,6 +81,16 @@ overrides local, compatible and free of official account state.
 and calendars the client offers. Entry does not initialize missing records or
 implement their claims. See [temporal-event families and integration](live-events.md)
 for the reviewed source tables, calendar scope and remaining per-family work.
+
+Guild meteor entry uses `guild_meteor_entry_catalog.json`; the
+[guild mode guide](guild-war.md) defines its schema and preserved-state boundary.
+Guild War activation validates the matching external `guildwar`, `guildraid2`,
+`seasondate` and `unlockfeature` records. It creates an immutable derived body,
+adds one local no-reward feature-126 rule, and stores a reversible
+`guild_war_selection.json`. Optional `--skip-basic` waives only the War course
+prerequisite in that response without recording stage clears. It layers above Raid/arena
+preparation, retaining their files and source data. These experiment inputs and
+selection files are not included in the original 19-reference-file content pack.
 
 The optional `orbital_entry_catalog.json` contains `client` equal to
 `{"version":"3.57.0","version_code":431,"region":"eu"}` and `floors`, a nonempty

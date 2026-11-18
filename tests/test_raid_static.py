@@ -20,6 +20,7 @@ from guardian_tales.raid_static import (
     LOCAL_FROM,
     LOCAL_TO,
     MAX_STATIC,
+    atomic_replace,
     bootstrap_override,
     compress,
     decode,
@@ -58,6 +59,50 @@ class RaidStaticTests(unittest.TestCase):
         lines[at + 1] = value + "\n"
         lines[at + 3] = digest(value.encode()) + "\n"
         self.source.write_bytes(compress("".join(lines).encode()))
+
+    def test_atomic_publication_retries_transient_windows_sharing_locks_without_partial_output(
+        self,
+    ):
+        target, staged = self.root / "published.json", self.root / "staged.json"
+        target.write_bytes(b"old")
+        staged.write_bytes(b"new-complete")
+        original_replace = os.replace
+        attempts = []
+
+        def temporarily_locked(source, destination):
+            attempts.append(1)
+            if len(attempts) < 3:
+                self.assertEqual(target.read_bytes(), b"old")
+                error = PermissionError("synthetic sharing violation")
+                error.winerror = 32
+                raise error
+            return original_replace(source, destination)
+
+        with (
+            patch("guardian_tales.raid_static.os.replace", side_effect=temporarily_locked),
+            patch("guardian_tales.raid_static.time.sleep"),
+        ):
+            atomic_replace(staged, target)
+        self.assertEqual(len(attempts), 3)
+        self.assertEqual(target.read_bytes(), b"new-complete")
+        self.assertFalse(staged.exists())
+
+    def test_atomic_publication_keeps_failures_bounded_and_does_not_retry_access_denials(self):
+        target, staged = self.root / "published.json", self.root / "staged.json"
+        target.write_bytes(b"old")
+        staged.write_bytes(b"new")
+        for winerror, expected_calls in ((33, 6), (5, 1)):
+            error = PermissionError("synthetic filesystem refusal")
+            error.winerror = winerror
+            with (
+                patch("guardian_tales.raid_static.os.replace", side_effect=error) as replace,
+                patch("guardian_tales.raid_static.time.sleep"),
+            ):
+                with self.assertRaises(PermissionError):
+                    atomic_replace(staged, target)
+            self.assertEqual(replace.call_count, expected_calls)
+            self.assertEqual(target.read_bytes(), b"old")
+            self.assertEqual(staged.read_bytes(), b"new")
 
     def test_historical_activation_preserves_other_rows_services_bosses_and_all_other_tables(self):
         before = records(decode(self.original))[1]

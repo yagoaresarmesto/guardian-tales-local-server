@@ -132,6 +132,7 @@ class SnapshotTests(unittest.TestCase):
                 "/user/charge-stamina-by-gem",
                 "/user/claim-daily-attendance",
                 "/user/guardian-mastery-level-up",
+                "/user/mark-tutorial",
                 "/user/reset-guardian-mastery-level",
                 "/user/save-party-member/v2",
             ],
