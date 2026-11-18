@@ -1194,8 +1194,59 @@ Two regressions cover authentication/request bounds, native empty-body framing,
 all four Boolean flags, fresh/imported accounts, reconnects and no-write reads
 with positive synthetic membership/pending-reward state retained. Three request
 variants passed against the actual account opened read-only with zero writes
-and unchanged full profile. Visible guild-menu entry and shop-return behavior
-remain pending APK retry after backend reload/reconnect.
+and unchanged full profile. One subsequent APK notice query completed, then
+stopped at `/guild-raid2/reset`. Visible menu entry/shop return remain unverified.
+
+## Preserved membership and non-mutating raid menu preparation
+
+The next unsupported request was `/guild-raid2/reset` with `IsPartial=false`.
+`SendResetGuildRaid2` derives that Boolean from whether `UserRaid` was fetched,
+unless its caller forces a full refresh. The guild-menu and castle entry routines
+read the response's `ClaimRaidSeasonReward` flag before requesting season rewards.
+This is menu preparation, not a player command to delete saved account data.
+The local handler accepts exactly a Boolean `IsPartial` and returns
+`ClaimRaidSeasonReward=false` for full/partial requests. It does not report a
+completed season reset, mark rewards claimed, send `AddedItems` or replace
+`UserRaid`, which was not captured separately. No attempt/receipt is saved.
+
+Read-only inspection found that the saved account has a guild membership but
+the client's `GuildClient.Guild` was null. The old empty `/guild/get-my-guild`
+response was inconsistent with that membership; the raid entry routine would
+dereference the guild after receiving its preparation response. Fixing only
+the unsupported route would leave that client-side failure in place.
+
+`/guild/get-my-guild` now validates the native nullable signed-32-bit `Hash` hint
+and the saved member's ownership and guild ID. Accounts without membership retain
+the empty guest view. Registered accounts receive an explicitly named **Local
+guild** using the preserved guild ID and complete own-member row only. The
+displayed member count is one, not the official roster size. The guild achievement
+view uses only that member's saved achievement ID/points; their reward flags remain
+unchanged. The original guild name, other members, applicants, leader, emblem,
+creation time and notices were not captured. The local name, ancient date/zero
+emblem, empty leader/introduction and empty notices/applicants are placeholders,
+not restored official details. Guild creation/membership changes remain unsupported.
+
+Native `RefreshMyGuild` consumes `Guild`, `GuildMembers`, `Applicants`, `Hash`
+and `DismissedMasterName`; its callback skips replacement when the hash matches.
+The local response supplies non-null lists, an empty dismissal name and a stable
+nonzero content hash, distinct from the previous empty view's zero. Later saved
+member changes produce a new hash. Native notices use a `GuildNotice` object with
+an empty `Notice` list and zero `RepresentativeNotice`, not an empty list in place
+of the object. No guild view or cache hash is persisted in SQLite.
+
+Four regressions cover authentication/cache schema, full/partial/reconnect
+preparation, no-write preservation of membership/raid currencies/pending rewards,
+unsupported battle/claim operations, the own-member-only view and stable/updating
+hashes, and malformed ownership/identity/achievement/cache inputs. The actual
+account's own-guild read and both raid cache-hint variants passed through a
+read-only connection with zero writes and unchanged full profile. This does not
+establish actual raid gameplay or a successful rendered guild menu.
+
+After backend reload, restart the APK once so the startup own-guild query can
+populate this local view. Reconnect alone can resume the pending preparation
+request while retaining the older null guild cache. Leave the existing bridge
+and CDN running. Original guild recovery and cache-independent raid gameplay
+remain outside this change.
 
 ## Host readiness before the APK check
 

@@ -6,7 +6,22 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **535 passing tests on Windows Python 3.11**. Two guild-notice-read
+The suite has **539 passing tests on Windows Python 3.11**. Four guild-menu
+regressions cover authenticated Boolean raid cache hints, omitted raid-resource/
+reward updates, own-member local guild views, native cache hashes, saved
+membership/achievement validation and full/partial/reconnect reads without writes.
+The APK's next unsupported request was `/guild-raid2/reset` with `IsPartial=false`.
+It now returns `ClaimRaidSeasonReward=false` without resetting any raid state.
+Read-only inspection also confirmed saved membership but a null client guild
+object. The older `/guild/get-my-guild` reply always returned null; it now offers
+a view named `Local guild` with only the saved member, membership ID and that
+member's achievement. Other guild details use explicit placeholders; no peer
+roster or original guild name is recovered. A stable nonzero content hash replaces
+the old empty cache. The actual-account sequence passed read-only with unchanged
+full profile. After backend reload, restart the APK once to refresh its guild
+cache before testing; raid gameplay/rewards and visible menu success remain
+unverified or unsupported.
+Two guild-notice-read
 regressions cover authentication, exact empty/native request bodies, Boolean
 notice types, repeated fresh/imported reads, reconnects and saved membership/
 pending-reward preservation while SQLite writes are disabled. The unsupported
@@ -15,7 +30,8 @@ as false for unavailable local-mode notices. It does not claim rewards or reset
 saved guild state. Native scene/shop callbacks establish these response keys;
 no official response was captured. Three actual-account request variants passed
 through a read-only connection with zero writes and unchanged full profile.
-Guild-menu APK retry still requires backend reload/reconnect.
+One actual APK notice request subsequently completed, then stopped at the raid
+preparation request. This does not establish a rendered guild menu.
 Three empty-friend-entry
 regressions cover authenticated native empty requests, current imported friend
 settings/count/gift preservation, unsupported social mutations and the profile/

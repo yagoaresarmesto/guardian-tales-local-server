@@ -37,6 +37,8 @@ from .characters import new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
 from .festival_shop import check_not_redeemable, redeem_points
+from .guild_menu import GUILD_MENU_ROUTES
+from .guild_menu import read as read_guild_menu
 from .hero_knowledge import claim_hero_knowledge
 from .items import inventory_item
 from .mastery import create_tables as create_mastery_tables
@@ -99,6 +101,7 @@ ACCOUNT_ROUTES = (
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/guild/red-dot",
+    "/guild-raid2/reset",
     "/chat/guild-history/v2",
     "/chat/listen-channel",
     "/collection/list-all",
@@ -1100,6 +1103,8 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route in GUILD_MENU_ROUTES:
+            return read_guild_menu(self, route, request)
         if route == "/user/get-user-profile-card":
             return read_profile_card(self, request)
         if route == "/festival-pass/check-not-redeemable":
@@ -1145,14 +1150,6 @@ class AccountStore:
             return result
         if route == "/guild/list-item-request":
             return {"Requests": []}
-        if route == "/guild/get-my-guild":
-            return {"Hash": 0, "Guild": None, "GuildMember": None, "GuildMembers": []}
-        if route == "/guild/red-dot":
-            if request is not None and (not isinstance(request, dict) or request):
-                raise ValueError("Local guild notification reads accept no parameters")
-            # These are menu indicators only. Hiding unavailable local-mode
-            # notices does not claim rewards or clear any saved guild state.
-            return {"Raid": False, "Meteor": False, "PunchKing": False, "GuildWar": False}
         if route == "/chat/guild-history/v2":
             return {"History": []}
         if route == "/chat/listen-channel":

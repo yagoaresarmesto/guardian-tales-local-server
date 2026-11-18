@@ -30,6 +30,7 @@ flowchart LR
 | `bootstrap.py` | Connection sign-in state, guest identity/credentials and game API dispatch |
 | `account.py` | SQLite profile, campaign receipts, prologue completion, migrations and attendance claims |
 | `profile_card.py` | Read-only own-user card from current local account/records, with empty uncaptured decorations/social fields |
+| `guild_menu.py` | Read-only own-member local guild view, stable cache hash, inactive notices and non-mutating raid-entry preparation |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
 | `beginner.py` | Eligibility, atomic multi-mission rewards, claim bits and persistent retry receipts |

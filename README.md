@@ -123,7 +123,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Initial free points, local shop availability and configured asset/stackable/individual item redemptions; sticker packs and other progression pending |
-| Guild lists and notices | Empty local recommendations/invitations and inactive mode-notification flags; guild creation and membership remain pending |
+| Guild menu | Saved own membership in a named local placeholder; inactive notices and no-op raid preparation; peer roster, guild gameplay and mutations pending |
 | Later phase gameplay and remaining rewards | Unfinished; entry support alone does not implement a phase's interactions or clear rules |
 | Multiplayer, guild systems and purchases | Not implemented |
 

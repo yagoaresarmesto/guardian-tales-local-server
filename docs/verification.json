@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 535,
+    "tests_run": 539,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -2935,6 +2935,38 @@
       "sqlite_writes": 0,
       "real_profile_membership_and_rewards_unchanged": true
     },
-    "post_fix_apk_guild_menu_and_shop_return": "pending backend reload and reconnect"
+    "post_fix_apk_guild_menu_and_shop_return": "One notice query completed, then unsupported raid preparation blocked entry; visible menu remains unverified"
+  },
+  "guild_membership_view_and_raid_preparation": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/guild-raid2/reset",
+    "observed_request": {"IsPartial": false},
+    "native_builder": "Oak.ApiConnection.SendResetGuildRaid2",
+    "native_callers": "GuildEnter.GuildRaid2EnterRoutine and GuildCastleStage.GuildCastleRaid2EnterRoutine",
+    "response": {"ClaimRaidSeasonReward": false},
+    "separate_UserRaid_captured": false,
+    "UserRaid_seasons_currencies_and_pending_rewards_not_replaced_or_reset": true,
+    "no_rewards_claims_receipts_or_profile_revision_changes": true,
+    "observed_saved_membership_with_null_client_guild_object": true,
+    "own_guild_read": "/guild/get-my-guild",
+    "native_own_guild_request": "Nullable signed-32-bit Hash cache hint",
+    "local_view": "Local guild, preserved guild ID and complete own-member row only; no recovered peer roster",
+    "local_achievement_view": "Saved own-member achievement ID/points only; reward flags preserved",
+    "uncaptured_details": "Placeholder name/date/emblem, empty leader/introduction/notices/applicants; original guild details not recovered",
+    "native_notice_object": {"Notice": [], "RepresentativeNotice": 0},
+    "stable_nonzero_view_hash_refreshes_old_empty_cache": true,
+    "all_saved_membership_profile_resources_and_revisions_preserved": true,
+    "official_guild_or_reset_response_captured": false,
+    "synthetic_regressions": 4,
+    "full_windows_tests": 539,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "own_member_and_guild_id_retained": true,
+      "full_and_partial_preparation_skip_claim_and_omit_UserRaid": true,
+      "sqlite_writes": 0,
+      "real_profile_unchanged": true
+    },
+    "post_fix_apk_guild_menu": "pending backend reload and one full APK restart to refresh the guild cache",
+    "guild_battles_season_reset_reward_claims_or_membership_mutations_implemented": false
   }
 }

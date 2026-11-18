@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Offline guild notices preserve membership, pending rewards and all saved state."""
+"""Offline guild menu prerequisites preserve membership, rewards and saved state."""
 
 import json
 import sqlite3
@@ -11,6 +11,8 @@ from guardian_tales.protocol import Packet, PacketError, encode_packet
 from tests.test_snapshots import synthetic_snapshot
 
 ROUTE = "/guild/red-dot"
+RAID_PREPARATION = "/guild-raid2/reset"
+OWN_GUILD = "/guild/get-my-guild"
 
 
 class GuildReadTests(unittest.TestCase):
@@ -93,3 +95,166 @@ class GuildReadTests(unittest.TestCase):
                     self.assertEqual(list(self.db.iterdump()), before)
                     self.assertEqual(self.db.total_changes, changes)
                     self.db.execute("PRAGMA query_only=OFF")
+
+    def test_raid_preparation_requires_sign_in_and_exact_boolean_cache_hint(self):
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        with self.assertRaises(PacketError):
+            self.call({"IsPartial": False}, RAID_PREPARATION)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        self.login()
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        for body in (
+            None,
+            {},
+            [],
+            False,
+            {"IsPartial": 0},
+            {"IsPartial": "false"},
+            {"IsPartial": None},
+            {"isPartial": False},
+            {"IsPartial": False, "Claim": True},
+            {"IsPartial": True, "Reset": True},
+        ):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, RAID_PREPARATION)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+
+    def test_raid_preparation_reconnects_skip_claim_without_resetting_any_saved_resource(self):
+        for imported in (False, True):
+            with self.subTest(imported=imported):
+                if imported:
+                    snapshot = synthetic_snapshot()
+                    with self.db:
+                        self.db.execute(
+                            "INSERT INTO imported_account VALUES(1,?,?,?,?)",
+                            ("0" * 64, "synthetic", json.dumps(snapshot["startup_reads"]), "{}"),
+                        )
+                        self.db.execute(
+                            "UPDATE local_account SET profile=?",
+                            (json.dumps(snapshot["profile"]),),
+                        )
+                profile = self.store.account.profile()
+                profile["GuildMember"] = {"GuildId": 7, "SyntheticPendingReward": 23}
+                profile["UserRaid"] = {
+                    "Raid": {"SyntheticPendingSeasonReward": 12},
+                    "SeasonClaimed": False,
+                    "PunchKingCoins": 456,
+                    "PickAxeCount": 42,
+                }
+                with self.db:
+                    self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+                for reconnect in (False, True):
+                    self.session = BootstrapSession(self.store)
+                    self.login(reconnect)
+                    self.db.execute("PRAGMA query_only=ON")
+                    before = list(self.db.iterdump())
+                    changes = self.db.total_changes
+                    for partial in (False, True, False):
+                        reply = self.call({"IsPartial": partial}, RAID_PREPARATION)
+                        self.assertEqual(reply, {"ClaimRaidSeasonReward": False})
+                        self.assertNotIn("UserRaid", reply)
+                        self.assertNotIn("AddedItems", reply)
+                    self.assertEqual(self.store.account.profile(), profile)
+                    self.assertEqual(list(self.db.iterdump()), before)
+                    self.assertEqual(self.db.total_changes, changes)
+                    self.db.execute("PRAGMA query_only=OFF")
+                before = list(self.db.iterdump())
+                for route in (
+                    "/guild-raid2/claim-season-rewards",
+                    "/guild-raid2/start-stage",
+                    "/guild-raid2/end-stage",
+                ):
+                    with self.subTest(route=route), self.assertRaises(PacketError):
+                        self.call({}, route)
+                self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_own_guild_view_preserves_member_and_exposes_only_a_named_local_placeholder(self):
+        self.login()
+        self.assertEqual(
+            self.call(None, OWN_GUILD),
+            {"Hash": 0, "Guild": None, "GuildMember": None, "GuildMembers": []},
+        )
+        profile = self.store.account.profile()
+        member = {
+            "UserId": profile["User"]["Id"],
+            "GuildId": 7,
+            "Name": "Saved member",
+            "Cas": 9,
+            "Achievement": {"Id": 1, "Points": 30, "Rewarded": [2]},
+        }
+        profile["GuildMember"] = member
+        snapshot = synthetic_snapshot()
+        with self.db:
+            self.db.execute(
+                "INSERT INTO imported_account VALUES(1,?,?,?,?)",
+                ("0" * 64, "synthetic", json.dumps(snapshot["startup_reads"]), "{}"),
+            )
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        self.db.execute("PRAGMA query_only=ON")
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        reply = self.call({"Hash": 0}, OWN_GUILD)
+        self.assertEqual(reply["Guild"]["Id"], 7)
+        self.assertEqual(reply["Guild"]["Name"], "Local guild")
+        self.assertEqual(reply["Guild"]["MemberCount"], 1)
+        self.assertEqual(reply["Guild"]["Achievement"], {"Id": 1, "Points": 30})
+        self.assertEqual(reply["Guild"]["Notices"], {"Notice": [], "RepresentativeNotice": 0})
+        self.assertEqual(reply["GuildMember"], member)
+        self.assertEqual(reply["GuildMembers"], [member])
+        self.assertEqual(reply["Applicants"], [])
+        self.assertEqual(reply["DismissedMasterName"], "")
+        self.assertGreater(reply["Hash"], 0)
+        self.assertEqual(self.call({"Hash": reply["Hash"]}, OWN_GUILD), reply)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        self.db.execute("PRAGMA query_only=OFF")
+        member.update(Name="Updated member", Cas=10)
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        before = list(self.db.iterdump())
+        changed = self.call({"Hash": reply["Hash"]}, OWN_GUILD)
+        self.assertNotEqual(changed["Hash"], reply["Hash"])
+        self.assertEqual(changed["GuildMembers"], [member])
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_own_guild_cache_hint_and_saved_membership_validation_never_repair_or_write(self):
+        self.login()
+        before = list(self.db.iterdump())
+        for body in (
+            [],
+            False,
+            0,
+            {"Hash": True},
+            {"Hash": "0"},
+            {"Hash": 0x80000000},
+            {"Claim": True},
+        ):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, OWN_GUILD)
+        self.assertEqual(list(self.db.iterdump()), before)
+        for cache_hint in (None, {}, {"Hash": None}, {"Hash": -1}, {"Hash": 0x7FFFFFFF}):
+            self.assertIsNone(self.call(cache_hint, OWN_GUILD)["Guild"])
+        profile = self.store.account.profile()
+        for invalid in (
+            [],
+            {"UserId": 2, "GuildId": 7},
+            {"UserId": True, "GuildId": 7},
+            {"UserId": 1, "GuildId": True},
+            {"UserId": 1, "GuildId": -1},
+            {"UserId": 1, "GuildId": 7, "Achievement": []},
+            {"UserId": 1, "GuildId": 7, "Achievement": {"Id": 1, "Points": False}},
+        ):
+            with self.subTest(member=invalid):
+                profile["GuildMember"] = invalid
+                with self.db:
+                    self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+                before = list(self.db.iterdump())
+                changes = self.db.total_changes
+                with self.assertRaises(PacketError):
+                    self.call({"Hash": None}, OWN_GUILD)
+                self.assertEqual(list(self.db.iterdump()), before)
+                self.assertEqual(self.db.total_changes, changes)
