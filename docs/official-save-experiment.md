@@ -1122,6 +1122,34 @@ retain progress on earlier floors and preserve later progress on old retries.
 Captured seeds and the real saved account remained unchanged. The APK non-clear
 retry requires backend reload; an actual APK victory still needs to be tested.
 
+## Read-only own profile card
+
+Opening the owner's profile failed at `/user/get-user-profile-card`. The pending
+native request contained only an integer `UserId` matching the saved local user.
+`SendGetUserProfileCard` confirms that request key. The profile popup's success
+callback reads `UserProfileCard` and `UserStickerPacks` directly; their native
+types require a card object and an integer-array pack list. Attached stickers
+are a list, while scarecrow scores are a signed-64-bit array. No official card
+response or separate sticker collection was captured during import.
+
+The authenticated read accepts only the saved local user's positive signed-32-bit
+ID. It returns the current saved user, arena/Colosseum records, captured champion/
+death-match records and signed Orbital floor. The native own-profile callback
+replaces its user/avatar/badge and locally available records with current client
+resources before rendering. Uncaptured sticker ownership, attached stickers,
+selected board and social records are explicitly empty/unknown in this view;
+they are not recovered official state. No account field or ownership collection
+is overwritten. Other-player lookups and profile customization remain unsupported.
+
+Eight regressions cover authentication/request/identity bounds, full current
+user and record preservation, later edits, signed floors, reconnect/reopening,
+unknown/invalid records, unsupported writes and successful reads while SQLite
+writes are disabled. A private protocol check read the actual account twice
+through a read-only SQLite connection, retaining the saved user/floor with zero
+writes and unchanged profile. APK display still requires backend reload and
+retry. Opening the card does not spend resources, change revisions, save a
+receipt, grant rewards or migrate the account.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

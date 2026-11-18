@@ -56,6 +56,7 @@ IMPORTED_MUTATIONS = frozenset(
 ACCOUNT_READS = frozenset(
     (
         "/auth/fetch-account",
+        "/user/get-user-profile-card",
         "/guild/list-item-request",
         "/guild/get-my-guild",
         "/chat/guild-history/v2",

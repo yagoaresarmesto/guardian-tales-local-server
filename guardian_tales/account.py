@@ -62,6 +62,7 @@ from .presets import create_tables as create_preset_tables
 from .presets import delete_existing as delete_existing_preset
 from .presets import save_party as save_party_preset
 from .presets import set_selected as set_selected_preset
+from .profile_card import read as read_profile_card
 from .reference import ReferenceData
 from .relic_options import change_or_apply as change_or_apply_relic_options
 from .relic_options import create_tables as create_relic_option_tables
@@ -94,6 +95,7 @@ from .weapon_options import create_tables as create_weapon_option_tables
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
+    "/user/get-user-profile-card",
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/chat/guild-history/v2",
@@ -1096,6 +1098,8 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route == "/user/get-user-profile-card":
+            return read_profile_card(self, request)
         if route == "/festival-pass/check-not-redeemable":
             return check_not_redeemable(self, request)
         if route == "/summon/set-select-character":

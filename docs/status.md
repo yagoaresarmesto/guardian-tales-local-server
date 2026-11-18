@@ -6,7 +6,18 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **522 passing tests on Windows Python 3.11**. Five Orbital non-clear
+The suite has **530 passing tests on Windows Python 3.11**. Eight own-profile-card
+regressions cover sign-in, exact own-user requests, current saved user/records,
+signed tower floors, reconnect/reopening, absent or invalid optional records,
+unsupported customization/other users and reads with SQLite writes disabled.
+The pending APK request's sole `UserId` matched the saved account. A protocol
+read against the actual database opened in read-only mode passed twice with
+zero writes and unchanged saved profile. Native callbacks require top-level
+`UserProfileCard` and `UserStickerPacks`; uncaptured decorations/social fields
+are explicitly empty/unknown in this local view. The own-user native callback
+uses the current representative avatar and device-local badge. Backend reload
+and APK retry remain pending; no original profile-card response was captured.
+Five Orbital non-clear
 exit regressions cover read-only exits, native schema/damage bounds, floor/catalog/
 prologue/authentication guards and reconnection. Ten no-reward completion
 regressions cover highest-floor-only progress, exact resource/profile bounds,

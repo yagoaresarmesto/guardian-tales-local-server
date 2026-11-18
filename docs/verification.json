@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 522,
+    "tests_run": 530,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -2867,5 +2867,30 @@
     },
     "post_fix_apk_non_clear_exit": "pending backend reload and reconnect",
     "post_fix_apk_victory": "not observed; constructed native request tested separately"
+  },
+  "own_profile_card_read": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/user/get-user-profile-card",
+    "native_builder": "Oak.ApiConnection.SendGetUserProfileCard",
+    "native_callback": "ProfileCardPopUp.RequestAndUpdateUserProfileCard success callback",
+    "observed_request_fields": ["UserId"],
+    "pending_request_user_matches_saved_account": true,
+    "response_keys": ["UserProfileCard", "UserStickerPacks"],
+    "official_response_captured": false,
+    "scope": "Authenticated own local user only; current saved user and available records",
+    "native_own_profile_callback_refreshes_avatar_badge_and_local_records": true,
+    "uncaptured_stickers_board_and_social_fields": "Explicit empty or unknown local view; no saved state is reset",
+    "all_saved_tables_profile_revisions_resources_and_ownership_preserved": true,
+    "other_player_lookups_and_profile_customization_supported": false,
+    "synthetic_regressions": 8,
+    "full_windows_tests": 530,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "repeated_reads": 2,
+      "sqlite_writes": 0,
+      "saved_user_and_records_retained": true,
+      "real_profile_unchanged": true
+    },
+    "post_fix_apk_display": "pending backend reload and reconnect"
   }
 }
