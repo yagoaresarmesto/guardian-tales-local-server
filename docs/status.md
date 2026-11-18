@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **702 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **703 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and twenty-two Guild War regressions cover native entry schemas,
+Four guild meteor and twenty-three Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -53,8 +53,18 @@ passed read-only without writes; no score, progress, costs or rewards are saved.
 The running API accepted the end request, then the client requested battle-record
 synchronization. That follow-up now returns three typed empty arrays for records,
 guild defense rankings and daily status; the real request/retry passed without
-writes. The API accepted the follow-up after reload with no pending request;
-visual confirmation of result/menu return remains pending. Single/Multi combat
+writes. The API accepted the follow-up after reload with no pending request,
+but the result screen froze. A read-only window observation and process-scoped
+Unity log identified missing item spec 21644, appended locally from the static
+cooperative participation reward. Overlay policy 3 now sets only
+PlayCoopCoinReward to zero, retaining other constants and source data. Existing
+selections auto-upgrade with their valid window and prerequisite waiver unchanged.
+The real source-table/read-only request checks passed without writes. After full
+restart the runtime count was zero with other reward constants retained; the APK
+displayed the complete cooperative attack result and Exit control. The user
+confirmed menu return, also verified by a fresh window observation with all three
+entries retained. No matching result exception appeared in the current process's
+bounded log check. Single/Multi combat
 and the basic-course UI remain unfinished. See
 [commands, contracts and boundaries](guild-war.md).
 

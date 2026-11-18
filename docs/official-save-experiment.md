@@ -2006,7 +2006,7 @@ The guarded `/guild-war/enter` trial accepts native lowercase `isPartial` and
 returns correctly typed fresh UserRaid.GuildWar / GuildWarInfo collections in
 phase 1 for the cooperative lobby. It preserves existing account state and
 rejects nonempty saved War progress; battles, claims, purchases and other War
-APIs remain unfinished. Twenty-eight new regressions and read-only real-account wire
+APIs remain unfinished. Twenty-nine new regressions and read-only real-account wire
 checks cover these contracts. The first APK trial reached the basic-course
 prerequisite popup and redirected to Play > Others, where the entry was absent.
 Metadata identifies the missing GuildWarSingle feature as 126. The derived static
@@ -2051,7 +2051,22 @@ synchronization. It now returns native empty LatestBattleRecords,
 CoopDefenseInGuildRanking and DailyBattleStatus arrays for season 1, without
 inventing records/rankings or writing state. The actual request/retry passed
 read-only. The API then accepted the follow-up, with no queued request remaining;
-visual confirmation of full result/menu return is pending.
+the user then reported a frozen result screen. A read-only window capture showed
+the incomplete scene, and process-scoped Unity logs identified missing item spec
+21644 in ItemBox.OnItemUpdate during GuildWarResult.SetBoss/Begin. Native EndCoop
+appends that static participation item locally even when server AddedItems is
+empty. The War overlay now zeros only PlayCoopCoinReward (originally 10), so the
+native helper skips the append. Policy 3 upgrades legacy selections automatically
+without changing their valid period, waiver or account. The additional regression
+covers migration, exact derived-table preservation and malformed policies; the
+actual table audit/completion/retry checks passed read-only. After full restart,
+a read-only native probe confirmed the coin count is zero and the unrelated medal
+count remains 12. The replay visibly completed the cooperative attack result,
+including per-character damage and Exit control. The user confirmed Exit returns
+to the War menu; a fresh window observation verified the lobby with all three
+entries available. The current process's bounded log check contained no matching
+missing-item/result exception. Persistent progression and other War modes retain
+their unfinished boundaries.
 Bounded Windows sharing-lock retries
 also retain atomic selector publication after repeated transient test failures.
 See [usage and detailed limitations](guild-war.md).

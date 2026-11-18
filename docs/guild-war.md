@@ -61,14 +61,16 @@ Native GuildWarSeason.IsValid checks that window. The source Global season was
 dated in 2099. Native LobbyMain.SetGuildContentButton tries active Raid first;
 the overlay makes all Global Raid periods inactive while Guild War is enabled.
 It preserves their selection files and composes above the existing Raid and
-Dungeon Kingdom Arena calendar preparation. Apart from the calendar and one
-local unlock rule and optional prerequisite waiver described below, tables,
-modes and calendar services retain their parent
-content. Disabling removes only the War selection file, so
+Dungeon Kingdom Arena calendar preparation. The overlay changes Global calendars,
+adds one local unlock rule, zeros the cooperative participation coin count and
+optionally waives Single prerequisites. Other tables, modes and calendar services
+retain their parent content. Disabling removes only the War selection file, so
 the parent Raid/arena bootstrap resumes. The original static source is immutable.
 
-The selection stores checksums, revision, parent digest and the selected period.
-Bootstrap re-prepares the overlay if the parent changes or the period expires;
+The selection stores checksums, revision, parent digest, selected period and
+`overlay_policy: 3`. Existing selections without a policy remain readable and
+are re-prepared at bootstrap, retaining their valid window and skip-basic choice.
+Bootstrap also re-prepares the overlay if the parent changes or the period expires;
 a parent change within the window retains the window. Prepared bodies are
 immutable and digest checked. Static get/check responses share one checksum.
 These commands do not open or migrate the account database or move global time.
@@ -114,7 +116,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and twenty-two War regressions cover native schemas, fresh/imported
+Four meteor and twenty-three War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -122,8 +124,8 @@ wire codec with the real source database opened read-only/query-only. No source
 writes or profile differences occurred. The real composed War calendar check
 covered 47 affected rows; all Raid periods were inactive, War was valid, and all
 other parent rows/services/tables plus the original source were preserved, apart
-from appending the single explicit no-reward feature rule and the optional War
-prerequisite waiver. The basic-course
+from appending the single explicit no-reward feature rule, zeroing cooperative
+participation coins and the optional War prerequisite waiver. The basic-course
 button remains unresolved. With the corrected prerequisite waiver the APK
 completed `/guild-war/enter` and began loading the cooperative screen, then
 requested passive help acknowledgment 1037. Imported-account protection had
@@ -166,8 +168,8 @@ AddedItems and Cancelled. The local response supplies the unchanged fresh
 GuildWarInfo, `Cancelled: false` and `AddedItems: []`. This acknowledges a free
 trial result without damage validation, score/progression storage, attempts,
 clears, character locks, resource consumption or rewards. Repetition is a no-op.
-The native client appends its static participation reward to the result's display
-list; that client-side decoration does not grant inventory in server SQLite.
+The native client can append its static participation reward to the result's
+display list. The overlay now disables that decoration as described below.
 The real pending completion and a repeat passed through the session/wire codec
 with read-only/query-only source SQLite, zero writes and an unchanged profile.
 The running API then completed that end request. The next failure was the
@@ -178,8 +180,38 @@ integer `seasonId: 1`. Its SyncBattleRecordsInfo callback consumes three arrays:
 local handler returns all three empty without inventing a battle history or
 rankings. The real request and repeat passed read-only with zero writes/profile
 changes. The API also accepted this follow-up after reload, and read-only pending
-inspection found no queued request. Visual confirmation of complete result/menu
-return remains pending. Single and Multi combat/result handlers remain unsupported.
+inspection found no queued request. That alone did not establish a working result
+screen: the user reported a freeze. Single and Multi combat/result handlers remain
+unsupported.
+
+## Cooperative result freeze
+
+On 2026-11-19 a read-only window capture confirmed an incomplete result screen,
+despite completed API calls and no queued request. Process-scoped Unity logs
+reported `Cannot found a item spec by id: 21644` in ItemBox.OnItemUpdate,
+GuildWarResult.SetBoss and its scene Begin. Native EndCoop appends item 21644 with
+`Constants.PlayCoopCoinReward` (field offset 0x5c), originally 10. AddPlayReward
+skips the append only when the count is below one. SetBoss renders that list, and
+the missing spec aborts the scene before its result controls are initialized.
+An empty server AddedItems list alone therefore does not avoid this exception.
+
+The local overlay now changes only PlayCoopCoinReward to zero, preserving other
+War constants and the immutable source. No substitute item spec, icon, reward or
+profile mutation is introduced. One added regression exercises legacy-overlay
+upgrade and malformed policy rejection; existing composition and reversal checks
+also verify the exact constant change and source restoration on disable. The real
+composed-table audit and read-only completion/retry checks passed with zero source
+writes. The lab overlay is prepared at policy 3, with its original period and
+skip-basic choice. A backend reload and full game restart are required to replace
+the cached static data and abandoned scene coroutine; reconnect cannot repair
+that scene. After restart a read-only native probe confirmed PlayCoopCoinReward
+loaded as zero while PlayCoopBattleMedalReward remained 12. The actual cooperative
+attack replay displayed the complete result, per-character damage and Exit button.
+The user confirmed Exit returns to the War menu, and a fresh window observation
+verified that lobby with all three entries still available. The current process's
+bounded log check contained no missing-21644 or GuildWarResult exception frames.
+This verifies this cooperative attack result path, not Single/Multi combat or
+persistent War score/progression/rewards.
 
 Two additional atomic-file regressions cover transient Windows sharing locks,
 bounded retries, preserved old output and immediate propagation of access denial.

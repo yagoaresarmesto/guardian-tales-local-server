@@ -87,7 +87,10 @@ Guild meteor entry uses `guild_meteor_entry_catalog.json`; the
 Guild War activation validates the matching external `guildwar`, `guildraid2`,
 `seasondate` and `unlockfeature` records. It creates an immutable derived body,
 adds one local no-reward feature-126 rule, and stores a reversible
-`guild_war_selection.json`. Optional `--skip-basic` waives only the War course
+`guild_war_selection.json`. Overlay policy 3 zeros only the cooperative participation
+coin count, preventing an absent reward spec from aborting the result UI; legacy
+selections upgrade at bootstrap while retaining their valid period and waiver.
+Optional `--skip-basic` waives only the War course
 prerequisite in that response without recording stage clears. It layers above Raid/arena
 preparation, retaining their files and source data. These experiment inputs and
 selection files are not included in the original 19-reference-file content pack.

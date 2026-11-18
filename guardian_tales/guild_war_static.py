@@ -22,6 +22,7 @@ from .snapshots import CLIENT
 
 SELECTION = "guild_war_selection.json"
 FEATURE_ID = 126
+OVERLAY_POLICY = 3
 START_INACTIVE = "2000-01-01T00:00:00+00:00"
 END_INACTIVE = "2000-01-07T23:59:59+00:00"
 
@@ -46,11 +47,10 @@ def load_selection(references):
     value = references.json(SELECTION)
     if (
         not isinstance(value, dict)
-        or set(value)
-        not in (
-            {"client", "season_id", "period", "base_sha256"} | MANIFEST_KEYS,
-            {"client", "season_id", "period", "base_sha256", "skip_basic"} | MANIFEST_KEYS,
-        )
+        or set(value) - {"skip_basic", "overlay_policy"}
+        != {"client", "season_id", "period", "base_sha256"} | MANIFEST_KEYS
+        or "overlay_policy" in value
+        and (type(value["overlay_policy"]) is not int or value["overlay_policy"] != OVERLAY_POLICY)
         or type(value.get("skip_basic", False)) is not bool
         or value["client"] != CLIENT
         or type(value["season_id"]) is not int
@@ -117,9 +117,19 @@ def enable(references, source=None, skip_basic=None):
     skip_basic = (previous or {}).get("skip_basic", False) if skip_basic is None else skip_basic
     if type(skip_basic) is not bool:
         raise ValueError("Guild War skip-basic policy must be Boolean")
+    constants = war.get("Constants")
+    if (
+        not isinstance(constants, dict)
+        or type(constants.get("PlayCoopCoinReward")) is not int
+        or not 0 <= constants["PlayCoopCoinReward"] <= 0x7FFFFFFF
+    ):
+        raise ValueError("Missing native Guild War cooperative participation reward")
+    # Native EndCoop adds item 21644 to AddedItems locally when this is positive.
+    # That absent item spec crashes the result UI even with an empty server list.
+    # Keep the free trial rewardless in both the response and client decoration.
+    constants["PlayCoopCoinReward"] = 0
     if skip_basic:
-        constants = war.get("Constants")
-        stage_set_id = constants.get("SingleStageSetId") if isinstance(constants, dict) else None
+        stage_set_id = constants.get("SingleStageSetId")
         stage_sets = war.get("CastleStageSet")
         if (
             type(stage_set_id) is not int
@@ -196,11 +206,7 @@ def enable(references, source=None, skip_basic=None):
         }
     )
     feature_text = json.dumps(features, ensure_ascii=False, separators=(",", ":"))
-    war_text = (
-        json.dumps(war, ensure_ascii=False, separators=(",", ":"))
-        if skip_basic
-        else items["guildwar"][1]
-    )
+    war_text = json.dumps(war, ensure_ascii=False, separators=(",", ":"))
     text = json.dumps(calendar, ensure_ascii=False, separators=(",", ":"))
     revision = max(
         int(time.time()),
@@ -210,7 +216,7 @@ def enable(references, source=None, skip_basic=None):
     if revision > 0x7FFFFFFF:
         raise ValueError("Guild War static revision exceeds the native range")
     checksum = digest(
-        b"local-guild-war-v2\n"
+        b"local-guild-war-v3\n"
         + items["__checksum__"][1].encode()
         + b"\n"
         + text.encode()
@@ -222,10 +228,9 @@ def enable(references, source=None, skip_basic=None):
     updates = [
         ("seasondate", text),
         ("unlockfeature", feature_text),
+        ("guildwar", war_text),
         ("__checksum__", checksum),
     ]
-    if skip_basic:
-        updates.append(("guildwar", war_text))
     for name, content in updates:
         at = items[name][0]
         lines[at : at + 4] = [
@@ -245,6 +250,7 @@ def enable(references, source=None, skip_basic=None):
         "period": period,
         "base_sha256": hashlib.sha256(source).hexdigest(),
         "skip_basic": skip_basic,
+        "overlay_policy": OVERLAY_POLICY,
         "static_data_sha256": sha256,
         "static_data_checksum": checksum,
         "static_data_revision": revision,
@@ -309,7 +315,8 @@ def bootstrap_override(references, filename, request):
     source = base_body(references)
     start, end = (datetime.fromisoformat(selection["period"][key]) for key in ("from", "to"))
     if (
-        selection["base_sha256"] != hashlib.sha256(source).hexdigest()
+        selection.get("overlay_policy") != OVERLAY_POLICY
+        or selection["base_sha256"] != hashlib.sha256(source).hexdigest()
         or not start <= utc_now() < end
     ):
         selection = enable(references, source)

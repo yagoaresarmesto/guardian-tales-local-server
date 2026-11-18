@@ -3,6 +3,7 @@
 
 import base64
 import copy
+import hashlib
 import io
 import json
 import sqlite3
@@ -28,6 +29,7 @@ from guardian_tales.guild_war import (
     main,
 )
 from guardian_tales.guild_war_static import (
+    OVERLAY_POLICY,
     SELECTION,
     base_body,
     bootstrap_override,
@@ -61,6 +63,7 @@ def synthetic_war_static(catalog):
             "Constants": {
                 "SingleClearedStageIds": [850020002],
                 "SingleStageSetId": 1,
+                "PlayCoopCoinReward": 10,
                 "SyntheticKeep": 9,
             },
             "CastleStageSet": [
@@ -167,8 +170,11 @@ class GuildWarTests(unittest.TestCase):
         before = records(decode(parent))[1]
         selection = enable(self.ref)
         after = records(decode(bootstrap_override(self.ref, "static_data_get.bin", None)))[1]
-        for name in before.keys() - {"seasondate", "unlockfeature", "__checksum__"}:
+        for name in before.keys() - {"seasondate", "unlockfeature", "guildwar", "__checksum__"}:
             self.assertEqual(before[name], after[name])
+        expected_war = json.loads(before["guildwar"][1])
+        expected_war["Constants"]["PlayCoopCoinReward"] = 0
+        self.assertEqual(json.loads(after["guildwar"][1]), expected_war)
         original_features = json.loads(before["unlockfeature"][1])
         features = json.loads(after["unlockfeature"][1])
         self.assertEqual(features[:-1], original_features)
@@ -388,6 +394,7 @@ class GuildWarTests(unittest.TestCase):
             ][1]
         )
         expected = copy.deepcopy(original)
+        expected["Constants"]["PlayCoopCoinReward"] = 0
         expected["CastleStageSet"][0]["SiegeStageIds"] = []
         expected["CastleStageSet"][0]["DefenceStageIds"] = []
         self.assertEqual(altered, expected)
@@ -398,9 +405,54 @@ class GuildWarTests(unittest.TestCase):
                 "guildwar"
             ][1]
         )
-        self.assertEqual(restored, original)
+        expected = copy.deepcopy(original)
+        expected["Constants"]["PlayCoopCoinReward"] = 0
+        self.assertEqual(restored, expected)
         self.assertEqual(self.store.account.profile(), profile)
         self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_legacy_overlay_upgrades_reward_decoration_without_resetting_window_waiver_or_account(
+        self,
+    ):
+        profile = self.install()
+        before = list(self.db.iterdump())
+        previous = enable(self.ref, skip_basic=True)
+        path = self.root / f"guild_war_static_{previous['static_data_sha256']}.bin"
+        lines, items = records(decode(path.read_bytes()))
+        war = json.loads(items["guildwar"][1])
+        war["Constants"]["PlayCoopCoinReward"] = 10
+        raw = json.dumps(war)
+        at = items["guildwar"][0]
+        lines[at + 1] = raw + "\n"
+        lines[at + 3] = digest(raw.encode()) + "\n"
+        old_body = compress("".join(lines).encode())
+        previous.pop("overlay_policy")
+        previous["static_data_sha256"] = hashlib.sha256(old_body).hexdigest()
+        (self.root / f"guild_war_static_{previous['static_data_sha256']}.bin").write_bytes(old_body)
+        (self.root / SELECTION).write_text(json.dumps(previous))
+        self.assertNotIn("overlay_policy", load_selection(self.ref))
+        check = json.loads(bootstrap_override(self.ref, "static_data_check.bin", {}))
+        upgraded = load_selection(self.ref)
+        self.assertEqual(upgraded["overlay_policy"], OVERLAY_POLICY)
+        self.assertEqual(upgraded["period"], previous["period"])
+        self.assertTrue(upgraded["skip_basic"])
+        self.assertEqual(check["Checksum"], upgraded["static_data_checksum"])
+        self.assertGreater(upgraded["static_data_revision"], previous["static_data_revision"])
+        new = json.loads(
+            records(decode(bootstrap_override(self.ref, "static_data_get.bin", None)))[1][
+                "guildwar"
+            ][1]
+        )
+        expected = copy.deepcopy(war)
+        expected["Constants"]["PlayCoopCoinReward"] = 0
+        self.assertEqual(new, expected)
+        self.assertEqual(self.source.read_bytes(), self.original)
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        for invalid in (False, 2, 4):
+            (self.root / SELECTION).write_text(json.dumps(dict(upgraded, overlay_policy=invalid)))
+            with self.subTest(policy=invalid), self.assertRaises(ValueError):
+                load_selection(self.ref)
 
     def test_imported_cooperative_help_acknowledgment_only_records_the_seen_help_once(self):
         profile = self.install()
