@@ -906,6 +906,37 @@ preservation task.
 Supplements use their own manifests. Pass the base root first, then supplements;
 the last matching entry wins. The server keeps the preserved files unchanged.
 
+## Experimental local raid catalog
+
+`guild_raid_entry_catalog.json` is an optional external opt-in catalog, limited
+to 256 KiB. It is not included in the existing 19-reference-file content release.
+Keep it in the backend's reference directory. The exact top-level fields are:
+
+- `client`: the matching version/version-code/region object.
+- `fresh_local`: `true`, explicitly enabling the fresh, non-persistent view.
+- `default_season_id`: an ID present in `seasons`.
+- `daily_entries`, `max_retry`, `play_time_ms`: native public constants.
+- `seasons`: unique entries containing `season_id`, `boss_set`, `round_set`,
+  `period`, `bosses` and `first_round`.
+
+Each period has aware ISO timestamps `from` and `to`, in increasing order.
+Each season has four distinct boss and stage IDs, with slots 1–4; each boss has
+only `slot`, `id`, `stage_id`. Its first-round object contains `number` (1),
+positive `score`, nonnegative `buff_level` and positive `boss_hp_bar`. IDs and
+numeric fields use bounded native integers. See the account-free synthetic
+[catalog example](../tests/test_guild_raid.py) and the
+[season command and limitations](official-save-experiment.md#fresh-local-raid-entry-and-season-selection).
+Do not substitute guessed IDs or another client's catalog.
+
+`guild_raid_selection.json` is a separate operator setting with exactly `client`
+and `season_id`. The `raid-season set` command validates the catalog and writes
+this file atomically. Missing selection uses the catalog default; invalid or
+unknown selection rejects instead of silently selecting another season. The
+backend rereads the setting for each raid entry. Neither file contains account
+state, and selection does not modify global time or remove client date checks.
+Keep these experimental files private; the existing content-pack allowlist does
+not distribute them.
+
 ## Original-client content boundary
 
 The prepared test used the base EN/ES content plus the Japanese voice supplement.

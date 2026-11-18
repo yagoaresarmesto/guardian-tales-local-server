@@ -39,6 +39,7 @@ from .discovery import discover_substage
 from .festival_shop import check_not_redeemable, redeem_points
 from .guild_menu import GUILD_MENU_ROUTES
 from .guild_menu import read as read_guild_menu
+from .guild_raid import enter as enter_guild_raid
 from .hero_knowledge import claim_hero_knowledge
 from .items import inventory_item
 from .mastery import create_tables as create_mastery_tables
@@ -102,6 +103,7 @@ ACCOUNT_ROUTES = (
     "/guild/get-my-guild",
     "/guild/red-dot",
     "/guild-raid2/reset",
+    "/guild-raid2/enter",
     "/chat/guild-history/v2",
     "/chat/listen-channel",
     "/collection/list-all",
@@ -1103,6 +1105,8 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route == "/guild-raid2/enter":
+            return enter_guild_raid(self, request)
         if route in GUILD_MENU_ROUTES:
             return read_guild_menu(self, route, request)
         if route == "/user/get-user-profile-card":

@@ -8,6 +8,7 @@ import sys
 COMMANDS = {
     "serve": ("server", "Run the local game and platform server"),
     "admin": ("admin", "Grant local gems/Festival points with audit receipts or inspect history"),
+    "raid-season": ("guild_raid", "List/select experimental local raid seasons"),
     "assets": ("assets", "Serve manifest-listed local resources"),
     "content": (
         "content_pack",

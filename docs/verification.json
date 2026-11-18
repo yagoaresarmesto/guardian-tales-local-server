@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 539,
+    "tests_run": 547,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -2966,7 +2966,36 @@
       "sqlite_writes": 0,
       "real_profile_unchanged": true
     },
-    "post_fix_apk_guild_menu": "pending backend reload and one full APK restart to refresh the guild cache",
+    "post_fix_apk_guild_menu": "Subsequent APK entry advanced to /guild-raid2/enter; raid rendering and combat remain unverified",
     "guild_battles_season_reset_reward_claims_or_membership_mutations_implemented": false
+  },
+  "fresh_local_raid_entry_and_season_selector": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/guild-raid2/enter",
+    "native_request": "Boolean IsPartial cache hint",
+    "native_response_evidence": "Entry callback, RefreshMyGuildRaid, UserGuildRaid/GuildRaidStatus models and registered partial UserRaid resource population",
+    "policy": "Explicit fresh local catalog; no saved raid progress replacement, battle authorization, results or rewards",
+    "native_round_exp_type": "signed-64-bit scalar",
+    "UserRaid_response_properties": ["UserId", "Raid"],
+    "other_mode_resources_omitted_and_saved_full_profile_preserved": true,
+    "catalog_source": "Public default/global season, boss, detail, round and global date tables in preserved 3.57.0 client; private external files only",
+    "private_lab_season_definitions": 46,
+    "initial_selected_season": 46,
+    "commands": ["raid-season list", "raid-season set ID"],
+    "operator_selection": "Atomic separate reference JSON, reread on entry; no database writes or global time shift",
+    "historical_dates_and_client_restrictions_preserved": true,
+    "native_practice_evidence": "Off-season practice calls the stage loader without start-stage API; actual combat is unverified",
+    "official_raid_response_history_attempts_rankings_and_rewards_captured": false,
+    "synthetic_regressions": 8,
+    "full_windows_tests": 547,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "entry_cache_hint_variants": 2,
+      "selected_season_id": 46,
+      "sqlite_writes": 0,
+      "real_full_profile_unchanged": true,
+      "added_items": []
+    },
+    "post_fix_apk_raid_menu_and_combat": "Pending backend reload and actual APK test"
   }
 }

@@ -1248,6 +1248,59 @@ request while retaining the older null guild cache. Leave the existing bridge
 and CDN running. Original guild recovery and cache-independent raid gameplay
 remain outside this change.
 
+## Fresh local raid entry and season selection
+
+After the membership/preparation fix, the APK reached `/guild-raid2/enter`.
+The native builder sends the Boolean `IsPartial` resource-cache hint. Its success
+callback reads `GuildRaidStatus`, nullable integer `GuildRanking`, integer
+`FeverBossIdx` and `Round`, a scalar signed-64-bit `RoundExp`, and `AddedItems`.
+The local opt-in response initializes a fresh personal raid for the selected
+season, round one and zero damage, with no ranking or added items. Entry requires
+completed prologue and owned guild membership. Preserved non-null raid progress
+rejects rather than being replaced. Re-entry resets this experimental view;
+there is no persistent raid damage, round progression or battle-result handling.
+
+The resource update includes only `UserRaid.UserId` and `UserRaid.Raid`. Native
+inspection of the registered `UserRaid` handler establishes that it populates
+the existing object and replaces supplied properties; omitted properties remain.
+Other-mode currencies, flags and guild-war state are deliberately omitted.
+The SQLite profile, including any saved other-mode fields, remains unchanged.
+
+An external matching catalog supplies public season/boss/stage/first-round IDs
+and global periods. The private Windows lab catalog has 46 default/global season
+definitions from the preserved client. These IDs are client catalog IDs, not a
+claim to reconstruct every official raid ever held. Public data and operator
+selection stay outside Git. No official raid response, historical damage,
+rankings, attempts or rewards were captured.
+
+From the repository root, using the backend's reference directory:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales raid-season list --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales raid-season set 12 --reference-dir local/client-data/reference
+```
+
+`list` marks the selection with `*` and shows periods and boss sets. `set` accepts
+only catalogued IDs and atomically replaces `guild_raid_selection.json`; it does
+not open SQLite or change the server clock. A running backend reads it on the
+next raid-entry request. Leave and re-enter the menu; reconnect if the client
+retains its scene cache. The first code update requires a backend reload.
+
+Native boss/background widgets use the personal raid's selected season ID.
+Date restrictions remain in info/start-button code. Historical selections may
+need practice mode: the native off-season practice path calls the stage loader
+without a start-stage API. These findings do not establish a working rendered
+historical menu or combat in the APK. Normal battle authorization, results,
+rankings and reward claims remain unsupported; test these incrementally.
+
+Eight regressions cover authenticated entry, exact cache schema, membership,
+native reply shapes, omitted unrelated resources/rewards, read-only repeated
+entry/reconnect, live selection, malformed/missing catalogs, preserved-progress
+guards, unknown operations and atomic-write failure. The real saved account
+passed both entry variants through a read-only protocol session: zero SQLite
+writes, selected season 46, no added items and unchanged full profile. This was
+a host check; post-fix APK rendering and combat remain unverified.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

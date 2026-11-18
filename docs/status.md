@@ -6,7 +6,22 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **539 passing tests on Windows Python 3.11**. Four guild-menu
+The suite has **547 passing tests on Windows Python 3.11**. Eight new raid
+regressions cover opt-in fresh entry, resource shapes, preserved state, live
+season selection and atomic-write failure. The actual APK advanced through the
+membership/preparation path to `/guild-raid2/enter`; that read now offers a
+catalog-selected local season with four client-defined bosses, round one, zero
+damage and no rewards. `raid-season list` and `raid-season set ID` use the same
+external reference directory as the backend. The private lab has 46 default/global
+definitions, initially selecting 46. No catalog or operator setting is published
+with the source. Selection changes neither SQLite nor global time; existing
+non-null saved raid progress rejects. Historical date restrictions remain, and
+practice is an inferred path to test older bosses. Both entry variants passed
+against the actual profile with SQLite writes disabled. Post-fix APK rendering
+and combat remain unverified; battle/result/reward APIs are unsupported. See
+[commands and evidence](official-save-experiment.md#fresh-local-raid-entry-and-season-selection).
+
+Four earlier guild-menu
 regressions cover authenticated Boolean raid cache hints, omitted raid-resource/
 reward updates, own-member local guild views, native cache hashes, saved
 membership/achievement validation and full/partial/reconnect reads without writes.
