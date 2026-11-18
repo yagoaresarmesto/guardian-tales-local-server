@@ -1403,6 +1403,39 @@ connection, with zero writes and unchanged full profile and selection. Post-fix
 APK log opening and boss refresh remain pending backend reload and reconnect.
 Start/end/abandon fight handling and nonempty battle history remain unsupported.
 
+## Empty raid history by boss and own member
+
+The general battle-status and latest-record reads each subsequently completed two
+actual APK requests. The next unsupported request was
+`/guild-raid2/get-battle-records/boss`, with public `SeasonId=1` and
+`BossId=1790004`. Native `GuildRaid2MemberRankingTab.RequestRecordData` sends
+those exact fields and reads `BattleRecords` as `List<BossBattleRecord>` before
+separating normal/fever records. The local response is now `{"BattleRecords":[]}`.
+The requested boss must be one of the four IDs in the requested catalog season;
+unknown or cross-season boss IDs reject. This read does not invent a cleared
+boss, damage or an attempt.
+
+The companion member detail popup uses
+`/guild-raid2/get-battle-records/member` with exact native integer `SeasonId`,
+`Day` and `UserId` fields. Its callback also consumes
+`List<BossBattleRecord>` from `BattleRecords`, so the local response is the same
+empty list. Day accepts the native nonnegative signed-32-bit range. Only the
+saved local user's ID is supported; other members' private histories were not
+captured. This companion contract is native inference, not an observed blocked
+member-detail request. Both routes require authentication, completed prologue,
+owned membership and the explicit matching catalog, and accept known cached
+season IDs independently of the latest operator selection.
+
+Three regressions cover native field validation, season/boss relationships,
+own-user restriction, catalog/membership guards and repeated reads across
+reconnects with SQLite writes disabled. All boss slots in the synthetic seasons
+and day bounds retain saved raid damage/attempts, pending rewards, other-mode
+currencies and selection. The actual blocked boss request and an own-member
+companion passed through a read-only protocol session with zero writes and the
+full profile/selection unchanged. Post-fix APK boss/member history rendering
+remains pending reload and reconnect. Nonempty history and combat remain
+unsupported.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

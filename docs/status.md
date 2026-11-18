@@ -6,7 +6,19 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **560 passing tests on Windows Python 3.11**. Four additional raid
+The suite has **563 passing tests on Windows Python 3.11**. Three additional raid
+history regressions cover boss/season relationships, the native day/user schema,
+owned-user restriction and read-only reconnects without progress, reward or
+selection changes. General battle-status/latest reads each completed two actual
+APK requests; the next blocked route was `/guild-raid2/get-battle-records/boss`
+for season 1 and public boss ID 1790004. It now returns `BattleRecords: []` only
+for a boss present in the requested catalog season. The native companion member
+detail read returns the same empty list for the saved local user. Both passed
+read-only actual-account protocol checks. Post-fix boss/member history rendering
+and combat remain unverified. See
+[contracts and evidence](official-save-experiment.md#empty-raid-history-by-boss-and-own-member).
+
+Four earlier raid
 menu regressions cover authenticated status/history reads, exact season/count
 schemas, native empty lists and fresh boss-state shapes, catalog/ownership
 guards and no-write reconnects. The observed blocked request was
@@ -15,8 +27,9 @@ returns `Records: []`. Its native follow-up latest-record read returns
 `BattleRecords: []`. The previously observed parameterless boss refresh returns
 fever index zero, round one and scalar round score zero, without consuming
 attempts or replacing preserved raid progress. Actual-account read-only checks
-passed all three routes with profile and selection unchanged. Post-fix APK log
-opening/refresh remain pending; combat and result handlers remain unsupported.
+passed all three routes with profile and selection unchanged. The APK later
+advanced through the two general history reads to the boss-specific request;
+boss refresh and combat/result handlers remain unverified or unsupported.
 See [contracts and evidence](official-save-experiment.md#empty-raid-combat-log-and-boss-refresh).
 
 Six earlier calendar

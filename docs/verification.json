@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 560,
+    "tests_run": 563,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3077,6 +3077,28 @@
       "sqlite_writes": 0,
       "profile_and_operator_selection_unchanged": true
     },
-    "post_fix_apk_log_and_boss_refresh": "Pending backend reload and reconnect"
+    "post_fix_apk_log_and_boss_refresh": "Battle status/latest each completed two APK requests; next failure was boss-specific history; boss refresh remains unverified"
+  },
+  "empty_raid_boss_and_own_member_history": {
+    "date": "2026-11-18",
+    "observed_blocked_route": "/guild-raid2/get-battle-records/boss",
+    "observed_public_request": {"SeasonId": 1, "BossId": 1790004},
+    "native_consumer": "GuildRaid2MemberRankingTab.RequestRecordData callback: List<BossBattleRecord> from BattleRecords, then normal/fever split",
+    "response": {"BattleRecords": []},
+    "boss_policy": "Exact native positive integer SeasonId/BossId; boss must belong to the requested catalog season",
+    "companion_route": "/guild-raid2/get-battle-records/member",
+    "companion_contract": "Native own-member detail popup: positive integer SeasonId/UserId, nonnegative signed-32-bit Day, same BattleRecords list; no observed blocked member request",
+    "member_policy": "Saved local user only; other members' history is unavailable",
+    "authentication_membership_matching_catalog_required": true,
+    "no_saved_progress_attempts_rewards_profile_resources_or_selection_changes": true,
+    "synthetic_regressions": 3,
+    "full_windows_tests": 563,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "routes": 2,
+      "sqlite_writes": 0,
+      "full_profile_and_operator_selection_unchanged": true
+    },
+    "post_fix_apk_boss_and_member_history": "Pending backend reload and reconnect"
   }
 }

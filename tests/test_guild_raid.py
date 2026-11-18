@@ -17,11 +17,13 @@ from unittest.mock import patch
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
 from guardian_tales.guild_raid import (
     BATTLE_STATUS,
+    BOSS_RECORDS,
     CATALOG,
     ENTRY_ROUTE,
     GUILD_RANKINGS,
     LATEST_RECORDS,
     MEMBER_RANKINGS,
+    MEMBER_RECORDS,
     SELECTION,
     UPDATE_STATUS,
     load_catalog,
@@ -519,6 +521,7 @@ class GuildRaidTests(unittest.TestCase):
             (LATEST_RECORDS, {"SeasonId": 1, "Count": 20}),
         ):
             self.assert_rejected(body, route)
+
         self.write_catalog(dict(self.catalog, client={"version": "other"}))
         for route, body in (
             (UPDATE_STATUS, None),
@@ -526,3 +529,85 @@ class GuildRaidTests(unittest.TestCase):
             (LATEST_RECORDS, {"SeasonId": 1, "Count": 20}),
         ):
             self.assert_rejected(body, route)
+
+    def test_boss_and_member_history_require_authenticated_exact_native_integer_schemas(self):
+        valid = (
+            (BOSS_RECORDS, {"SeasonId": 1, "BossId": 1001}),
+            (MEMBER_RECORDS, {"SeasonId": 1, "Day": 0, "UserId": 9400}),
+        )
+        for route, body in valid:
+            self.assert_rejected(body, route)
+        self.login()
+        for route, body in valid:
+            self.assert_rejected(body, route)
+        self.install_import()
+        for route, body in valid:
+            self.assert_rejected(None, route)
+            self.assert_rejected(dict(body, Count=20), route)
+            self.assert_rejected(dict(body, Claim=True), route)
+            for key in body:
+                missing = dict(body)
+                del missing[key]
+                self.assert_rejected(missing, route)
+                for value in (True, -1, "1", 1.0, 0x80000000):
+                    self.assert_rejected(dict(body, **{key: value}), route)
+
+    def test_boss_and_member_history_validate_season_boss_membership_and_owned_user(self):
+        profile = self.install_import()
+        self.login()
+        for body in (
+            {"SeasonId": 3, "BossId": 1001},
+            {"SeasonId": 1, "BossId": 0},
+            {"SeasonId": 1, "BossId": 9999},
+            {"SeasonId": 1, "BossId": 2001},
+        ):
+            self.assert_rejected(body, BOSS_RECORDS)
+        self.assert_rejected({"SeasonId": 1, "Day": 0, "UserId": 9401}, MEMBER_RECORDS)
+        self.assert_rejected({"SeasonId": 3, "Day": 0, "UserId": 9400}, MEMBER_RECORDS)
+        self.save(dict(profile, GuildMember={"UserId": 9401, "GuildId": 7}))
+        self.assert_rejected({"SeasonId": 1, "BossId": 1001}, BOSS_RECORDS)
+        self.save(profile)
+        (self.root / CATALOG).unlink()
+        for route, body in (
+            (BOSS_RECORDS, {"SeasonId": 1, "BossId": 1001}),
+            (MEMBER_RECORDS, {"SeasonId": 1, "Day": 0, "UserId": 9400}),
+        ):
+            self.assert_rejected(body, route)
+
+    def test_empty_boss_and_member_history_preserves_all_saved_progress_and_selection_across_reconnect(
+        self,
+    ):
+        profile = self.install_import()
+        profile["UserRaid"].update(
+            Raid={"SeasonId": 2, "TotalDamage": 987, "PlayCount": 1}, SyntheticPendingReward=[6]
+        )
+        self.save(profile)
+        select_season(self.references, 2)
+        selection = (self.root / SELECTION).read_bytes()
+        for reconnect in (False, True):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            self.db.execute("PRAGMA query_only=ON")
+            before = list(self.db.iterdump())
+            changes = self.db.total_changes
+            for season in self.catalog["seasons"]:
+                for boss in season["bosses"]:
+                    self.assertEqual(
+                        self.call(
+                            {"SeasonId": season["season_id"], "BossId": boss["id"]}, BOSS_RECORDS
+                        ),
+                        {"BattleRecords": []},
+                    )
+                for day in (0, 6, 0x7FFFFFFF):
+                    self.assertEqual(
+                        self.call(
+                            {"SeasonId": season["season_id"], "Day": day, "UserId": 9400},
+                            MEMBER_RECORDS,
+                        ),
+                        {"BattleRecords": []},
+                    )
+            self.assertEqual(self.db.total_changes, changes)
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.store.account.profile(), profile)
+            self.assertEqual((self.root / SELECTION).read_bytes(), selection)
+            self.db.execute("PRAGMA query_only=OFF")

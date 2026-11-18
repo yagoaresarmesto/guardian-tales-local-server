@@ -18,7 +18,9 @@ RANKING_ROUTES = (GUILD_RANKINGS, MEMBER_RANKINGS)
 UPDATE_STATUS = "/guild-raid2/update-status"
 BATTLE_STATUS = "/guild-raid2/get-battle-status"
 LATEST_RECORDS = "/guild-raid2/get-battle-records/latest"
-MENU_READ_ROUTES = (UPDATE_STATUS, BATTLE_STATUS, LATEST_RECORDS)
+BOSS_RECORDS = "/guild-raid2/get-battle-records/boss"
+MEMBER_RECORDS = "/guild-raid2/get-battle-records/member"
+MENU_READ_ROUTES = (UPDATE_STATUS, BATTLE_STATUS, LATEST_RECORDS, BOSS_RECORDS, MEMBER_RECORDS)
 CATALOG = "guild_raid_entry_catalog.json"
 SELECTION = "guild_raid_selection.json"
 
@@ -197,18 +199,28 @@ def menu_read(account, route, request):
         selected_season(account.references, catalog)
         fresh_profile(account)
         return {"FeverBossIdx": 0, "Round": 1, "RoundExp": 0}
-    if route not in (BATTLE_STATUS, LATEST_RECORDS):
+    keys = {
+        BATTLE_STATUS: {"SeasonId"},
+        LATEST_RECORDS: {"SeasonId", "Count"},
+        BOSS_RECORDS: {"SeasonId", "BossId"},
+        MEMBER_RECORDS: {"SeasonId", "Day", "UserId"},
+    }.get(route)
+    if keys is None:
         raise ValueError("Unsupported local raid menu read")
-    keys = {"SeasonId", "Count"} if route == LATEST_RECORDS else {"SeasonId"}
     if (
         not isinstance(request, dict)
         or set(request) != keys
-        or not integer(request["SeasonId"])
-        or route == LATEST_RECORDS
-        and not integer(request["Count"], 0)
+        or any(
+            not integer(value, 0 if key in ("Count", "Day") else 1)
+            for key, value in request.items()
+        )
     ):
-        raise ValueError("Local raid history requires a season ID and native integer count")
-    find_season(local_context(account), request["SeasonId"])
+        raise ValueError("Local raid history requires exact native integer fields")
+    season = find_season(local_context(account), request["SeasonId"])
+    if route == BOSS_RECORDS and request["BossId"] not in {b["id"] for b in season["bosses"]}:
+        raise ValueError("Requested raid boss must belong to the requested season")
+    if route == MEMBER_RECORDS and request["UserId"] != account.profile()["User"]["Id"]:
+        raise ValueError("Local raid member history is available only for the saved local user")
     # These are lists, not a synthetic completed fight or a profile resource.
     return {"Records": []} if route == BATTLE_STATUS else {"BattleRecords": []}
 
