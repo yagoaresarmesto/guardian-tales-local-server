@@ -6,7 +6,20 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **550 passing tests on Windows Python 3.11**. Three additional raid
+The suite has **556 passing tests on Windows Python 3.11**. Six calendar
+regressions address the historical raid selector's missing client date handling.
+The client held season 27 correctly, but its effective-season getter rejected
+the expired period and substituted the previous season before choosing bosses.
+`raid-season set` now prepares an immutable static response activating only that
+raid's global calendar row, with matching checksums/revisions and an atomic
+selection manifest. Original tables, other service dates, all bosses, global time
+and saved account remain unchanged. Private full-table preparation verified that
+exactly one calendar row and its containing/checksum records changed. The client
+must fully restart after each selection; reconnect is insufficient. Post-fix
+historical rendering and combat remain pending an actual APK test. See
+[corrected selector behavior](official-save-experiment.md#fresh-local-raid-entry-and-season-selection).
+
+Three earlier raid
 ranking regressions cover exact authenticated season requests, catalog/membership
 validation and read-only reconnects without changing saved progress, rewards or
 operator selection. The raid-entry API completed and the user reported partially
@@ -17,7 +30,8 @@ ranking refresh returns `Rankings: []`, based on its native builder/callback.
 Known catalog seasons are accepted independently of the latest operator choice
 because timed refreshes can carry an older client cache. Both routes passed
 read-only actual-account checks with full profile and selection unchanged.
-Post-fix APK ranking refresh and combat remain unverified. See
+Both ranking routes subsequently completed four actual APK requests each; visible
+classification UI and combat remain unverified. See
 [contracts and evidence](official-save-experiment.md#empty-local-raid-classifications).
 
 Eight earlier raid
@@ -29,8 +43,8 @@ damage and no rewards. `raid-season list` and `raid-season set ID` use the same
 external reference directory as the backend. The private lab has 46 default/global
 definitions, initially selecting 46. No catalog or operator setting is published
 with the source. Selection changes neither SQLite nor global time; existing
-non-null saved raid progress rejects. Historical date restrictions remain, and
-practice is an inferred path to test older bosses. Both entry variants passed
+non-null saved raid progress rejects. Historical selection now requires the
+calendar preparation and full restart described above. Both entry variants passed
 against the actual profile with SQLite writes disabled. Post-fix APK rendering
 and combat remain unverified; battle/result/reward APIs are unsupported. See
 [commands and evidence](official-save-experiment.md#fresh-local-raid-entry-and-season-selection).

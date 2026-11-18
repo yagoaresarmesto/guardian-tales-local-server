@@ -25,6 +25,7 @@ from .packet_reader import lz4_block
 from .play_menu import PLAY_MENU_ROUTES
 from .play_menu import read as play_menu_read
 from .protocol import Packet, PacketError
+from .raid_static import bootstrap_override as raid_bootstrap_override
 from .reference import compressed_empty_list
 from .snapshots import (
     ACCOUNT_READS,
@@ -591,7 +592,9 @@ class BootstrapSession:
         if route in STATIC_SEEDS:
             filename, kind = STATIC_SEEDS[route]
             try:
-                seed = self.store.references.read_bytes(filename)
+                seed = raid_bootstrap_override(self.store.references, filename, body)
+                if seed is None:
+                    seed = self.store.references.read_bytes(filename)
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
             return Packet(

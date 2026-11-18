@@ -57,9 +57,9 @@ def unwrap_compression(data):
     return stored if len(stored) == original else lz4_block(stored, original)
 
 
-def lz4_block(data, expected):
+def lz4_block(data, expected, *, limit=MAX_PACKET):
     """Decode a bounded raw LZ4 block; no frame container or external library."""
-    if not 0 <= expected <= MAX_PACKET:
+    if not 0 <= expected <= limit:
         raise PacketError("LZ4 output size outside reader limits")
     out = bytearray()
     at = 0

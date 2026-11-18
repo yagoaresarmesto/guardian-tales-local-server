@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 550,
+    "tests_run": 556,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -2983,7 +2983,7 @@
     "initial_selected_season": 46,
     "commands": ["raid-season list", "raid-season set ID"],
     "operator_selection": "Atomic separate reference JSON, reread on entry; no database writes or global time shift",
-    "historical_dates_and_client_restrictions_preserved": true,
+    "initial_id_only_selector_left_historical_dates_unchanged": true,
     "native_practice_evidence": "Off-season practice calls the stage loader without start-stage API; actual combat is unverified",
     "official_raid_response_history_attempts_rankings_and_rewards_captured": false,
     "synthetic_regressions": 8,
@@ -3019,6 +3019,39 @@
       "sqlite_writes": 0,
       "full_profile_and_operator_selection_unchanged": true
     },
-    "post_fix_apk_ranking_refresh": "Pending backend reload and APK reconnect"
+    "post_fix_apk_ranking_refresh": "Both routes completed four APK requests each before calendar correction; classification rendering and combat remain unverified"
+  },
+  "historical_raid_calendar_selection_fix": {
+    "date": "2026-11-18",
+    "reported_problem": "Different selected historical seasons displayed the same bosses",
+    "read_only_runtime_personal_raid_season": 27,
+    "native_cause": "UserRaid.get_GuildRaid2SeasonId rejects expired personal season through IsVaildSeasonId and substitutes GetPrevSeasonId before boss lookup",
+    "fix": "Prepare an immutable matching static body that activates only the selected global raid calendar row; publish artifact before atomic selection; serve consistent static data/check-update responses",
+    "source_static_body_unchanged": true,
+    "saved_account_and_global_time_unchanged": true,
+    "other_calendar_rows_service_variants_bosses_and_tables_preserved": true,
+    "local_period": {"from": "2000-01-01T00:00:00+00:00", "to": "2099-12-24T23:59:59+00:00"},
+    "existing_global_reward_until": "2099-12-31T23:59:59+00:00; no reward handlers enabled",
+    "client_application": "Full game restart after every selection; reconnect/menu return is insufficient",
+    "static_preparation_expanded_limit_mib": 64,
+    "default_network_packet_limit_mib_unchanged": 16,
+    "synthetic_regressions": 6,
+    "full_windows_tests": 556,
+    "private_actual_static_body_check": {
+      "result": "PASS",
+      "selected_season": 27,
+      "changed_calendar_rows": 1,
+      "changed_records": ["seasondate", "__checksum__"],
+      "prepared_compressed_bytes": 8811393,
+      "other_records_and_original_source_preserved": true
+    },
+    "actual_account_read_only_bootstrap_check": {
+      "result": "PASS",
+      "static_get_checksum_checks_and_raid_entry": 4,
+      "selected_season": 27,
+      "sqlite_writes": 0,
+      "profile_and_original_static_source_unchanged": true
+    },
+    "post_fix_apk_historical_boss_rendering_and_combat": "Pending backend reload and full game restart"
   }
 }

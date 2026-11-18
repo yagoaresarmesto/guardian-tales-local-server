@@ -928,14 +928,35 @@ numeric fields use bounded native integers. See the account-free synthetic
 [season command and limitations](official-save-experiment.md#fresh-local-raid-entry-and-season-selection).
 Do not substitute guessed IDs or another client's catalog.
 
-`guild_raid_selection.json` is a separate operator setting with exactly `client`
-and `season_id`. The `raid-season set` command validates the catalog and writes
-this file atomically. Missing selection uses the catalog default; invalid or
-unknown selection rejects instead of silently selecting another season. The
-backend rereads the setting for each raid entry. Neither file contains account
-state, and selection does not modify global time or remove client date checks.
-Keep these experimental files private; the existing content-pack allowlist does
-not distribute them.
+`guild_raid_selection.json` contains `client`, `season_id` and the generated
+`static_data_sha256`, `static_data_checksum`, `static_data_revision` manifest.
+The older two-field setting remains readable but cannot activate expired seasons;
+run `raid-season set ID` again to upgrade it. Missing selection uses the catalog
+default. Invalid/unknown selection rejects instead of silently choosing another.
+
+`set` validates matching external `static_data_get.bin`, including the selected
+season's boss/stage identities and unique global raid calendar ID. It creates
+an immutable `guild_raid_static_<sha256>.bin` before atomically publishing the
+selection. Source files, the catalog's original dates and SQLite remain unchanged.
+The prepared body changes only the selected raid's `KakaoGlobal` period and any
+existing reward-until timestamp, plus static revision/checksum records. Other
+calendar rows, service variants, bosses and tables retain their values. No reward
+route is enabled. Bootstrap checks the artifact hash before serving it; update
+checks compare the client's checksum with the generated one.
+
+Preparation accepts at most 64 MiB of decompressed local static text and uses
+bounded LZ4 encoding to remain within the existing packet limit. The network
+reader's default 16 MiB limit is unchanged. Binary static records retain their
+original bytes and use checksums of their decoded binary content. Both the
+original and prepared bodies remain private external data, excluded from the
+content-pack allowlist. Unpublished artifacts left by an interrupted selection
+do not become active; the atomic setting selects the complete body.
+
+After every selection **fully close and reopen the game** to reload its static
+calendar. Reconnect alone does not apply it. The backend rereads the setting,
+but the client's loaded tables persist until restart. Selection changes neither
+global server time nor the saved account. Historical boss rendering and combat
+must still be checked in the APK.
 
 ## Original-client content boundary
 

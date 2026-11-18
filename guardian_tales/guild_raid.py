@@ -103,6 +103,15 @@ def validate_season(value):
 def selected_season(references, catalog=None):
     catalog = load_catalog(references) if catalog is None else catalog
     season_id = catalog["default_season_id"]
+    selection = load_selection(references)
+    if selection is not None:
+        season_id = selection["season_id"]
+    return find_season(catalog, season_id)
+
+
+def load_selection(references):
+    from .raid_static import MANIFEST_KEYS, validate_manifest
+
     path = references.directory / SELECTION
     if path.exists():
         if not path.is_file() or path.stat().st_size > 1024:
@@ -110,13 +119,16 @@ def selected_season(references, catalog=None):
         selection = references.json(SELECTION)
         if (
             not isinstance(selection, dict)
-            or set(selection) != {"client", "season_id"}
+            or set(selection)
+            not in ({"client", "season_id"}, {"client", "season_id"} | MANIFEST_KEYS)
             or selection["client"] != CLIENT
             or not integer(selection["season_id"])
         ):
             raise ValueError("Invalid local raid selection")
-        season_id = selection["season_id"]
-    return find_season(catalog, season_id)
+        if MANIFEST_KEYS <= selection.keys():
+            validate_manifest(selection)
+        return selection
+    return None
 
 
 def find_season(catalog, season_id):
@@ -128,16 +140,20 @@ def find_season(catalog, season_id):
 
 
 def select_season(references, season_id):
+    from .raid_static import prepare
+
     season = find_season(load_catalog(references), season_id)
-    # A separate atomic file lets a running backend read the selection on its
-    # next entry request. The account database and global clock are untouched.
+    previous = load_selection(references)
+    manifest = prepare(references, season, (previous or {}).get("static_data_revision", 0))
+    # Publish the immutable static body before atomically switching selection.
+    # The client must reload its tables; SQLite and global time are untouched.
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(
             mode="w", encoding="utf-8", dir=references.directory, prefix=".raid-", delete=False
         ) as stream:
             temporary = stream.name
-            json.dump({"client": CLIENT, "season_id": season_id}, stream)
+            json.dump({"client": CLIENT, "season_id": season_id, **manifest}, stream)
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
@@ -242,13 +258,13 @@ def main(argv=None):
             season = select_season(references, args.season_id)
             result = {
                 "selected_season_id": season["season_id"],
-                "apply": "Leave and re-enter the raid menu; reconnect if the client keeps its cache",
-                "scope": "Fresh local content only; historical dates remain and combat is experimental",
+                "apply": "Fully close and reopen the game so its static tables reload; reconnect is insufficient",
+                "scope": "Selected raid's global calendar is locally active; other modes and global time are preserved; combat is experimental",
             }
         else:
             catalog = load_catalog(references)
             selected = selected_season(references, catalog)["season_id"]
-            print("Selected  Season  Boss set  Global period (UTC)")
+            print("Selected  Season  Boss set  Original global period (UTC)")
             for season in sorted(catalog["seasons"], key=lambda s: s["season_id"]):
                 marker = "*" if season["season_id"] == selected else " "
                 period = season["period"]
@@ -256,6 +272,11 @@ def main(argv=None):
                     f"{marker:>8}  {season['season_id']:>6}  {season['boss_set']:>8}  "
                     f"{period['from']} - {period['to']}"
                 )
+            selection = load_selection(references)
+            if selection is not None and "static_data_sha256" in selection:
+                print("Local calendar prepared. Fully restart the game after each selection.")
+            else:
+                print("Calendar not prepared. Run raid-season set ID, then fully restart the game.")
             return
     except (ValueError, OSError, TypeError, KeyError) as error:
         parser.error(str(error))

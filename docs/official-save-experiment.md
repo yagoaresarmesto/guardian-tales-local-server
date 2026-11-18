@@ -1280,19 +1280,36 @@ From the repository root, using the backend's reference directory:
 .\.venv\Scripts\python.exe -m guardian_tales raid-season set 12 --reference-dir local/client-data/reference
 ```
 
-`list` marks the selection with `*` and shows periods and boss sets. `set` accepts
-only catalogued IDs and atomically replaces `guild_raid_selection.json`; it does
-not open SQLite or change the server clock. A running backend reads it on the
-next raid-entry request. Leave and re-enter the menu; reconnect if the client
-retains its scene cache. The first code update requires a backend reload.
+`list` marks the selection with `*`, shows original periods/boss sets and reports
+whether its local calendar has been prepared. `set` accepts only catalogued IDs,
+requires matching `static_data_get.bin` and prepares an immutable static body
+before atomically replacing `guild_raid_selection.json`. It does not open SQLite
+or change the server clock. After **each selection, fully close and reopen the
+game** so its static tables reload; leaving the menu or reconnecting is
+insufficient. The first code update also requires a backend reload.
 
-Native boss/background widgets use the personal raid's selected season ID.
-Date restrictions remain in info/start-button code. Historical selections may
-need practice mode: the native off-season practice path calls the stage loader
-without a start-stage API. These findings do not establish a working rendered
-historical menu or combat in the APK. Normal battle authorization, results and
-reward claims remain unsupported; test these incrementally. Ranking reads now
-use the empty local view described below.
+The initial ID-only implementation was incomplete. Read-only inspection showed
+that the running client actually held personal raid season 27 while the same
+bosses remained visible. Native `UserRaid.get_GuildRaid2SeasonId` checks
+`IsVaildSeasonId`: an expired selection falls back to `GetPrevSeasonId` before
+the boss/background widgets use it. The previous inference that those widgets
+would directly display any supplied historical ID was incorrect.
+
+`raid-season set` now prepares a copy of the original static response with only
+the selected raid's `seasondate` global-service row activated locally from
+2000-01-01 through 2099-12-24. An existing global reward-until date is adjusted
+to 2099-12-31 for ordering consistency; no reward handler is enabled. Other dates,
+service variants, seasons, bosses and tables retain their original values.
+The original external body is never overwritten. The selected calendar and
+`__checksum__` records receive correct SHA-256 hashes and increasing native
+revisions; bootstrap serves the prepared body and a consistent update checksum.
+The native date guard then sees an active period without a global clock change.
+
+Normal battle authorization, results and reward claims remain unsupported;
+test these incrementally. The native off-season practice loader was inspected,
+but it does not bypass the effective-season getter used by the boss menu.
+Ranking reads use the empty local view described below. The corrected historic
+boss display and combat still require an actual APK check after full restart.
 
 Eight regressions cover authenticated entry, exact cache schema, membership,
 native reply shapes, omitted unrelated resources/rewards, read-only repeated
@@ -1303,6 +1320,15 @@ writes, selected season 46, no added items and unchanged full profile. This was
 a host check. Subsequently the user reported that raids loaded at least
 partially, and the actual entry request completed before the classification
 refresh failed. This does not establish successful combat or complete menu UI.
+
+Six additional calendar regressions cover historical activation, preservation
+of other table rows/service dates/binary records, cache checksums, successive
+selection revisions, legacy settings, missing/corrupt source/artifact guards,
+LZ4 match/literal/window boundaries and failed atomic publication. Expanded
+selector tests require restart guidance and preserve the old selection when
+publication fails. The private full-table preparation changed exactly one
+calendar row and the two containing/checksum records, preserving all bosses and
+other records. The actual source body and saved account remain unchanged.
 
 ## Empty local raid classifications
 

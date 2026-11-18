@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Fresh raid content selection preserves the account and unrelated modes."""
 
+import base64
 import copy
 import io
 import json
@@ -26,6 +27,7 @@ from guardian_tales.guild_raid import (
     selected_season,
 )
 from guardian_tales.protocol import PacketError
+from guardian_tales.raid_static import compress, digest
 from guardian_tales.snapshots import CLIENT
 from tests.test_snapshots import request, synthetic_snapshot
 
@@ -62,12 +64,66 @@ def synthetic_catalog():
     }
 
 
+def synthetic_static(catalog):
+    raid = {"Seasons": [], "Boss": [], "BossDetails": []}
+    dates = []
+    for season in catalog["seasons"]:
+        date_id = 5400000 + season["season_id"]
+        raid["Seasons"].append(
+            {
+                "Id": season["season_id"],
+                "SeasonDateId": date_id,
+                "BossSet": season["boss_set"],
+                "RoundSet": season["round_set"],
+            }
+        )
+        for boss in season["bosses"]:
+            raid["Boss"].append(
+                {"SetId": season["boss_set"], "Slot": boss["slot"], "Id": boss["id"]}
+            )
+            raid["BossDetails"].append({"Id": boss["id"], "StageId": boss["stage_id"]})
+        dates.append(
+            {
+                "Id": date_id,
+                "From": {
+                    "KakaoGlobal": season["period"]["from"],
+                    "KakaoKorea": "2019-01-01T00:00:00Z",
+                },
+                "To": {"KakaoGlobal": season["period"]["to"], "KakaoKorea": "2019-01-08T00:00:00Z"},
+                "RewardUntil": {"KakaoGlobal": "2020-01-14T00:00:00Z"},
+            }
+        )
+    dates.append(
+        {
+            "Id": 99,
+            "From": {"KakaoGlobal": "2026-01-01T00:00:00Z"},
+            "To": {"KakaoGlobal": "2027-01-01T00:00:00Z"},
+        }
+    )
+    rows = [
+        ("guildraid2", json.dumps(raid)),
+        ("seasondate", json.dumps({"EventPeriod": dates})),
+        ("unrelated", '{"Keep":[1,2]}'),
+        ("heroes-bin", base64.b64encode(b"synthetic binary data").decode()),
+        ("__checksum__", digest(b"synthetic")),
+    ]
+    raw = (
+        "".join(
+            f"{name}\n{content}\n1\n{digest(base64.b64decode(content) if name.endswith('-bin') else content.encode())}\n"
+            for name, content in rows
+        )
+        + "\n\n\n"
+    )
+    return compress(raw.encode())
+
+
 class GuildRaidTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(dir=os.environ.get("GT_TEST_TMP"))
         self.root = Path(self.temporary.name)
         self.catalog = synthetic_catalog()
         self.write_catalog()
+        (self.root / "static_data_get.bin").write_bytes(synthetic_static(self.catalog))
         self.db = sqlite3.connect(":memory:")
         self.store = GuestStore(self.db, self.root)
         self.references = self.store.account.references
@@ -198,7 +254,9 @@ class GuildRaidTests(unittest.TestCase):
         before = list(self.db.iterdump())
         self.assertEqual(self.call({"IsPartial": False})["GuildRaidStatus"]["SeasonId"], 1)
         self.assertEqual(list(self.db.iterdump()), before)
-        self.assertEqual(sorted(p.name for p in self.root.iterdir()), sorted((CATALOG, SELECTION)))
+        self.assertTrue((self.root / SELECTION).is_file())
+        self.assertEqual(len(list(self.root.glob("guild_raid_static_*.bin"))), 1)
+        self.assertFalse(list(self.root.glob(".raid-*")))
 
     def test_preserved_raid_progress_and_unknown_battle_operations_remain_guarded(self):
         profile = self.install_import()
@@ -257,14 +315,19 @@ class GuildRaidTests(unittest.TestCase):
         for season_id in (True, 0, 3, "2"):
             with self.assertRaises(ValueError):
                 select_season(self.references, season_id)
-        with patch(
-            "guardian_tales.guild_raid.os.replace", side_effect=OSError("synthetic failure")
-        ):
+        original_replace = os.replace
+
+        def fail_selection(source, destination):
+            if Path(destination).name == SELECTION:
+                raise OSError("synthetic selection publication failure")
+            return original_replace(source, destination)
+
+        with patch("guardian_tales.guild_raid.os.replace", side_effect=fail_selection):
             with self.assertRaises(OSError):
                 select_season(self.references, 2)
         self.assertEqual((self.root / SELECTION).read_bytes(), original)
         self.assertEqual(selected_season(self.references)["season_id"], 1)
-        self.assertEqual(len(list(self.root.iterdir())), 2)
+        self.assertFalse(list(self.root.glob(".raid-*")))
 
     def test_invalid_saved_selection_is_rejected_instead_of_silently_defaulting(self):
         for value in (
@@ -287,6 +350,7 @@ class GuildRaidTests(unittest.TestCase):
             main(["set", "1", "--reference-dir", str(self.root)])
         self.assertIn("Boss set", out.getvalue())
         self.assertIn('"selected_season_id": 1', out.getvalue())
+        self.assertIn("Fully close and reopen the game", out.getvalue())
         self.assertEqual(selected_season(self.references)["season_id"], 1)
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             main(["set", "3", "--reference-dir", str(self.root)])
