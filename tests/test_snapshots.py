@@ -104,8 +104,10 @@ class SnapshotTests(unittest.TestCase):
             result["enabled_mutation_routes"],
             [
                 "/item/apply-options",
+                "/item/apply-relic-options",
                 "/item/change-lock-options",
                 "/item/change-options",
+                "/item/change-relic-options/v2",
                 "/item/engrave-weapon",
                 "/item/enhance-weapon",
                 "/item/limitbreak-weapon/v2",

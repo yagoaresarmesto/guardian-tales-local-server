@@ -289,6 +289,16 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route in ("/item/change-relic-options/v2", "/item/apply-relic-options"):
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request,
+                        self.store.account.change_or_apply_relic_options(body, operation_id, route),
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
             if route == "/item/change-lock-options":
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)

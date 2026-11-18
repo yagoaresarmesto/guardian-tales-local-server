@@ -32,6 +32,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/item/engrave-weapon",
         "/item/change-options",
         "/item/change-lock-options",
+        "/item/change-relic-options/v2",
+        "/item/apply-relic-options",
         "/item/apply-options",
         "/item/limitbreak-weapon/v2",
         "/summon/set-select-character",

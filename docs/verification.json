@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 489,
+    "tests_run": 507,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1198,8 +1198,10 @@
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
       "/item/apply-options",
+      "/item/apply-relic-options",
       "/item/change-lock-options",
       "/item/change-options",
+      "/item/change-relic-options/v2",
       "/item/engrave-weapon",
       "/item/enhance-weapon",
       "/item/limitbreak-weapon/v2",
@@ -2750,6 +2752,62 @@
       "original_startup_seed_preserved": true,
       "real_saved_profile_unchanged": true
     },
-    "post_fix_apk_option_lock": "pending backend reload and reconnect"
+    "post_fix_apk_option_lock": {
+      "result": "PASS",
+      "saved_receipts": 3,
+      "requested_flags_saved_and_locked_values_retained_through_later_rolls": true,
+      "all_assets_stackables_and_misc_inventory_equal_pre_mock_baseline": true,
+      "scope": "Saved selected lock flags/values and resource inventories; unrelated later equipment changes are outside this comparison"
+    }
+  },
+  "free_relic_option_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/change-relic-options/v2",
+    "native_builders": [
+      "Oak.ApiConnection.SendChangeRelicOptions",
+      "Oak.ApiConnection.SendApplyRelicOptions"
+    ],
+    "change_request_fields": [
+      "ItemId",
+      "OptionType"
+    ],
+    "apply_request_fields": [
+      "ItemId",
+      "Apply"
+    ],
+    "option_type_sources": {
+      "1": "Relic main/base",
+      "2": "Relic secondary/change"
+    },
+    "change_response_options": "NewRelicOptions list of OptionId/Level/OptionSource rows",
+    "official_response_captured": false,
+    "explicit_external_catalog": "relic_option_mock_catalog.json",
+    "policy": "Free local uniform per-slot option-ID selection and inclusive integer level rolls for the selected source group",
+    "official_presence_and_value_probabilities_implemented": false,
+    "generation_preserves_entire_profile_and_revision": true,
+    "accept_changes_only_selected_group_relic_options_and_user_revision": true,
+    "discard_preserves_entire_profile_and_revision": true,
+    "all_currencies_tickets_materials_jewel_slots_and_other_fields_preserved": true,
+    "repeated_option_ids_in_separate_slots_supported": true,
+    "locked_rows_and_unselected_group_preserved": true,
+    "atomic_proposals_resolution_and_canonical_receipts": true,
+    "current_state_retries_do_not_reroll_or_resurrect_older_proposals": true,
+    "original_spec_options_and_persisted_slot_pools_validated_on_resolution": true,
+    "new_resolution_policy": "Latest pending proposal per item; native apply request has no proposal ID/type",
+    "synthetic_regressions": 18,
+    "full_windows_tests": 507,
+    "detached_actual_account_check": {
+      "result": "PASS",
+      "generation_preserves_entire_profile_and_revision": true,
+      "accept_changes_only_selected_source_slots_and_user_revision": true,
+      "discard_preserves_profile_and_revision": true,
+      "all_currencies_tickets_materials_jewel_slots_and_other_fields_preserved": true,
+      "repeated_main_option_ids_supported": true,
+      "both_main_and_subgroup_rolls_preserve_unselected_group": true,
+      "same_and_delayed_retries_do_not_roll_or_overwrite_later_state": true,
+      "original_startup_seed_preserved": true,
+      "real_saved_profile_unchanged": true
+    },
+    "post_fix_apk_relic_options": "pending backend reload and reconnect"
   }
 }

@@ -62,6 +62,8 @@ from .presets import delete_existing as delete_existing_preset
 from .presets import save_party as save_party_preset
 from .presets import set_selected as set_selected_preset
 from .reference import ReferenceData
+from .relic_options import change_or_apply as change_or_apply_relic_options
+from .relic_options import create_tables as create_relic_option_tables
 from .snapshots import create_tables as create_snapshot_tables
 from .snapshots import is_imported
 from .stamina_purchase import purchase_stamina
@@ -130,6 +132,8 @@ ACCOUNT_ROUTES = (
     "/item/apply-options",
     "/item/engrave-weapon",
     "/item/change-lock-options",
+    "/item/change-relic-options/v2",
+    "/item/apply-relic-options",
     "/user/guardian-mastery-level-up",
     "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
@@ -195,6 +199,7 @@ class AccountStore:
         create_weapon_option_tables(db)
         create_weapon_engrave_tables(db)
         create_weapon_option_lock_tables(db)
+        create_relic_option_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1066,6 +1071,9 @@ class AccountStore:
 
     def change_weapon_option_locks(self, request, operation_id):
         return change_weapon_option_locks(self, request, operation_id)
+
+    def change_or_apply_relic_options(self, request, operation_id, route):
+        return change_or_apply_relic_options(self, request, operation_id, route)
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)

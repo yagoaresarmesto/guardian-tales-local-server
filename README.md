@@ -113,7 +113,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Free equipment limit breaks | Two APK operations reached 5 breaks with gold, hammers, experience and other profile fields retained |
 | Free equipment option values | Seven APK rolls and one accepted proposal saved with resources retained; existing identities/locks preserved |
 | Free first equipment engraving | One APK engraving saved; gold, hammers, experience and limit breaks retained; matching public attribute tier |
-| Free equipment option locks | Lock/unlock existing ordinary options without consuming stones; locked values survive later rolls; APK retry pending |
+| Free equipment option locks | Three APK locks saved with selected values retained through later rolls and resources intact |
+| Free relic option changes | Main/subgroup option types and values roll from public slot pools; persistent apply/discard without payment; APK retry pending |
 | Guardian mastery skill upgrades | Catalog-backed spending and class limits; 34 APK upgrades matched saved skills and costs |
 | Guardian mastery reset | Refund, configured free-gem payment and cooldown saved atomically; one APK reset verified |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |

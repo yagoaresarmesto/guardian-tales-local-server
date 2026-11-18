@@ -98,7 +98,8 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Twenty mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+Twenty-two mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+`/item/change-relic-options/v2`, `/item/apply-relic-options`,
 `/item/change-lock-options`,
 `/item/engrave-weapon`,
 `/item/enhance-weapon`,
@@ -147,6 +148,8 @@ First engraving also has a free mock using a compatible owned hammer and one
 matching public attribute tier; gold/materials remain intact.
 Ordinary option locking/unlocking shares the free option catalog and retains
 all stones, changing only requested lock flags and user revision when necessary.
+Relic option changes also use a separate free proposal/decision flow with public
+per-slot option pools, changing only the selected main or secondary group.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -1018,7 +1021,55 @@ rollback. A detached actual-account check locked the requested accessory option,
 verified a later value roll retained its level, accepted that roll and unlocked
 the option, preserving all resources and other fields. Old retries retained the
 later unlock without writes. Captured seeds and the actual saved profile were
-unchanged. The APK lock/unlock retry is pending backend reload and reconnect.
+unchanged. Three subsequent APK lock receipts saved the requested flags, and
+their selected values remained fixed through later ordinary value rolls.
+Assets, stackables and miscellaneous inventory match the private pre-lock
+baseline. Other later equipment changes are outside this live comparison.
+
+## Free relic option changes by source group
+
+The next unsupported APK request was `/item/change-relic-options/v2`; the owner
+asked to retain its different payment resource. Native `SendChangeRelicOptions`
+sends `ItemId` and `OptionType`; its callbacks read `NewRelicOptions` rows with
+`OptionId`, `Level` and `OptionSource`. Native main/sub accessors filter sources
+1 and 2 respectively, and separate callers request those option types. Native
+`SendApplyRelicOptions` sends `ItemId` and Boolean `Apply`. No official response
+was captured.
+
+The pending owned relic has three main rows, including repeated IDs, and two
+secondary rows. Its public spec supplies separate ordered pools per group/slot.
+The explicit free mock rolls only the requested group's unlocked slots: it
+chooses an allowed ID uniformly, then a level uniformly within that ID's public
+range. Types and values can change or repeat; a single-ID slot only varies its
+level. These are local uniform rules, not reconstructed official rates. Slot
+count/order/source, locked rows and the other group remain intact. Repeated main
+option IDs are legitimate and are not deduplicated. Jewel slots and set effects
+are retained.
+
+Generation stores a proposal without changing profile/revision. Acceptance
+changes only the validated selected-group result in `RelicOptions` and user
+revision; discard leaves the profile unchanged. No payment resource, ticket,
+currency or inventory quantity is consumed or required by the server's free
+policy. The matching external catalog is additional to the content pack.
+
+Proposal changes and canonical receipts commit atomically. Old generation retries
+display current pending/applied options without drawing or restoring older rolls;
+old resolution retries preserve newer proposals and current state. Different
+parameters/routes under one identity reject. Resolving requires the original
+spec/options and saved public slot pools to remain valid, including after catalog
+removal, while preserving later jewel-slot and other unrelated item edits. The
+apply body has no proposal ID/type, so a new decision resolves the latest pending
+proposal for that item. Existing session-epoch retry limits still apply.
+
+Eighteen regressions cover exact free generation/accept/discard bounds, both
+groups, repeated IDs, slot-pool validity, locked/unselected rows, latest-state
+retries, reopening/reconnect/new login, catalog removal, later jewel edits,
+ownership/configuration/schema/authentication, revision ceilings and rollback.
+A detached actual-account check generated and accepted the pending secondary
+proposal, generated/discarded a main-group proposal, and verified no-write same
+and delayed retries. All currencies, tickets, materials, jewel slots and unrelated
+fields were preserved. Captured seeds and the actual saved profile remained
+unchanged. The APK relic-option retry is pending backend reload and reconnect.
 
 ## Host readiness before the APK check
 

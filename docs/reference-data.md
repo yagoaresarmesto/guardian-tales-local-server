@@ -55,6 +55,7 @@ not fetch missing bootstrap files from an official service.
 | `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
 | `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |
 | `weapon_option_mock_catalog.json` | Free option-value proposals and ordinary option lock/unlock | Matching client and public per-weapon option ranges; explicit local free policy |
+| `relic_option_mock_catalog.json` | Free relic main/subgroup option proposals and apply/discard | Matching client and public per-source, per-slot option IDs/ranges; explicit uniform local rolls |
 | `weapon_engrave_mock_catalog.json` | Free first engraving and validation of saved engraving | Matching eligible exclusive specs, origin/hammer rarities, option tiers, experience gate and level coefficient |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
@@ -352,6 +353,52 @@ These operations require the matching engraving catalog for a saved engraved
 target, accepting one public tier with ceiling in 1..`max_ceiling`. Malformed or
 unknown engraving data rejects before writes; unengraved accounts need no new
 catalog for the existing operations.
+
+`/item/change-relic-options/v2` accepts exactly positive inventory-instance
+`ItemId` and integer `OptionType` 1 (main/base) or 2 (secondary/change). The
+response contains current `User` plus `NewRelicOptions`, with `OptionId`, `Level`
+and `OptionSource` for every proposed row. `/item/apply-relic-options` accepts
+exactly `ItemId` and Boolean `Apply`: true accepts the latest proposal, false
+discards it. Both return current `User`.
+
+The opt-in `relic_option_mock_catalog.json` is limited to 1 MiB and has exactly
+matching `client`, Boolean `free: true` and `relics`. This map contains 1..4,096
+canonical positive decimal spec IDs. Each relic has exactly source keys `1` and
+`2`, each holding 0..16 slot pools, with at least one slot overall. A pool maps
+1..256 canonical positive option IDs to `[minimum, maximum]` integer levels in
+0..1,000,000. The prepared catalog derives those ordered pools from matching
+public `items.BaseOptions` and `items.ChangeOptions`, omitting unused empty public
+slots. It is additional to the published content pack.
+
+The target must be an owned single relic in `User.ItemMiscs` with valid
+`RelicOptions` and a configured spec. Locked relics are supported. Saved rows
+retain their order and must match each source's slot count and public pools;
+**repeated option IDs in different slots are valid**. The selected group requires
+at least one unlocked slot. Each unlocked selected slot chooses an allowed
+option ID uniformly, then an integer level uniformly within that ID's inclusive
+range. The ID and value can both change; the same result can also repeat. A slot
+with only one allowed ID varies only its level. These are explicit local uniform
+rolls, not reconstructed official presence/value probabilities. Locked rows and
+the entire unselected group are retained. Set effects and jewel mutation are
+outside these routes.
+
+Generation stores a separate proposal with original options/spec and validated
+slot pools, leaving the entire profile/revision unchanged. Acceptance replaces
+only `RelicOptions` with the validated selected-group result and increments user
+revision; discard leaves the profile unchanged. No currency, relic tickets,
+materials or other item quantities are consumed or required by the server's
+free policy. Existing jewel slots, unrelated equipment/progress and all other
+fields are retained. Client UI resource checks remain outside this handler.
+
+Proposal replacement/resolution and canonical receipts commit atomically. Old
+generation retries return the latest pending proposal or current applied options
+without drawing or resurrecting old work. Old acceptance/discard retries retain
+newer pending work and current state. A changed body/route under one identity
+rejects. Resolution validates the original spec/options and persisted slot pools,
+including after external catalog removal, while retaining later jewel-slot or
+unrelated item changes. New resolutions target the item's latest pending
+proposal; the native apply body has no proposal ID/type. Session-epoch retry
+limitations across new logins still apply.
 
 `/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
 reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,
