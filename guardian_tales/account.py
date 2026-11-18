@@ -82,6 +82,8 @@ from .weapon_enhance import create_tables as create_weapon_enhance_tables
 from .weapon_enhance import enhance as enhance_weapon
 from .weapon_limit_break import create_tables as create_weapon_limit_break_tables
 from .weapon_limit_break import limit_break as limit_break_weapon
+from .weapon_options import change_or_apply as change_or_apply_weapon_options
+from .weapon_options import create_tables as create_weapon_option_tables
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -120,6 +122,8 @@ ACCOUNT_ROUTES = (
     "/lobby-village/remove-obstacle",
     "/item/enhance-weapon",
     "/item/limitbreak-weapon/v2",
+    "/item/change-options",
+    "/item/apply-options",
     "/user/guardian-mastery-level-up",
     "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
@@ -182,6 +186,7 @@ class AccountStore:
         create_village_obstacle_tables(db)
         create_weapon_enhance_tables(db)
         create_weapon_limit_break_tables(db)
+        create_weapon_option_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1044,6 +1049,9 @@ class AccountStore:
 
     def limit_break_weapon(self, request, operation_id):
         return limit_break_weapon(self, request, operation_id)
+
+    def change_or_apply_weapon_options(self, request, operation_id, route):
+        return change_or_apply_weapon_options(self, request, operation_id, route)
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)

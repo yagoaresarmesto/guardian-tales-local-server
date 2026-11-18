@@ -54,6 +54,7 @@ not fetch missing bootstrap files from an official service.
 | `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
 | `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
 | `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |
+| `weapon_option_mock_catalog.json` | Free proposals to change existing option values | Matching client and public per-weapon option ranges; explicit local uniform value rolls |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 | `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
@@ -240,6 +241,43 @@ current `User`; old replays retain later experience/breaks and require neither
 the original hammers nor catalog to remain present. A changed body under the same
 operation identity rejects. A new operation can reuse retained hammers until the
 maximum, where new requests reject without writes.
+
+`/item/change-options` accepts exactly a positive integer `ItemId`, identifying
+the owned inventory instance, and returns current `User` plus `NewOptions` pairs
+containing `OptionId` and `Level`. Its opt-in `weapon_option_mock_catalog.json`
+contains exactly matching `client`, Boolean `free: true` and `weapons`. The file
+is limited to 1 MiB. `weapons` maps 1..30,000 canonical positive decimal spec IDs
+to 1..32 canonical option IDs, each with `[minimum, maximum]` integer levels in
+0..1,000. The prepared catalog derives those ranges from matching public
+`items.Options` rows and is additional to the published content pack.
+
+This is a local **option-value mock**: it preserves each existing option ID,
+count, order, lock flag and source, rolling only unlocked levels uniformly within
+their configured inclusive ranges. It does not reproduce official probabilities
+or add/remove optional attributes. The target must be owned, unengraved equipment
+with distinct supported ordinary (`OptionSource: 0`) options in range and at least
+one unlocked option. Locked equipment itself is supported. Existing option locks
+are retained; creating/removing locks uses a separate unsupported operation.
+No option stones, lock stones, other inventory or currency are consumed or required
+by this server policy. Client UI resource checks are outside this handler.
+
+Generating a proposal leaves the entire profile and user revision unchanged.
+The latest proposal for each item is stored separately with its original option
+set and validated range data. `/item/apply-options` accepts exactly `ItemId`
+and Boolean `Apply`: true applies the latest proposal and increments user revision;
+false discards it without changing the profile. Both return current `User`.
+Experience, limit breaks, buffs, missions and all other fields are retained.
+The saved spec and original options must still match when resolving a proposal;
+later experience/limit-break changes are retained. Persisted range checks remain
+available if the external catalog is removed.
+
+Proposal replacement/resolution and canonical receipts commit atomically. Old
+change retries display the latest pending proposal, or current applied options,
+without drawing again or restoring an old proposal. Old apply/discard retries
+return current profile without consuming a newer proposal. A changed body or
+route under one request identity rejects. The wire carries no proposal ID:
+new apply/discard requests resolve the latest pending proposal for that item.
+Session-epoch retry limits across new logins remain the same as other mutations.
 
 `/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
 reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,

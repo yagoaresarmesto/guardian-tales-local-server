@@ -110,7 +110,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Princess gift | No-reward mock; one APK acknowledgment saved its timer/revision with other village fields preserved |
 | Regenerating village obstacle | Explicit no-reward/no-payment mock restarts the configured machine's regeneration; APK retry pending |
 | Free equipment enhancement | Opt-in experience from owned hammers; three APK upgrades saved with all hammer stacks retained; unengraved targets only |
-| Free equipment limit breaks | Explicit hammer mock raises the saved limit-break count, retaining gold/materials and experience; APK retry pending |
+| Free equipment limit breaks | Two APK operations reached 5 breaks with gold, hammers, experience and other profile fields retained |
+| Free equipment option values | Local rolls preserve option identities/locks; persistent apply/discard without consuming stones; APK retry pending |
 | Guardian mastery skill upgrades | Catalog-backed spending and class limits; 34 APK upgrades matched saved skills and costs |
 | Guardian mastery reset | Refund, configured free-gem payment and cooldown saved atomically; one APK reset verified |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |

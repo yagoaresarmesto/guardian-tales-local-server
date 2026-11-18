@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 443,
+    "tests_run": 461,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1197,6 +1197,8 @@
     },
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
+      "/item/apply-options",
+      "/item/change-options",
       "/item/enhance-weapon",
       "/item/limitbreak-weapon/v2",
       "/lobby-village/harvest-all",
@@ -2607,6 +2609,59 @@
       "original_startup_seed_preserved": true,
       "real_saved_profile_unchanged": true
     },
-    "post_fix_apk_limit_break": "pending backend reload and reconnect"
+    "post_fix_apk_limit_break": {
+      "result": "PASS",
+      "saved_receipts": 2,
+      "saved_limit_breaks": 5,
+      "first_break_matches_detached_prediction": true,
+      "continuous_breaks_match_current_target": true,
+      "gold_hammer_stacks_and_experience_equal_pre_mock_baseline": true,
+      "all_other_profile_fields_except_user_revision_equal_pre_mock_baseline": true
+    }
+  },
+  "free_equipment_option_value_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/change-options",
+    "native_builders": [
+      "Oak.ApiConnection.SendChangeItemOptions",
+      "Oak.ApiConnection.SendApplyItemOptions"
+    ],
+    "change_request_fields": [
+      "ItemId"
+    ],
+    "change_response_options": "NewOptions list of OptionId/Level pairs",
+    "apply_request_fields": [
+      "ItemId",
+      "Apply"
+    ],
+    "official_response_captured": false,
+    "policy": "Free local uniform rolls of existing unlocked option levels within matching public ranges; preserve identities/count/order/locks/source",
+    "official_option_presence_and_value_probabilities_implemented": false,
+    "explicit_external_catalog": "weapon_option_mock_catalog.json",
+    "generation_preserves_entire_profile_and_revision": true,
+    "accept_changes_only_target_options_and_user_revision": true,
+    "discard_preserves_entire_profile_and_revision": true,
+    "stones_currency_and_inventory_quantities_preserved": true,
+    "locked_target_and_existing_locked_options_supported": true,
+    "engraved_targets_and_option_lock_creation_supported": false,
+    "proposal_original_options_spec_and_persisted_ranges_validated": true,
+    "later_experience_and_limit_break_changes_retained": true,
+    "atomic_proposals_resolution_and_canonical_receipts": true,
+    "old_retries_do_not_resurrect_old_rolls_or_consume_newer_pending_work": true,
+    "new_resolution_policy": "Latest pending proposal for requested item; native request has no proposal ID",
+    "synthetic_regressions": 18,
+    "full_windows_tests": 461,
+    "detached_actual_account_check": {
+      "result": "PASS",
+      "proposal_option_count": 5,
+      "generation_preserves_entire_profile": true,
+      "accept_changes_only_target_option_levels_and_user_revision": true,
+      "discard_preserves_profile_and_revision": true,
+      "all_currencies_stones_and_inventory_quantities_preserved": true,
+      "same_and_delayed_retries_preserve_current_state_without_writes": true,
+      "original_startup_seed_preserved": true,
+      "real_saved_profile_unchanged": true
+    },
+    "post_fix_apk_option_values": "pending backend reload and reconnect"
   }
 }

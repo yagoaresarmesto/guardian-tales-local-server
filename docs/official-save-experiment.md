@@ -98,7 +98,8 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Sixteen mutations are now enabled: `/item/enhance-weapon`,
+Eighteen mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+`/item/enhance-weapon`,
 `/item/limitbreak-weapon/v2`, `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
@@ -137,6 +138,9 @@ gold and every material. It requires its own matching public-derived catalog.
 Hammer limit breaks use a separate free mock: compatible owned hammers increase
 the saved break count up to its configured maximum without consuming materials,
 gold or experience.
+Equipment option-value proposals and their apply/discard step also have an
+explicit free mock, retaining all stones and changing only supported unlocked
+option levels when the owner accepts the proposal.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -876,7 +880,53 @@ actual-account check of the pending one-hammer request increased the saved break
 count from 2 to 3 and preserved all other fields apart from user revision. It
 also verified reuse up to 5, no-write replay at that maximum and rejection of a
 new capped operation. The actual saved account was unchanged during these checks.
-The APK limit-break retry is pending backend reload and reconnect.
+Two subsequent APK limit-break receipts reached the saved maximum of 5. Their
+continuous changes match the target, and the first matches the detached
+prediction. Gold, all hammer stacks, experience and every other profile field
+apart from user revision match the private pre-mock baseline.
+
+## Free equipment option-value proposals
+
+The next unsupported APK request was `/item/change-options`, and the owner asked
+to retain option stones. Native `SendChangeItemOptions` sends exactly `ItemId`;
+the forge and retry callbacks read `NewOptions` as `OptionId`/`Level` pairs. The
+popup separately calls `SendApplyItemOptions` with `ItemId` and Boolean `Apply`,
+using false for keeping old values and true for applying new values. No original
+official response was captured.
+
+The explicit matching external catalog supplies public per-weapon option ranges.
+This local mock keeps existing option identities, count, order, locks and source,
+rolling unlocked levels uniformly within those ranges. It does not reconstruct
+official option-presence probabilities or add/remove optional attributes. Only
+owned unengraved weapons with supported ordinary option rows are accepted. A
+locked target is supported, existing locked option values remain fixed, and
+option-lock creation/removal remains a separate unsupported operation.
+
+Generation persists a proposal and its original spec/options/ranges without
+changing the profile or revision. Applying changes only target `Options` and
+user revision; discarding leaves the profile unchanged. No stones, currency,
+buffs, progression credit or other inventory are consumed. A new reroll replaces
+the latest proposal for that item. Resolving requires unchanged original options
+and spec, while preserving later experience/limit-break changes; saved ranges
+remain checked after external catalog removal.
+
+Proposal writes/resolution and receipts commit atomically. Change retries show
+the latest proposal or current applied options without drawing or resurrecting an
+older proposal. Apply/discard retries retain newer pending work and current
+profile state. Different parameters or routes under the same identity reject.
+The native body has no proposal ID, so a new resolution targets that item's
+latest pending proposal. Existing session-epoch limitations still apply across
+new logins.
+
+Eighteen regressions cover generation/accept/discard bounds, free resources,
+locked values, repeated rolls, current-state retries, reopening/reconnect/new
+login, persisted range guards, later experience/break changes, stale/corrupt
+proposals, ownership/configuration/schema/authentication, revision ceilings and
+transaction rollback. A detached actual-account check generated all five current
+option values, applied a proposal and discarded a later proposal while retaining
+all stones, currency, inventory quantities and other fields. Same and delayed
+retries made no writes; captured seeds and the actual saved profile remained
+unchanged. The APK option-value retry is pending backend reload and reconnect.
 
 ## Host readiness before the APK check
 

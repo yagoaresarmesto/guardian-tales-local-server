@@ -103,6 +103,8 @@ class SnapshotTests(unittest.TestCase):
         self.assertEqual(
             result["enabled_mutation_routes"],
             [
+                "/item/apply-options",
+                "/item/change-options",
                 "/item/enhance-weapon",
                 "/item/limitbreak-weapon/v2",
                 "/lobby-village/harvest-all",

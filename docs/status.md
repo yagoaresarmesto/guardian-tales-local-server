@@ -6,13 +6,22 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **443 passing tests on Windows Python 3.11**. Thirteen free hammer
+The suite has **461 passing tests on Windows Python 3.11**. Eighteen equipment
+option-value regressions cover free generation/apply/discard, locked values,
+later rerolls/upgrades, persistent current-state retries, original option/range
+guards, catalog removal, ownership/authentication/schema/configuration, revision
+ceilings and rollback. The explicit local mock preserves option identities/count
+and rolls only unlocked values within matching public ranges. A detached
+actual-account check passed without changing the real save. APK retry requires
+backend reload and reconnect.
+Thirteen free hammer
 limit-break regressions cover exact break/revision mutation bounds, retained
 resources and experience, origin-rarity compatibility, maximum clipping,
 persistent current-state retries, ownership/authentication/schema/configuration
 guards, malformed saved items, overflow and rollback. The detached actual-account
-check passed without changing the real save. This is an explicit free local mock;
-APK retry requires backend reload and reconnect.
+check passed without changing the real save. Two APK operations subsequently
+reached 5 saved breaks with gold, hammer stacks, experience and all other profile
+fields apart from user revision equal to their private pre-mock baseline.
 Twelve free equipment
 enhancement regressions cover exact target experience/revision changes, retained
 gold and hammers, locked targets, level caps, discount flags, retry persistence,
