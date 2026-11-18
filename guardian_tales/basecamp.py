@@ -43,7 +43,7 @@ def collect(user, village, catalog, now):
         not integer(now, MAX_TIME, 1)
         or not integer(village.get("UserId"), MAX_REVISION, 1)
         or village["UserId"] != user.get("Id")
-        or not integer(user.get("GuardianMasteryLevel"), minimum=1)
+        or not integer(user.get("GuardianMasteryLevel"))
     ):
         raise ValueError("Invalid base-camp clock or village owner")
     buildings = village.get("Buildings")

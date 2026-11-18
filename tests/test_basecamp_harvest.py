@@ -140,7 +140,7 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
         self.reject_without_writes()
         self.open_session()
         profile = self.store.account.profile()
-        profile["User"]["GuardianMasteryLevel"] = 0
+        profile["User"]["GuardianMasteryLevel"] = -1
         self.save_profile(profile)
         self.reject_without_writes()
 

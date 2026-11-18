@@ -13,7 +13,7 @@ from guardian_tales.village import INT_MAX, MAX_REVISION, current_village
 from tests.test_village_harvest import NOW, VillageFixture
 
 
-class GuardianMasteryTests(VillageFixture, unittest.TestCase):
+class GuardianMasteryFixture(VillageFixture):
     def setUp(self):
         super().setUp()
         self.mastery_catalog = {
@@ -51,6 +51,8 @@ class GuardianMasteryTests(VillageFixture, unittest.TestCase):
         profile["User"]["GuardianMasteryLevel"] = sum(levels.values())
         self.save_profile(profile)
 
+
+class GuardianMasteryTests(GuardianMasteryFixture, unittest.TestCase):
     def test_spend_changes_only_one_skill_total_asset_and_account_revision(self):
         before = self.store.account.profile()
         village = current_village(self.db)

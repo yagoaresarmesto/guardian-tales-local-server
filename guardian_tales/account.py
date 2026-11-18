@@ -39,6 +39,8 @@ from .hero_knowledge import claim_hero_knowledge
 from .items import inventory_item
 from .mastery import create_tables as create_mastery_tables
 from .mastery import upgrade as upgrade_guardian_mastery
+from .mastery_reset import create_tables as create_mastery_reset_tables
+from .mastery_reset import reset as reset_guardian_mastery
 from .missions import (
     FIRST_HERO_CHALLENGE_GEMS,
     FIRST_HERO_CHALLENGE_GROUP,
@@ -105,6 +107,7 @@ ACCOUNT_ROUTES = (
     "/lobby-village/harvest-all",
     "/lobby-village/harvest-basecamp",
     "/user/guardian-mastery-level-up",
+    "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
     "/stage/start-stage",
     "/stage/start-quest",
@@ -159,6 +162,7 @@ class AccountStore:
         create_village_tables(db)
         create_basecamp_tables(db)
         create_mastery_tables(db)
+        create_mastery_reset_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1008,6 +1012,9 @@ class AccountStore:
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)
+
+    def reset_guardian_mastery(self, request, operation_id, now=None):
+        return reset_guardian_mastery(self, request, operation_id, now)
 
     def purchase_stamina(self, request, operation_id, now=None):
         return purchase_stamina(self, request, operation_id, now)

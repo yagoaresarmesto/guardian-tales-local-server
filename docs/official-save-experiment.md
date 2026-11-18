@@ -98,11 +98,11 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Nine mutations are now enabled: `/summon/set-select-character`,
+Ten mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina` and
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp` and
-`/user/guardian-mastery-level-up`. The summon routes
+`/user/guardian-mastery-level-up` and `/user/reset-guardian-mastery-level`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
@@ -118,6 +118,8 @@ Base-camp harvesting currently requires an explicit fixed mastery debug reward;
 the prepared experiment uses the owner's requested 100 million per collection.
 Mastery skill upgrades spend the catalog's next-level cost and persist one skill,
 the total mastery level and the corresponding payment with retry protection.
+Reset clears the skills/total and refunds their catalog investment, charging the
+configured free-gem cost and setting a persisted cooldown with its own receipt.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -544,7 +546,7 @@ camp production. A separate external catalog selects upgraded camp specs, the
 minimum interval and the fixed mastery amount. The prepared policy grants exactly
 100,000,000 to existing asset 70033 for each eligible new collection.
 
-The handler requires a preserved village, a positive saved mastery level and one
+The handler requires a preserved village, a nonnegative saved mastery level and one
 configured producing camp. It retains future/zero clocks. A credited collection
 updates only mastery balance, camp `EndTime` and account/village revisions, with
 its receipt in the same transaction. Replays return frozen notices and current
@@ -553,7 +555,8 @@ Normal guardian points, levels, gold, tickets, owned heroes/gear and other villa
 systems remain unchanged. If the full reward would exceed the signed-32-bit
 balance, the request rejects atomically. No fallback debug reward exists without
 the catalog. Ordinary camp rates/scoring, gold conversion, ticket collection,
-party management and mastery resets are separate unfinished contracts.
+party management remain unfinished. Zero allocated mastery levels remain valid
+for the upgraded camp after a reset.
 
 Twelve regressions cover exact rewards and preserved state/seeds, interval/future/
 zero-clock boundaries, current-state retries, reopening/new login, explicit catalog
@@ -605,8 +608,46 @@ Thirteen regressions exercise these boundaries, persistence and rollback. All
 365 tests pass on Python 3.11 and 3.13 without external networking. A detached
 in-memory actual-account upgrade verified its exact next cost, narrow mutation
 bounds, unchanged village and no-write retry; it did not mutate the saved account.
-The actual APK upgrade retry remains pending backend reload. Mastery reset and
-ordinary camp production remain unfinished.
+Subsequently, 34 APK upgrades matched their saved skill map, total, mastery
+balance and spending counter. Village and captured seed hashes were unchanged.
+This comparison does not assert whole-profile equality across unrelated player
+actions. Ordinary camp production remains unfinished.
+
+## Guardian mastery reset
+
+The owner next reported an error while resetting mastery. The unsupported route
+was `/user/reset-guardian-mastery-level`. Its matching native builder is
+parameterless, and its coroutine checks success, refreshes mastery and shows the
+completion popup. Native UI guards reject fully maximized/empty mastery and a
+future `SkillNextResetTime`, comparing whole Unix seconds. The matching guardian
+constants specify resource 70003, cost 300 and cooldown 86,400 seconds. These
+client contracts were inspected; no original official reset response was captured.
+
+The handler uses the existing mastery catalog and a separate matching reset
+catalog. It requires consistent saved mastery and an owned producing upgraded
+camp. It clears the skill map and serialized total, refunds the sum of configured
+costs invested in those current skills, subtracts that refund from mastery
+`Spent`, charges the configured free gems and increments gem spending and user
+revision. Refund/counter treatment is an explicit local policy, preserving signed
+historical offsets rather than refunding a historical counter wholesale. The
+client displays total gems; paid-gem fallback is outside this implementation.
+The reset time becomes server time plus cooldown, in UTC. Profile and receipt
+commit together, and the response contains the current `User`.
+
+Replay returns current state without charging/refunding again or clearing newer
+skills. An older skill-upgrade replay likewise cannot restore cleared skills.
+Receipts survive reopening and catalog removal; fresh login retains the shared
+epoch-identity limitations. Empty/maximized skills, malformed state, insufficient
+free gems, active cooldown or currency/revision overflow reject without writes.
+The camp's debug collection now accepts zero allocated mastery levels after reset;
+the upgraded producing camp remains its activation guard.
+
+Fourteen regressions exercise these boundaries, timestamps, persistence, rollback,
+retry interleaving and zero-level camp collection. All 379 tests pass on isolated
+Python 3.11/3.13. A detached actual-account reset verified exact refund/payment,
+cooldown and narrow mutation bounds, then verified an old upgrade retry and a
+reset retry after a new skill purchase. The real saved account was unchanged.
+APK reset verification remains pending backend reload.
 
 ## Host readiness before the APK check
 

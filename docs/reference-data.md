@@ -51,6 +51,7 @@ not fetch missing bootstrap files from an official service.
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
+| `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -145,8 +146,10 @@ is a positive signed-32-bit amount. The prepared experiment uses the matching
 upgraded portal spec, 60 seconds and **100,000,000 mastery points**, explicitly
 requested by the owner. This catalog is not part of the published content pack.
 
-The reward goes to the existing asset 70033. It requires a positive saved mastery
+The reward goes to the existing asset 70033. It requires a nonnegative saved mastery
 level and one configured camp in producing status, using that camp's `EndTime`.
+Zero allocated skill levels remain valid after a mastery reset; the upgraded
+camp specification supplies the activation boundary.
 Future/zero anchors are retained. Each eligible new request grants the fixed
 amount and advances the clock; retries cannot grant it again. Normal guardian
 points (70013), mastery/guardian levels, gold, tickets, parties and equipment
@@ -174,7 +177,34 @@ transaction spends mastery asset 70033, adds the cost to its signed `Spent`
 counter, increments the selected skill, synchronizes the total and increments
 the account revision. Historical spending treatment is a local policy; the
 official response was not captured. Retries return current user state without
-another debit. Mastery reset is unsupported.
+another debit.
+
+`/user/reset-guardian-mastery-level` accepts no parameters or an empty object.
+It uses the same mastery catalog plus `guardian_mastery_reset_catalog.json`,
+limited to 4 KiB, containing exactly `client`, `resource_id`, `cost` and
+`cooldown_seconds`. Match the pinned client; `resource_id` must be integer 70003,
+`cost` a positive signed-32-bit integer, and cooldown an integer in 1..31,536,000.
+Extract `SkillResetResource`, `SkillResetCost` and `SkillResetCoolTime` from the
+matching guardian constants. The prepared values are 70003, 300 and 86,400.
+The client checks total gems; this local implementation charges free gems only
+and rejects insufficient free gems without falling back to paid gems.
+
+Reset requires the same upgraded camp and consistent skill map, with at least one
+allocated level and at least one skill below its maximum. A nullable
+`SkillNextResetTime` gates requests using the native whole-second comparison;
+equality is eligible. The new time is current server time plus the configured
+cooldown, serialized in UTC. The **local refund policy** returns the sum of all
+configured level costs invested in the current skill map, clears the map and
+sets total mastery to zero. It adds that refund to asset 70033 and subtracts the
+same amount from its signed `Spent` counter, preserving any historical offset.
+It spends the configured gem cost and increments gem spending and user revision.
+All changes and the receipt commit together. No official reset response was
+captured, so the refund/counter policy is not claimed as a verified official
+contract. Overflow, malformed state or active cooldown reject without writes.
+The response carries current `User`; replay cannot repeat payment/refund or
+erase newer skills. An older upgrade replay cannot restore reset skills. Catalogs
+are unnecessary for an existing receipt. Ordinary camp production remains outside
+these operations.
 
 The attendance reader expects `origin_group`, `active_group`, and `groups`, where
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.

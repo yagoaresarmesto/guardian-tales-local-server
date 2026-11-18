@@ -6,16 +6,22 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **365 passing tests**. Thirteen guardian-mastery regressions cover
+The suite has **379 passing tests**. Fourteen mastery-reset regressions cover
+exact refund/payment and mutation bounds, upgrade/reset retry interleaving,
+reopening/new login, cooldown/null/ancient/.NET timestamp boundaries,
+authentication/schema/catalog guards, empty/maximized skills, currency/revision
+limits, rollback and camp collection after reset. A detached actual-account reset
+passed; the APK reset retry requires a backend reload.
+Thirteen guardian-mastery regressions cover
 single-skill spending, exact costs, class/skill limits, preserved state, retries,
 reopening/new login, schema/authentication/catalog guards, invalid saved state,
 revision/spending limits and transaction rollback. A detached actual-account
-upgrade passed; the APK skill-upgrade retry requires a backend reload.
+upgrade passed. Subsequently, 34 APK upgrades matched saved skills and costs.
 Four additional gem-administration regressions
 cover imported accounts without a local prologue row, exact state preservation,
 CLI/reopening/replay, signed-64-bit revisions and older databases without an import
-table. The current imported-account gem grant and APK display are pending manual
-command execution with its backend stopped.
+table. The owner subsequently ran the million-gem command; its saved audit receipt
+confirms the grant. The exact APK gem display was not independently verified.
 Twelve base-camp mastery-debug regressions
 cover exact rewards and mutation bounds, interval gates, retries/reopening,
 catalog/authentication guards, camp/mastery state, overflow, revisions, rollback,
@@ -1005,8 +1011,23 @@ maximum. An upgraded producing camp and a matching external catalog are required
 Reconnect retries return current user state without a second debit. Thirteen
 new regressions and the full 365-test matrix pass on Python 3.11/3.13 without
 external networking. A detached real-account check verified the exact cost,
-mutation bounds and replay without changing the saved account. The APK upgrade
-retry is pending backend reload. Mastery reset and other village actions remain
-unfinished.
+mutation bounds and replay without changing the saved account. Subsequently,
+34 APK upgrades matched the saved skill map, total, mastery balance and spending
+counter. Village and captured seed hashes were unchanged; this comparison does
+not assert whole-profile equality across unrelated player actions.
+
+The next failure was the parameterless `/user/reset-guardian-mastery-level`.
+It now clears the current skill map/total, refunds that map's catalog investment,
+reverses the same mastery spending, charges configured free gems and saves a new
+reset time with one atomic receipt. The matching constants specify 300 gems and
+86,400 seconds. Native UI guards reject empty/maximized mastery and active cooldown.
+Refund and signed counter treatment are explicit local policies; an official reset
+response was not captured. Paid-gem fallback is unsupported. Old reset/upgrade
+retries preserve subsequent work, and the upgraded camp can collect with zero
+skills after a reset. Fourteen new regressions and all 379 tests pass on isolated
+Python 3.11/3.13. A detached actual-account reset verified the refund, payment,
+cooldown, narrow mutation bounds and both retry directions without changing the
+saved account. The APK reset retry remains pending backend reload. Other village
+actions and ordinary camp production remain unfinished.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).

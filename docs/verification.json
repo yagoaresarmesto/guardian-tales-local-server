@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 365,
+    "tests_run": 379,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1207,7 +1207,8 @@
       "/summon/select-character",
       "/summon/set-select-character",
       "/user/charge-stamina",
-      "/user/guardian-mastery-level-up"
+      "/user/guardian-mastery-level-up",
+      "/user/reset-guardian-mastery-level"
     ]
   },
   "imported_village_cache_hints": {
@@ -2064,7 +2065,6 @@
     "prepared_portal_spec_ids": [
       200502
     ],
-    "saved_positive_mastery_level_required": true,
     "no_implicit_reward_without_explicit_catalog": true,
     "future_zero_clocks_not_initialized": true,
     "normal_guardian_points_levels_gold_tickets_parties_and_owned_gear_preserved": true,
@@ -2123,7 +2123,9 @@
       "mastery_level_up_requests_before_fix": 0,
       "scope": "Saved mastery balance and harvest receipts; unrelated live account mutations are outside this comparison."
     },
-    "ordinary_production_scoring_conversion_tickets_and_party_changes_implemented": false
+    "ordinary_production_scoring_conversion_tickets_and_party_changes_implemented": false,
+    "saved_nonnegative_mastery_level_required": true,
+    "zero_allocated_skills_after_reset_can_collect": true
   },
   "imported_account_console_gem_grants": {
     "date": "2026-11-18",
@@ -2166,8 +2168,9 @@
     ],
     "running_backend_state_lock_required": true,
     "retry_preserves_later_spending_without_duplicate_grant": true,
-    "current_experimental_import_grant_applied": false,
-    "post_command_current_import_apk_display": "pending owner command and reconnect"
+    "current_experimental_import_grant_applied": true,
+    "post_command_current_import_apk_display": "Not independently verified; saved audit receipt confirms the owner command",
+    "owner_command_saved_audit_receipt_amount": 1000000
   },
   "guardian_mastery_skill_upgrades": {
     "date": "2026-11-18",
@@ -2227,7 +2230,81 @@
       "village_unchanged": true,
       "replay_no_write": true
     },
-    "post_fix_apk_upgrade": "pending backend reload",
-    "mastery_reset_implemented": false
+    "post_fix_apk_upgrade": {
+      "result": "PASS",
+      "saved_upgrade_receipts": 34,
+      "total_cost": 78420000,
+      "skill_levels_match_receipts": true,
+      "total_matches_receipts": true,
+      "balance_matches_receipts": true,
+      "spent_matches_receipts": true,
+      "village_preserved": true,
+      "captured_seed_preserved": true,
+      "scope": "Skill map, total, mastery balance/Spent and village/seed; whole-profile equality is not asserted."
+    },
+    "mastery_reset_implemented": true
+  },
+  "guardian_mastery_reset": {
+    "date": "2026-11-18",
+    "observed_failure_route": "/user/reset-guardian-mastery-level",
+    "native_parameterless_builder_and_success_refresh_inspected": true,
+    "native_empty_maximized_and_whole_second_cooldown_guards_inspected": true,
+    "original_official_response_captured": false,
+    "external_reset_catalog": "guardian_mastery_reset_catalog.json",
+    "matching_mastery_catalog_required": true,
+    "prepared_gem_resource": 70003,
+    "prepared_gem_cost": 300,
+    "prepared_cooldown_seconds": 86400,
+    "payment_scope": "Free gems only; paid-gem fallback unsupported",
+    "local_refund_policy": "Sum catalog costs invested in current skills; add to mastery balance and subtract from signed mastery Spent, preserving historical offset",
+    "reset_changes": "Clear skill map and total, refund mastery investment, charge gems, update reset time and user revision",
+    "profile_and_receipt_atomic": true,
+    "response_model": "User",
+    "village_and_captured_seed_preserved": true,
+    "replay_preserves_later_skills_and_never_repeats_payment_or_refund": true,
+    "old_upgrade_replay_does_not_restore_reset_skills": true,
+    "reopen_and_catalog_removal_replay_tested": true,
+    "malformed_empty_maximized_cooldown_overflow_reject_without_writes": true,
+    "upgraded_camp_collection_supported_after_zero_level_reset": true,
+    "new_regressions": 14,
+    "focused_windows_checks": 52,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 379,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 379,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_actual_account_detached_validation": {
+      "result": "PASS",
+      "real_account_mutated": false,
+      "refund": 228964000,
+      "gem_cost": 300,
+      "cooldown_seconds": 86400,
+      "only_expected_refund_payment_skills_total_timer_revision_changed": true,
+      "village_unchanged": true,
+      "old_upgrade_retry_does_not_restore_skill": true,
+      "reset_replay_preserves_later_upgrade_without_second_payment_or_refund": true
+    },
+    "post_fix_apk_reset": "pending backend reload"
   }
 }

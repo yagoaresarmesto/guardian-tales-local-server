@@ -51,6 +51,41 @@ def load_catalog(references):
     return value
 
 
+def saved_mastery(user, village, catalog):
+    """Validate shared camp ownership, skill levels and their serialized total."""
+    skills, costs = catalog["skills"], catalog["level_costs"]
+    buildings = village.get("Buildings")
+    camps = (
+        [
+            b
+            for b in buildings
+            if isinstance(b, dict)
+            and type(b.get("SpecId")) is int
+            and b["SpecId"] in catalog["portal_specs"]
+        ]
+        if isinstance(buildings, list)
+        else []
+    )
+    if (
+        village.get("UserId") != user.get("Id")
+        or len(camps) != 1
+        or type(camps[0].get("Status")) is not int
+        or camps[0]["Status"] != 2
+    ):
+        raise ValueError("Mastery operations require an opened upgraded base camp")
+    options = user.get("Options")
+    mastery = options.get("GuardianMastery") if isinstance(options, dict) else None
+    levels = mastery.get("GuardianMasterySkill") if isinstance(mastery, dict) else None
+    if not isinstance(levels, dict) or any(
+        k not in skills or not integer(v, len(costs)) for k, v in levels.items()
+    ):
+        raise ValueError("Invalid saved guardian mastery skills")
+    total = sum(levels.values())
+    if not integer(user.get("GuardianMasteryLevel")) or user["GuardianMasteryLevel"] != total:
+        raise ValueError("Saved mastery total differs from its skill levels")
+    return levels, total
+
+
 def upgrade(account, body, operation_id):
     if (
         not isinstance(body, dict)
@@ -75,36 +110,7 @@ def upgrade(account, body, operation_id):
     skills, costs = catalog["skills"], catalog["level_costs"]
     if str(skill_id) not in skills:
         raise ValueError("Unknown guardian mastery skill")
-    village = current_village(account.db)
-    buildings = village.get("Buildings")
-    camps = (
-        [
-            b
-            for b in buildings
-            if isinstance(b, dict)
-            and type(b.get("SpecId")) is int
-            and b["SpecId"] in catalog["portal_specs"]
-        ]
-        if isinstance(buildings, list)
-        else []
-    )
-    if (
-        village.get("UserId") != user.get("Id")
-        or len(camps) != 1
-        or type(camps[0].get("Status")) is not int
-        or camps[0]["Status"] != 2
-    ):
-        raise ValueError("Mastery upgrades require an opened upgraded base camp")
-    options = user.get("Options")
-    mastery = options.get("GuardianMastery") if isinstance(options, dict) else None
-    levels = mastery.get("GuardianMasterySkill") if isinstance(mastery, dict) else None
-    if not isinstance(levels, dict) or any(
-        k not in skills or not integer(v, len(costs)) for k, v in levels.items()
-    ):
-        raise ValueError("Invalid saved guardian mastery skills")
-    total = sum(levels.values())
-    if not integer(user.get("GuardianMasteryLevel")) or user["GuardianMasteryLevel"] != total:
-        raise ValueError("Saved mastery total differs from its skill levels")
+    levels, total = saved_mastery(user, current_village(account.db), catalog)
     class_levels = {
         c: sum(levels.get(k, 0) for k, v in skills.items() if v == c) for c in (1, 2, 3, 4)
     }
