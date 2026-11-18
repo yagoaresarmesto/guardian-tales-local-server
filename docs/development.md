@@ -15,6 +15,31 @@ The tests use temporary account state. Set `GT_TEST_TMP` to an existing writable
 temporary directory and `GT_CERT_DIR` to a different certificate directory if
 needed. No full game content or captured bootstrap data is needed.
 
+### Select an area
+
+The suite has [logical test groups](../tests/README.md), defined in
+[the group catalog](../tests/groups.json). Existing test files and shared fixture
+imports stay at their original locations:
+
+```sh
+python -m guardian_tales validate --list-groups
+python -m guardian_tales validate --group inventory
+python -m guardian_tales validate --group teams --group guild
+```
+
+Listing reports discovered counts without executing cases. Multiple groups form
+a union and keep discovery order; a case cannot run twice through repeated group
+arguments. The default `validate` command and CI still execute every test in the
+original order. Unknown groups, catalog omissions, stale files, undiscovered
+modules and duplicate test identities fail before execution. Register each new
+test module exactly once in `tests/groups.json`.
+
+Direct `python -m unittest tests.test_jewel_upgrade` and
+`python -m unittest discover -s tests` also retain their existing paths and
+behavior. The grouped runner adds catalog-completeness checks. Grouping does
+not introduce parallel execution or alter temporary fixtures, game handlers or
+the saved local account.
+
 ## Verify without external networking
 
 Prepare Docker's Python image while networking is available:

@@ -1,0 +1,58 @@
+{
+  "core": {
+    "description": "Bootstrap packets, LZ4 and test-runner organization",
+    "modules": ["test_bootstrap", "test_validation"]
+  },
+  "account": {
+    "description": "Account import, profile reads and local administration",
+    "modules": ["test_snapshots", "test_profile_card", "test_admin", "test_admin_festival", "test_admin_imported"]
+  },
+  "content": {
+    "description": "Reference data, content packs, archives and catalog contracts",
+    "modules": ["test_reference", "test_content_pack", "test_ondemand_archives", "test_quest_catalog", "test_tutorial_catalog"]
+  },
+  "campaign": {
+    "description": "Story entry, stage progress, completion and play menus",
+    "modules": ["test_campaign", "test_completion", "test_discovery", "test_monsters", "test_story", "test_play_menu"]
+  },
+  "heroes": {
+    "description": "Fresh and imported hero experience and training caps",
+    "modules": ["test_training", "test_training_catalog", "test_imported_training"]
+  },
+  "inventory": {
+    "description": "Weapons, relic options, jewel decomposition and jewel upgrades",
+    "modules": ["test_weapon_enhance", "test_weapon_limit_break", "test_weapon_engrave", "test_weapon_options", "test_weapon_option_lock", "test_relic_options", "test_jewel_decompose", "test_jewel_upgrade"]
+  },
+  "teams": {
+    "description": "Normal parties, preset selection/editing and compact resources",
+    "modules": ["test_party_members", "test_preset_selection", "test_preset_edit", "test_preset_delete", "test_preset_create", "test_preset_payloads"]
+  },
+  "rewards": {
+    "description": "Missions, achievements, knowledge, passes, stamina and attendance",
+    "modules": ["test_missions", "test_beginner_batches", "test_challenges", "test_challenge_batches", "test_imported_challenges", "test_hero_knowledge", "test_imported_hero_knowledge", "test_guardian_pass", "test_festival_pass", "test_festival_shop", "test_festival_redemption", "test_stamina_regen", "test_stamina_purchase", "test_imported_stamina_purchase", "test_attendance_mock"]
+  },
+  "summons": {
+    "description": "Wishlist, hero draws and imported summon state",
+    "modules": ["test_summon_selection", "test_summon_draw", "test_imported_summons"]
+  },
+  "village": {
+    "description": "Harvest, gifts, obstacles, basecamp and guardian mastery",
+    "modules": ["test_village_harvest", "test_village_gift_mock", "test_village_obstacle_mock", "test_basecamp_harvest", "test_guardian_mastery", "test_mastery_reset"]
+  },
+  "guild": {
+    "description": "Guild reads, Raid calendars/combat and Dungeon Kingdom Arena",
+    "modules": ["test_guild_reads", "test_guild_raid", "test_raid_static", "test_punchking"]
+  },
+  "orbital": {
+    "description": "Orbital entry, progress and completion",
+    "modules": ["test_orbital", "test_orbital_completion"]
+  },
+  "android": {
+    "description": "Temporary Android bridge routing and restoration",
+    "modules": ["test_android_bridge"]
+  },
+  "integration": {
+    "description": "Loopback transport/TLS, packet codec and resource serving",
+    "modules": ["test_server", "test_assets"]
+  }
+}

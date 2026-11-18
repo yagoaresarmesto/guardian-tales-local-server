@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 658,
+    "tests_run": 664,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3409,5 +3409,24 @@
       "real_source_profile_unchanged": true
     },
     "post_fix_apk_formation_and_leader": "Pending backend reload, retry and reconnect persistence check"
+  },
+  "logical_test_groups": {
+    "date": "2026-11-18",
+    "catalog": "tests/groups.json",
+    "groups": 14,
+    "modules": 68,
+    "listing_command": "python -m guardian_tales validate --list-groups",
+    "selection_command": "python -m guardian_tales validate --group inventory --group teams",
+    "previous_case_ids_and_relative_order_preserved": 658,
+    "existing_test_and_shared_fixture_paths_preserved": true,
+    "default_complete_suite_and_ci_commands_unchanged": true,
+    "complete_disjoint_case_partition": true,
+    "inventory_teams_union_cases": 168,
+    "actual_repeated_core_selection": {"result": "PASS", "tests_run": 26, "groups_run": ["core"]},
+    "catalog_guards": ["unknown groups", "unassigned modules", "stale files", "undiscovered modules", "duplicate module assignment", "duplicate normalized test IDs"],
+    "execution": "Sequential, original discovery order; repeated groups form a union; listing does not execute cases",
+    "runner_regressions": 6,
+    "full_windows_tests": 664,
+    "game_handlers_saved_account_and_emulator_behavior_changed": false
   }
 }

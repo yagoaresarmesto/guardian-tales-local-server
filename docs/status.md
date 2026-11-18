@@ -6,7 +6,17 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **658 passing tests on Windows Python 3.11**. Nine normal-party
+The suite has **664 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 68 modules. `validate --list-groups` reports
+discovered counts; repeated `--group` arguments select a union in original
+discovery order. Existing files, shared fixture imports, direct unittest paths
+and the default full CI run remain unchanged. An independent discovery audit
+retained all 658 previous case IDs and their relative order, with six new runner
+regressions. Group membership partitions every case exactly once; inventory plus
+teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
+modules fail explicitly. See [group usage and maintenance](../tests/README.md).
+
+Nine earlier normal-party
 regressions cover ordered owned members, leader changes, trailing-slot removal,
 metadata/equipment/preset preservation, compact responses, no-op revisions,
 current-state retries, authentication, numeric guards and rollback. The actual

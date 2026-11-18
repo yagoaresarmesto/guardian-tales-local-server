@@ -11,6 +11,8 @@
 - For implementation changes, run the relevant behavioral tests and required
   format/lint checks. For documentation-only changes, check local links and the
   staged diff; additional tests are needed only if behavior is affected.
+- Register each new test module exactly once in tests/groups.json. Use
+  `python -m guardian_tales validate --list-groups` to inspect available areas.
 - Keep game binaries/content, captured bootstrap bodies, credentials, certificate
   keys, account databases and machine-specific lab tools outside the source tree.
 - Preserve the saved local account when changing persistence or lab tooling.

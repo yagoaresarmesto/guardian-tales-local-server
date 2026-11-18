@@ -21,6 +21,12 @@ For changes to persistence or rewards, preserve existing account state, make
 retries safe, and test both successful completion and rejected input. Run the
 regression suite, synthetic demo, formatter and linter before submitting changes.
 
+Tests have [logical groups](tests/README.md) while their existing module/fixture
+paths remain stable. Use `validate --group NAME` during iteration and the default
+`validate` command for the full suite. Register new test modules exactly once in
+[the group catalog](tests/groups.json); validation rejects missing or duplicate
+assignments before executing tests.
+
 Use English for code, comments, documentation, issues and pull requests.
 Report the client version, relevant route, expected/actual behavior and a minimal
 sanitized reproduction. Keep account identifiers, provider tokens, certificates,

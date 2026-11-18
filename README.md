@@ -155,6 +155,7 @@ server, not a service for public hosting.
 - [API inventory and implementation plan](docs/implementation-plan.md)
 - [Inn checkpoint and next steps](docs/first-phase-checkpoint.md)
 - [Development, tests, CI and GitHub preparation](docs/development.md)
+- [Test groups and focused validation commands](tests/README.md)
 
 Hosted test results are available in [GitHub Actions](https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml).
 
