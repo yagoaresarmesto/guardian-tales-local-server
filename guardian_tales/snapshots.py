@@ -68,6 +68,7 @@ ACCOUNT_READS = frozenset(
         "/guild/list-item-request",
         "/guild/get-my-guild",
         "/guild/red-dot",
+        "/guild/claim-guild-daily-attendance",
         "/guild-raid2/reset",
         "/guild-raid2/enter",
         "/guild-raid2/start-stage",

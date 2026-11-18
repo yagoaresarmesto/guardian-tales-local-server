@@ -1,10 +1,15 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Read-only local guild views and entry prerequisites; no guild operations."""
+"""Local guild views, entry prerequisites and an explicit no-reward attendance mock."""
 
 import hashlib
 import json
 
-GUILD_MENU_ROUTES = ("/guild/get-my-guild", "/guild/red-dot", "/guild-raid2/reset")
+GUILD_MENU_ROUTES = (
+    "/guild/get-my-guild",
+    "/guild/red-dot",
+    "/guild-raid2/reset",
+    "/guild/claim-guild-daily-attendance",
+)
 
 
 def own_guild(account, request):
@@ -81,6 +86,12 @@ def own_guild(account, request):
 
 
 def read(account, route, request):
+    if route == "/guild/claim-guild-daily-attendance":
+        if request is not None and (not isinstance(request, dict) or request):
+            raise ValueError("Guild attendance mock accepts no parameters")
+        # Native callbacks consume AddedItems. The explicitly requested mock
+        # returns an empty list without claiming attendance or changing state.
+        return {"AddedItems": []}
     if route == "/guild/get-my-guild":
         return own_guild(account, request)
     if route == "/guild/red-dot":

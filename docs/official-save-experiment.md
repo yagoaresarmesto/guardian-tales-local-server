@@ -1958,6 +1958,31 @@ claim is implemented here. The [integration review](live-events.md) lists the
 families, current snapshot calendar findings and practical next steps, including
 the extra web dependency of Yutnori. Game content and account data remain private.
 
+## Empty guild attendance reward mock
+
+The next unsupported and pending request was
+`/guild/claim-guild-daily-attendance`. The user explicitly requested an empty
+mock. Matching native `SendClaimGuildDailyAttendance` sends no body, and the
+attendance screen and guild-entry coroutines both consume `AddedItems` through
+`UserUtil.GetAddedItems` on success. No official response body was captured.
+
+The authenticated handler accepts no body, JSON null or an empty object and
+returns exactly `{"AddedItems":[]}`. It does not mark the day claimed, change
+attendance dates/counts, grant rewards, clear pending rewards, alter membership,
+increment revisions or write a receipt. Repeated calls are naturally no-ops.
+Other guild reward claims retain their existing unsupported boundary. This mock
+is shared by fresh guest and imported accounts; it requires no additional
+catalog, membership initialization or recovered official guild data.
+
+Two regressions cover fresh/imported accounts, native framing and aliases,
+reopen/reconnect/retries, exact empty rewards, authentication and malformed
+parameters with query-only SQLite enabled. The actual pending route and native
+no-body contract also passed against the real database opened read-only and
+query-only through the session and response wire codec, including null/object
+aliases and a repeat. All saved state remained equal with zero source writes.
+These are native-contract and host checks; the actual APK retry and any empty
+reward-popup behavior remain pending backend reload and reconnect.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

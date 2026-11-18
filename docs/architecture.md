@@ -30,7 +30,7 @@ flowchart LR
 | `bootstrap.py` | Connection sign-in state, guest identity/credentials and game API dispatch |
 | `account.py` | SQLite profile, campaign receipts, prologue completion, migrations and attendance claims |
 | `profile_card.py` | Read-only own-user card from current local account/records, with empty uncaptured decorations/social fields |
-| `guild_menu.py` | Read-only own-member local guild view, stable cache hash, inactive notices and non-mutating raid-entry preparation |
+| `guild_menu.py` | Own-member local guild view, stable cache hash, inactive notices, empty attendance mock and non-mutating raid-entry preparation |
 | `guild_raid.py` | Fresh raid menus, empty history/rankings, combat entry/exit trial and season selector; no account writes, persistent raid progress or rewards |
 | `raid_static.py` | Bounded external static-table preparation, LZ4 encoding and immutable raid-only calendar overrides for historical selection |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |

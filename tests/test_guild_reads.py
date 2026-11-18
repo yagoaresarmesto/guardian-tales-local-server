@@ -13,6 +13,7 @@ from tests.test_snapshots import synthetic_snapshot
 ROUTE = "/guild/red-dot"
 RAID_PREPARATION = "/guild-raid2/reset"
 OWN_GUILD = "/guild/get-my-guild"
+ATTENDANCE_MOCK = "/guild/claim-guild-daily-attendance"
 
 
 class GuildReadTests(unittest.TestCase):
@@ -47,6 +48,63 @@ class GuildReadTests(unittest.TestCase):
             {"AuthKind": 0, "AccessToken": "synthetic-only", "Reconnect": reconnect},
             "/auth/sign-in",
         )
+
+    def test_attendance_mock_empty_rewards_preserve_fresh_and_imported_state_on_retry_and_reconnect(
+        self,
+    ):
+        for imported in (False, True):
+            with self.subTest(imported=imported):
+                if imported:
+                    snapshot = synthetic_snapshot()
+                    profile = snapshot["profile"]
+                    profile["GuildMember"] = {
+                        "UserId": profile["User"]["Id"],
+                        "GuildId": 7,
+                        "Cas": 23,
+                        "AttendanceCount": 11,
+                        "LastAttendanceAt": "2026-11-17T00:00:00+00:00",
+                    }
+                    profile["UserClaimedReward"]["SyntheticGuildReward"] = {"Pending": [3, 4]}
+                    with self.db:
+                        self.db.execute(
+                            "INSERT INTO imported_account VALUES(1,?,?,?,?)",
+                            ("0" * 64, "synthetic", json.dumps(snapshot["startup_reads"]), "{}"),
+                        )
+                        self.db.execute(
+                            "UPDATE local_account SET profile=?", (json.dumps(profile),)
+                        )
+                profile = self.store.account.profile()
+                for reconnect in (False, True):
+                    self.store = GuestStore(self.db)
+                    self.session = BootstrapSession(self.store)
+                    self.login(reconnect)
+                    self.db.execute("PRAGMA query_only=ON")
+                    before = list(self.db.iterdump())
+                    changes = self.db.total_changes
+                    for body, native in ((None, True), (None, False), ({}, False), (None, True)):
+                        reply = self.call(body, ATTENDANCE_MOCK, native_empty=native)
+                        self.assertEqual(reply, {"AddedItems": []})
+                    self.assertEqual(self.store.account.profile(), profile)
+                    self.assertEqual(list(self.db.iterdump()), before)
+                    self.assertEqual(self.db.total_changes, changes)
+                    self.db.execute("PRAGMA query_only=OFF")
+
+    def test_attendance_mock_requires_authentication_and_rejects_parameters_without_writes(self):
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        with self.assertRaises(PacketError):
+            self.call(route=ATTENDANCE_MOCK, native_empty=True)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        self.login()
+        self.db.execute("PRAGMA query_only=ON")
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        for body in ([], False, 0, "", {"GuildId": 7}, {"Day": 1}, {"Claim": True}):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, ATTENDANCE_MOCK)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
 
     def test_authentication_and_exact_parameterless_schema_reject_without_writes(self):
         before = list(self.db.iterdump())

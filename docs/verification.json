@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 672,
+    "tests_run": 674,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3465,5 +3465,27 @@
     },
     "historical_selector_minigames_and_reward_handlers": "Reviewed integration scope only; not implemented by this change",
     "post_fix_apk_entry_and_rendering": "Pending backend reload and reconnect"
+  },
+  "guild_attendance_empty_reward_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_and_pending_route": "/guild/claim-guild-daily-attendance",
+    "owner_requested_policy": "Empty no-reward mock",
+    "native_contract": "SendClaimGuildDailyAttendance sends no body; attendance screen and guild-entry coroutines consume AddedItems with UserUtil.GetAddedItems",
+    "request_aliases": ["native no body", "JSON null", "empty object"],
+    "response": {"AddedItems": []},
+    "scope": "Authenticated fresh and imported accounts; no membership or extra catalog required",
+    "attendance_membership_assets_inventory_pending_rewards_and_revisions_changed": false,
+    "receipt_or_profile_writes": false,
+    "retries": "Naturally repeatable no-op; saved attendance is not marked claimed",
+    "synthetic_regressions": 2,
+    "full_windows_tests": 674,
+    "private_real_account_read_only_check": {
+      "result": "PASS",
+      "source_opened_read_only_and_query_only": true,
+      "native_packet_null_empty_object_and_repeat_through_session_and_wire_codec": true,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_retry_and_empty_popup": "Pending backend reload and reconnect"
   }
 }

@@ -124,6 +124,7 @@ ACCOUNT_ROUTES = (
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/guild/red-dot",
+    "/guild/claim-guild-daily-attendance",
     "/guild-raid2/reset",
     "/guild-raid2/enter",
     RAID_STAGE_ENTRY_ROUTE,

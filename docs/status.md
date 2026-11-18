@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **672 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **674 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 69 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -15,6 +15,18 @@ retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
+
+Two guild-attendance regressions cover the explicitly requested empty-reward
+mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object
+requests, fresh and imported accounts, reopen/reconnect/retries, authentication
+and malformed bodies, with SQLite writes disabled. It returns `AddedItems: []`
+without changing attendance, membership, balances, inventory, rewards or profile
+revisions. The pending route was confirmed in the client; the native request
+builder sends no body and both attendance callbacks consume AddedItems. Four
+request/retry variants passed through the session and wire codec against the
+real database opened read-only/query-only, with zero writes and unchanged full
+profile. APK retry is pending backend reload. See
+[mock contract](official-save-experiment.md#empty-guild-attendance-reward-mock).
 
 Eight temporal-event entry regressions cover the native no-body packet, fresh
 and imported state, all 13 dictionary families plus nullable ReturnEvent,
