@@ -15,6 +15,10 @@ ENTRY_ROUTE = "/guild-raid2/enter"
 GUILD_RANKINGS = "/guild-raid2/get-guild-rankings"
 MEMBER_RANKINGS = "/guild-raid2/get-member-rankings"
 RANKING_ROUTES = (GUILD_RANKINGS, MEMBER_RANKINGS)
+UPDATE_STATUS = "/guild-raid2/update-status"
+BATTLE_STATUS = "/guild-raid2/get-battle-status"
+LATEST_RECORDS = "/guild-raid2/get-battle-records/latest"
+MENU_READ_ROUTES = (UPDATE_STATUS, BATTLE_STATUS, LATEST_RECORDS)
 CATALOG = "guild_raid_entry_catalog.json"
 SELECTION = "guild_raid_selection.json"
 
@@ -169,6 +173,46 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
+def local_context(account):
+    if account.needs_prologue() or own_guild(account, None)["Guild"] is None:
+        raise ValueError("Local raid reads require completed prologue and owned guild membership")
+    return load_catalog(account.references)
+
+
+def fresh_profile(account):
+    profile = account.profile()
+    saved = profile.get("UserRaid")
+    if saved is not None and (not isinstance(saved, dict) or saved.get("Raid") is not None):
+        raise ValueError(
+            "Preserved raid progress needs its own validated contract; it is not reset"
+        )
+    return profile
+
+
+def menu_read(account, route, request):
+    if route == UPDATE_STATUS:
+        if request is not None and (not isinstance(request, dict) or request):
+            raise ValueError("Local raid status refresh accepts no parameters")
+        catalog = local_context(account)
+        selected_season(account.references, catalog)
+        fresh_profile(account)
+        return {"FeverBossIdx": 0, "Round": 1, "RoundExp": 0}
+    if route not in (BATTLE_STATUS, LATEST_RECORDS):
+        raise ValueError("Unsupported local raid menu read")
+    keys = {"SeasonId", "Count"} if route == LATEST_RECORDS else {"SeasonId"}
+    if (
+        not isinstance(request, dict)
+        or set(request) != keys
+        or not integer(request["SeasonId"])
+        or route == LATEST_RECORDS
+        and not integer(request["Count"], 0)
+    ):
+        raise ValueError("Local raid history requires a season ID and native integer count")
+    find_season(local_context(account), request["SeasonId"])
+    # These are lists, not a synthetic completed fight or a profile resource.
+    return {"Records": []} if route == BATTLE_STATUS else {"BattleRecords": []}
+
+
 def rankings(account, route, request):
     if (
         route not in RANKING_ROUTES
@@ -177,13 +221,9 @@ def rankings(account, route, request):
         or not integer(request["SeasonId"])
     ):
         raise ValueError("Local raid rankings require a catalogued integer SeasonId")
-    if account.needs_prologue() or own_guild(account, None)["Guild"] is None:
-        raise ValueError(
-            "Local raid rankings require completed prologue and owned guild membership"
-        )
     # A timed refresh may still carry an earlier selection cached by the client.
     # Accept any known season without changing selection or emitting resources.
-    find_season(load_catalog(account.references), request["SeasonId"])
+    find_season(local_context(account), request["SeasonId"])
     if route == GUILD_RANKINGS:
         # Native CutOff is Dictionary<int32, int64>, not a list or null.
         return {"Rankings": [], "CutOff": {}}
@@ -197,15 +237,8 @@ def enter(account, request):
         or type(request["IsPartial"]) is not bool
     ):
         raise ValueError("Local raid entry requires a Boolean IsPartial")
-    if account.needs_prologue() or own_guild(account, None)["Guild"] is None:
-        raise ValueError("Local raid entry requires completed prologue and owned guild membership")
-    season = selected_season(account.references)
-    profile = account.profile()
-    saved = profile.get("UserRaid")
-    if saved is not None and (not isinstance(saved, dict) or saved.get("Raid") is not None):
-        raise ValueError(
-            "Preserved raid progress needs its own validated contract; it is not reset"
-        )
+    season = selected_season(account.references, local_context(account))
+    profile = fresh_profile(account)
     now = utc_now().astimezone(timezone.utc)
     try:
         next_reset = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)

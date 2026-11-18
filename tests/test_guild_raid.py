@@ -16,17 +16,21 @@ from unittest.mock import patch
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
 from guardian_tales.guild_raid import (
+    BATTLE_STATUS,
     CATALOG,
     ENTRY_ROUTE,
     GUILD_RANKINGS,
+    LATEST_RECORDS,
     MEMBER_RANKINGS,
     SELECTION,
+    UPDATE_STATUS,
     load_catalog,
     main,
     select_season,
     selected_season,
 )
-from guardian_tales.protocol import PacketError
+from guardian_tales.packet_reader import parse_packet
+from guardian_tales.protocol import Packet, PacketError, encode_packet
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.snapshots import CLIENT
 from tests.test_snapshots import request, synthetic_snapshot
@@ -421,3 +425,104 @@ class GuildRaidTests(unittest.TestCase):
         self.write_catalog(dict(self.catalog, client={"version": "other"}))
         for route in (GUILD_RANKINGS, MEMBER_RANKINGS):
             self.assert_rejected({"SeasonId": 1}, route)
+
+    def test_raid_menu_history_reads_require_authentication_membership_and_exact_native_requests(
+        self,
+    ):
+        valid = (
+            (UPDATE_STATUS, None),
+            (BATTLE_STATUS, {"SeasonId": 1}),
+            (LATEST_RECORDS, {"SeasonId": 1, "Count": 20}),
+        )
+        for route, body in valid:
+            self.assert_rejected(body, route)
+        self.login()
+        for route, body in valid:
+            self.assert_rejected(body, route)
+        self.install_import()
+        for body in ([], False, 0, {"Round": 1}, {"Claim": True}):
+            self.assert_rejected(body, UPDATE_STATUS)
+        for route in (BATTLE_STATUS, LATEST_RECORDS):
+            for season_id in (True, 0, -1, "1", 1.0, 3, 0x80000000):
+                body = {"SeasonId": season_id}
+                if route == LATEST_RECORDS:
+                    body["Count"] = 20
+                self.assert_rejected(body, route)
+            self.assert_rejected(None, route)
+            self.assert_rejected({"SeasonId": 1, "Count": 20, "Claim": True}, route)
+        self.assert_rejected({"SeasonId": 1, "Count": 20}, BATTLE_STATUS)
+        self.assert_rejected({"SeasonId": 1}, LATEST_RECORDS)
+        for count in (True, -1, "20", 20.0, 0x80000000):
+            self.assert_rejected({"SeasonId": 1, "Count": count}, LATEST_RECORDS)
+
+    def test_empty_history_accepts_known_cached_seasons_without_changing_saved_progress_or_selection(
+        self,
+    ):
+        profile = self.install_import()
+        profile["UserRaid"].update(
+            Raid={"SeasonId": 2, "TotalDamage": 456, "PlayCount": 2}, SyntheticPendingReward=[5]
+        )
+        self.save(profile)
+        select_season(self.references, 2)
+        selection = (self.root / SELECTION).read_bytes()
+        for reconnect in (False, True):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            self.db.execute("PRAGMA query_only=ON")
+            before = list(self.db.iterdump())
+            changes = self.db.total_changes
+            for season in (1, 2, 1):
+                self.assertEqual(self.call({"SeasonId": season}, BATTLE_STATUS), {"Records": []})
+                for count in (0, 20, 0x7FFFFFFF):
+                    self.assertEqual(
+                        self.call({"SeasonId": season, "Count": count}, LATEST_RECORDS),
+                        {"BattleRecords": []},
+                    )
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, changes)
+            self.assertEqual(self.store.account.profile(), profile)
+            self.assertEqual((self.root / SELECTION).read_bytes(), selection)
+            self.db.execute("PRAGMA query_only=OFF")
+
+    def test_boss_status_refresh_is_native_parameterless_fresh_round_without_rewards_or_writes(
+        self,
+    ):
+        self.install_import()
+        self.login()
+        self.db.execute("PRAGMA query_only=ON")
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        expected = {"FeverBossIdx": 0, "Round": 1, "RoundExp": 0}
+        for body in (None, {}, None):
+            self.assertEqual(self.call(body, UPDATE_STATUS), expected)
+        native = parse_packet(
+            encode_packet(Packet(0, b"", body_type=0, api=UPDATE_STATUS, sequence_id=31))
+        )
+        reply = self.session.handle(native)
+        self.assertEqual(json.loads(reply.body), expected)
+        self.assertEqual(reply.sequence_id, 31)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+
+    def test_raid_menu_missing_catalog_and_saved_progress_do_not_get_silently_reset(self):
+        profile = self.install_import()
+        self.login()
+        self.save(dict(profile, UserRaid={"Raid": {"SeasonId": 1, "TotalDamage": 42}}))
+        self.assert_rejected(None, UPDATE_STATUS)
+        self.save(dict(profile, GuildMember={"UserId": 9401, "GuildId": 7}))
+        self.assert_rejected({"SeasonId": 1}, BATTLE_STATUS)
+        self.save(profile)
+        (self.root / CATALOG).unlink()
+        for route, body in (
+            (UPDATE_STATUS, None),
+            (BATTLE_STATUS, {"SeasonId": 1}),
+            (LATEST_RECORDS, {"SeasonId": 1, "Count": 20}),
+        ):
+            self.assert_rejected(body, route)
+        self.write_catalog(dict(self.catalog, client={"version": "other"}))
+        for route, body in (
+            (UPDATE_STATUS, None),
+            (BATTLE_STATUS, {"SeasonId": 1}),
+            (LATEST_RECORDS, {"SeasonId": 1, "Count": 20}),
+        ):
+            self.assert_rejected(body, route)

@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 556,
+    "tests_run": 560,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3052,6 +3052,31 @@
       "sqlite_writes": 0,
       "profile_and_original_static_source_unchanged": true
     },
-    "post_fix_apk_historical_boss_rendering_and_combat": "Pending backend reload and full game restart"
+    "post_fix_apk_historical_boss_rendering_and_combat": "Subsequent APK battle-status and ranking requests used historical season 1 matching selection; exact boss rendering and combat remain unverified"
+  },
+  "empty_raid_log_and_boss_status_reads": {
+    "date": "2026-11-18",
+    "observed_blocked_route": "/guild-raid2/get-battle-status",
+    "observed_pending_request": {"SeasonId": 1},
+    "native_status_type": "Records: List<GuildRaid2BattleStatus>",
+    "status_response": {"Records": []},
+    "native_companion_route": "/guild-raid2/get-battle-records/latest",
+    "native_companion_request": "Exact integer SeasonId and nonnegative signed-32-bit Count",
+    "native_companion_type": "BattleRecords: List<BossBattleRecord>",
+    "companion_response": {"BattleRecords": []},
+    "observed_unsupported_boss_refresh_route": "/guild-raid2/update-status",
+    "native_boss_refresh_request": "None",
+    "boss_refresh_response": {"FeverBossIdx": 0, "Round": 1, "RoundExp": 0},
+    "native_round_exp_type": "signed-64-bit scalar",
+    "policy": "Authenticated owned-membership opt-in local reads only; no invented fight, attempts, rewards or persisted progress; fresh boss view rejects preserved non-null raid progress",
+    "synthetic_regressions": 4,
+    "full_windows_tests": 560,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "routes": 3,
+      "sqlite_writes": 0,
+      "profile_and_operator_selection_unchanged": true
+    },
+    "post_fix_apk_log_and_boss_refresh": "Pending backend reload and reconnect"
   }
 }

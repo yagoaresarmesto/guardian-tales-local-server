@@ -6,7 +6,20 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **556 passing tests on Windows Python 3.11**. Six calendar
+The suite has **560 passing tests on Windows Python 3.11**. Four additional raid
+menu regressions cover authenticated status/history reads, exact season/count
+schemas, native empty lists and fresh boss-state shapes, catalog/ownership
+guards and no-write reconnects. The observed blocked request was
+`/guild-raid2/get-battle-status` with the selected historical `SeasonId=1`; it now
+returns `Records: []`. Its native follow-up latest-record read returns
+`BattleRecords: []`. The previously observed parameterless boss refresh returns
+fever index zero, round one and scalar round score zero, without consuming
+attempts or replacing preserved raid progress. Actual-account read-only checks
+passed all three routes with profile and selection unchanged. Post-fix APK log
+opening/refresh remain pending; combat and result handlers remain unsupported.
+See [contracts and evidence](official-save-experiment.md#empty-raid-combat-log-and-boss-refresh).
+
+Six earlier calendar
 regressions address the historical raid selector's missing client date handling.
 The client held season 27 correctly, but its effective-season getter rejected
 the expired period and substituted the previous season before choosing bosses.
@@ -15,8 +28,9 @@ raid's global calendar row, with matching checksums/revisions and an atomic
 selection manifest. Original tables, other service dates, all bosses, global time
 and saved account remain unchanged. Private full-table preparation verified that
 exactly one calendar row and its containing/checksum records changed. The client
-must fully restart after each selection; reconnect is insufficient. Post-fix
-historical rendering and combat remain pending an actual APK test. See
+must fully restart after each selection; reconnect is insufficient. The client
+subsequently requested historical season 1 as selected, confirming effective
+season selection. Exact boss rendering and combat remain unverified. See
 [corrected selector behavior](official-save-experiment.md#fresh-local-raid-entry-and-season-selection).
 
 Three earlier raid

@@ -1365,6 +1365,44 @@ passed read-only checks against the actual profile for the pending and newly
 selected seasons: zero database writes and unchanged full profile/selection.
 Post-fix APK ranking refresh and subsequent combat remain unverified.
 
+## Empty raid combat log and boss refresh
+
+After reloading the calendar override, the APK requested
+`/guild-raid2/get-battle-status` with `SeasonId=1`, matching the new historical
+selection. This confirms that its effective-season request now follows the
+selection; exact boss rendering and combat remain unverified. The current
+failure is a later unsupported log read, rather than a static bootstrap failure.
+
+Native `GuildRaid2Logs.OpenRaidLog` first refreshes rankings, then requests battle
+status and latest records before opening the overlay. Its status callback reads
+`Records` as `List<GuildRaid2BattleStatus>` and passes it to `SetBattleStatus`.
+The local read now returns `{"Records":[]}`. A status entry's nested `Records`
+would be `Dictionary<int32,int64[]>`; no such entries or invented fights are
+created. The native next request, `/guild-raid2/get-battle-records/latest`, uses
+exact integer `SeasonId` and `Count` fields. Its callback reads `BattleRecords`
+as `List<BossBattleRecord>`, so the companion response is
+`{"BattleRecords":[]}`. This second contract is native inference; the observed
+blocked packet was the status request. Count must be a nonnegative signed-32-bit
+integer, and season IDs must exist in the matching opt-in catalog.
+
+Telemetry also recorded unsupported `/guild-raid2/update-status`. Its native
+builder sends no body; the boss-entry refresh routine consumes integer
+`FeverBossIdx` and `Round`, and scalar int64 `RoundExp`. The fresh local response
+is `{"FeverBossIdx":0,"Round":1,"RoundExp":0}`, consistent with initial entry.
+It does not simulate damage, consume attempts or advance a round. Preserved
+non-null saved raid progress rejects this fresh status view instead of resetting
+it. Empty history reads leave preserved progress untouched. All three reads
+require authentication, completed prologue and owned guild membership; no profile
+resources, rewards, receipts or operator selection are returned or changed.
+
+Four regressions cover native parameterless and exact season/count schemas,
+ownership/catalog guards, fresh status shapes, preserved-progress protection,
+known cached seasons and repeated/reconnect history reads with SQLite writes
+disabled. The actual account passed all three protocol reads through a read-only
+connection, with zero writes and unchanged full profile and selection. Post-fix
+APK log opening and boss refresh remain pending backend reload and reconnect.
+Start/end/abandon fight handling and nonempty battle history remain unsupported.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all
