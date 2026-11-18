@@ -80,6 +80,8 @@ from .village_obstacle import create_tables as create_village_obstacle_tables
 from .village_obstacle import remove as remove_village_obstacle
 from .weapon_enhance import create_tables as create_weapon_enhance_tables
 from .weapon_enhance import enhance as enhance_weapon
+from .weapon_limit_break import create_tables as create_weapon_limit_break_tables
+from .weapon_limit_break import limit_break as limit_break_weapon
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -117,6 +119,7 @@ ACCOUNT_ROUTES = (
     "/lobby-village/receive-gift",
     "/lobby-village/remove-obstacle",
     "/item/enhance-weapon",
+    "/item/limitbreak-weapon/v2",
     "/user/guardian-mastery-level-up",
     "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
@@ -178,6 +181,7 @@ class AccountStore:
         create_village_gift_tables(db)
         create_village_obstacle_tables(db)
         create_weapon_enhance_tables(db)
+        create_weapon_limit_break_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1037,6 +1041,9 @@ class AccountStore:
 
     def enhance_weapon(self, request, operation_id):
         return enhance_weapon(self, request, operation_id)
+
+    def limit_break_weapon(self, request, operation_id):
+        return limit_break_weapon(self, request, operation_id)
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)

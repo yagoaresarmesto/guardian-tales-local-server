@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 430,
+    "tests_run": 443,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1198,6 +1198,7 @@
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
       "/item/enhance-weapon",
+      "/item/limitbreak-weapon/v2",
       "/lobby-village/harvest-all",
       "/lobby-village/harvest-basecamp",
       "/lobby-village/receive-gift",
@@ -2565,6 +2566,47 @@
       "original_startup_seed_preserved": true,
       "real_saved_profile_unchanged": true
     },
-    "post_fix_apk_enhancement": "pending backend reload and reconnect"
+    "post_fix_apk_enhancement": {
+      "result": "PASS",
+      "saved_receipts": 3,
+      "first_gain_matches_detached_prediction": true,
+      "continuous_experience_changes_match_current_target": true,
+      "all_saved_hammer_stacks_equal_pre_enhancement_hash": true,
+      "scope": "Live experience/hammer inventory comparison; complete profile/currency bounds verified separately in detached and synthetic checks"
+    }
+  },
+  "free_equipment_hammer_limit_break_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/limitbreak-weapon/v2",
+    "native_builder": "Oak.ApiConnection.SendLimitBreakWeapon",
+    "request_fields": [
+      "TargetWeaponId",
+      "SourceItems",
+      "discountBuff"
+    ],
+    "official_response_captured": false,
+    "policy": "Owner-selected free local mock retaining selected hammers and gold; one break per hammer clipped at maximum",
+    "explicit_external_catalog": "weapon_limit_break_mock_catalog.json",
+    "scope": "Owned unengraved eligible target, matching owned unlocked hammer origin rarity; only LimitBreaks and User.Cas change",
+    "native_hammer_filter_compares_target_origin_rarity": true,
+    "locked_target_supported": true,
+    "gold_hammers_experience_account_buffs_and_missions_unchanged": true,
+    "duplicate_weapon_sacrifice_and_engraved_targets_supported": false,
+    "atomic_profile_and_canonical_receipt": true,
+    "current_state_retry_after_later_breaks_experience_and_material_or_catalog_removal": true,
+    "synthetic_regressions": 13,
+    "full_windows_tests": 443,
+    "detached_actual_account_check": {
+      "result": "PASS",
+      "breaks_before": 2,
+      "breaks_after": 3,
+      "only_target_limit_breaks_and_user_revision_changed": true,
+      "gold_hammer_quantities_experience_and_other_profile_fields_preserved": true,
+      "same_and_delayed_retries_at_maximum_without_writes": true,
+      "new_operation_at_maximum_rejects_without_writes": true,
+      "original_startup_seed_preserved": true,
+      "real_saved_profile_unchanged": true
+    },
+    "post_fix_apk_limit_break": "pending backend reload and reconnect"
   }
 }

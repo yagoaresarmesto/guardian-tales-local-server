@@ -53,6 +53,7 @@ not fetch missing bootstrap files from an official service.
 | `village_gift_mock_catalog.json` | Princess gift acknowledgment without rewards | Matching client and explicit local cooldown; no reward pool is read |
 | `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
 | `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
+| `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 | `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
@@ -210,8 +211,35 @@ policy. The response contains current `User`. Profile and retry receipt commit
 atomically; a replay returns current state, preserving later improvements even
 after catalog removal. Different parameters under the same request identity
 reject. A new operation can reuse the retained hammers until the cap is reached.
-Evolution, engraving, limit-breaking and general equipment mutations remain
-outside this handler.
+Evolution, engraving and weapon-sacrifice enhancement remain outside this
+handler. Hammer limit breaks use the separate mock below.
+
+`/item/limitbreak-weapon/v2` also accepts exactly `TargetWeaponId`, `SourceItems`
+and Boolean `discountBuff`, but uses `weapon_limit_break_mock_catalog.json`.
+The catalog is limited to 1 MiB and has exactly `client`, `free`, `weapons`,
+`hammers` and `max_limit_breaks`. It requires the matching pinned client,
+Boolean `free: true`, a maximum count in 1..100, and disjoint canonical positive
+decimal spec maps. `weapons` contains 1..30,000 eligible spec IDs mapped to origin
+rarity 3 or 4; `hammers` contains 1..64 limit-break hammer specs mapped to rarity
+3 or 4. The prepared catalog uses matching public weapons with current rarity
+4 or 5 and origin rarity 3 or 4, both public `limitbreakhammer` specs and the
+matching maximum count of 5. It is additional to the published content pack.
+
+A new request must identify one owned, unengraved target below that maximum,
+and 1..256 unlocked owned hammer stacks with positive counts within their saved
+quantities. A locked target is supported. Each hammer's rarity must equal the
+target's **origin rarity**, including evolved/myth weapons. Each selected hammer
+adds one limit break, clipped at the configured maximum. No hammer, gold or
+account buff is consumed. Only target `LimitBreaks` and user revision change;
+experience, item options, mission counters, all other inventory and village state
+are retained. This is an explicit free local mock, not the official exchange.
+Sacrificing duplicate weapons and engraved targets are outside its scope.
+
+Profile and canonical retry receipt commit atomically. The response contains
+current `User`; old replays retain later experience/breaks and require neither
+the original hammers nor catalog to remain present. A changed body under the same
+operation identity rejects. A new operation can reuse retained hammers until the
+maximum, where new requests reject without writes.
 
 `/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
 reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,

@@ -98,7 +98,8 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Fifteen mutations are now enabled: `/item/enhance-weapon`, `/summon/set-select-character`,
+Sixteen mutations are now enabled: `/item/enhance-weapon`,
+`/item/limitbreak-weapon/v2`, `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
@@ -133,6 +134,9 @@ the building and restarting its regeneration timer.
 Equipment enhancement has an explicit free policy for owned hammers and
 unengraved targets: only equipment experience and user revision change, retaining
 gold and every material. It requires its own matching public-derived catalog.
+Hammer limit breaks use a separate free mock: compatible owned hammers increase
+the saved break count up to its configured maximum without consuming materials,
+gold or experience.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -832,7 +836,47 @@ actual-account check of the pending request computed 422,750 experience from
 19 hammers, changing only target experience from 1,335,460 to 1,758,210 and user
 revision. Gold, hammer quantities, all unrelated profile fields and captured seeds
 were preserved; same-operation and delayed retries made no writes. The actual
-saved account was unchanged. The APK retry is pending backend reload/reconnect.
+saved account was unchanged. Three subsequent APK enhancement receipts were
+saved; their continuous experience changes match the current target and the
+first gain matches the detached prediction. All saved hammer stacks match their
+pre-enhancement hash. This live comparison establishes experience and retained
+hammer inventory; complete profile/currency bounds were checked in detached and
+synthetic tests.
+
+## Free equipment limit breaks using hammers
+
+The next unsupported route was `/item/limitbreak-weapon/v2`. The owner requested
+a mock retaining the hammers. Its matching native `SendLimitBreakWeapon` builder
+sends `TargetWeaponId`, `SourceItems` and `discountBuff`. Native
+`ForgeLimitBreak.GetAddLimitBreakCount` adds stack quantities, while its hammer
+filter compares material rarity with the target weapon's origin rarity. The
+success callback logs analytics and requests the existing training-mission check;
+no extra reward response fields were identified. No official response was
+captured.
+
+The separate matching catalog explicitly enables the free mock for eligible
+unengraved weapons and owned, unlocked limit-break hammers. A locked target is
+supported. Each hammer contributes one limit break, clipped at the matching
+maximum of 5; both hammer quantities and gold are retained. Only target
+`LimitBreaks` and user revision change. Experience, options, account buffs,
+mission/progression counters, other inventory, village and captured seeds remain
+unchanged. This does not implement duplicate-weapon sacrifice or engraving.
+
+The profile and canonical operation receipt commit atomically. Old replays
+return current state without reapplying a break, including after later upgrades,
+catalog/material removal or reaching the maximum. A changed body under the same
+identity rejects; new operations can reuse retained hammers up to the maximum.
+The existing session-epoch retry limitation still applies across new logins.
+
+Thirteen regressions cover exact mutation/resource bounds, compatible origin
+rarity, multiple stacks and clipping, discount flags, persistent current-state
+retries, ownership/schema/configuration/authentication guards, malformed target
+and material state, revision/count overflow and transaction rollback. A detached
+actual-account check of the pending one-hammer request increased the saved break
+count from 2 to 3 and preserved all other fields apart from user revision. It
+also verified reuse up to 5, no-write replay at that maximum and rejection of a
+new capped operation. The actual saved account was unchanged during these checks.
+The APK limit-break retry is pending backend reload and reconnect.
 
 ## Host readiness before the APK check
 

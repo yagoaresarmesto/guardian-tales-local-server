@@ -6,14 +6,22 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **430 passing tests on Windows Python 3.11**. Twelve free equipment
+The suite has **443 passing tests on Windows Python 3.11**. Thirteen free hammer
+limit-break regressions cover exact break/revision mutation bounds, retained
+resources and experience, origin-rarity compatibility, maximum clipping,
+persistent current-state retries, ownership/authentication/schema/configuration
+guards, malformed saved items, overflow and rollback. The detached actual-account
+check passed without changing the real save. This is an explicit free local mock;
+APK retry requires backend reload and reconnect.
+Twelve free equipment
 enhancement regressions cover exact target experience/revision changes, retained
 gold and hammers, locked targets, level caps, discount flags, retry persistence,
 ownership/configuration/authentication/schema guards, overflow and rollback.
 The owner selected a free local policy; the detached actual-account check gained
 the expected experience while preserving every resource and unrelated field.
-Engraved targets and weapon sacrifice materials remain unsupported. APK retry
-requires backend reload and reconnect.
+Engraved targets and weapon sacrifice materials remain unsupported. Three APK
+enhancements subsequently saved continuous experience changes matching the
+current target, with all hammer stacks equal to their pre-enhancement hash.
 Eight regenerating
 obstacle mock regressions cover exact profile/village preservation, available
 and future regeneration, old retries after later collection/regeneration,

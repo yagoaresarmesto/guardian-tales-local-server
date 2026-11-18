@@ -104,6 +104,7 @@ class SnapshotTests(unittest.TestCase):
             result["enabled_mutation_routes"],
             [
                 "/item/enhance-weapon",
+                "/item/limitbreak-weapon/v2",
                 "/lobby-village/harvest-all",
                 "/lobby-village/harvest-basecamp",
                 "/lobby-village/receive-gift",
