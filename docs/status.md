@@ -6,7 +6,21 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **547 passing tests on Windows Python 3.11**. Eight new raid
+The suite has **550 passing tests on Windows Python 3.11**. Three additional raid
+ranking regressions cover exact authenticated season requests, catalog/membership
+validation and read-only reconnects without changing saved progress, rewards or
+operator selection. The raid-entry API completed and the user reported partially
+loaded raids; the next unsupported request was `/guild-raid2/get-guild-rankings`
+with `SeasonId=45`. It now returns `Rankings: []` and `CutOff: {}`, matching the
+native list and integer-to-int64 dictionary. The companion automatic member
+ranking refresh returns `Rankings: []`, based on its native builder/callback.
+Known catalog seasons are accepted independently of the latest operator choice
+because timed refreshes can carry an older client cache. Both routes passed
+read-only actual-account checks with full profile and selection unchanged.
+Post-fix APK ranking refresh and combat remain unverified. See
+[contracts and evidence](official-save-experiment.md#empty-local-raid-classifications).
+
+Eight earlier raid
 regressions cover opt-in fresh entry, resource shapes, preserved state, live
 season selection and atomic-write failure. The actual APK advanced through the
 membership/preparation path to `/guild-raid2/enter`; that read now offers a

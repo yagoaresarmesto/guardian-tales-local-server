@@ -17,6 +17,8 @@ from guardian_tales.bootstrap import BootstrapSession, GuestStore
 from guardian_tales.guild_raid import (
     CATALOG,
     ENTRY_ROUTE,
+    GUILD_RANKINGS,
+    MEMBER_RANKINGS,
     SELECTION,
     load_catalog,
     main,
@@ -111,11 +113,11 @@ class GuildRaidTests(unittest.TestCase):
         self.save(profile)
         return profile
 
-    def assert_rejected(self, value):
+    def assert_rejected(self, value, route=ENTRY_ROUTE):
         before = list(self.db.iterdump())
         changes = self.db.total_changes
         with self.assertRaises(PacketError):
-            self.call(value)
+            self.call(value, route)
         self.assertEqual(list(self.db.iterdump()), before)
         self.assertEqual(self.db.total_changes, changes)
 
@@ -288,3 +290,70 @@ class GuildRaidTests(unittest.TestCase):
         self.assertEqual(selected_season(self.references)["season_id"], 1)
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             main(["set", "3", "--reference-dir", str(self.root)])
+
+    def test_rankings_require_authentication_exact_integer_season_and_valid_local_membership(self):
+        for route in (GUILD_RANKINGS, MEMBER_RANKINGS):
+            self.assert_rejected({"SeasonId": 1}, route)
+        self.login()
+        for route in (GUILD_RANKINGS, MEMBER_RANKINGS):
+            self.assert_rejected({"SeasonId": 1}, route)
+        self.install_import()
+        for route in (GUILD_RANKINGS, MEMBER_RANKINGS):
+            for body in (
+                None,
+                {},
+                [],
+                {"SeasonId": True},
+                {"SeasonId": 0},
+                {"SeasonId": -1},
+                {"SeasonId": 0x80000000},
+                {"SeasonId": "1"},
+                {"SeasonId": 1.0},
+                {"SeasonId": 3},
+                {"seasonId": 1},
+                {"SeasonId": 1, "Claim": True},
+            ):
+                with self.subTest(route=route, body=body):
+                    self.assert_rejected(body, route)
+        profile = self.store.account.profile()
+        self.save(dict(profile, GuildMember={"UserId": 9401, "GuildId": 7}))
+        for route in (GUILD_RANKINGS, MEMBER_RANKINGS):
+            self.assert_rejected({"SeasonId": 1}, route)
+
+    def test_empty_rankings_reconnect_reads_preserve_all_progress_rewards_and_selection(self):
+        profile = self.install_import()
+        profile["UserRaid"].update(
+            Raid={"SeasonId": 1, "TotalDamage": 123, "PlayCount": 2}, SyntheticPendingReward=[4]
+        )
+        self.save(profile)
+        select_season(self.references, 2)
+        selection = (self.root / SELECTION).read_bytes()
+        for reconnect in (False, True):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            self.db.execute("PRAGMA query_only=ON")
+            before = list(self.db.iterdump())
+            changes = self.db.total_changes
+            for season_id in (1, 2, 1):
+                self.assertEqual(
+                    self.call({"SeasonId": season_id}, GUILD_RANKINGS),
+                    {"Rankings": [], "CutOff": {}},
+                )
+                self.assertEqual(
+                    self.call({"SeasonId": season_id}, MEMBER_RANKINGS), {"Rankings": []}
+                )
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, changes)
+            self.assertEqual(self.store.account.profile(), profile)
+            self.assertEqual((self.root / SELECTION).read_bytes(), selection)
+            self.db.execute("PRAGMA query_only=OFF")
+
+    def test_rankings_reject_missing_and_foreign_catalogs_without_writes(self):
+        self.install_import()
+        self.login()
+        (self.root / CATALOG).unlink()
+        for route in (GUILD_RANKINGS, MEMBER_RANKINGS):
+            self.assert_rejected({"SeasonId": 1}, route)
+        self.write_catalog(dict(self.catalog, client={"version": "other"}))
+        for route in (GUILD_RANKINGS, MEMBER_RANKINGS):
+            self.assert_rejected({"SeasonId": 1}, route)

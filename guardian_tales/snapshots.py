@@ -62,6 +62,8 @@ ACCOUNT_READS = frozenset(
         "/guild/red-dot",
         "/guild-raid2/reset",
         "/guild-raid2/enter",
+        "/guild-raid2/get-guild-rankings",
+        "/guild-raid2/get-member-rankings",
         "/chat/guild-history/v2",
         "/chat/listen-channel",
         "/collection/list-all",

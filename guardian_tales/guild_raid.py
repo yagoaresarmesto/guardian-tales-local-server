@@ -12,6 +12,9 @@ from .reference import ReferenceData
 from .snapshots import CLIENT
 
 ENTRY_ROUTE = "/guild-raid2/enter"
+GUILD_RANKINGS = "/guild-raid2/get-guild-rankings"
+MEMBER_RANKINGS = "/guild-raid2/get-member-rankings"
+RANKING_ROUTES = (GUILD_RANKINGS, MEMBER_RANKINGS)
 CATALOG = "guild_raid_entry_catalog.json"
 SELECTION = "guild_raid_selection.json"
 
@@ -148,6 +151,27 @@ def select_season(references, season_id):
 
 def utc_now():
     return datetime.now(timezone.utc)
+
+
+def rankings(account, route, request):
+    if (
+        route not in RANKING_ROUTES
+        or not isinstance(request, dict)
+        or set(request) != {"SeasonId"}
+        or not integer(request["SeasonId"])
+    ):
+        raise ValueError("Local raid rankings require a catalogued integer SeasonId")
+    if account.needs_prologue() or own_guild(account, None)["Guild"] is None:
+        raise ValueError(
+            "Local raid rankings require completed prologue and owned guild membership"
+        )
+    # A timed refresh may still carry an earlier selection cached by the client.
+    # Accept any known season without changing selection or emitting resources.
+    find_season(load_catalog(account.references), request["SeasonId"])
+    if route == GUILD_RANKINGS:
+        # Native CutOff is Dictionary<int32, int64>, not a list or null.
+        return {"Rankings": [], "CutOff": {}}
+    return {"Rankings": []}
 
 
 def enter(account, request):

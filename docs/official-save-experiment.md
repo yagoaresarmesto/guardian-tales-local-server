@@ -1290,8 +1290,9 @@ Native boss/background widgets use the personal raid's selected season ID.
 Date restrictions remain in info/start-button code. Historical selections may
 need practice mode: the native off-season practice path calls the stage loader
 without a start-stage API. These findings do not establish a working rendered
-historical menu or combat in the APK. Normal battle authorization, results,
-rankings and reward claims remain unsupported; test these incrementally.
+historical menu or combat in the APK. Normal battle authorization, results and
+reward claims remain unsupported; test these incrementally. Ranking reads now
+use the empty local view described below.
 
 Eight regressions cover authenticated entry, exact cache schema, membership,
 native reply shapes, omitted unrelated resources/rewards, read-only repeated
@@ -1299,7 +1300,44 @@ entry/reconnect, live selection, malformed/missing catalogs, preserved-progress
 guards, unknown operations and atomic-write failure. The real saved account
 passed both entry variants through a read-only protocol session: zero SQLite
 writes, selected season 46, no added items and unchanged full profile. This was
-a host check; post-fix APK rendering and combat remain unverified.
+a host check. Subsequently the user reported that raids loaded at least
+partially, and the actual entry request completed before the classification
+refresh failed. This does not establish successful combat or complete menu UI.
+
+## Empty local raid classifications
+
+The next unsupported APK request was `/guild-raid2/get-guild-rankings`.
+Read-only inspection of the pending packet confirmed `{"SeasonId":45}`.
+The native builder wraps the integer season ID; the timed ranking refresher
+reads the personal raid's current client-cached season. This can differ from the
+operator's latest selection while a scene/refresh is in flight. Ranking reads
+therefore accept any season present in the explicit matching catalog, without
+changing that selection. Authentication, completed prologue and owned guild
+membership are required; missing/foreign catalogs, unknown seasons, non-integers
+and extra request fields reject.
+
+The guild-ranking callback consumes `Rankings` as a list of guild ranking
+entries and `CutOff` as `Dictionary<int32,int64>`. The cut-off widget converts
+that dictionary to a list, so an object is required even when empty. The local
+response is `{"Rankings":[],"CutOff":{}}`. The callback derives its update
+timestamp from client server-time; no timestamp, score or reward is invented.
+
+Native `GuildRaid2RankingResources.StartTracking` also creates the member-ranking
+refresher. Its builder uses the same season request shape and its callback reads
+`Rankings`, reprocesses member rows and has a native fallback for its own empty
+ranking entry. The companion `/guild-raid2/get-member-rankings` read therefore
+returns `{"Rankings":[]}`. This companion contract is inferred from native code;
+it was not the observed failing APK packet. Neither response includes profile
+resources, rewards, attempts or progress updates. Saved raid progress is not
+read as an official classification or replaced by these reads.
+
+Three additional regressions cover authentication/schema/ownership checks,
+known-season reads across selection changes and reconnects, missing/foreign
+catalogs and preservation of all saved tables, pending rewards, other-mode
+currencies and operator selection with SQLite writes disabled. Both routes
+passed read-only checks against the actual profile for the pending and newly
+selected seasons: zero database writes and unchanged full profile/selection.
+Post-fix APK ranking refresh and subsequent combat remain unverified.
 
 ## Host readiness before the APK check
 

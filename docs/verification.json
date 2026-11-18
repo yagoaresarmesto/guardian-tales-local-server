@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 547,
+    "tests_run": 550,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -2996,6 +2996,29 @@
       "real_full_profile_unchanged": true,
       "added_items": []
     },
-    "post_fix_apk_raid_menu_and_combat": "Pending backend reload and actual APK test"
+    "post_fix_apk_raid_menu_and_combat": "Entry request completed and user reported partially loaded raids; next unsupported request was guild ranking refresh; combat remains unverified"
+  },
+  "empty_local_raid_rankings": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/guild-raid2/get-guild-rankings",
+    "observed_pending_request": {"SeasonId": 45},
+    "guild_response": {"Rankings": [], "CutOff": {}},
+    "native_cut_off_type": "Dictionary<int32,int64>",
+    "companion_route": "/guild-raid2/get-member-rankings",
+    "companion_response": {"Rankings": []},
+    "companion_contract_evidence": "Native automatic ranking tracker, season-ID builder and callback with empty own-entry fallback; no observed failing member request",
+    "request_policy": "Exact positive integer SeasonId, matching opt-in catalog, completed prologue and owned membership; accept known earlier cached seasons independently of operator selection",
+    "no_profile_resources_rewards_attempts_progress_or_selection_changes": true,
+    "official_classification_responses_and_history_captured": false,
+    "synthetic_regressions": 3,
+    "full_windows_tests": 550,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "routes": 2,
+      "known_seasons": 2,
+      "sqlite_writes": 0,
+      "full_profile_and_operator_selection_unchanged": true
+    },
+    "post_fix_apk_ranking_refresh": "Pending backend reload and APK reconnect"
   }
 }
