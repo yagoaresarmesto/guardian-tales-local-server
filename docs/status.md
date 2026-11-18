@@ -6,7 +6,14 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **379 passing tests**. Fourteen mastery-reset regressions cover
+The suite has **381 passing tests on Windows Python 3.11**. Two new bridge
+regressions cover restoration after ADB loses its connection, dynamic loopback
+ports and failed reconnect without root/device changes. The latest isolated
+Python 3.11/3.13 matrix contains the preceding 379 tests; Docker was unavailable
+for the reconnect change, so its full suite ran on the Windows host instead.
+The interrupted prepared bridge was restored, its initial root setting matched,
+backend/CDN preflight passed and the saved database quick-check returned ok.
+Fourteen mastery-reset regressions cover
 exact refund/payment and mutation bounds, upgrade/reset retry interleaving,
 reopening/new login, cooldown/null/ancient/.NET timestamp boundaries,
 authentication/schema/catalog guards, empty/maximized skills, currency/revision

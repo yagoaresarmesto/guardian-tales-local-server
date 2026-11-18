@@ -3,15 +3,13 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 379,
+    "tests_run": 381,
     "failures": 0,
     "errors": 0,
-    "external_network_disabled": true,
-    "network_interfaces": [
-      "lo"
-    ],
-    "python": "3.11.18",
-    "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+    "external_network_disabled": false,
+    "python": "3.11.9",
+    "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately.",
+    "platform": "Windows"
   },
   "synthetic_demo": {
     "result": "PASS",
@@ -2319,6 +2317,30 @@
       "village_preserved": true,
       "captured_seed_preserved": true,
       "sqlite_quick_check": "ok"
+    }
+  },
+  "android_bridge_restore_reconnect": {
+    "date": "2026-11-18",
+    "observed_start_error": "A previous bridge needs restoration; use the restore action first",
+    "observed_restore_error": "ADB daemon restarted without a connection to the selected emulator",
+    "change": "Reconnect ADB to the identity-checked running instance current loopback endpoint before root/device cleanup",
+    "stopped_android_cleanup_unchanged": true,
+    "failed_reconnect_preserves_active_record_and_skips_device_mutations": true,
+    "saved_account_and_backend_cdn_processes_preserved": true,
+    "new_regressions": 2,
+    "focused_windows_checks": 9,
+    "full_windows_tests": 381,
+    "full_windows_result": "PASS",
+    "isolated_matrix_for_this_change": "Not run; Docker Linux engine unavailable",
+    "actual_prepared_recovery": {
+      "result": "PASS",
+      "previous_bridge_record_restored_inactive": true,
+      "restoration_errors": [],
+      "original_root_setting_restored": true,
+      "backend_tls_and_cdn_preflight": "PASS",
+      "account_sqlite_quick_check": "ok",
+      "recovery_used_explicit_adb_connect_before_restore": true,
+      "new_run_left_for_owner_terminal": true
     }
   }
 }

@@ -283,6 +283,7 @@ class Bridge:
             )
             self.save()
             return
+        command([d.adb_path, "connect", serial(info)])
         d.set_root(True)
         d.adb("shell", "am", "force-stop", PACKAGE)
         errors = []

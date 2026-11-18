@@ -127,3 +127,87 @@ class AndroidBridgeTests(unittest.TestCase):
                         bridge.restore()
                     root.assert_not_called()
                     setting.assert_not_called()
+
+    def test_restore_reconnects_disconnected_adb_at_current_port_before_cleanup(self):
+        for port in (16512, 17492):
+            with self.subTest(port=port), tempfile.TemporaryDirectory() as temporary:
+                folder = Path(temporary)
+                record = {
+                    "active": True,
+                    "identity": ["4", "Synthetic test", 123],
+                    "base": "/data/local/tmp/gt357bridge_0123456789abcdef",
+                    "chain": "GT357_0123456789abcdef",
+                    "reverse_ports": [],
+                    "root_was_enabled": False,
+                }
+                state = folder / "session.json"
+                state.write_text(json.dumps(record))
+                connected = False
+                endpoint = "127.0.0.1:" + str(port)
+
+                def adb_command(args, check=True):
+                    nonlocal connected
+                    if args == [device.adb_path, "connect", endpoint]:
+                        connected = True
+                    elif args[:3] == [device.adb_path, "-s", endpoint]:
+                        if not connected:
+                            raise RuntimeError("device not found after daemon restart")
+                    else:
+                        self.fail("Unexpected device command: " + repr(args))
+                    return SimpleNamespace(stdout=b"")
+
+                with patch.object(Device, "info", return_value={**self.info(), "adb_port": port}):
+                    device = Device("synthetic.exe", 4, "Synthetic test")
+                    bridge = Bridge(device, folder, folder, 18081)
+                    with (
+                        patch(
+                            "guardian_tales.android_bridge.command", side_effect=adb_command
+                        ) as run,
+                        patch.object(device, "set_root") as setting,
+                    ):
+                        bridge.restore()
+                        self.assertEqual(
+                            run.call_args_list[0].args[0], [device.adb_path, "connect", endpoint]
+                        )
+                        self.assertEqual(
+                            run.call_args_list[1].args[0][3:],
+                            ["shell", "am", "force-stop", "com.kakaogames.gdts"],
+                        )
+                        self.assertEqual(
+                            [c.args for c in setting.call_args_list], [(True,), (False,)]
+                        )
+                saved = json.loads(state.read_text())
+                self.assertFalse(saved["active"])
+                self.assertFalse(saved["ready"])
+                self.assertEqual(saved["restoration_errors"], [])
+
+    def test_failed_restore_reconnect_preserves_active_record_without_device_mutation(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            record = {
+                "active": True,
+                "identity": ["4", "Synthetic test", 123],
+                "base": "/data/local/tmp/gt357bridge_0123456789abcdef",
+                "chain": "GT357_0123456789abcdef",
+                "reverse_ports": [],
+                "root_was_enabled": False,
+            }
+            state = folder / "session.json"
+            state.write_text(json.dumps(record))
+            before = state.read_bytes()
+            with patch.object(Device, "info", return_value=self.info()):
+                device = Device("synthetic.exe", 4, "Synthetic test")
+                bridge = Bridge(device, folder, folder, 18081)
+                with (
+                    patch(
+                        "guardian_tales.android_bridge.command",
+                        side_effect=RuntimeError("ADB unavailable"),
+                    ),
+                    patch.object(device, "set_root") as setting,
+                    patch.object(device, "adb") as adb,
+                ):
+                    with self.assertRaisesRegex(RuntimeError, "ADB unavailable"):
+                        bridge.restore()
+                    setting.assert_not_called()
+                    adb.assert_not_called()
+            self.assertEqual(state.read_bytes(), before)

@@ -148,6 +148,16 @@ before invoking a separate restore command. Failed restoration keeps the session
 marked active and reports the error. Do not delete its session record to hide
 an incomplete cleanup.
 
+If startup reports `A previous bridge needs restoration`, run the restore action
+with the same instance index/name and session directory, then repeat the original
+`run` command. When Android is running, restoration reconnects ADB using the
+selected instance's current loopback port before changing root or cleaning up.
+This also handles a restarted ADB daemon that has forgotten its emulator
+connection. A failed reconnect leaves the active record available for another
+restore attempt. If Android is stopped, the existing shutdown cleanup path
+restores its root configuration without connecting ADB. Backend/CDN processes
+and the saved account remain separate from bridge restoration.
+
 ## Additional download errors
 
 Keep the CDN journal enabled when testing downloads. A missing resource returns
