@@ -6,13 +6,22 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **475 passing tests on Windows Python 3.11**. Fourteen first-engraving
+The suite has **489 passing tests on Windows Python 3.11**. Fourteen option-lock
+regressions cover free lock/unlock, exact flag/revision/resource bounds, no-op
+requests, canonical current-state retries, reopening/reconnect/new login,
+same-item pending-proposal invalidation, later value rolls, saved engraving,
+ownership/authentication/schema/configuration, revision ceilings and rollback.
+The detached actual-accessory check passed without changing the real save;
+APK retry requires backend reload and reconnect.
+Fourteen first-engraving
 regressions cover free hammer/gold preservation, valid public tiers, eligibility,
 origin rarity, ownership/authentication/schema/configuration, persistent retries,
 revision limits, rollback and follow-up ordinary option/experience changes. The
 explicit first-engraving mock retains materials, uses a local uniform tier roll
 and sets the initial counter to 1. The detached actual-account check passed;
-the real save was unchanged. APK retry requires backend reload and reconnect.
+the real save was unchanged. One APK engraving subsequently saved the expected
+attribute/ceiling while assets, hammers, experience and limit breaks matched the
+pre-mock baseline. Later ordinary option edits are outside that live comparison.
 Eighteen equipment
 option-value regressions cover free generation/apply/discard, locked values,
 later rerolls/upgrades, persistent current-state retries, original option/range

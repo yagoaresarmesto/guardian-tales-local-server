@@ -98,7 +98,8 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Nineteen mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+Twenty mutations are now enabled: `/item/change-options`, `/item/apply-options`,
+`/item/change-lock-options`,
 `/item/engrave-weapon`,
 `/item/enhance-weapon`,
 `/item/limitbreak-weapon/v2`, `/summon/set-select-character`,
@@ -144,6 +145,8 @@ explicit free mock, retaining all stones and changing only supported unlocked
 option levels when the owner accepts the proposal.
 First engraving also has a free mock using a compatible owned hammer and one
 matching public attribute tier; gold/materials remain intact.
+Ordinary option locking/unlocking shares the free option catalog and retains
+all stones, changing only requested lock flags and user revision when necessary.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -905,7 +908,7 @@ official option-presence probabilities or add/remove optional attributes. Only
 owned weapons with supported ordinary option rows and validated saved engraving,
 if present, are accepted. A
 locked target is supported, existing locked option values remain fixed, and
-option-lock creation/removal remains a separate unsupported operation.
+option-lock creation/removal now uses the separate free operation described below.
 
 Generation persists a proposal and its original spec/options/ranges without
 changing the profile or revision. Applying changes only target `Options` and
@@ -977,8 +980,45 @@ ordinary options/experience after engraving. A detached actual-account check
 confirmed the pending first engraving, retained all resources and other fields,
 then verified ordinary option acceptance and experience enhancement preserved the
 attribute. Same and delayed retries made no writes; captured seeds and the actual
-saved account remained unchanged. The APK first-engraving retry is pending backend
-reload and reconnect.
+saved account remained unchanged. One subsequent APK engraving receipt matches
+the saved attribute and initial ceiling of 1. Assets, hammer inventory, target
+experience and limit breaks match the pre-mock baseline. Later ordinary option
+edits and other profile fields are outside this live comparison.
+
+## Free ordinary option locking and unlocking
+
+The next unsupported APK route was `/item/change-lock-options`; the owner
+requested retaining its stones. Matching native `SendChangeLockItemOptions`
+sends `ItemId`, `OptionIds` and Boolean `DoLock`. Separate native lock/unlock
+coroutines use that route and refresh their UI from the updated user state;
+no additional response payload was identified. The pending request selected one
+existing option on an owned accessory. No official response was captured.
+
+The handler shares the explicit free option catalog. It validates owned equipment,
+its ordinary option IDs/ranges and any supported saved engraving, then changes
+only the requested `Locked` flags. Other flags, every value, engraving, currency,
+stone/material quantities and unrelated state remain intact. A real change
+increments user revision once; a request already in the desired state saves a
+no-op receipt without a profile/revision change. No stones or other payment are
+consumed or required by the server's free policy.
+
+Changing a lock discards only that item's pending option-value proposal, in the
+same transaction as profile and receipt. This prevents an old proposal from
+undoing the newly selected locks; other items' pending work is retained. No-op
+requests retain their existing pending work. Retries treat selected ID order as
+insignificant and return current state without reapplying older flags after a
+later unlock or option change, including after catalog removal. Changed request
+parameters under one identity reject. Existing session-epoch retry limits apply.
+
+Fourteen regressions cover exact lock/unlock/resource bounds, no-op semantics,
+reopening/reconnect/new login, canonical delayed retries, same-item pending
+invalidation, later rolls respecting locks, all-locked eligibility, supported
+engraving, ownership/configuration/schema/authentication, revision ceilings and
+rollback. A detached actual-account check locked the requested accessory option,
+verified a later value roll retained its level, accepted that roll and unlocked
+the option, preserving all resources and other fields. Old retries retained the
+later unlock without writes. Captured seeds and the actual saved profile were
+unchanged. The APK lock/unlock retry is pending backend reload and reconnect.
 
 ## Host readiness before the APK check
 

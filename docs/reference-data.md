@@ -54,7 +54,7 @@ not fetch missing bootstrap files from an official service.
 | `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
 | `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
 | `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |
-| `weapon_option_mock_catalog.json` | Free proposals to change existing option values | Matching client and public per-weapon option ranges; explicit local uniform value rolls |
+| `weapon_option_mock_catalog.json` | Free option-value proposals and ordinary option lock/unlock | Matching client and public per-weapon option ranges; explicit local free policy |
 | `weapon_engrave_mock_catalog.json` | Free first engraving and validation of saved engraving | Matching eligible exclusive specs, origin/hammer rarities, option tiers, experience gate and level coefficient |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
@@ -260,7 +260,7 @@ their configured inclusive ranges. It does not reproduce official probabilities
 or add/remove optional attributes. The target must be owned equipment
 with distinct supported ordinary (`OptionSource: 0`) options in range and at least
 one unlocked option. Locked equipment itself is supported. Existing option locks
-are retained; creating/removing locks uses a separate unsupported operation.
+are retained; creating/removing locks uses the separate free operation below.
 Saved engraving matching the separate engraving catalog is validated and retained.
 No option stones, lock stones, other inventory or currency are consumed or required
 by this server policy. Client UI resource checks are outside this handler.
@@ -282,6 +282,31 @@ return current profile without consuming a newer proposal. A changed body or
 route under one request identity rejects. The wire carries no proposal ID:
 new apply/discard requests resolve the latest pending proposal for that item.
 Session-epoch retry limits across new logins remain the same as other mutations.
+
+`/item/change-lock-options` accepts exactly positive integer `ItemId`, a list
+`OptionIds` of 1..32 distinct positive integer option IDs and Boolean `DoLock`.
+It shares the explicit matching `weapon_option_mock_catalog.json` free policy.
+The item must be owned equipment with supported ordinary options matching its
+public ranges; every requested ID must already be present. Known saved engraving
+is validated and retained. True locks only the selected IDs; false unlocks only
+those IDs. Existing option values, identities, order, metadata and other locks
+are preserved. The response contains current `User`.
+
+A real flag change increments user revision once and discards only that item's
+unapplied option-value proposal, so a stale proposal cannot overwrite the new
+locks. Other items' pending proposals remain intact. A new request already in
+the desired state saves its receipt without rewriting the profile, incrementing
+revision or discarding pending work. No lock stones, option stones, other
+materials, currency, buffs or mission credit are consumed or required by this
+server policy. It does not enforce the original service's payment/quota rules.
+Client UI resource checks are outside this handler.
+
+Profile changes, same-item pending-proposal removal and canonical retry receipt
+commit atomically. Option ID order is insignificant; changed IDs, target or
+direction under the same identity reject. Old retries return current `User`
+without reinstating a lock after a later unlock or undoing subsequent option
+values, including after catalog removal. Later value rolls preserve the newly
+locked values; all-locked equipment requires an unlock before a new roll.
 
 `/item/engrave-weapon` accepts exactly positive integer `TargetWeaponId` and
 `MaterialWeaponId`, identifying different owned inventory instances. The opt-in

@@ -112,7 +112,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Free equipment enhancement | Opt-in experience from owned hammers; three APK upgrades saved with all hammer stacks retained; validated engraving bonus supported |
 | Free equipment limit breaks | Two APK operations reached 5 breaks with gold, hammers, experience and other profile fields retained |
 | Free equipment option values | Seven APK rolls and one accepted proposal saved with resources retained; existing identities/locks preserved |
-| Free first equipment engraving | Explicit first-engraving mock retains hammer/gold and uses matching public option tiers; APK retry pending |
+| Free first equipment engraving | One APK engraving saved; gold, hammers, experience and limit breaks retained; matching public attribute tier |
+| Free equipment option locks | Lock/unlock existing ordinary options without consuming stones; locked values survive later rolls; APK retry pending |
 | Guardian mastery skill upgrades | Catalog-backed spending and class limits; 34 APK upgrades matched saved skills and costs |
 | Guardian mastery reset | Refund, configured free-gem payment and cooldown saved atomically; one APK reset verified |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |

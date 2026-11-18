@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 475,
+    "tests_run": 489,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1198,6 +1198,7 @@
     "apk_imported_lobby_verified": true,
     "enabled_mutation_routes": [
       "/item/apply-options",
+      "/item/change-lock-options",
       "/item/change-options",
       "/item/engrave-weapon",
       "/item/enhance-weapon",
@@ -2671,7 +2672,7 @@
       "assets_stackables_and_misc_inventory_equal_pre_mock_baseline": true,
       "all_other_profile_fields_except_user_revision_equal_pre_mock_baseline": true
     },
-    "option_lock_creation_supported": false,
+    "option_lock_creation_supported": true,
     "validated_saved_engraving_preserved": true
   },
   "free_first_equipment_engraving_mock": {
@@ -2707,6 +2708,48 @@
       "original_startup_seed_preserved": true,
       "real_saved_profile_unchanged": true
     },
-    "post_fix_apk_first_engraving": "pending backend reload and reconnect"
+    "post_fix_apk_first_engraving": {
+      "result": "PASS",
+      "saved_receipts": 1,
+      "saved_attribute_matches_receipt": true,
+      "saved_initial_ceiling": 1,
+      "gold_all_hammer_stacks_experience_and_limit_breaks_preserved": true,
+      "scope": "Saved engraving, ceiling, assets, hammer inventory, target experience and limit breaks; later ordinary option edits and other profile changes are outside this comparison"
+    }
+  },
+  "free_equipment_option_lock_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/change-lock-options",
+    "native_builder": "Oak.ApiConnection.SendChangeLockItemOptions",
+    "request_fields": [
+      "ItemId",
+      "OptionIds",
+      "DoLock"
+    ],
+    "official_response_captured": false,
+    "policy": "Free lock/unlock of requested existing ordinary option IDs; retain every stone, material and currency",
+    "explicit_shared_catalog": "weapon_option_mock_catalog.json",
+    "only_selected_lock_flags_and_user_revision_change": true,
+    "noop_requests_preserve_profile_revision_and_pending_proposal": true,
+    "known_saved_engraving_preserved": true,
+    "changed_locks_discard_only_same_item_unapplied_value_proposal": true,
+    "later_value_rolls_preserve_locked_values": true,
+    "atomic_profile_pending_removal_and_canonical_receipt": true,
+    "selected_id_order_insignificant_for_retry_identity": true,
+    "old_retries_preserve_later_unlock_and_value_changes_without_writes": true,
+    "synthetic_regressions": 14,
+    "full_windows_tests": 489,
+    "detached_actual_account_check": {
+      "result": "PASS",
+      "only_selected_lock_flags_and_user_revision_changed": true,
+      "all_stones_currencies_item_quantities_and_option_values_preserved": true,
+      "only_same_item_pending_proposal_discarded": true,
+      "later_roll_and_accept_preserve_locked_value": true,
+      "unlock_preserves_all_values_and_resources": true,
+      "old_retry_preserves_later_unlock_without_writes": true,
+      "original_startup_seed_preserved": true,
+      "real_saved_profile_unchanged": true
+    },
+    "post_fix_apk_option_lock": "pending backend reload and reconnect"
   }
 }
