@@ -51,6 +51,7 @@ not fetch missing bootstrap files from an official service.
 | `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
 | `village_gift_mock_catalog.json` | Princess gift acknowledgment without rewards | Matching client and explicit local cooldown; no reward pool is read |
+| `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 | `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
@@ -154,6 +155,27 @@ revision, gift pool or original captured seed changes. The skipped gift is not
 queued or delivered later. The village overlay and receipt commit atomically;
 replays return the current village without postponing a later timer or overwriting
 other village work. Catalog removal does not prevent receipt replay.
+
+`/lobby-village/remove-obstacle` accepts exactly one positive integer `buildingId`.
+Its explicit mock catalog `village_obstacle_mock_catalog.json` is limited to
+64 KiB and contains exactly the pinned `client` and `regenerating_specs`, a map
+of canonical positive decimal spec IDs to positive integer regeneration seconds
+in 1..31,536,000. Include only matching `LobbyBuildings` rows of type `Obstacle`
+with positive `RegenTime` and item rewards. The prepared catalog covers the
+regenerating vending machine (spec 321002, 57,600 seconds). Permanent obstacles,
+hero unlocks and normal building demolition are outside this mock.
+
+The request must identify one owned configured obstacle in status 0 (available)
+or 3 (regenerating). An available obstacle, or a completed regeneration, is
+acknowledged by retaining the building/position and setting status 3 with its
+next `EndTime`. Only those fields and the village revision change. A future
+regeneration is retained. The response contains current `UserLobbyVillage`,
+omitting `AddedItems` and `AddedCharacters` so the native reward branches are
+skipped. No currency is charged and no reward is delivered or deferred: this is
+an explicit local mock, not the official obstacle exchange. The entire user
+profile stays unchanged. The village overlay and receipt commit together;
+replays preserve later timers and other village actions, including after catalog
+removal. A different building under an existing operation identity rejects.
 
 `/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
 reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,

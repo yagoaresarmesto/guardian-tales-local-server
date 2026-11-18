@@ -6,14 +6,24 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **410 passing tests on Windows Python 3.11**. Nine princess-gift
+The suite has **418 passing tests on Windows Python 3.11**. Eight regenerating
+obstacle mock regressions cover exact profile/village preservation, available
+and future regeneration, old retries after later collection/regeneration,
+reopening/reconnect/new login, ownership/spec/status/clock/revision bounds,
+explicit configuration, request identity/schema/authentication and rollback.
+The owner selected an empty reward. The configured vending-machine mock keeps
+the building and position, restarts regeneration and charges/grants nothing.
+Its detached actual-account check passed; the APK retry requires backend reload
+and reconnect.
+Nine princess-gift
 mock regressions cover omitted reward notices, exact timer/revision mutation
 bounds, null/future/.NET fraction boundaries, current-state retries across later
 gifts and village collection, reopening/new login, malformed state, ownership,
 revision/time overflow, explicit catalog/schema/authentication and rollback.
 The owner selected no reward. A detached actual-account gift acknowledgment
 preserved the entire user profile and changed only its village gift timer/revision;
-the APK retry requires a backend reload and reconnect.
+one subsequent APK acknowledgment saved the expected gift timer and single
+village revision increment. Other village fields and captured seed hashes matched.
 Six imported stamina
 purchase regressions cover exact profile/seed preservation, saved/expired price
 tiers and batches, current-state retries after consumption/catalog removal,

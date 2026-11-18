@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 410,
+    "tests_run": 418,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1200,6 +1200,7 @@
       "/lobby-village/harvest-all",
       "/lobby-village/harvest-basecamp",
       "/lobby-village/receive-gift",
+      "/lobby-village/remove-obstacle",
       "/preset/delete-preset",
       "/preset/set-presets",
       "/preset/set-selected-preset",
@@ -2484,6 +2485,53 @@
       "old_retry_returns_latest_timer_without_writes": true,
       "prepared_local_cooldown_seconds": 21600
     },
-    "post_fix_apk_gift_mock": "pending backend reload and reconnect"
+    "post_fix_apk_gift_mock": {
+      "result": "PASS",
+      "saved_gift_receipts": 1,
+      "gift_timer_matches_receipt": true,
+      "village_revision_incremented_once": true,
+      "all_other_village_fields_preserved": true,
+      "captured_seed_preserved": true,
+      "scope": "Gift timer, village revision and other village fields; subsequent natural stamina changes are outside the profile comparison."
+    }
+  },
+  "regenerating_village_obstacle_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/lobby-village/remove-obstacle",
+    "owner_preferred_empty_reward": true,
+    "native_request_key": "buildingId",
+    "native_builder_and_removal_coroutine_inspected": true,
+    "missing_AddedItems_and_AddedCharacters_skip_native_reward_branches": true,
+    "response_models": [
+      "UserLobbyVillage"
+    ],
+    "explicit_external_catalog": "village_obstacle_mock_catalog.json",
+    "prepared_spec_id": 321002,
+    "prepared_regeneration_seconds": 57600,
+    "scope": "Regenerating item obstacle only; no permanent demolition, hero unlock, currency cost or rewards",
+    "building_and_position_retained": true,
+    "only_selected_status_end_time_and_village_revision_change": true,
+    "future_regeneration_timer_preserved": true,
+    "entire_user_profile_preserved": true,
+    "village_overlay_and_building_specific_receipt_atomic": true,
+    "changed_building_under_same_operation_rejected": true,
+    "old_replay_preserves_later_regeneration_and_village_collection": true,
+    "catalog_removal_and_reopening_replay_tested": true,
+    "original_official_response_captured": false,
+    "new_regressions": 8,
+    "focused_windows_checks": 45,
+    "full_windows_tests": 418,
+    "full_windows_result": "PASS",
+    "external_network_disabled_for_current_suite": false,
+    "private_actual_account_detached_validation": {
+      "result": "PASS",
+      "real_account_mutated": false,
+      "entire_user_profile_unchanged": true,
+      "no_reward_keys_no_payment_no_building_deletion": true,
+      "only_selected_obstacle_status_end_time_and_village_revision_changed": true,
+      "old_retry_preserves_later_regeneration_without_writes": true,
+      "prepared_regeneration_seconds": 57600
+    },
+    "post_fix_apk_obstacle_mock": "pending backend reload and reconnect"
   }
 }

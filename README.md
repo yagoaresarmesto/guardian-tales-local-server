@@ -107,7 +107,8 @@ snapshot. Other versions and distributions have not been validated. See the
 | Orbital preset creation/application | Two APK creations persisted; current state matches save/delete history and selections |
 | Village resource collection | APK gold collection verified; full soul points retained; saved clocks and retry receipts |
 | Guardian base-camp debug collection | Opt-in fixed mastery-point reward; four APK collections credited the requested 100 million each |
-| Princess gift | Explicit no-reward mock updates only the village gift timer/revision and omits the reward notice; APK retry pending |
+| Princess gift | No-reward mock; one APK acknowledgment saved its timer/revision with other village fields preserved |
+| Regenerating village obstacle | Explicit no-reward/no-payment mock restarts the configured machine's regeneration; APK retry pending |
 | Guardian mastery skill upgrades | Catalog-backed spending and class limits; 34 APK upgrades matched saved skills and costs |
 | Guardian mastery reset | Refund, configured free-gem payment and cooldown saved atomically; one APK reset verified |
 | Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |

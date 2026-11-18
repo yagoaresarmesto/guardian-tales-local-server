@@ -106,6 +106,7 @@ class SnapshotTests(unittest.TestCase):
                 "/lobby-village/harvest-all",
                 "/lobby-village/harvest-basecamp",
                 "/lobby-village/receive-gift",
+                "/lobby-village/remove-obstacle",
                 "/preset/delete-preset",
                 "/preset/set-presets",
                 "/preset/set-selected-preset",

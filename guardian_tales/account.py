@@ -76,6 +76,8 @@ from .village import create_tables as create_village_tables
 from .village import harvest as harvest_village
 from .village_gift import create_tables as create_village_gift_tables
 from .village_gift import receive as receive_village_gift
+from .village_obstacle import create_tables as create_village_obstacle_tables
+from .village_obstacle import remove as remove_village_obstacle
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -111,6 +113,7 @@ ACCOUNT_ROUTES = (
     "/lobby-village/harvest-all",
     "/lobby-village/harvest-basecamp",
     "/lobby-village/receive-gift",
+    "/lobby-village/remove-obstacle",
     "/user/guardian-mastery-level-up",
     "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
@@ -170,6 +173,7 @@ class AccountStore:
         create_mastery_reset_tables(db)
         create_attendance_tables(db)
         create_village_gift_tables(db)
+        create_village_obstacle_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1023,6 +1027,9 @@ class AccountStore:
 
     def receive_village_gift(self, request, operation_id, now=None):
         return receive_village_gift(self, request, operation_id, now)
+
+    def remove_village_obstacle(self, request, operation_id, now=None):
+        return remove_village_obstacle(self, request, operation_id, now)
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)

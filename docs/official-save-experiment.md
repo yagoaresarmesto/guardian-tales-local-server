@@ -98,12 +98,12 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Thirteen mutations are now enabled: `/summon/set-select-character`,
+Fourteen mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp`,
-`/lobby-village/receive-gift`,
+`/lobby-village/receive-gift`, `/lobby-village/remove-obstacle`,
 `/user/guardian-mastery-level-up` and `/user/reset-guardian-mastery-level`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
@@ -128,6 +128,8 @@ Gem stamina purchases use their existing catalog prices, quota, storage ceiling
 and atomic payment/grant receipts for the preserved account as well.
 Princess gifts use an explicit no-reward acknowledgment that advances only the
 village gift timer/revision and omits the reward notice.
+The configured regenerating obstacle also skips rewards/payment while retaining
+the building and restarting its regeneration timer.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -753,7 +755,42 @@ Nine regressions verify these boundaries, replay/interleaving and rollback. A
 detached actual-account acknowledgment verified the exact timer/revision changes,
 unchanged entire user profile, omitted reward notice and no-write old retry after
 a second gift. The real saved account was unchanged. The full Windows suite has
-410 passing tests. The APK gift acknowledgment remains pending backend reload
+410 passing tests. The subsequent APK acknowledgment saved its expected timer
+and single village revision increment. Other village fields and the captured
+seed hashes matched. Subsequent natural stamina changes are outside that profile
+comparison.
+
+## Regenerating vending machine without rewards
+
+The next unsupported request was `/lobby-village/remove-obstacle`, and the owner
+again preferred an empty reward. Its native builder sends lower-case `buildingId`.
+The removal coroutine checks optional `AddedItems`/`AddedCharacters`; absent keys
+skip reward branches while the normal removal/refresh path continues. The matching
+public table identifies the saved obstacle as the regenerating vending machine,
+with a positive regeneration interval. No original official response was captured.
+
+The explicit external mock catalog permits only configured regenerating obstacle
+specs, with the prepared machine interval of 57,600 seconds. A request must identify
+one owned instance in available/completed-regeneration state. It retains the row,
+position and all other fields, sets status 3 with a new regeneration `EndTime` and
+increments the village revision. An active future regeneration is retained. The
+response contains only current `UserLobbyVillage`, with no item or hero reward
+keys. No soul points or other currency are spent, and no rewards are delivered or
+deferred. This is a local mock, not an implementation of the official exchange.
+Permanent removal, hero-unlock obstacles and general demolition remain unsupported.
+
+The overlay and a building-specific operation receipt commit atomically. A replay
+returns the current village without extending a later timer or overwriting other
+village work, including after reopening or catalog removal. Reusing the same
+request identity for a different building rejects. Wrong ownership/spec/status,
+malformed requests/configuration, clock/revision overflow and unauthenticated
+requests reject without writes.
+
+Eight regressions and the 418-test Windows suite pass. A detached actual-account
+check preserved the entire user profile, restarted only the selected machine's
+regeneration and village revision, retained the building/position and verified a
+no-write old replay after a later regeneration. The real saved account was
+unchanged during the check. The APK obstacle mock retry is pending backend reload
 and reconnect.
 
 ## Host readiness before the APK check
