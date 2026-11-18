@@ -89,6 +89,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Local currency administration | Audited gem and season-bound Festival point grants, idempotent operation IDs and exclusive offline writes |
 | Gem stamina purchases | Fresh/imported accounts: external price tiers, atomic free-gem costs and stored stamina, UTC quota and retry receipts |
 | Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
+| Imported hero leveling | Opt-in free experience for owned catalog heroes, including limit breaks, blessings and myth caps; atomic save/retry checks passed; APK retry pending |
 | Mission book | Inn, knight level 2, stamina and configured hero-draw milestones; atomic batches and persistent reward receipts; other missions pending |
 | Hero collection/draw challenges | Configured thresholds, next-step or all-earned-step batches, atomic asset rewards and persistent step/request receipts |
 | Hero acquisition knowledge | Catalog-backed initial knowledge for batches of untrained base heroes, saved character flags and retry receipts; advanced objectives pending |

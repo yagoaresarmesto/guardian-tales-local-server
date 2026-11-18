@@ -33,6 +33,7 @@ not fetch missing bootstrap files from an official service.
 | `attendance_catalog.json` | Daily attendance reward lookup | Parsed public attendance catalog, not account state |
 | `attendance_mock_catalog.json` | Explicit no-reward attendance for imported accounts | Matching client, group IDs and 28-day cycle; owner-selected debug policy |
 | `training_catalog.json` | Knight experience targets and story caps | Parsed public experience catalog for the matching build |
+| `imported_training_catalog.json` | Free leveling of owned imported heroes | Matching public experience thresholds, story caps, hero/myth variant IDs and level modifiers; explicit free-XP policy |
 | `tutorial_catalog.json` | Known UI completion markers after Inn | Parsed public tutorial ID list for the matching build |
 | `quest_catalog.json` | Known chapter quest registration in Inn | Parsed mapping of chapter codes to quest IDs |
 | `substage_catalog.json` | Side-stage map discovery in Inn | Verified map handles and target stage IDs |
@@ -536,7 +537,36 @@ objects containing `opened_stage_id` and `max_level`. The first cap is the defau
 later rows apply when their stage has its opened flag. Resolve build-specific
 values before supplying this file. The synthetic fixture illustrates the schema
 with test thresholds; it must not be used with an APK. Without this file, only
-the original one-time knight tutorial is supported.
+the original one-time knight tutorial is supported for fresh accounts.
+
+Imported accounts instead require `imported_training_catalog.json`. This explicit
+local policy includes `client` (the pinned version/code/region),
+`free_experience: true`, `experience_by_level`, `caps`, `character_ids`, `myth_ids`,
+`limit_break_coefficient`, `blessing_coefficient`, `myth_coefficient`,
+`max_limit_breaks` and `max_bless_level`. Thresholds are `[0]` followed by public
+`exps2.LevelExps[].TotalExps`; caps retain the ordered public story rows. For this
+policy, a native internal level N uses threshold index N (displayed level N+1).
+The limit is the opened-story cap plus saved breaks times their coefficient,
+saved blessings times their coefficient and the myth coefficient for a myth
+variant. Resolve IDs and modifiers from matching public client data, never a
+player's current level. The observed build has coefficients 3, 5 and 20, maximum
+five breaks and three blessings. Myth variant IDs are public character specs
+whose rank is at least the public `MythCharacterRank` constant (six); hero IDs
+come from the public hero-spec index. `MythStoneCharacterMap` identifies eligible
+pre-myth heroes and must not be used as the list of already-mythic variants.
+These game tables remain external.
+
+Positive XP deltas may stop between thresholds but cannot exceed the computed
+cap. The handler changes only requested heroes' experience, `User.Cas`, the
+record of total experience applied and `UserRecord.Cas`. Every asset, including
+shared experience amount/spending, remains unchanged; an empty XP balance is
+valid. One transaction saves targets and an epoch/sequence receipt. Reconnect
+replays return current resources without training again. The same delta with a
+new request identity is a new operation. A full fresh client launch has a new
+epoch and cannot identify an old request solely from an ambiguous XP delta.
+Missing policy, unknown/unowned heroes, invalid state, cap/record overflow or a
+failed batch rejects without profile or receipt changes. The older paid knight
+training and its receipts remain separate.
 
 The optional tutorial catalog contains `ids`, a list of distinct nonnegative
 integer tutorial IDs from the matching client's catalog. Built-in passive help

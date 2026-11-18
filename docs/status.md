@@ -6,7 +6,17 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **577 passing tests on Windows Python 3.11**. Three friend
+The suite has **584 passing tests on Windows Python 3.11**. Seven imported-hero
+training regressions cover free XP with an empty balance, non-knights, break/
+blessing/myth caps, native threshold indexing, partial growth, story unlocks,
+atomic batches/rollback, saved-state guards and request/reconnect receipts.
+The actual pending `/user/add-character-experience` request passed on an
+in-memory clone with only target XP, revisions and applied-XP record changed;
+all assets and the real source profile remained unchanged. The matching external
+free-XP policy is installed locally. APK leveling remains pending backend reload
+and reconnect. See [contract and evidence](official-save-experiment.md#free-imported-hero-experience).
+
+Three earlier friend
 recommendation regressions cover authenticated parameterless/native empty bodies,
 the native `RecommendInfos` list, social-state preservation and fresh/imported
 reconnect reads without writes. The unsupported `/friend2/recommend` request was

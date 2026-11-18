@@ -49,6 +49,8 @@ from .guild_raid import menu_read as read_raid_menu
 from .guild_raid import rankings as guild_raid_rankings
 from .guild_raid import start_stage as enter_raid_stage
 from .hero_knowledge import claim_hero_knowledge
+from .imported_training import create_tables as create_imported_training_tables
+from .imported_training import train as train_imported_characters
 from .items import inventory_item
 from .mastery import create_tables as create_mastery_tables
 from .mastery import upgrade as upgrade_guardian_mastery
@@ -254,6 +256,7 @@ class AccountStore:
         db.execute(
             "CREATE TABLE IF NOT EXISTS character_training_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, targets TEXT NOT NULL)"
         )
+        create_imported_training_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS character_summon_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, results TEXT NOT NULL, created_at TEXT NOT NULL)"
         )
@@ -863,6 +866,8 @@ class AccountStore:
         }
 
     def add_character_experience(self, request, operation_id=None):
+        if is_imported(self.db):
+            return train_imported_characters(self, request, operation_id)
         if (self.references.directory / "training_catalog.json").is_file():
             return train_characters(self, request, operation_id)
         return self._initial_knight_training(request)

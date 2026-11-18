@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 577,
+    "tests_run": 584,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3185,5 +3185,28 @@
       "full_profile_and_social_state_unchanged": true
     },
     "post_fix_apk_recommendation_view": "Pending backend reload and reconnect"
+  },
+  "free_imported_hero_experience": {
+    "date": "2026-11-18",
+    "observed_rejected_route": "/user/add-character-experience",
+    "native_request": "Experiences maps owned character row IDs to positive XP deltas; private values excluded",
+    "native_cap": "Story cap + limit breaks * 3 + blessings * 5 + myth bonus 20; native internal level N uses threshold index N",
+    "external_public_catalog": "Matching exps2 thresholds/caps, 709 hero-spec IDs and 41 public rank-six myth variants; explicit free_experience policy; pre-myth eligibility IDs excluded",
+    "mutation_scope": "Requested owned hero XP, User.Cas, UserRecord.AddCharacterExperienceAmount and UserRecord.Cas only",
+    "all_assets_amounts_and_spending_preserved_even_with_zero_xp_balance": true,
+    "transaction": "Profile and separate epoch/sequence training receipt commit or roll back together; replays return current state",
+    "same_delta_with_new_request_identity_is_new_training": true,
+    "fresh_paid_knight_training_unchanged": true,
+    "synthetic_regressions": 7,
+    "full_windows_tests": 584,
+    "private_actual_account_clone_check": {
+      "result": "PASS",
+      "pending_request_and_exact_retry": true,
+      "applied_to_in_memory_clone_only": true,
+      "all_asset_rows_unchanged": true,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_leveling": "Pending backend reload, reconnect and retry"
   }
 }

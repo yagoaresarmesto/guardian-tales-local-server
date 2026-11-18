@@ -151,6 +151,17 @@ a new request can legitimately spend the same amount or reuse a sequence ID.
 Replays return current state without spending again. After a fresh session, a
 matching completed request is recognized only when its proposed new target is
 invalid; this cannot infer every ambiguous replay across a fresh client launch.
+
+Imported accounts use a separate, opt-in free training implementation and
+`imported_character_training_requests` receipts. Matching external public data
+supplies the hero IDs, myth variants, XP thresholds and the story/break/blessing/
+myth cap calculation. Positive deltas within that cap update owned hero XP and
+the applied-experience record without touching any asset amount or spending.
+The profile and receipt commit together; a replay returns current resources,
+while a new identity may legitimately apply the same delta again. No cost-based
+retry inference or tutorial marker is shared with paid knight training. Exact
+`Experiences` requests are admitted by the imported-account mutation guard only
+into this separately validated policy; missing configuration still rejects.
 Without the catalog, the original one-time 37-point tutorial remains available.
 
 Beginner mission claims currently accept Inn (0), knight level 2 (1) or spending

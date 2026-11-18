@@ -1566,6 +1566,46 @@ native empty packet: zero writes and unchanged full profile. The original
 official recommendation response was not captured. Actual empty recommendation
 UI rendering still needs verification after backend reload and reconnect.
 
+## Free imported hero experience
+
+The next rejected call was `/user/add-character-experience`. Its native request
+contains `Experiences`, mapping owned row IDs to positive XP deltas. The imported
+mutation guard had blocked the route, and the existing training implementation
+only admitted knights without breaks or blessings. The pending request targets
+an owned non-knight with five breaks and blessing level three. The user chose
+normal saved hero growth without consuming shared experience.
+
+Native `CharacterInfo.RawMaxLevel` adds story level, limit-break and blessing
+coefficients and a myth bonus. `GetAddedCoefLevel` uses public constants 3, 5 and
+20; myth specs have rank at least six. Read-only public character-spec references
+identify 41 rank-six variants in the 709-entry hero-spec index. The myth-stone
+map instead identifies the pre-myth eligible specs, not those rank-six IDs;
+`AssignMythMap` and `MythSpec` distinguish these two steps. The matching external
+policy combines these IDs with public `exps2` thresholds and story caps. Native
+levels are zero-based: threshold N is the XP needed for internal level N, shown
+as N+1. The new imported policy uses this index explicitly; legacy fresh-account
+paid training retains its existing behavior.
+
+One to 32 owned targets can receive positive XP deltas, including partial levels,
+up to their individual current cap. All targets validate before mutation. Only
+target XP, User revision, applied-experience record and record revision change.
+All assets, equipment, other heroes and progress remain unchanged, even when
+the shared XP balance is zero. Profile and epoch/sequence receipt save in one
+transaction. Reconnect replays return current resources; identical costs with
+new request identities are legitimate new training. Conflicting identities,
+unknown heroes, malformed policies/state, over-cap deltas and numeric overflow
+reject atomically. A new client epoch cannot infer an ambiguous prior operation
+from XP cost alone.
+
+Seven regressions cover advanced/non-knight/myth caps, native threshold indexing,
+story unlocks, zero-balance free batches, partial growth, profile preservation,
+reopen/reconnect/retry behavior, invalid inputs and transactional rollback. The
+actual pending request passed through the protocol against an in-memory clone
+of the saved database, including an exact retry. All asset rows matched the
+original, and the real read-only source had zero writes and unchanged profile.
+The external public policy is installed locally. Actual APK leveling and UI
+refresh still require backend reload, reconnect and the user's retry.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all
