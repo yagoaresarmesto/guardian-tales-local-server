@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 352,
+    "tests_run": 365,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": true,
@@ -1206,7 +1206,8 @@
       "/preset/set-selected-preset",
       "/summon/select-character",
       "/summon/set-select-character",
-      "/user/charge-stamina"
+      "/user/charge-stamina",
+      "/user/guardian-mastery-level-up"
     ]
   },
   "imported_village_cache_hints": {
@@ -2113,9 +2114,16 @@
     "private_pre_retry_hashes_recorded": true,
     "real_account_mutated_during_checks": false,
     "original_official_response_captured": false,
-    "running_backend_reloaded": false,
-    "post_fix_apk_mastery_debug_collection": "pending",
-    "ordinary_production_scoring_conversion_tickets_party_changes_and_mastery_upgrades_implemented": false
+    "running_backend_reloaded": true,
+    "post_fix_apk_mastery_debug_collection": {
+      "result": "PASS",
+      "credited_collections": 4,
+      "total_credited": 400000000,
+      "saved_balance_matches_baseline_plus_receipts": true,
+      "mastery_level_up_requests_before_fix": 0,
+      "scope": "Saved mastery balance and harvest receipts; unrelated live account mutations are outside this comparison."
+    },
+    "ordinary_production_scoring_conversion_tickets_and_party_changes_implemented": false
   },
   "imported_account_console_gem_grants": {
     "date": "2026-11-18",
@@ -2160,5 +2168,66 @@
     "retry_preserves_later_spending_without_duplicate_grant": true,
     "current_experimental_import_grant_applied": false,
     "post_command_current_import_apk_display": "pending owner command and reconnect"
+  },
+  "guardian_mastery_skill_upgrades": {
+    "date": "2026-11-18",
+    "observed_failure_route": "/user/guardian-mastery-level-up",
+    "scope": "One catalog-backed skill level with mastery payment, derived total and atomic retry receipt",
+    "native_builder_single_integer_SkillId_inspected": true,
+    "native_coroutine_success_ui_refresh_inspected": true,
+    "native_skill_map_next_cost_class_cap_and_total_helpers_inspected": true,
+    "original_official_response_captured": false,
+    "external_catalog": "guardian_mastery_catalog.json",
+    "prepared_skills": 16,
+    "prepared_classes": 4,
+    "prepared_individual_levels": 64,
+    "local_activation_policy": "One owned producing upgraded camp; complete feature-unlock emulation unfinished",
+    "native_class_cap": "min((minimum class total // 10 + 1) * 10, largest class skill count * individual level count)",
+    "payment_asset": 70033,
+    "local_spent_counter_policy": "Add exact next-level cost without resetting historical signed values",
+    "response_model": "User",
+    "only_selected_skill_total_mastery_balance_spent_and_user_revision_change": true,
+    "village_and_captured_seed_preserved": true,
+    "profile_and_receipt_atomic": true,
+    "reconnect_retry_returns_current_user_without_second_debit": true,
+    "changed_skill_under_same_receipt_rejected": true,
+    "new_regressions": 13,
+    "focused_windows_checks": 38,
+    "automated_matrix": [
+      {
+        "result": "PASS",
+        "tests_run": 365,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.11.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      },
+      {
+        "result": "PASS",
+        "tests_run": 365,
+        "failures": 0,
+        "errors": 0,
+        "external_network_disabled": true,
+        "network_interfaces": [
+          "lo"
+        ],
+        "python": "3.13.18",
+        "scope": "Protocol, platform HTTPS, local account persistence, reward retries and read-only CDN. APK verification is documented separately."
+      }
+    ],
+    "private_actual_account_detached_validation": {
+      "result": "PASS",
+      "real_account_mutated": false,
+      "eligible_skill_count": 16,
+      "only_expected_skill_total_mastery_balance_spent_revision_changed": true,
+      "village_unchanged": true,
+      "replay_no_write": true
+    },
+    "post_fix_apk_upgrade": "pending backend reload",
+    "mastery_reset_implemented": false
   }
 }

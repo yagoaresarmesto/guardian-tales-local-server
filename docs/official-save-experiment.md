@@ -98,10 +98,11 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Eight mutations are now enabled: `/summon/set-select-character`,
+Nine mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina` and
-`/lobby-village/harvest-all` and `/lobby-village/harvest-basecamp`. The summon routes
+`/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp` and
+`/user/guardian-mastery-level-up`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
@@ -115,6 +116,8 @@ Village harvesting collects configured inn/facility gold and soul points with
 balances, clocks and retry receipts stored together.
 Base-camp harvesting currently requires an explicit fixed mastery debug reward;
 the prepared experiment uses the owner's requested 100 million per collection.
+Mastery skill upgrades spend the catalog's next-level cost and persist one skill,
+the total mastery level and the corresponding payment with retry protection.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -550,7 +553,7 @@ Normal guardian points, levels, gold, tickets, owned heroes/gear and other villa
 systems remain unchanged. If the full reward would exceed the signed-32-bit
 balance, the request rejects atomically. No fallback debug reward exists without
 the catalog. Ordinary camp rates/scoring, gold conversion, ticket collection,
-party management and mastery upgrades are separate unfinished contracts.
+party management and mastery resets are separate unfinished contracts.
 
 Twelve regressions cover exact rewards and preserved state/seeds, interval/future/
 zero-clock boundaries, current-state retries, reopening/new login, explicit catalog
@@ -560,8 +563,50 @@ changed debug configuration. All 348 tests pass on Python 3.11 and 3.13 with
 external networking disabled. A detached actual-account check granted exactly
 100 million mastery points, preserving all other fields except the intended camp
 clock and revisions; replay did not write. The real account was unchanged and
-private pre-retry hashes were recorded. Backend reload and the APK retry remain
-pending.
+private pre-retry hashes were recorded. Subsequently, four APK collections
+produced saved receipts totaling 400 million mastery points. The saved balance
+matches the pre-retry balance plus these receipts. Unrelated live village and
+console operations are outside that balance-only comparison.
+
+## Guardian mastery skill upgrades
+
+The owner's attempt to add a mastery skill point reached the unsupported
+`/user/guardian-mastery-level-up`. The matching native builder sends exactly one
+integer `SkillId`; its coroutine consumes success and refreshes the mastery UI.
+Native mastery helpers establish the skill map, next-level cost and class cap.
+These are inferred client contracts; no original official response was captured.
+
+An external `guardian_mastery_catalog.json` supplies matching skill/class IDs,
+ordered level costs and upgraded camp specs. The prepared 3.57.0 table has 16
+skills across four classes and 64 individual levels. The handler requires an
+owned, producing upgraded camp; this is the local activation gate rather than a
+complete implementation of every lobby feature-unlock rule.
+
+Each accepted request spends the selected skill's next-level cost from asset
+70033 and increments that asset's historical `Spent` counter. It preserves any
+existing signed counter value rather than resetting it. It increases one entry
+in `User.Options.GuardianMastery.GuardianMasterySkill`, synchronizes the derived
+`User.GuardianMasteryLevel` total and increments `User.Cas`. The local spending
+counter policy is not verified against an official level-up response. Reset time,
+normal guardian points, all other assets, heroes/gear, village and captured seed
+remain unchanged. The response carries the current `User` model.
+
+The native class cap is the next multiple of ten above the lowest class total,
+clamped to the largest class skill count times the number of individual levels.
+The selected class must remain below that cap before the upgrade, and the skill
+must have another configured level. Missing or malformed state, inconsistent
+totals, unknown skills, insufficient funds and overflow reject without writes.
+Profile and request receipt commit together. A reconnect replay returns current
+state without another debit, even after another upgrade or catalog removal;
+changing its skill under the same request identity rejects. Fresh-login request
+identity has the same limits as the other epoch-based mutations.
+
+Thirteen regressions exercise these boundaries, persistence and rollback. All
+365 tests pass on Python 3.11 and 3.13 without external networking. A detached
+in-memory actual-account upgrade verified its exact next cost, narrow mutation
+bounds, unchanged village and no-write retry; it did not mutate the saved account.
+The actual APK upgrade retry remains pending backend reload. Mastery reset and
+ordinary camp production remain unfinished.
 
 ## Host readiness before the APK check
 

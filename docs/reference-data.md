@@ -50,6 +50,7 @@ not fetch missing bootstrap files from an official service.
 | `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
+| `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 
 These `.bin` inputs are **response bodies**, not full TLS records, wire frames,
 packet headers, APK files, or account responses. Missing files cause a controlled
@@ -151,7 +152,29 @@ amount and advances the clock; retries cannot grant it again. Normal guardian
 points (70013), mastery/guardian levels, gold, tickets, parties and equipment
 remain unchanged. Overflow rejects the whole reward. Without the explicit catalog,
 the operation rejects; ordinary production/scoring, conversion, quick-harvest
-tickets, party changes and mastery upgrades remain unfinished.
+tickets and party changes remain unfinished. Skill upgrades use their own catalog.
+
+`/user/guardian-mastery-level-up` accepts exactly one integer `SkillId`. Its
+external `guardian_mastery_catalog.json` is limited to 64 KiB and contains exactly
+`client`, `portal_specs`, `skills` and `level_costs`. The client is pinned as above;
+portal specs are distinct positive IDs for upgraded camps. `skills` maps canonical
+positive decimal skill IDs to integer class IDs 1..4, with all four classes
+present. `level_costs` is a nonempty list of positive signed-32-bit costs, indexed
+by the selected skill's current level: index zero buys level one. Derive these
+from the matching `guardianlevel` table's `GuardianSkill` (`SkillId`,
+`SkillCategoryId`) and ordered `GuardianSkillLevel` (`SkillLevel`, `LevelUpExp`)
+rows. Keep the extracted data external; it is not in the published content pack.
+
+The prepared catalog contains 16 skills and 64 levels. The lowest sum of skill
+levels among the four classes controls the next ten-level class cap; the native
+maximum is the largest class's skill count times the individual level count.
+The selected skill also has its own maximum. The saved skill map and total must
+agree. An owned producing upgraded camp is the local activation gate. A single
+transaction spends mastery asset 70033, adds the cost to its signed `Spent`
+counter, increments the selected skill, synchronizes the total and increments
+the account revision. Historical spending treatment is a local policy; the
+official response was not captured. Retries return current user state without
+another debit. Mastery reset is unsupported.
 
 The attendance reader expects `origin_group`, `active_group`, and `groups`, where
 each group maps to rows with `Day` and `Rewards`; a reward has `ItemId` and `Amount`.

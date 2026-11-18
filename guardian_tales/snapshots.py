@@ -36,6 +36,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/charge-stamina",
         "/lobby-village/harvest-all",
         "/lobby-village/harvest-basecamp",
+        "/user/guardian-mastery-level-up",
     )
 )
 ACCOUNT_READS = frozenset(

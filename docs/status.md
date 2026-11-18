@@ -6,7 +6,12 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **352 passing tests**. Four additional gem-administration regressions
+The suite has **365 passing tests**. Thirteen guardian-mastery regressions cover
+single-skill spending, exact costs, class/skill limits, preserved state, retries,
+reopening/new login, schema/authentication/catalog guards, invalid saved state,
+revision/spending limits and transaction rollback. A detached actual-account
+upgrade passed; the APK skill-upgrade retry requires a backend reload.
+Four additional gem-administration regressions
 cover imported accounts without a local prologue row, exact state preservation,
 CLI/reopening/replay, signed-64-bit revisions and older databases without an import
 table. The current imported-account gem grant and APK display are pending manual
@@ -986,7 +991,22 @@ Normal guardian points, levels, gold, tickets, parties, heroes and equipment rem
 unchanged. Ordinary camp scoring/rates and conversion are unfinished. All 348
 isolated tests pass. The exact reward and mutation bounds passed against a
 temporary in-memory copy of the actual account, without changing its saved state.
-Backend reload and the APK mastery-debug collection retry remain pending. Other
-village actions and rewards are unfinished.
+Four subsequent APK camp collections have saved receipts totaling 400 million
+mastery points; the saved balance equals the pre-retry balance plus those rewards.
+This comparison covers the mastery balance and receipts, not unrelated concurrent
+village or console operations.
+
+The next mastery failure was `/user/guardian-mastery-level-up`, which accepts one
+`SkillId`. It now spends the matching next-level cost from asset 70033, updates
+one skill in `User.Options.GuardianMastery`, synchronizes the total mastery level,
+increments the user revision and saves a receipt atomically. Native class caps
+advance in tens according to the lowest class total, with a separate per-skill
+maximum. An upgraded producing camp and a matching external catalog are required.
+Reconnect retries return current user state without a second debit. Thirteen
+new regressions and the full 365-test matrix pass on Python 3.11/3.13 without
+external networking. A detached real-account check verified the exact cost,
+mutation bounds and replay without changing the saved account. The APK upgrade
+retry is pending backend reload. Mastery reset and other village actions remain
+unfinished.
 See the
 [experiment boundaries and remaining work](official-save-experiment.md).
