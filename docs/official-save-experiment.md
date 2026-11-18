@@ -98,11 +98,12 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
-Twelve mutations are now enabled: `/summon/set-select-character`,
+Thirteen mutations are now enabled: `/summon/set-select-character`,
 `/summon/select-character`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp`,
+`/lobby-village/receive-gift`,
 `/user/guardian-mastery-level-up` and `/user/reset-guardian-mastery-level`. The summon routes
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
@@ -125,6 +126,8 @@ Daily attendance uses an explicit no-reward mock: it acknowledges the local day
 and advances calendar/login counters without delivering or parsing any reward.
 Gem stamina purchases use their existing catalog prices, quota, storage ceiling
 and atomic payment/grant receipts for the preserved account as well.
+Princess gifts use an explicit no-reward acknowledgment that advances only the
+village gift timer/revision and omits the reward notice.
 Other mutations
 remain rejected until validated for imported state. Health's
 `imported_account_read_only` is false because these routes can write.
@@ -720,8 +723,38 @@ purchase tests retain rollback and daily-reset coverage. The full Windows suite
 has 401 passing tests. A detached actual-account purchase spent exactly the
 configured first-tier cost and added its stored stamina amount, preserved all
 other fields and verified a no-write delayed replay. The real saved account was
-unchanged during the check. The imported APK purchase retry is pending backend
-reload and reconnect.
+unchanged during the check. The imported APK subsequently saved one purchase
+receipt; its gem payment, stored stamina and reset counter matched. This check
+covers those purchase fields rather than unrelated subsequent village actions.
+
+## Princess gift without rewards
+
+The next unsupported request was `/lobby-village/receive-gift`. The owner explicitly
+preferred no reward. The matching native builder sends no parameters. Its success
+callback checks for `AddedItems`; when the key is absent it skips reward parsing
+and the reward notice, then invokes the completion action. The saved village uses
+`NextGiftTime` to gate the present. No original official gift response was captured.
+
+An explicit external `village_gift_mock_catalog.json` pins the client and local
+cooldown. The prepared 21,600-second delay is a debug policy, not a claimed official
+interval. A due gift updates only `UserLobbyVillage.NextGiftTime` and its revision.
+Null/future timers are retained. The response contains the current village and
+omits `AddedItems`, rather than manufacturing a zero-value item. The entire user
+profile, all balances/inventory, other village fields and the captured startup seed
+remain unchanged; the gift is skipped rather than deferred.
+
+The village overlay and operation receipt commit together. Replays return current
+village state without resetting a later timer or overwriting subsequent village
+collection, including after reopening or catalog removal. Missing/invalid
+configuration, malformed timers, wrong ownership, invalid request/authentication
+and revision/time overflow reject without writes.
+
+Nine regressions verify these boundaries, replay/interleaving and rollback. A
+detached actual-account acknowledgment verified the exact timer/revision changes,
+unchanged entire user profile, omitted reward notice and no-write old retry after
+a second gift. The real saved account was unchanged. The full Windows suite has
+410 passing tests. The APK gift acknowledgment remains pending backend reload
+and reconnect.
 
 ## Host readiness before the APK check
 

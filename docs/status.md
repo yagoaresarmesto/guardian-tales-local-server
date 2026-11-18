@@ -6,14 +6,24 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **401 passing tests on Windows Python 3.11**. Six imported stamina
+The suite has **410 passing tests on Windows Python 3.11**. Nine princess-gift
+mock regressions cover omitted reward notices, exact timer/revision mutation
+bounds, null/future/.NET fraction boundaries, current-state retries across later
+gifts and village collection, reopening/new login, malformed state, ownership,
+revision/time overflow, explicit catalog/schema/authentication and rollback.
+The owner selected no reward. A detached actual-account gift acknowledgment
+preserved the entire user profile and changed only its village gift timer/revision;
+the APK retry requires a backend reload and reconnect.
+Six imported stamina
 purchase regressions cover exact profile/seed preservation, saved/expired price
 tiers and batches, current-state retries after consumption/catalog removal,
 reopening/reconnect/new login, storage/funds/quota/schema/authentication guards
 and signed-64-bit revision limits. The existing purchase handler is now enabled
 for imported accounts. A detached actual-account purchase verified its exact
 gem cost, stored stamina grant and no-write delayed replay; the APK purchase
-retry requires a backend reload and reconnect.
+retry subsequently saved one receipt with the expected gem payment, stored
+stamina and reset counter. This verification covers those purchase fields, not
+unrelated later village actions.
 Fourteen daily
 attendance mock regressions cover no-reward mutation bounds, ignored reward
 catalogs, day/request retry fences, official same-day state, reopening/new login,

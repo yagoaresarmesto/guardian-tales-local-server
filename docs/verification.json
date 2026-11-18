@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 401,
+    "tests_run": 410,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -1199,6 +1199,7 @@
     "enabled_mutation_routes": [
       "/lobby-village/harvest-all",
       "/lobby-village/harvest-basecamp",
+      "/lobby-village/receive-gift",
       "/preset/delete-preset",
       "/preset/set-presets",
       "/preset/set-selected-preset",
@@ -2434,6 +2435,55 @@
       "charged_stamina_timer_paid_gems_other_assets_roster_inventory_and_record_preserved": true,
       "delayed_replay_does_not_charge_grant_reset_or_write": true
     },
-    "post_fix_imported_apk_purchase": "pending backend reload and reconnect"
+    "post_fix_imported_apk_purchase": {
+      "result": "PASS",
+      "saved_purchase_receipts": 1,
+      "gem_cost": 100,
+      "stored_stamina_granted": 50,
+      "gem_balance_and_spending_match_receipt": true,
+      "reserve_balance_and_spending_match_receipt": true,
+      "daily_counter_and_reset_match_receipt": true,
+      "scope": "Saved gem payment, stored stamina and daily counter; unrelated subsequent village changes are outside this comparison."
+    }
+  },
+  "village_princess_gift_mock": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/lobby-village/receive-gift",
+    "owner_explicitly_preferred_no_reward": true,
+    "native_parameterless_builder_inspected": true,
+    "native_success_callback_skips_reward_parsing_and_notice_when_AddedItems_absent": true,
+    "response_models": [
+      "UserLobbyVillage"
+    ],
+    "AddedItems_key_omitted": true,
+    "user_profile_and_all_balances_inventory_unchanged": true,
+    "only_due_village_gift_timer_and_village_revision_change": true,
+    "null_and_future_timers_preserved": true,
+    "dotnet_seventh_fraction_eligibility_guarded": true,
+    "explicit_external_catalog": "village_gift_mock_catalog.json",
+    "prepared_local_cooldown_seconds": 21600,
+    "official_gift_interval_and_response_verified": false,
+    "gift_reward_skipped_not_deferred": true,
+    "village_overlay_and_receipt_atomic": true,
+    "replay_returns_current_village_preserving_later_gift_and_collection": true,
+    "receipt_replay_survives_catalog_removal_and_reopening": true,
+    "original_captured_seed_preserved": true,
+    "new_regressions": 9,
+    "focused_windows_checks": 49,
+    "full_windows_tests": 410,
+    "full_windows_result": "PASS",
+    "external_network_disabled_for_current_suite": false,
+    "private_actual_account_detached_validation": {
+      "result": "PASS",
+      "real_account_mutated": false,
+      "owner_selected_no_reward_mock": true,
+      "only_village_next_gift_time_and_revision_changed": true,
+      "entire_user_profile_unchanged": true,
+      "response_contains_only_current_village_model": true,
+      "AddedItems_omitted_to_skip_native_reward_notice": true,
+      "old_retry_returns_latest_timer_without_writes": true,
+      "prepared_local_cooldown_seconds": 21600
+    },
+    "post_fix_apk_gift_mock": "pending backend reload and reconnect"
   }
 }

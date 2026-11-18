@@ -50,6 +50,7 @@ not fetch missing bootstrap files from an official service.
 | `stamina_regen_catalog.json` | Natural stamina recharge | Matching client, base charged-stamina maximum and interval in minutes |
 | `orbital_preset_catalog.json` | Creating/applying an unused Orbital slot | Matching client and mode slot count |
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
+| `village_gift_mock_catalog.json` | Princess gift acknowledgment without rewards | Matching client and explicit local cooldown; no reward pool is read |
 | `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 | `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
@@ -137,6 +138,22 @@ are supported; mixed-resource facility effects and unfinished inns reject.
 Airships, visitors, guardian-base-camp points, dispatches, shops and construction
 require their own operations. Native arithmetic is evidence for the local
 calculation, not a captured official reward contract.
+
+`/lobby-village/receive-gift` supports an explicit no-reward mock. Its external
+`village_gift_mock_catalog.json`, limited to 4 KiB, contains exactly the pinned
+`client` and positive integer `cooldown_seconds` in 1..31,536,000. The prepared
+local cooldown is 21,600 seconds. This is a local debugging policy, not a verified
+official gift interval; no official reward response was captured.
+
+The parameterless request requires an owned preserved village. If its nullable
+`NextGiftTime` is due, only that timer and `UserLobbyVillage.Cas` advance. A future
+or null timer is retained. The response contains only the current village model;
+`AddedItems` is omitted because the native success callback skips its reward
+notice when that key is absent. No user profile, balance, inventory, account
+revision, gift pool or original captured seed changes. The skipped gift is not
+queued or delivered later. The village overlay and receipt commit atomically;
+replays return the current village without postponing a later timer or overwriting
+other village work. Catalog removal does not prevent receipt replay.
 
 `/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
 reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,

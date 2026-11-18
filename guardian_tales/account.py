@@ -74,6 +74,8 @@ from .training import train_characters
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
 from .village import create_tables as create_village_tables
 from .village import harvest as harvest_village
+from .village_gift import create_tables as create_village_gift_tables
+from .village_gift import receive as receive_village_gift
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -108,6 +110,7 @@ ACCOUNT_ROUTES = (
     "/preset/delete-preset",
     "/lobby-village/harvest-all",
     "/lobby-village/harvest-basecamp",
+    "/lobby-village/receive-gift",
     "/user/guardian-mastery-level-up",
     "/user/reset-guardian-mastery-level",
     "/stage/get-stage-progresses",
@@ -166,6 +169,7 @@ class AccountStore:
         create_mastery_tables(db)
         create_mastery_reset_tables(db)
         create_attendance_tables(db)
+        create_village_gift_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS local_account (id INTEGER PRIMARY KEY CHECK(id=1), schema_version INTEGER NOT NULL, profile TEXT NOT NULL)"
         )
@@ -1016,6 +1020,9 @@ class AccountStore:
 
     def harvest_basecamp(self, request, operation_id, now=None):
         return harvest_basecamp(self, request, operation_id, now)
+
+    def receive_village_gift(self, request, operation_id, now=None):
+        return receive_village_gift(self, request, operation_id, now)
 
     def upgrade_guardian_mastery(self, request, operation_id):
         return upgrade_guardian_mastery(self, request, operation_id)
