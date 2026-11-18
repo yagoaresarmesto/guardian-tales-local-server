@@ -1159,8 +1159,8 @@ The native profile popup waits for `FriendClient.UpdateFriendDict` before settin
 up the visible card. `SendEnterFriend2` sends `/friend2/enter` without a body. Its
 success callback consumes `FriendInfos` as a dictionary keyed by integer user ID
 and a Boolean `IsMigrated`; the latter can enable a first-entry migration notice.
-Only this local prerequisite is implemented. No official response or peer
-records were captured.
+This was the initial local prerequisite; empty recommendations are covered
+below. No official response or peer records were captured.
 
 Authenticated parameterless entry now returns `FriendInfos={}` and
 `IsMigrated=false`. This explicit empty local view does not claim restored
@@ -1540,6 +1540,31 @@ Raid pointer and User revision when needed; an exact replay wrote nothing. The
 read-only source database remained unchanged. Actual APK team switching remains
 pending backend reload and reconnect; the user's retry will persist the choice
 through the normal server transaction.
+
+## Empty friend recommendations
+
+The next unsupported request in the friend section was `/friend2/recommend`.
+Read-only inspection confirmed a native pending packet with body type zero and
+zero body bytes. `SendRecommendFriend` is parameterless; its caller is
+`FriendClient.UpdateLatelyFriends`. The success callback reads `RecommendInfos`
+as `List<FriendInfo>` into the client's recent/recommendation list and records
+the refresh time locally.
+
+The user explicitly chose an empty local view. Authenticated parameterless
+requests now return `{"RecommendInfos":[]}`. The response includes no profile
+resource or peer data. It leaves saved `UserFriend` settings, friend/request
+counts, pending gifts, dates and revision unchanged, and performs no migration,
+gift collection, invitation or friendship mutation. The existing friend-entry
+response remains `FriendInfos={}` and `IsMigrated=false`. Other-player lookup,
+friend requests and gift writes remain unsupported.
+
+Three regressions cover authentication, exact parameterless/native empty bodies,
+the required list shape, preserved imported social state and fresh/imported
+reconnect sequences with SQLite writes disabled. Repeated friend-entry and
+recommendation reads passed against the actual read-only database, including a
+native empty packet: zero writes and unchanged full profile. The original
+official recommendation response was not captured. Actual empty recommendation
+UI rendering still needs verification after backend reload and reconnect.
 
 ## Host readiness before the APK check
 

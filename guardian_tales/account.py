@@ -124,6 +124,7 @@ ACCOUNT_ROUTES = (
     "/heavenholdfarm/collection-all",
     "/pasture/collection-all",
     "/friend2/enter",
+    "/friend2/recommend",
     "/friend2/has-changes",
     "/mission/get-user-mission",
     "/mission/claim-beginner-all",
@@ -1211,6 +1212,10 @@ class AccountStore:
             # Peer records were not captured; do not reset saved UserFriend
             # counters, grant gifts or report an executed social migration.
             return {"FriendInfos": {}, "IsMigrated": False}
+        if route == "/friend2/recommend":
+            if request is not None and (not isinstance(request, dict) or request):
+                raise ValueError("Local empty friend recommendations accept no parameters")
+            return {"RecommendInfos": []}
         if route == "/friend2/has-changes":
             return {"Changed": False, "Gift": False}
         raise KeyError("Unsupported account route")

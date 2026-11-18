@@ -13,6 +13,7 @@ from tests.test_snapshots import synthetic_snapshot
 
 ROUTE = "/user/get-user-profile-card"
 FRIEND_ROUTE = "/friend2/enter"
+RECOMMEND_ROUTE = "/friend2/recommend"
 
 
 class ProfileCardTests(unittest.TestCase):
@@ -280,3 +281,61 @@ class ProfileCardTests(unittest.TestCase):
             self.assertEqual(list(self.db.iterdump()), before)
             self.assertEqual(self.db.total_changes, changes)
             self.db.execute("PRAGMA query_only=OFF")
+
+    def test_recommendations_require_authentication_and_exact_native_parameterless_body(self):
+        self.assert_rejected_without_writes(None, RECOMMEND_ROUTE)
+        self.login()
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        native = parse_packet(
+            encode_packet(Packet(0, b"", body_type=0, api=RECOMMEND_ROUTE, sequence_id=25))
+        )
+        self.assertEqual(json.loads(self.session.handle(native).body), {"RecommendInfos": []})
+        for body in (None, {}):
+            self.assertEqual(self.call(body, RECOMMEND_ROUTE), {"RecommendInfos": []})
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        for body in ([], False, 0, "", {"UserId": 1}, {"Count": 20}, {"Claim": True}):
+            self.assert_rejected_without_writes(body, RECOMMEND_ROUTE)
+
+    def test_empty_recommendations_preserve_saved_social_settings_counts_gifts_and_revisions(self):
+        profile = self.install_import()
+        profile["UserFriend"].update(
+            Enabled=True,
+            AllowRequest=False,
+            NumFriends=17,
+            NumRequests=3,
+            GiftCount=5,
+            Cas=42,
+            SyntheticPendingGifts=[1, 2],
+        )
+        self.save(profile)
+        self.login()
+        self.db.execute("PRAGMA query_only=ON")
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        for _ in range(3):
+            self.assertEqual(self.call(None, RECOMMEND_ROUTE), {"RecommendInfos": []})
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+
+    def test_friend_entry_and_recommendations_reconnect_reads_do_not_enable_social_mutations(self):
+        for imported in (False, True):
+            if imported:
+                self.install_import()
+            for reconnect in (False, True):
+                self.session = BootstrapSession(self.store)
+                self.login(reconnect)
+                self.db.execute("PRAGMA query_only=ON")
+                before = list(self.db.iterdump())
+                changes = self.db.total_changes
+                self.assertEqual(
+                    self.call(None, FRIEND_ROUTE), {"FriendInfos": {}, "IsMigrated": False}
+                )
+                self.assertEqual(self.call(None, RECOMMEND_ROUTE), {"RecommendInfos": []})
+                for route in ("/friend2/request", "/friend2/send-gift", "/friend2/receive-gift"):
+                    self.assert_rejected_without_writes({}, route)
+                self.assertEqual(list(self.db.iterdump()), before)
+                self.assertEqual(self.db.total_changes, changes)
+                self.db.execute("PRAGMA query_only=OFF")

@@ -78,6 +78,7 @@ ACCOUNT_READS = frozenset(
         "/heavenholdfarm/collection-all",
         "/pasture/collection-all",
         "/friend2/enter",
+        "/friend2/recommend",
         "/friend2/has-changes",
         "/mission/get-user-mission",
         "/ad/init-inbox",

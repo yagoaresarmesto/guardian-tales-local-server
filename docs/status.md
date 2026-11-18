@@ -6,7 +6,19 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **574 passing tests on Windows Python 3.11**. Five Raid selection
+The suite has **577 passing tests on Windows Python 3.11**. Three friend
+recommendation regressions cover authenticated parameterless/native empty bodies,
+the native `RecommendInfos` list, social-state preservation and fresh/imported
+reconnect reads without writes. The unsupported `/friend2/recommend` request was
+confirmed as body type zero with no payload. It now returns `RecommendInfos: []`,
+matching `FriendClient.UpdateLatelyFriends`, while retaining saved settings,
+friend/request counts, gifts and revisions. Existing friend entry remains empty;
+social mutations and peer lookup are unavailable. Repeated actual-account reads
+passed with SQLite writes disabled and the full profile unchanged. APK
+recommendation rendering remains pending reload/reconnect. See
+[contract and evidence](official-save-experiment.md#empty-friend-recommendations).
+
+Five earlier Raid selection
 regressions cover the native 700-ID block, the shared `GuildRaidAndConquest`
 pointer, owned team validation, independent mode preservation, cross-mode
 retries/reconnects, revision guards and atomic rollback. The rejected actual

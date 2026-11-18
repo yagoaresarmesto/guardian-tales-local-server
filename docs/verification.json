@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 574,
+    "tests_run": 577,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3162,6 +3162,28 @@
       "real_source_database_writes": 0,
       "real_source_profile_unchanged": true
     },
-    "post_fix_apk_team_selection": "Pending backend reload and reconnect"
+    "post_fix_apk_team_selection": "Selection route subsequently completed two more APK requests before the friend recommendation failure; exact Raid pointer persistence has not been separately inspected"
+  },
+  "empty_friend_recommendations": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/friend2/recommend",
+    "observed_pending_request": {"body_type": 0, "body_length": 0},
+    "native_builder": "ApiConnection.SendRecommendFriend, parameterless",
+    "native_consumer": "FriendClient.UpdateLatelyFriends callback reads RecommendInfos as List<FriendInfo>, then updates its local refresh time",
+    "response": {"RecommendInfos": []},
+    "user_policy": "Empty local friend/recommendation views",
+    "saved_social_settings_counts_pending_gifts_dates_and_revisions_preserved": true,
+    "no_profile_resources_migrations_receipts_rewards_or_social_mutations": true,
+    "official_recommendation_response_and_peer_records_captured": false,
+    "synthetic_regressions": 3,
+    "full_windows_tests": 577,
+    "actual_account_read_only_protocol_check": {
+      "result": "PASS",
+      "friend_entry_repetitions": 2,
+      "recommendation_none_empty_object_and_native_empty_bodies": true,
+      "sqlite_writes": 0,
+      "full_profile_and_social_state_unchanged": true
+    },
+    "post_fix_apk_recommendation_view": "Pending backend reload and reconnect"
   }
 }
