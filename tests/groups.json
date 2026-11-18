@@ -28,8 +28,8 @@
     "modules": ["test_party_members", "test_preset_selection", "test_preset_edit", "test_preset_delete", "test_preset_create", "test_preset_payloads"]
   },
   "rewards": {
-    "description": "Missions, achievements, knowledge, passes, stamina and attendance",
-    "modules": ["test_missions", "test_beginner_batches", "test_challenges", "test_challenge_batches", "test_imported_challenges", "test_hero_knowledge", "test_imported_hero_knowledge", "test_guardian_pass", "test_festival_pass", "test_festival_shop", "test_festival_redemption", "test_stamina_regen", "test_stamina_purchase", "test_imported_stamina_purchase", "test_attendance_mock"]
+    "description": "Missions, achievements, knowledge, passes, temporal events, stamina and attendance",
+    "modules": ["test_missions", "test_beginner_batches", "test_challenges", "test_challenge_batches", "test_imported_challenges", "test_hero_knowledge", "test_imported_hero_knowledge", "test_guardian_pass", "test_festival_pass", "test_festival_shop", "test_festival_redemption", "test_stamina_regen", "test_stamina_purchase", "test_imported_stamina_purchase", "test_attendance_mock", "test_live_events"]
   },
   "summons": {
     "description": "Wishlist, hero draws and imported summon state",

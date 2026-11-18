@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **664 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 68 modules. `validate --list-groups` reports
+The suite has **672 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 69 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -15,6 +15,17 @@ retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
+
+Eight temporal-event entry regressions cover the native no-body packet, fresh
+and imported state, all 13 dictionary families plus nullable ReturnEvent,
+malformed requests/state, authentication, reconnect and read-only retries. The
+observed `/live-event/enter` now returns current saved `UserEvent` without new
+seasons, rewards or writes. The actual packet passed twice against a query-only
+real database; the resource matched exactly and the source profile was unchanged
+with zero writes. APK rendering is pending reload and reconnect. The matching
+catalog contains 14 families/397 base rows; Roadmap and Bingo have saved records,
+while minigames, historical selection and rewards need additional handlers. See
+[event contracts and integration scope](live-events.md).
 
 Nine earlier normal-party
 regressions cover ordered owned members, leader changes, trailing-slot removal,

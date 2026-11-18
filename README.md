@@ -131,6 +131,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
 | Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
 | Festival Pass | Initial free points, local shop availability and configured asset/stackable/individual item redemptions; sticker packs and other progression pending |
+| Temporal-event entry | Reads preserved `UserEvent` without season initialization or rewards; 14 catalog families reviewed; APK entry and individual event actions pending |
 | Guild menu | Saved own membership in a named local placeholder; inactive notices, no-op raid preparation and opt-in local season selection; raid combat and peer roster pending |
 | Later phase gameplay and remaining rewards | Unfinished; entry support alone does not implement a phase's interactions or clear rules |
 | Multiplayer, guild systems and purchases | Not implemented |
@@ -152,6 +153,7 @@ server, not a service for public hosting.
 - [Observed packet protocol](docs/protocol.md)
 - [Verified behavior and limitations](docs/status.md)
 - [Experimental private-account snapshot import](docs/official-save-experiment.md)
+- [Temporal-event families and offline integration](docs/live-events.md)
 - [API inventory and implementation plan](docs/implementation-plan.md)
 - [Inn checkpoint and next steps](docs/first-phase-checkpoint.md)
 - [Development, tests, CI and GitHub preparation](docs/development.md)

@@ -29,7 +29,7 @@ Execution stays sequential; this change does not introduce parallel workers.
 | `heroes` | Hero experience and training caps |
 | `inventory` | Weapons, relic options and jewel operations |
 | `teams` | Normal parties, presets and compact response payloads |
-| `rewards` | Missions, challenges, knowledge, passes, stamina and attendance |
+| `rewards` | Missions, challenges, knowledge, passes, temporal events, stamina and attendance |
 | `summons` | Wishlist, draws and imported summon state |
 | `village` | Harvest, gifts, obstacles, basecamp and guardian mastery |
 | `guild` | Guild reads, Raid and Dungeon Kingdom Arena |

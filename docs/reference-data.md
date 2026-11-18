@@ -75,6 +75,12 @@ needed for the synthetic demo or the core persistence tests.
 An external directory can override a built-in JSON template by filename. Keep
 overrides local, compatible and free of official account state.
 
+`/live-event/enter` needs no new external catalog: it reads current saved
+`UserEvent` only. Existing matching static tables determine which event screens
+and calendars the client offers. Entry does not initialize missing records or
+implement their claims. See [temporal-event families and integration](live-events.md)
+for the reviewed source tables, calendar scope and remaining per-family work.
+
 The optional `orbital_entry_catalog.json` contains `client` equal to
 `{"version":"3.57.0","version_code":431,"region":"eu"}` and `floors`, a nonempty
 list of distinct positive integer floor IDs from the matching `infinitytowerfloors`

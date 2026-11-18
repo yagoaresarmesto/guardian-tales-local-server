@@ -59,6 +59,7 @@ from .jewel_decompose import create_tables as create_jewel_decompose_tables
 from .jewel_decompose import decompose as decompose_jewels
 from .jewel_upgrade import create_tables as create_jewel_upgrade_tables
 from .jewel_upgrade import upgrade as upgrade_jewel
+from .live_events import enter as enter_live_events
 from .mastery import create_tables as create_mastery_tables
 from .mastery import upgrade as upgrade_guardian_mastery
 from .mastery_reset import create_tables as create_mastery_reset_tables
@@ -147,6 +148,7 @@ ACCOUNT_ROUTES = (
     "/guardian-pass/enter",
     "/guardian-pass/claim-all",
     "/festival-pass/enter",
+    "/live-event/enter",
     "/festival-pass/claim-all",
     "/festival-pass/check-not-redeemable",
     "/festival-pass/redeem-point-rewards",
@@ -1188,6 +1190,8 @@ class AccountStore:
                 raise ValueError("Festival Pass entry accepts no parameters")
             # Native scene callbacks refresh from the global saved pass record.
             return {"UserFestivalPass": self.profile()["UserFestivalPass"]}
+        if route == "/live-event/enter":
+            return enter_live_events(self, request)
         if route == "/ad/init-inbox":
             if request is not None and request != {}:
                 raise ValueError("Ad inbox initialization accepts no parameters")

@@ -92,6 +92,7 @@ ACCOUNT_READS = frozenset(
         "/ad/init-inbox",
         "/guardian-pass/enter",
         "/festival-pass/enter",
+        "/live-event/enter",
         "/user/exchange-summon-pickup-ticket",
     )
 )

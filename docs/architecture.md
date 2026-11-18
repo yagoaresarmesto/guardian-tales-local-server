@@ -46,6 +46,7 @@ flowchart LR
 | `jewel_upgrade.py` | Guaranteed free one-grade upgrades for owned loose/socket jewels, stack allocation/merging and atomic result receipts |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
 | `festival_shop.py` | Local shop exclusions, catalog point prices and atomic asset/stackable redemptions |
+| `live_events.py` | Authenticated read of preserved temporal-event progress without initialization, rewards or account writes |
 | `admin.py`, `admin_festival.py` | Exclusive audited grants of gems and active-season Festival points |
 | `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |

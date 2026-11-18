@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 664,
+    "tests_run": 672,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3428,5 +3428,42 @@
     "runner_regressions": 6,
     "full_windows_tests": 664,
     "game_handlers_saved_account_and_emulator_behavior_changed": false
+  },
+  "temporal_event_entry": {
+    "date": "2026-11-18",
+    "observed_unsupported_and_pending_route": "/live-event/enter",
+    "native_request_contract": "SendEnterLiveEvent sends no body; null and empty-object read aliases are accepted",
+    "response_resource": "Current saved UserEvent, including all present native dictionaries, nullable ReturnEvent and retained extra fields",
+    "supported_native_dictionary_families": 13,
+    "entry_initializes_seasons_or_grants_rewards": false,
+    "entry_changes_revisions_or_writes_account": false,
+    "validation": "Authenticated read; matching saved owner, bounded revision and canonical positive record identities; malformed bodies and saved records reject",
+    "synthetic_regressions": 8,
+    "full_windows_tests": 672,
+    "read_only_real_account_check": {
+      "result": "PASS",
+      "source_opened_read_only_and_query_only": true,
+      "native_no_body_packet_and_repeat_through_session_and_wire_codec": true,
+      "responses_match_saved_user_event_exactly": true,
+      "saved_families": ["Roadmap", "Bingo"],
+      "current_public_roadmap_33_record_already_present": true,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "matching_external_catalog_review": {
+      "families": 14,
+      "base_definition_rows": 397,
+      "counts_are_historical_candidates_not_all_active_events": true,
+      "calendar_table": "seasondate.EventPeriod",
+      "source_global_calendar_date_utc": "2026-11-18",
+      "offsetless_source_dates_treated_as_utc": true,
+      "scheduled_family_events": {"roadmap": 33, "return": 22, "new_player_attendance": 231},
+      "calendar_does_not_establish_account_eligibility": true,
+      "web_event_type": "Yutnori",
+      "web_event_has_external_url": true,
+      "web_component_not_preserved_or_implemented_by_entry": true
+    },
+    "historical_selector_minigames_and_reward_handlers": "Reviewed integration scope only; not implemented by this change",
+    "post_fix_apk_entry_and_rendering": "Pending backend reload and reconnect"
   }
 }

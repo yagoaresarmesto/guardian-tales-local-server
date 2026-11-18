@@ -1935,6 +1935,29 @@ remained unchanged with zero writes. These are native-contract/host results;
 actual APK save, displayed leader/slots and reconnect persistence remain pending
 backend reload and retry.
 
+## Temporal-event entry and integration review
+
+The next observed pending request was `/live-event/enter`, sent with no body.
+Matching native scene loaders await it and use global `UserEvent`; the resource
+apply method handles 13 dictionaries and nullable ReturnEvent. Entry now returns
+the current saved resource after validating ownership, revision and record IDs.
+It does not initialize seasons, repair progress, grant rewards or write state.
+
+Eight synthetic regressions cover native transport, fresh/imported reads, every
+event family, malformed requests/state, retained extra fields, authentication
+and reconnect. The actual pending packet and retry passed through the session
+and wire codec against the real database opened read-only with query-only mode.
+Both responses matched saved UserEvent, with zero source writes and no profile
+change. APK entry/rendering is pending backend reload and reconnect.
+
+The private account retains Roadmap and Bingo records; its Roadmap record
+matches current public event 33. Inspection of the matching external tables
+found 14 families and 397 historical/base definition rows, with separate calendar
+and eligibility requirements. No additional minigame, season selector or reward
+claim is implemented here. The [integration review](live-events.md) lists the
+families, current snapshot calendar findings and practical next steps, including
+the extra web dependency of Yutnori. Game content and account data remain private.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all
