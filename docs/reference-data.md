@@ -796,6 +796,34 @@ counts are retained. Ticket payment removes only stacks depleted by that draw,
 preserving other zero-amount stacks. Imported-account regressions also cover
 reopening, reconnect receipts, legitimate new-session draws and rollback.
 
+## Normal party members
+
+`/user/save-party-member/v2` accepts exactly `CharacterIds`: an ordered list of
+one to four distinct positive Int32 owned inventory hero IDs. It uses the saved
+roster directly and needs no additional external catalog. Public character spec
+IDs, zero/null holes, repeated IDs and empty formations are rejected. The first
+ID remains the leader; the array is never sorted or deduplicated. This route
+saves the normal `User.Party` with ID zero, rather than selecting or editing a
+mode preset. The client retains its feature-based slot availability checks;
+the server bounds the formation to the four physical native slots.
+
+The current normal-party object and owned hero registry must be unambiguous,
+with a valid revision. Only `User.Party.Characters` and, when the formation
+changes, `User.Cas` are updated. All other party metadata is retained. A shorter
+array replaces the complete roster: native `PartyInfo.Apply` clears the old
+trailing slots. Character equipment/progression, representative avatar, assets,
+relic options/jewels, selected mode pointers, preset definitions and every other
+profile section remain equal. No rewards or mission progress are invented.
+
+The response contains only `User.Id`, `User.Cas` and the complete current
+`User.Party`. Matching native `User.Apply` preserves omitted inventory, character
+and preset fields, and `PartyInfo.Apply` resolves member IDs against the owned
+character registry. Profile and ordered canonical request receipt commit or
+roll back together. An unchanged formation records its identity without a
+revision increase or profile rewrite. Exact epoch/sequence retries return the
+current party without undoing newer choices or later equipment edits. Changing
+members or their order under an already-used identity rejects.
+
 ## Beginner reward batches
 
 The optional `beginner_mission_catalog.json` extends the built-in Inn, initial

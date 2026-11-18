@@ -23,6 +23,7 @@ from .orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE
 from .orbital import end as end_orbital
 from .orbital import enter as enter_orbital
 from .packet_reader import lz4_block
+from .party_members import ROUTE as PARTY_MEMBER_ROUTE
 from .play_menu import PLAY_MENU_ROUTES
 from .play_menu import read as play_menu_read
 from .protocol import Packet, PacketError
@@ -311,6 +312,15 @@ class BootstrapSession:
             if route == "/user/charge-stamina":
                 try:
                     return json_response(request, self.store.account.charge_stamina(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == PARTY_MEMBER_ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.save_party_members(body, operation_id)
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/item/enhance-weapon":

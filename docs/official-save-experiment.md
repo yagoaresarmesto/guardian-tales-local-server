@@ -1892,6 +1892,49 @@ socket/stack refresh remain pending backend reload and reconnect. The APK's
 original cost/percentage preview and its pre-send funds checks are retained;
 the server-side policy guarantees success and charges nothing once submitted.
 
+## Saving normal-party members
+
+The next unsupported route was `/user/save-party-member/v2`. The actual pending
+body had exactly `CharacterIds`, containing one owned inventory hero ID that
+differed from the saved normal party. This route now persists the ordered
+normal-party formation, including changing its leader or removing trailing
+members, while leaving saved mode presets and all equipment intact.
+
+Matching native `ApiConnection.SendSavePartyMemberV2` establishes the exact
+body. `PartyMembers.SaveCurrentPartyMember` serializes each currently selected
+member's inventory ID in order and sends it through this API. `PartyInfo.Apply`
+resolves numeric IDs using the existing owned-hero registry and clears trailing
+slots after a shorter array. Native `User.Apply` tests whether Party is present,
+then applies that object; absent hero/inventory/preset fields are preserved.
+The normal saved party has ID zero and a physical capacity of four. Existing
+client-side feature gates determine which slots its UI offers.
+
+New requests require one to four distinct positive owned IDs, completed
+prologue, an unambiguous roster, the normal party and a valid User revision.
+Order is significant and the first member is the leader. Only Party.Characters
+and User revision change; party metadata, every hero, equipment, relic options,
+jewels, currencies, representative avatar, mode selections, preset definitions
+and all other profile sections are retained. No mission credit is fabricated.
+The response carries only current User Id, Cas and complete Party, avoiding
+another large inventory/hero payload for a member change.
+
+Profile and an order-preserving canonical request receipt are one transaction.
+An unchanged formation records its identity without rewriting the profile or
+increasing the revision. A retry of an older request returns the current party,
+including after newer choices, reopening and later gear edits; it cannot undo
+those changes. Changed membership or ordering under the same identity rejects.
+
+Nine synthetic regressions cover four-member ordering, leader swaps, shortening,
+metadata/profile/preset preservation, compact resources, no-op revisions,
+reopen/reconnect/current-state retries, malformed/unknown/duplicate IDs, saved
+state guards, numeric bounds, authentication and late rollback. The actual
+request passed on an in-memory account clone: only the normal formation and
+User revision changed, every other field and preset remained equal, and an
+exact retry wrote nothing. Its response was 72 bytes. The real source database
+remained unchanged with zero writes. These are native-contract/host results;
+actual APK save, displayed leader/slots and reconnect persistence remain pending
+backend reload and retry.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

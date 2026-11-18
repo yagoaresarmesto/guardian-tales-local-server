@@ -38,6 +38,7 @@ flowchart LR
 | `beginner.py` | Eligibility, atomic multi-mission rewards, claim bits and persistent retry receipts |
 | `challenges.py`, `challenge_progress.py` | Catalog challenge progress, imported official baselines, contiguous next/all-step claims and atomic rewards/receipts |
 | `punchking.py`, `punchking_static.py` | Dungeon Kingdom Arena practice, rotation/day calendar composition and battle-session receipts |
+| `party_members.py` | Ordered normal-party roster saves, compact current Party resources and atomic profile/request receipts |
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `imported_hero_knowledge.py` | Eight native hero-book progress rules, nonpaying official flags, awakening bit decoding and atomic per-objective/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |

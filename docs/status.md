@@ -6,7 +6,18 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **649 passing tests on Windows Python 3.11**. Thirteen jewel-upgrade
+The suite has **658 passing tests on Windows Python 3.11**. Nine normal-party
+regressions cover ordered owned members, leader changes, trailing-slot removal,
+metadata/equipment/preset preservation, compact responses, no-op revisions,
+current-state retries, authentication, numeric guards and rollback. The actual
+pending `/user/save-party-member/v2` request passed on an in-memory account
+clone, changing only the normal formation and User revision. Every other field
+and saved preset remained equal, the response was 72 bytes and its exact retry
+wrote nothing. The real database remained unchanged. APK formation/leader
+refresh and reconnect persistence are pending reload and retry. See
+[contract and evidence](official-save-experiment.md#saving-normal-party-members).
+
+Thirteen earlier jewel-upgrade
 regressions cover guaranteed low-powder success without costs, socket and loose
 targets, stack merge/allocation, locks, maximum grade, malformed requests/graphs,
 numeric bounds, atomic rollback, authentication and reconnect. The actual

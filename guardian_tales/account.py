@@ -70,6 +70,8 @@ from .missions import (
 )
 from .monsters import record_defeated_monsters
 from .orbital import create_tables as create_orbital_tables
+from .party_members import create_tables as create_party_member_tables
+from .party_members import save as save_party_members
 from .passes import (
     FIRST_FESTIVAL_LEVEL,
     FIRST_FESTIVAL_POINTS,
@@ -117,6 +119,7 @@ from .weapon_options import create_tables as create_weapon_option_tables
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
+    "/user/save-party-member/v2",
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/guild/red-dot",
@@ -223,6 +226,7 @@ class AccountStore:
         self.references = ReferenceData(reference_dir)
         create_snapshot_tables(db)
         create_preset_tables(db)
+        create_party_member_tables(db)
         create_village_tables(db)
         create_basecamp_tables(db)
         create_mastery_tables(db)
@@ -1105,6 +1109,9 @@ class AccountStore:
 
     def enhance_weapon(self, request, operation_id):
         return enhance_weapon(self, request, operation_id)
+
+    def save_party_members(self, request, operation_id):
+        return save_party_members(self, request, operation_id)
 
     def decompose_jewels(self, request, operation_id):
         return decompose_jewels(self, request, operation_id)

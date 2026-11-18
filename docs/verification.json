@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 649,
+    "tests_run": 658,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3382,5 +3382,32 @@
       "real_source_profile_unchanged": true
     },
     "post_fix_apk_success_and_saved_grade": "Pending backend reload, reconnect and retry"
+  },
+  "normal_party_member_saves": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/user/save-party-member/v2",
+    "observed_schema": {"CharacterIds": "ordered owned inventory hero ID list"},
+    "native_contract": "PartyMembers.SaveCurrentPartyMember serializes selected inventory IDs; PartyInfo.Apply resolves owned characters and clears trailing slots; User.Apply guards absent fields",
+    "supported_formation": "One to four distinct positive owned inventory IDs; first is leader; normal Party Id zero",
+    "client_feature_slot_gates": "Retained in the client UI; server enforces the physical maximum of four",
+    "changed_fields": ["User.Party.Characters", "User.Cas when formation changes"],
+    "all_hero_gear_relic_avatar_asset_mode_selection_and_preset_state_preserved": true,
+    "response_user_fields": ["Id", "Cas", "Party"],
+    "transaction": "Profile and order-preserving canonical request receipt commit or roll back together",
+    "unchanged_formation": "Receipt only; no profile rewrite or revision increase",
+    "retries": "Return current party without undoing later choices, gear edits or reopened/reconnected state; changed order or members under one identity reject",
+    "synthetic_regressions": 9,
+    "full_windows_tests": 658,
+    "private_actual_account_clone_check": {
+      "result": "PASS",
+      "pending_owned_members": 1,
+      "only_normal_formation_and_user_revision_changed": true,
+      "all_other_profile_fields_and_presets_preserved": true,
+      "compact_response_bytes": 72,
+      "exact_retry_writes": 0,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_formation_and_leader": "Pending backend reload, retry and reconnect persistence check"
   }
 }

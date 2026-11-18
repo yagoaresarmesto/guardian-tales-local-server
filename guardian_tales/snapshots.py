@@ -58,6 +58,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/lobby-village/remove-obstacle",
         "/user/guardian-mastery-level-up",
         "/user/reset-guardian-mastery-level",
+        "/user/save-party-member/v2",
     )
 )
 ACCOUNT_READS = frozenset(

@@ -105,6 +105,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Orbital phase loading trial | APK loading and defeat return observed; guarded known-floor loading preserves saved state |
 | Orbital stage closing | Non-clear exits preserve all state; opt-in victories save highest floor without rewards; actual APK victory pending |
 | Orbital/Raid preset selection | Orbital verified in APK; saved Raid/Conquest selection host-tested with atomic choice and retry receipts |
+| Normal-party members | Ordered one-to-four owned heroes, leader changes and trailing-slot removal persist with compact responses and retry receipts; equipment and mode presets retained; APK save check pending |
 | Dungeon Kingdom Arena practice | Three rotations and days 1–7 selectable by command; entry/start/end and saved arena teams host-tested; no rewards or saved scores; APK combat pending |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
