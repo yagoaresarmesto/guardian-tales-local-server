@@ -113,6 +113,8 @@ class SnapshotTests(unittest.TestCase):
                 "/item/engrave-weapon",
                 "/item/enhance-weapon",
                 "/item/limitbreak-weapon/v2",
+                "/item/upgrade-jewel",
+                "/item/upgrade-jewel-from-relic",
                 "/lobby-village/harvest-all",
                 "/lobby-village/harvest-basecamp",
                 "/lobby-village/receive-gift",

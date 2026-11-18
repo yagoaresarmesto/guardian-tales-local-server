@@ -57,6 +57,8 @@ from .imported_training import train as train_imported_characters
 from .items import inventory_item
 from .jewel_decompose import create_tables as create_jewel_decompose_tables
 from .jewel_decompose import decompose as decompose_jewels
+from .jewel_upgrade import create_tables as create_jewel_upgrade_tables
+from .jewel_upgrade import upgrade as upgrade_jewel
 from .mastery import create_tables as create_mastery_tables
 from .mastery import upgrade as upgrade_guardian_mastery
 from .mastery_reset import create_tables as create_mastery_reset_tables
@@ -159,6 +161,8 @@ ACCOUNT_ROUTES = (
     "/lobby-village/remove-obstacle",
     "/item/enhance-weapon",
     "/item/decompose-jewel",
+    "/item/upgrade-jewel",
+    "/item/upgrade-jewel-from-relic",
     "/item/limitbreak-weapon/v2",
     "/item/change-options",
     "/item/apply-options",
@@ -265,6 +269,7 @@ class AccountStore:
         )
         create_imported_training_tables(db)
         create_jewel_decompose_tables(db)
+        create_jewel_upgrade_tables(db)
         create_imported_knowledge_tables(db)
         create_challenge_tables(db)
         create_punchking_tables(db)
@@ -1103,6 +1108,9 @@ class AccountStore:
 
     def decompose_jewels(self, request, operation_id):
         return decompose_jewels(self, request, operation_id)
+
+    def upgrade_jewel(self, request, operation_id, route):
+        return upgrade_jewel(self, request, operation_id, route)
 
     def limit_break_weapon(self, request, operation_id):
         return limit_break_weapon(self, request, operation_id)

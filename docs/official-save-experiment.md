@@ -1840,6 +1840,58 @@ wrote nothing. The real source database remained unchanged with zero writes.
 These are native-contract and host results; actual APK result rendering and
 retained quantities remain pending backend reload, reconnect and retry.
 
+## Guaranteed jewel upgrades without spending resources
+
+The next unsupported request was `/item/upgrade-jewel-from-relic`, with exactly
+`RelicId`, `SlotIndex` and `UseJewelPowder`. It selected an owned locked relic's
+socket, with a grade-19 jewel and a nominal powder amount below the native
+full-success requirement. The owner requested no resource consumption and
+guaranteed success regardless of the selected percentage.
+
+Matching native `ApiConnection.SendUpgradeJewelFromRelic` and
+`SendUpgradeJewel` establish the socket and loose-stack request shapes. The
+loose route takes an owned inventory `JewelId`. `InlaidData` supplies the grade's
+full powder requirement and nominal gold calculation. The forge slider and
+`SetProgressLabel` calculate the displayed percentage. Its `ProcessUpgrade`
+coroutine reads a Boolean `Succeeded` from the response, refreshes User-backed
+inventory/socket data, and chooses the success/failure notice accordingly.
+`Utils.IdxBool` takes a default Boolean argument; the success field is a scalar,
+rather than an indexed result list.
+
+Both routes now use a separate pinned external catalog with `free: true` and
+`always_succeed: true`. All 20 matching public jewel specs and their 19
+same-group, consecutive-grade evolution edges are covered, together with the
+20 public relic specs and native global capacity of one socket. Positive nominal
+powder amounts up to the native full requirement are accepted without charging
+powder or gold. The result is always `Succeeded: true` for a valid new operation.
+No success RNG or fabricated currency/activity-counter update is involved.
+
+Socket upgrades replace the selected jewel spec ID by its public evolution
+target. Loose upgrades promote one unit, merging into an existing next-grade
+stack or allocating an inventory ID; the total number of owned jewels is
+conserved. Other source units, unrelated sockets, relic options, equipment,
+currencies, spending and other profile sections are retained. Maximum-grade,
+unknown, empty or unowned targets and numeric/graph inconsistencies reject.
+Profile, ID allocation and route-bound canonical request receipt are atomic.
+An exact retry returns current User with the prior successful outcome without
+advancing another grade, including after later progress or catalog removal.
+
+Thirteen synthetic regressions cover socket/loose targets, locked relics, low
+nominal powder and empty currency balances, stack merge/allocation and zero-row
+reuse, maximum grade, malformed requests/catalog graphs, numeric bounds,
+transaction rollback, authentication and reconnect. The actual rejected request
+passed on an in-memory copy of the saved account: only the selected socket's
+grade 19 -> 20 and User revision changed. All currencies and every other saved
+field remained equal; an exact retry wrote nothing. A separate synthetic memory
+check used the actual public graph for all 19 edges through both routes: 38
+cases passed with the minimum nominal powder and zero gold/powder balances.
+The real source database remained unchanged with zero writes.
+
+These are native-contract/host results. Actual APK success rendering and saved
+socket/stack refresh remain pending backend reload and reconnect. The APK's
+original cost/percentage preview and its pre-send funds checks are retained;
+the server-side policy guarantees success and charges nothing once submitted.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

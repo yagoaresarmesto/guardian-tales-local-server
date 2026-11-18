@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 636,
+    "tests_run": 649,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3346,5 +3346,41 @@
       "real_source_profile_unchanged": true
     },
     "post_fix_apk_result_and_retention": "Pending backend reload, reconnect and retry"
+  },
+  "guaranteed_free_jewel_upgrades": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/item/upgrade-jewel-from-relic",
+    "routes": ["/item/upgrade-jewel", "/item/upgrade-jewel-from-relic"],
+    "native_contract": "Exact owned inventory target and UseJewelPowder; relic route includes SlotIndex; ProcessUpgrade reads scalar Boolean Succeeded via Utils.IdxBool",
+    "policy": "Valid owned targets advance one public graph grade with guaranteed success and no gold/powder consumption",
+    "prepared_jewel_specs": 20,
+    "prepared_upgrade_edges": 19,
+    "prepared_relic_specs": 20,
+    "regional_socket_count": 1,
+    "nominal_powder_bound": "Positive Int32 up to the source grade's native full-success amount; does not charge saved balances",
+    "response": {"User": "current saved resource", "Succeeded": true},
+    "loose_upgrade": "Promote exactly one unit, merge or allocate a next-grade stack, conserve total jewels and retain old zero rows for native quantity clearing",
+    "socket_upgrade": "Change only selected socket spec and User revision",
+    "all_currency_spending_other_sockets_and_other_profile_sections_preserved": true,
+    "activity_counter_credit": "None under the explicit free-upgrade mock",
+    "transaction": "Profile, ID allocation and route-bound canonical request receipt commit or roll back together",
+    "retries": "Return current User and saved success without another promotion; later grades, maximum result and catalog removal supported",
+    "client_preview_and_pre_send_funds_checks": "Unmodified; displayed chance can remain below 100 percent while the local result is guaranteed",
+    "synthetic_regressions": 13,
+    "full_windows_tests": 649,
+    "private_account_and_real_public_catalog_checks": {
+      "result": "PASS",
+      "actual_pending_request_on_in_memory_clone": true,
+      "public_grade_change": [19, 20],
+      "partial_powder_selection_succeeded": true,
+      "only_target_socket_and_user_revision_changed": true,
+      "all_assets_and_other_profile_fields_preserved": true,
+      "real_public_graph_cases": 38,
+      "minimum_nominal_powder_and_empty_currency_balances": true,
+      "exact_retry_writes": 0,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_success_and_saved_grade": "Pending backend reload, reconnect and retry"
   }
 }

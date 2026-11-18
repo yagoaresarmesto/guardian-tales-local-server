@@ -118,6 +118,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Regenerating village obstacle | Explicit no-reward/no-payment mock restarts the configured machine's regeneration; APK retry pending |
 | Free equipment enhancement | Opt-in experience from owned hammers; three APK upgrades saved with all hammer stacks retained; validated engraving bonus supported |
 | Source-preserving jewel decomposition | Catalog powder rewards for all 20 prepared jewel grades, with owned stacks retained and atomic retry receipts; APK result/retention check pending |
+| Guaranteed free jewel upgrades | Owned loose or relic-socket jewels advance one catalog grade with guaranteed success, retained gold/powder and atomic retry receipts; APK result check pending |
 | Free equipment limit breaks | Two APK operations reached 5 breaks with gold, hammers, experience and other profile fields retained |
 | Free equipment option values | Seven APK rolls and one accepted proposal saved with resources retained; existing identities/locks preserved |
 | Free first equipment engraving | One APK engraving saved; gold, hammers, experience and limit breaks retained; matching public attribute tier |

@@ -31,6 +31,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/collection/claim-hero-knowledge-all",
         "/item/enhance-weapon",
         "/item/decompose-jewel",
+        "/item/upgrade-jewel",
+        "/item/upgrade-jewel-from-relic",
         "/item/engrave-weapon",
         "/item/change-options",
         "/item/change-lock-options",

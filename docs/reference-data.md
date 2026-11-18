@@ -58,6 +58,7 @@ not fetch missing bootstrap files from an official service.
 | `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
 | `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
 | `jewel_decompose_mock_catalog.json` | Jewel powder rewards without losing selected jewels | Matching client, explicit source-retention policy, public jewel spec grades and decomposition powder yields |
+| `jewel_upgrade_mock_catalog.json` | Guaranteed jewel upgrades without currency costs | Matching client, explicit free/always-success policy, closed public evolution graph, nominal powder bounds, relic specs and regional socket count |
 | `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |
 | `weapon_option_mock_catalog.json` | Free option-value proposals and ordinary option lock/unlock | Matching client and public per-weapon option ranges; explicit local free policy |
 | `relic_option_mock_catalog.json` | Free relic main/subgroup option proposals and apply/discard | Matching client and public per-source, per-slot option IDs/ranges; explicit uniform local rolls |
@@ -293,6 +294,59 @@ roll back together. Epoch/sequence retries return current User without granting
 again, including after catalog removal or later source/reward edits. A changed
 batch under an already-used identity rejects. New requests still require their
 matching catalog, ownership, unlocked stock and sufficient saved quantities.
+
+## Guaranteed free jewel upgrades
+
+The two native routes are supported under a separate explicit local policy:
+
+- `/item/upgrade-jewel`: exactly positive integer `JewelId` and `UseJewelPowder`.
+  The jewel ID identifies one owned stack inventory row.
+- `/item/upgrade-jewel-from-relic`: exactly positive integer `RelicId`, zero-based
+  nonnegative integer `SlotIndex`, and positive integer `UseJewelPowder`.
+  The relic ID identifies one owned unique relic row in `User.ItemMiscs`.
+
+The required external `jewel_upgrade_mock_catalog.json` is limited to 1 MiB.
+It has exactly `client`, `free: true`, `always_succeed: true`, `slot_count`,
+`relic_ids` and `jewels`. The regional socket count is in 1..16. Public relic IDs
+are distinct positive integers; `jewels` maps canonical public spec ID strings
+to `{grade, group_id, evolve_to, powder_full}`. Grades are in 1..100; group IDs
+are positive. Every nonzero evolution target must be present, in the same group,
+and exactly one grade higher. A terminal spec has both evolution target and full
+powder amount zero; other rows require a positive full powder amount.
+
+Build the graph from matching `items` jewel rows (`Grade`, `GroupId`, `EvolveTo`),
+the relic IDs from `Type: relic`, and nominal full powder amounts from
+`inlaid.JewelGrade[].UpgradeNeeded`. The regional capacity is
+`inlaid.constants.InlaidCount.KakaoGlobal`. The prepared catalog contains 20
+jewel specs, 19 upgrade edges, 20 relic specs and one regional socket.
+
+A new operation validates ownership, unambiguous inventory IDs, positive stock,
+boolean saved lock state, the selected socket and the saved target spec. Locked
+upgrade targets are retained. The selected nominal powder amount may be any
+positive Int32 up to that grade's native full-success amount. The handler does
+not charge it or gold, and returns Boolean `Succeeded: true` with current `User`.
+It draws no success probability. Maximum-grade or empty/unknown socket targets
+reject new operations.
+
+A socket upgrade changes only the selected public jewel spec ID and User
+revision. A loose upgrade promotes exactly one owned unit: decrease its old
+stack by one and merge one unit into the next-grade stack, or allocate a new
+inventory ID when absent. Total jewel quantity is conserved. Empty old rows
+remain in the resource so the client can clear their old quantity. Existing
+destination metadata is retained; a new stack inherits the source's lock.
+Currencies, spending, other sockets, equipment references, relic options,
+activity counters and all other profile sections remain unchanged.
+
+Profile, any inventory-ID allocation and the route-bound canonical request
+receipt commit or roll back together. An exact epoch/sequence retry returns
+current User and the saved successful outcome without promoting again, even
+after later upgrades, catalog removal or a maximum-grade result. A changed
+route, target, slot or nominal powder amount under that identity rejects.
+
+The original client still calculates and displays the normal percentage from
+its slider, and can require nominal funds before sending the request. The local
+server guarantees the submitted operation's result and retains currency; this
+policy does not modify the APK's preview or its client-side funds checks.
 
 ## Free equipment limit breaks
 

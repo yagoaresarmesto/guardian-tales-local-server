@@ -16,6 +16,7 @@ import uuid
 from datetime import datetime, timezone
 
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
+from .jewel_upgrade import ROUTES as JEWEL_UPGRADE_ROUTES
 from .lobby import LOBBY_ROUTES
 from .lobby import respond as lobby_response
 from .orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE
@@ -318,6 +319,15 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.enhance_weapon(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route in JEWEL_UPGRADE_ROUTES:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.upgrade_jewel(body, operation_id, route)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

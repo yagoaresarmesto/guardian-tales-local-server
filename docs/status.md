@@ -6,7 +6,20 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **636 passing tests on Windows Python 3.11**. Eleven jewel
+The suite has **649 passing tests on Windows Python 3.11**. Thirteen jewel-upgrade
+regressions cover guaranteed low-powder success without costs, socket and loose
+targets, stack merge/allocation, locks, maximum grade, malformed requests/graphs,
+numeric bounds, atomic rollback, authentication and reconnect. The actual
+rejected socket request passed on an in-memory clone, changing only the selected
+jewel from grade 19 to 20 and User revision. All currency and other profile
+fields remained equal; its exact retry wrote nothing. The actual public graph
+passed all 19 edges through both routes on synthetic memory state, 38 cases in
+total. The real database remained unchanged. APK success rendering and inventory
+refresh are pending reload/reconnect; the original preview percentage remains
+client-controlled. See
+[contract and evidence](official-save-experiment.md#guaranteed-jewel-upgrades-without-spending-resources).
+
+Eleven earlier jewel
 decomposition regressions cover mixed grades, catalog-driven rewards, source
 and socket retention, new free operations, exact retries, authentication,
 ownership/locks, bounds and atomic rollback. The actual rejected
