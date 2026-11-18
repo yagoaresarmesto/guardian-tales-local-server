@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 569,
+    "tests_run": 574,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3140,6 +3140,28 @@
       "full_profile_and_operator_selection_unchanged": true
     },
     "persistent_raid_result_validation_and_abandon_handler_implemented": false,
-    "post_fix_apk_result_and_menu_return": "Pending backend reload and reconnect"
+    "post_fix_apk_result_and_menu_return": "End-stage handled one APK request before a rejected Raid preset-selection request; exact result/menu rendering remains unconfirmed"
+  },
+  "raid_and_conquest_preset_selection": {
+    "date": "2026-11-18",
+    "observed_rejected_route": "/preset/set-selected-preset",
+    "observed_request": {"PresetId": 713},
+    "native_contract": "Exact PresetId; width-100 native preset blocks; shared User.SelectedPresetId.GuildRaidAndConquest for the 700 block",
+    "selection_scope": "Existing owned Orbital [400,500) and Raid/Conquest [700,800) teams only; other definition mutations remain Orbital",
+    "pending_team_exists_once_and_members_gear_are_owned": true,
+    "transaction": "Change only the selected mode pointer and User.Cas when needed, with an epoch/sequence retry receipt; rollback on receipt failure",
+    "replays_return_current_state_without_undoing_later_cross_mode_choices": true,
+    "definitions_heroes_equipment_inventory_raid_progress_and_independent_mode_choices_preserved": true,
+    "synthetic_regressions": 5,
+    "full_windows_tests": 574,
+    "private_actual_account_clone_check": {
+      "result": "PASS",
+      "applied_to_in_memory_clone_only": true,
+      "only_shared_raid_pointer_and_user_revision_changed_when_needed": true,
+      "exact_retry_writes": 0,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_team_selection": "Pending backend reload and reconnect"
   }
 }

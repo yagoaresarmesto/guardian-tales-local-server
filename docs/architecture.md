@@ -239,18 +239,22 @@ observed in that trial; the full profile and draw receipts remained unchanged.
 Victory, saved progression and rewards are still unverified and unimplemented.
 
 `/preset/set-selected-preset` accepts exactly integer `PresetId`. The native enum
-uses `InfiniteTower = 4` with width-100 ID ranges. The implemented scope is existing
-captured Orbital presets in `[400,500)`, validated by the same owned-party helper
-as phase entry. One transaction changes only `User.SelectedPresetId.InfiniteTower`
-and `User.Cas`, then stores a session-epoch/sequence request receipt. No-op choices
+uses width-100 ID ranges: `InfiniteTower` is `[400,500)`, and the shared
+`GuildRaidAndConquest` selection uses `[700,800)`. Only existing saved definitions
+with owned heroes/equipment are selectable. One transaction changes only that
+mode's `User.SelectedPresetId` field and `User.Cas`, then stores a
+session-epoch/sequence request receipt. No-op choices
 leave the revision intact; retries return current `User` without undoing later
 choices. Reusing a request identity for another ID rejects, and a failed receipt
 write rolls back the profile update. Preset definitions, current party, character
-progression/equipment and inventory remain unchanged. Other modes and
-formation/result writes are separate unsupported contracts; editing/creation/deletion
+progression/equipment, independent mode pointers and inventory remain unchanged.
+Other selection groups and formation/result writes are separate unsupported
+contracts; Orbital editing/creation/deletion
 are described below.
 The original response was not captured. The APK selection subsequently succeeded;
 its saved receipt, pointer and revision matched, with unrelated state preserved.
+Raid selection was tested through the protocol against an in-memory clone of
+the actual account; its first post-fix APK change remains unverified.
 
 The following `/user/charge-stamina` failure was a separate parameterless natural
 recharge request. Its local policy mirrors the native client arithmetic: below

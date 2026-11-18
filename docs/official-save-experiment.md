@@ -114,8 +114,8 @@ Twenty-three mutations are now enabled: `/item/change-options`, `/item/apply-opt
 use the existing local selection/draw catalogs,
 atomic payment/reward transactions and session-scoped retry receipts. Supported
 draws are one or ten heroes using free gems, ordinary controllers or selectable
-controllers. Preset selection changes only the chosen captured Orbital preset
-and the account revision, with its own atomic retry receipts. Editing an existing
+controllers. Preset selection changes only the saved Orbital or shared
+Raid/Conquest pointer and account revision, with atomic retry receipts. Editing an existing
 Orbital preset saves its definition separately from the captured seed; a matching
 slot-count catalog also permits creating a missing definition. Deletion
 removes one existing Orbital definition and clears its selection if necessary. Natural stamina
@@ -345,7 +345,8 @@ of 100, placing that mode's IDs in `[400,500)`. The popup success callback uses
 the selected ID; the saved choice belongs to `User.SelectedPresetId.InfiniteTower`.
 The original selection response was not captured.
 
-The enabled mutation accepts only that mode's already captured party presets.
+This initial mutation accepted only that mode's already captured party presets;
+the later Raid/Conquest selection extension is described below.
 It shares the phase-entry ownership checks for distinct characters and equipment.
 Selection updates only the mode's pointer and `User.Cas`; all other profile data
 and preserved preset definitions remain unchanged. Repeating the same choice
@@ -364,8 +365,9 @@ applied to the real account by those checks. After reload, the APK selection
 request succeeded and one receipt was saved. A private check matched the selected
 pointer and revision to that receipt; all unrelated profile data and preserved
 preset definitions were unchanged. The subsequent failure was a separate
-`/user/charge-stamina` request. Creating and reordering presets, other
-modes' selections and Orbital formation/result writes remain unsupported.
+`/user/charge-stamina` request. Later sections cover Orbital definition mutations
+and Raid/Conquest selection; other selection groups and formation/result writes
+remain separate contracts.
 
 ## Natural stamina recharge
 
@@ -1501,6 +1503,43 @@ session with false cancellation, an empty reward list and zero database writes.
 The actual result screen/menu return still needs APK confirmation after backend
 reload and reconnect. Separate abandon handling and persistent raid results are
 outside this acknowledgment.
+
+## Selecting a saved Raid/Conquest preset
+
+After the completion endpoint handled an actual APK request, switching teams
+failed at `/preset/set-selected-preset` with `PresetId=713`. The old handler
+allowed only Orbital IDs. Native preset-type helpers use width-100 ranges and
+map the shared Raid/Conquest selection to the 700 block. The user model stores
+that choice in `User.SelectedPresetId.GuildRaidAndConquest`. The pending target
+exists exactly once in the captured/current definitions; its four heroes and
+equipment passed the ownership check. No real profile change was applied by
+that read-only inspection.
+
+The selector now supports existing owned definitions in `[400,500)` and
+`[700,800)`. It derives the stored field from the ID block, validates the existing
+pointer as zero or an ID from that same block, and updates only the selected
+field plus `User.Cas` when the choice changes. Independent mode selections,
+heroes, character equipment, inventory, raid progress and all team definitions
+remain unchanged. This is a real saved selection, not an acknowledgment that
+ignores the requested choice. The native shared field also applies to its shared
+guild contexts; no new per-mode selection field is invented.
+
+Existing epoch/sequence receipts retain atomic update/rollback and current-state
+retry behavior across both groups. Repeating a choice does not increment the
+revision; a delayed Raid retry cannot undo a later Raid choice or Orbital change.
+Unknown groups, missing/ambiguous/empty teams, unowned heroes/gear and invalid
+saved pointers/revisions reject without writes. Team creation, editing and
+deletion remain limited to the separately implemented Orbital contracts.
+
+Five additional regressions cover zero/default Raid selection, preservation of
+the complete profile/definitions, interleaved Orbital/Raid changes, stale retries
+after reopening/reconnect, no-op revisions, ownership/scope failures, invalid
+saved state and rollback when receipt insertion fails. The actual pending request
+was applied only to an in-memory SQLite clone. It changed exactly the shared
+Raid pointer and User revision when needed; an exact replay wrote nothing. The
+read-only source database remained unchanged. Actual APK team switching remains
+pending backend reload and reconnect; the user's retry will persist the choice
+through the normal server transaction.
 
 ## Host readiness before the APK check
 

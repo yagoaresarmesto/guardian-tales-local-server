@@ -6,7 +6,19 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **569 passing tests on Windows Python 3.11**. Three completion
+The suite has **574 passing tests on Windows Python 3.11**. Five Raid selection
+regressions cover the native 700-ID block, the shared `GuildRaidAndConquest`
+pointer, owned team validation, independent mode preservation, cross-mode
+retries/reconnects, revision guards and atomic rollback. The rejected actual
+request was `/preset/set-selected-preset` with `PresetId=713`; the previous
+handler admitted only Orbital. Selection now supports existing owned teams in
+both Orbital and Raid/Conquest groups, updating only the selected pointer and
+User revision with the existing receipt transaction. The pending request passed
+against an in-memory clone of the real account; exact replay wrote nothing and
+the read-only source remained unchanged. Post-fix APK switching remains pending.
+See [scope and evidence](official-save-experiment.md#selecting-a-saved-raidconquest-preset).
+
+Three earlier completion
 regressions cover the exact `Damages` array, nonnegative int64 values, four-member
 and aggregate bounds, ownership/catalog/progress guards and no-write retries
 across reconnects. The APK reached `/guild-raid2/end-stage` after start succeeded.
@@ -1197,10 +1209,11 @@ That initial trial did not establish saved Orbital progression. The later
 no-reward handler is covered by constructed victory checks; actual APK victory,
 formation edits, battle validation and reward delivery remain unverified or unsupported.
 Changing the preset inside Orbital next failed at
-`/preset/set-selected-preset`. It now selects only existing captured Orbital
+`/preset/set-selected-preset`. That initial fix selected existing captured Orbital
 parties, updating the selection pointer and revision with atomic request receipts.
 Replays preserve later choices; team definitions, heroes, equipment and other
-profile data remain unchanged. The APK selection succeeded and its saved receipt,
+profile data remain unchanged. The later Raid/Conquest extension is described
+above. The APK Orbital selection succeeded and its saved receipt,
 pointer and revision matched, with unrelated data preserved. The following failure
 was the parameterless `/user/charge-stamina` request. Natural recharge now uses
 the saved timer, matching interval and adjusted maximum, committing only the

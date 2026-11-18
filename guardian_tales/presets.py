@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Manage Orbital presets without changing owned heroes or gear."""
+"""Select saved Orbital/Raid teams and manage Orbital definitions without gear changes."""
 
 import json
 
@@ -7,6 +7,7 @@ from .snapshots import CLIENT, preserved_read
 
 GEAR_FIELDS = ("Weapon1", "Weapon2", "Accessory", "Orb1", "Orb2", "Merch", "Relic")
 MAX_REVISION = 0x7FFFFFFFFFFFFFFF
+SELECTION_FIELDS = {400: "InfiniteTower", 700: "GuildRaidAndConquest"}
 
 
 def integer(value, minimum=0):
@@ -72,24 +73,28 @@ def owned_party_preset(db, profile, preset_id):
     return matches[0]
 
 
-def choose_orbital(user, preset_id):
+def choose_preset(user, preset_id, field, base):
     selected, revision = user.get("SelectedPresetId"), user.get("Cas")
     if (
         not isinstance(selected, dict)
-        or not integer(selected.get("InfiniteTower"))
-        or selected["InfiniteTower"] != 0
-        and not 400 <= selected["InfiniteTower"] < 500
+        or not integer(selected.get(field))
+        or selected[field] != 0
+        and not base <= selected[field] < base + 100
         or type(revision) is not int
         or not 0 <= revision <= MAX_REVISION
     ):
-        raise ValueError("Invalid saved Orbital selection or account revision")
-    if selected["InfiniteTower"] == preset_id:
+        raise ValueError("Invalid saved party selection or account revision")
+    if selected[field] == preset_id:
         return False
     if revision == MAX_REVISION:
         raise ValueError("Account revision exceeds the supported range")
-    selected["InfiniteTower"] = preset_id
+    selected[field] = preset_id
     user["Cas"] += 1
     return True
+
+
+def choose_orbital(user, preset_id):
+    return choose_preset(user, preset_id, "InfiniteTower", 400)
 
 
 def set_selected(account, body, operation_id):
@@ -97,12 +102,15 @@ def set_selected(account, body, operation_id):
         not isinstance(body, dict)
         or set(body) != {"PresetId"}
         or not integer(body["PresetId"])
-        or not 400 <= body["PresetId"] < 500
         or not isinstance(operation_id, str)
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError("Select an existing Orbital preset after completing the prologue")
+        raise ValueError("Select an existing supported party preset after completing the prologue")
+    base = body["PresetId"] // 100 * 100
+    field = SELECTION_FIELDS.get(base)
+    if field is None:
+        raise ValueError("Only saved Orbital and Raid/Conquest preset selection is supported")
     encoded = json.dumps(body, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_selection_requests WHERE operation_id=?", (operation_id,)
@@ -115,7 +123,7 @@ def set_selected(account, body, operation_id):
         return {"User": profile["User"]}
     owned_party_preset(account.db, profile, body["PresetId"])
     user = profile["User"]
-    changed = choose_orbital(user, body["PresetId"])
+    changed = choose_preset(user, body["PresetId"], field, base)
     with account.db:
         if changed:
             account.db.execute(

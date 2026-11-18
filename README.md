@@ -102,7 +102,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Infinite-tower rankings | Empty local leaderboard list; APK query succeeded; no official rank or player entries inferred |
 | Orbital phase loading trial | APK loading and defeat return observed; guarded known-floor loading preserves saved state |
 | Orbital stage closing | Non-clear exits preserve all state; opt-in victories save highest floor without rewards; actual APK victory pending |
-| Orbital preset selection | Captured owned party choice saved in APK; atomic choice and retry receipts |
+| Orbital/Raid preset selection | Orbital verified in APK; saved Raid/Conquest selection host-tested with atomic choice and retry receipts |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
 | Own profile card | Card request completed; empty friend prerequisite added; uncaptured decorations/social fields empty; APK rendering pending |
