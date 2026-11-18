@@ -36,7 +36,7 @@ flowchart LR
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
 | `beginner.py` | Eligibility, atomic multi-mission rewards, claim bits and persistent retry receipts |
-| `challenges.py` | Catalog challenge conditions, contiguous next/all-step claims and atomic step/request receipts |
+| `challenges.py`, `challenge_progress.py` | Catalog challenge progress, imported official baselines, contiguous next/all-step claims and atomic rewards/receipts |
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
@@ -173,11 +173,20 @@ the base64 `GuideClaimed` bit array and a frozen reward receipt. A retry reuses
 the original item IDs and reward notice while returning current account state.
 Other missions and mixed batches remain unsupported.
 
-The first collect-hero challenge uses a separate `(group_id, step)` reward
-receipt and the integer `ChallengeClaimed` map. Only group 200's first step is
-implemented for the saved one-knight account. Its transaction records step 1 and
-50 free gems together; retries reuse the original reward notice. Later steps and
-the all-step route require their own progression/retry contracts.
+Challenge claims use `(group_id, step)` reward receipts and the integer
+`ChallengeClaimed` map. The no-catalog fresh-account fallback grants only group
+200's first step for the saved knight. The fresh catalog extends this to
+configured hero-count, draw-count and lifetime-gold conditions. Imported
+accounts require a separate pinned-client catalog with verified native progress
+types and reward storage. `imported_challenge_baselines` records existing
+official claim markers without paying their rewards again. Later local claims
+must have contiguous receipts above that baseline, never an implicit rebase.
+The next-step route grants one eligible step per group; the all-step route grants
+all consecutively earned steps based on the same saved progress snapshot.
+New assets, stackables or unowned single cosmetics, claim markers, inventory
+counter, revisions, baselines and request receipts commit atomically. Replays
+return frozen notices and current resources; other mission families remain
+separate contracts. See [external policy](reference-data.md#challenge-reward-steps).
 
 `/ad/init-inbox` is a parameterless compatibility read. Its callbacks open the
 inbox while the global resource handler applies the returned saved `UserRecord`.

@@ -3,9 +3,29 @@
 
 import json
 
+from .challenge_progress import CONDITIONS, MAX_LONG, integer, progress_value
+from .items import inventory_item
+from .snapshots import CLIENT, is_imported
 
-def load_challenge_catalog(references):
-    value = references.json("challenge_mission_catalog.json")
+
+def create_tables(db):
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS imported_challenge_baselines "
+        "(group_id INTEGER PRIMARY KEY, step INTEGER NOT NULL)"
+    )
+
+
+def load_challenge_catalog(references, imported=False):
+    name = (
+        "imported_challenge_mission_catalog.json" if imported else "challenge_mission_catalog.json"
+    )
+    if imported:
+        path = references.directory / name
+        if not path.is_file() or path.stat().st_size > 2 * 1024 * 1024:
+            raise ValueError("Imported challenges require a matching external catalog")
+    value = references.json(name)
+    if imported and (not isinstance(value, dict) or value.get("client") != CLIENT):
+        raise ValueError("Invalid imported challenge catalog client")
     groups = value.get("groups") if isinstance(value, dict) else None
     if not isinstance(groups, dict) or not 1 <= len(groups) <= 512:
         raise ValueError("Invalid challenge mission catalog")
@@ -20,7 +40,9 @@ def load_challenge_catalog(references):
             or int(key) > 0x7FFFFFFF
             or not isinstance(group, dict)
             or set(group) != {"condition", "steps"}
-            or group["condition"] not in ("owned_heroes", "hero_draws", "collected_gold")
+            or not isinstance(group["condition"], str)
+            or group["condition"]
+            not in (CONDITIONS if imported else ("owned_heroes", "hero_draws", "collected_gold"))
             or not isinstance(group["steps"], list)
             or not 1 <= len(group["steps"]) <= 1000
         ):
@@ -41,16 +63,80 @@ def load_challenge_catalog(references):
             for reward in step["rewards"]:
                 if (
                     not isinstance(reward, dict)
-                    or set(reward) != {"item_id", "amount"}
+                    or set(reward)
+                    != ({"item_id", "amount", "storage"} if imported else {"item_id", "amount"})
+                    or imported
+                    and reward.get("storage") not in ("asset", "stackable", "misc")
                     or type(reward["item_id"]) is not int
                     or not 1 <= reward["item_id"] <= 0x7FFFFFFF
                     or type(reward["amount"]) is not int
                     or not 1 <= reward["amount"] <= 0x7FFFFFFF
+                    or reward.get("storage") == "misc"
+                    and reward["amount"] != 1
                 ):
                     raise ValueError("Invalid challenge asset reward")
     if total > 10000:
         raise ValueError("Challenge catalog has too many steps")
     return groups
+
+
+def allocate_reward_item(user, item_id):
+    counter = user.get("ItemIdCounter")
+    owned = [
+        row["Id"] for kind in ("ItemWeapons", "ItemMiscs", "ItemStackables") for row in user[kind]
+    ]
+    if (
+        not integer(counter, 0x7FFFFFFE)
+        or any(not integer(v) or v > counter for v in owned)
+        or len(set(owned)) != len(owned)
+    ):
+        raise ValueError(
+            "Invalid inventory counter or duplicate IDs for challenge reward allocation"
+        )
+    user["ItemIdCounter"] += 1
+    return inventory_item(user["ItemIdCounter"], item_id)
+
+
+def grant_reward(user, assets, reward):
+    item_id, amount = reward["item_id"], reward["amount"]
+    if reward.get("storage", "asset") == "asset":
+        if item_id not in assets or not integer(assets[item_id].get("Amount"), 0x7FFFFFFF - amount):
+            raise ValueError("Unsupported challenge asset reward or balance overflow")
+        assets[item_id]["Amount"] += amount
+        inventory_id = 0
+    elif reward["storage"] == "misc":
+        if item_id in assets or any(row["ItemId"] == item_id for row in user["ItemMiscs"]):
+            raise ValueError(
+                "An already owned unique challenge cosmetic needs a duplicate reward policy"
+            )
+        item = allocate_reward_item(user, item_id)
+        user["ItemMiscs"].append(item)
+        inventory_id = item["Id"]
+    else:
+        if item_id in assets:
+            raise ValueError("A challenge asset cannot be stored as a stackable")
+        stacks = user.get("ItemStackables")
+        if not isinstance(stacks, list):
+            raise ValueError("Invalid saved challenge stackable inventory")
+        matches = [row for row in stacks if row.get("ItemId") == item_id]
+        if any(
+            not integer(row.get("Amount")) or not integer(row.get("Id")) or row["Id"] == 0
+            for row in matches
+        ):
+            raise ValueError("Invalid saved challenge reward stack")
+        active = [row for row in matches if row["Amount"]]
+        if len(active) > 1:
+            raise ValueError("Challenge reward stack is ambiguous")
+        item = (active or matches or [None])[0]
+        if item is None:
+            item = allocate_reward_item(user, item_id)
+            item["Amount"] = 0
+            stacks.append(item)
+        if not integer(item["Amount"], 0x7FFFFFFF - amount):
+            raise ValueError("Challenge reward stack overflow")
+        item["Amount"] += amount
+        inventory_id = item["Id"]
+    return {"Id": inventory_id, "ItemId": item_id, "Amount": amount}
 
 
 def response(profile, rewards):
@@ -80,7 +166,8 @@ def claim_challenges(account, request, operation_id, all_steps):
         if receipt[0] != encoded:
             raise ValueError("Challenge request identity was already used for another batch")
         return response(account.profile(), json.loads(receipt[1]))
-    catalog = load_challenge_catalog(account.references)
+    imported = is_imported(account.db)
+    catalog = load_challenge_catalog(account.references, imported)
     if any(str(g) not in catalog for g in ids):
         raise ValueError("Only configured challenge groups can be claimed")
     profile = account.profile()
@@ -88,8 +175,15 @@ def claim_challenges(account, request, operation_id, all_steps):
     claims = mission["ChallengeClaimed"]
     if not isinstance(claims, dict) or not isinstance(user["Characters"], list):
         raise ValueError("Invalid saved challenge state")
+    if imported and (
+        mission.get("UserId") != user.get("Id")
+        or not integer(user.get("Cas"), MAX_LONG)
+        or not integer(mission.get("Cas"), MAX_LONG)
+    ):
+        raise ValueError("Invalid imported challenge ownership or revisions")
     targets = {}
     new_steps = []
+    baselines = []
     for group_id in ids:
         group = catalog[str(group_id)]
         claimed = claims.get(str(group_id), 0)
@@ -98,9 +192,25 @@ def claim_challenges(account, request, operation_id, all_steps):
         receipts = account.db.execute(
             "SELECT step FROM challenge_mission_claims WHERE group_id=? ORDER BY step", (group_id,)
         ).fetchall()
-        if receipts != [(i,) for i in range(1, claimed + 1)]:
+        base = 0
+        if imported:
+            saved = account.db.execute(
+                "SELECT step FROM imported_challenge_baselines WHERE group_id=?", (group_id,)
+            ).fetchone()
+            if saved is None:
+                if receipts:
+                    raise ValueError("Imported challenge receipts require their original baseline")
+                base = claimed
+                baselines.append((group_id, base))
+            else:
+                base = saved[0]
+                if not integer(base, claimed):
+                    raise ValueError("Imported challenge baseline exceeds saved progress")
+        if receipts != [(i,) for i in range(base + 1, claimed + 1)]:
             raise ValueError("Challenge receipts do not match saved contiguous steps")
-        if group["condition"] == "owned_heroes":
+        if imported:
+            progress = progress_value(profile, group["condition"])
+        elif group["condition"] == "owned_heroes":
             progress = len(user["Characters"])
         elif group["condition"] == "hero_draws":
             progress = profile["UserRecord"]["SummonCharacterCount"]
@@ -128,26 +238,25 @@ def claim_challenges(account, request, operation_id, all_steps):
         targets[str(group_id)] = target
 
     assets = {a["Id"]: a for a in user["Assets"]}
+    if imported and len(assets) != len(user["Assets"]):
+        raise ValueError("Imported challenge asset IDs must be unambiguous")
     notices = []
     receipts = []
     for group_id, number, rewards in new_steps:
         granted = []
         for reward in rewards:
-            item_id, amount = reward["item_id"], reward["amount"]
-            if item_id not in assets:
-                raise ValueError("Only existing asset rewards are supported for challenge steps")
-            asset = assets[item_id]
-            if type(asset["Amount"]) is not int or not 0 <= asset["Amount"] <= 0x7FFFFFFF - amount:
-                raise ValueError("Challenge reward balance overflow or invalid saved asset")
-            asset["Amount"] += amount
-            granted.append({"Id": 0, "ItemId": item_id, "Amount": amount})
+            granted.append(grant_reward(user, assets, reward))
         notices.extend(granted)
         receipts.append((group_id, number, json.dumps(granted, separators=(",", ":"))))
     if receipts:
+        if imported and (user["Cas"] == MAX_LONG or mission["Cas"] == MAX_LONG):
+            raise ValueError("Imported challenge revision overflow")
         claims.update(targets)
         user["Cas"] += 1
         mission["Cas"] += 1
     with account.db:
+        for row in baselines:
+            account.db.execute("INSERT INTO imported_challenge_baselines VALUES(?,?)", row)
         for row in receipts:
             account.db.execute("INSERT INTO challenge_mission_claims VALUES(?,?,?)", row)
         account.db.execute(

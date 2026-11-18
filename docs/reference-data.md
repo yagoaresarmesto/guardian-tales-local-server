@@ -45,6 +45,7 @@ not fetch missing bootstrap files from an official service.
 | `beginner_mission_catalog.json` | Hero-draw beginner milestones | Public mission IDs, required draw counts and supported asset/stackable rewards |
 | `stamina_purchase_catalog.json` | Free-gem purchases of stored stamina | Matching public amount, price tiers, storage ceiling and type-9 daily limit |
 | `challenge_mission_catalog.json` | Hero collection/draw and gold collection challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
+| `imported_challenge_mission_catalog.json` | Dynamic imported-account achievements | Pinned client, available public challenge groups/steps, verified progress types and explicit reward storage |
 | `hero_knowledge_catalog.json` | Initial acquisition knowledge | Matching base-hero origins, public initial knowledge IDs and asset reward lists |
 | `festival_shop_catalog.json` | Festival shop availability and simple point redemptions | Matching season, shop IDs, prices, limits, explicit ownership exclusions and typed rewards |
 | `orbital_entry_catalog.json` | Experimental Orbital phase loading | Matching client identity and public floor IDs; no outcome or reward rules |
@@ -737,7 +738,7 @@ mission type; other beginner conditions remain unfinished.
 
 ## Challenge reward steps
 
-The optional `challenge_mission_catalog.json` contains a `groups` object keyed
+For fresh accounts, optional `challenge_mission_catalog.json` contains a `groups` object keyed
 by positive decimal group ID. Each group has a `condition` and ordered `steps`;
 each step has an increasing positive `threshold` and a `rewards` list containing
 positive `item_id`/`amount` pairs. List position determines step number, starting
@@ -772,6 +773,50 @@ across fresh logins also applies here. Receipted retries survive catalog removal
 Without the external catalog, the original first-knight/group-200 step-1
 fallback remains available on the next-step route. It does not extend to later
 steps or a larger roster. The all-step route requires an explicit catalog.
+
+Imported accounts use `imported_challenge_mission_catalog.json`, with a pinned
+`client` object and the same `groups`/ordered `steps` structure. Its `condition`
+uses a verified native mission type rather than the legacy aliases. Every reward
+also specifies `storage`: `asset`, `stackable` or `misc`. Assets must already
+exist; stackables merge into the existing active stack or allocate a new inventory
+ID. A `misc` reward is one previously unowned cosmetic, with amount exactly one.
+Already owned unique cosmetics reject until their duplicate/conversion policy is
+known. The prepared public data classifies these from `items.Type`; random,
+hero, weapon-stat or unknown reward types are not inferred.
+
+The progress evaluators read saved state as follows:
+
+| Native condition | Saved source |
+| --- | --- |
+| `SummonCharacter`, `SummonEquip` | `UserRecord.SummonCharacterCount`, `SummonWeaponCount` |
+| `Attendance`, `EvolveCharacters` | `UserRecord.LoginDayCount`, `EvolveCharacterCount` |
+| `LimitBreak`, `CraftMerch` | `UserRecord.LimitBreakCharacterCount`, `CraftMerchCount` |
+| `BlessCharacters`, `EngraveWeapons`, `MythCharacters` | Matching `UserRecord.Misc` character/weapon counters |
+| `DecomposeJewel`, `LobbyComplaintClear` | `UserRecord.Misc.DecomposeJewelCount`, `ComplaintClear` |
+| `CollectHero` | Saved owned-character row count |
+| `TowerInfinityClear` | `UserProgress.TowerInfinity.Floor` |
+| `CollectGold` | Gold amount plus lifetime spending, capped at Int32 maximum |
+| `UseStamina` | Charged/reserve stamina lifetime spending; reject native Int32 overflow |
+
+Matching `MissionHelper.GetMissionProgressCount` branches establish these rules;
+in particular, `LimitBreak` counts character breaks, not weapon breaks. The
+prepared 3.57.0 KakaoGlobal catalog has 13 available groups and 1,190 contiguous
+steps. Version/date gates must be resolved before preparing the file; two other
+verified evaluator types have no available steps in this regional catalog.
+Other native condition types still require verified evaluators. A saved counter
+only advances when a corresponding local gameplay handler maintains it; these
+claims do not invent battle results or new activity counts.
+
+On a group's first local claim, its current imported `ChallengeClaimed` step is
+saved in `imported_challenge_baselines`. Those old official steps receive no
+local reward and need no fabricated local reward receipts. Only later steps
+require contiguous `challenge_mission_claims` rows. The baseline cannot be
+silently recreated when local receipts already exist, and cannot exceed the
+saved claim marker. Baseline, new rewards, inventory IDs, claim markers and
+request receipts commit together. Failed batches save none of them. Replays
+retain frozen reward notices with current resources, even after catalog removal.
+This extends the two challenge claim routes; beginner, daily and event claims
+remain separate contracts.
 
 ## Initial hero acquisition knowledge
 

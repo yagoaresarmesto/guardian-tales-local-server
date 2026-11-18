@@ -33,6 +33,7 @@ from .campaign import (
     initial_stage_progresses,
 )
 from .challenges import claim_challenges
+from .challenges import create_tables as create_challenge_tables
 from .characters import new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
@@ -257,6 +258,7 @@ class AccountStore:
             "CREATE TABLE IF NOT EXISTS character_training_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, targets TEXT NOT NULL)"
         )
         create_imported_training_tables(db)
+        create_challenge_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS character_summon_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, results TEXT NOT NULL, created_at TEXT NOT NULL)"
         )
@@ -692,7 +694,8 @@ class AccountStore:
     def claim_challenge_missions(self, request, operation_id=None, all_steps=False):
         """Claim configured steps, retaining the legacy first-knight fallback."""
         if (
-            all_steps
+            is_imported(self.db)
+            or all_steps
             or (self.references.directory / "challenge_mission_catalog.json").is_file()
             or isinstance(operation_id, str)
             and self.db.execute(

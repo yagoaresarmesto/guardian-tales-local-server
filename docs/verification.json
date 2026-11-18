@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 588,
+    "tests_run": 600,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3230,5 +3230,32 @@
       "real_source_profile_unchanged": true
     },
     "post_fix_apk_responsiveness_and_partial_resource_handling": "Pending backend reload, reconnect and select/save/delete trial"
+  },
+  "dynamic_imported_achievements": {
+    "date": "2026-11-18",
+    "observed_rejected_route": "/mission/claim-challenge-all-step",
+    "observed_public_group_ids": [206],
+    "native_contract": "Exact missionIds list; next/all-step claim routes; MissionHelper.GetMissionProgressCount switch and public missions/items tables",
+    "verified_saved_progress_rules": 15,
+    "prepared_regional_groups": 13,
+    "prepared_regional_steps": 1190,
+    "baseline_policy": "Retain existing official ChallengeClaimed steps as nonpaying baselines; local receipts are required only above the baseline; never silently rebase missing receipts",
+    "reward_storage": ["existing assets", "stackables", "single previously unowned cosmetics"],
+    "unknown_conditions_and_duplicate_cosmetic_conversion_guarded": true,
+    "transaction": "Baselines, new rewards, inventory IDs, markers, revisions and request receipt commit or roll back together",
+    "retries": "Frozen notices with current resources; new counter growth can earn later steps under a new request identity",
+    "fresh_account_challenge_behavior_retained": true,
+    "synthetic_regressions": 12,
+    "full_windows_tests": 600,
+    "private_actual_account_clone_check": {
+      "result": "PASS",
+      "newly_earned_steps": 1,
+      "old_official_steps_not_paid_again": true,
+      "only_expected_asset_claim_marker_and_revisions_changed": true,
+      "exact_retry_writes": 0,
+      "real_source_database_writes": 0,
+      "real_source_profile_unchanged": true
+    },
+    "post_fix_apk_claim_and_reward_rendering": "Pending backend reload, reconnect and retry"
   }
 }

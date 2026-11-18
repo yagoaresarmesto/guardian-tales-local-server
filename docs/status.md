@@ -6,7 +6,19 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **588 passing tests on Windows Python 3.11**. Four preset response
+The suite has **600 passing tests on Windows Python 3.11**. Twelve imported
+challenge regressions cover official baselines, saved native counter rules,
+next/all-step batches, dynamic new progress, asset/stackable/cosmetic rewards,
+reopen/reconnect/current-state retries, malformed inputs, numeric guards and
+atomic rollback. The rejected `/mission/claim-challenge-all-step` request named
+the hero-summon achievement group. The actual request passed on an in-memory
+clone, awarding one newly earned step while retaining the old official steps;
+an exact retry wrote nothing. The matching external catalog contains 13
+available groups and 1,190 steps, driven by 15 verified progress evaluators.
+The real profile remained unchanged; APK claim/refresh verification is pending
+backend reload and reconnect. See [contract and evidence](official-save-experiment.md#dynamic-imported-achievements).
+
+Four earlier preset response
 regressions cover large inventories, compact current selections, full definition
 replacement on save/create/delete, independent mode pointers, wire round trips
 and stale/reconnect retries. Preset responses now send only owner ID, revision

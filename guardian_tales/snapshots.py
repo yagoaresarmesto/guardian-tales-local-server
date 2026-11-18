@@ -44,6 +44,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/preset/delete-preset",
         "/user/charge-stamina",
         "/user/add-character-experience",
+        "/mission/claim-challenge-all",
+        "/mission/claim-challenge-all-step",
         "/user/charge-stamina-by-gem",
         "/user/claim-daily-attendance",
         "/lobby-village/harvest-all",

@@ -1647,6 +1647,52 @@ Actual APK response handling and perceived speed require backend reload and a
 new select/save/delete trial; no emulator or live account state was changed by
 these measurements.
 
+## Dynamic imported achievements
+
+The rejected achievement request was `/mission/claim-challenge-all-step` with
+`missionIds: [206]`, the public hero-summon group. The imported mutation guard
+rejected it. The fresh-account implementation also expected every saved claim
+step to have a local receipt, whereas this imported profile already had official
+claim markers and no local challenge receipts. Simply enabling that handler
+would therefore still fail, or risk re-awarding old rewards if markers were reset.
+
+The existing next/all-step implementation now accepts imported accounts only
+with a matching `imported_challenge_mission_catalog.json`. Public mission enum
+values and the native `MissionHelper.GetMissionProgressCount` switch establish
+15 progress rules over saved record counters, miscellaneous counters, owned
+heroes, gold, stamina spending and Orbital floor. For example, summons read
+`SummonCharacterCount`, blessings read `Misc.BlessCharacterCount`, and character
+limit-break achievements read only `LimitBreakCharacterCount`. These are not
+individual hardcoded target amounts. Public `missions` rows supply ordered
+thresholds and rewards; `items.Type` supplies asset/stackable/cosmetic storage.
+The prepared regional catalog filters unavailable version-gated rows and has
+13 groups with 1,190 contiguous steps. Other native conditions remain guarded;
+claiming does not generate unsupported gameplay progress or repair counters
+that another local gameplay handler does not yet update.
+
+A first local claim saves each existing official step as a nonpaying baseline.
+Only eligible steps above it receive rewards and new contiguous local receipts.
+Missing local receipts cannot be silently rebased. One transaction saves all
+baseline rows, new asset/stackable/unowned-cosmetic rewards, inventory IDs, claim
+markers, revisions and request receipt. A malformed/unearned group or overflow
+rejects the batch without writes. No-op completed groups retain their markers.
+Exact receipt replays return current resources and frozen reward notices without
+granting again; a new operation after real saved counter growth can earn the next
+steps. Unique cosmetics already owned are rejected pending a verified duplicate
+reward policy, rather than inventing a conversion. Fresh-account behavior and
+its existing receipts remain available separately.
+
+Twelve additional regressions exercise these cases, including protocol admission,
+authentication, catalog guards, all 15 progress sources, allocator/revision guards,
+catalog removal, reconnects and transaction failure. The actual pending request
+passed against an in-memory copy of the account database. It awarded one new
+step, changed only its expected asset amount and User/UserMission revisions and
+claim marker, retained all old steps without replayed rewards, and recorded the
+baseline plus only the new local step. An exact retry wrote nothing. The real
+SQLite source was read-only and its profile remained unchanged. Original official
+claim responses were not captured; APK reward rendering and refresh still require
+backend reload, reconnect and the user's retry.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all
