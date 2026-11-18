@@ -77,6 +77,7 @@ from .presets import delete_existing as delete_existing_preset
 from .presets import save_party as save_party_preset
 from .presets import set_selected as set_selected_preset
 from .profile_card import read as read_profile_card
+from .punchking import create_tables as create_punchking_tables
 from .reference import ReferenceData
 from .relic_options import change_or_apply as change_or_apply_relic_options
 from .relic_options import create_tables as create_relic_option_tables
@@ -259,6 +260,7 @@ class AccountStore:
         )
         create_imported_training_tables(db)
         create_challenge_tables(db)
+        create_punchking_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS character_summon_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, results TEXT NOT NULL, created_at TEXT NOT NULL)"
         )

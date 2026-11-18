@@ -1033,6 +1033,63 @@ but the client's loaded tables persist until restart. Selection changes neither
 global server time nor the saved account. Historical boss rendering and combat
 must still be checked in the APK.
 
+## Dungeon Kingdom Arena practice selector
+
+The optional `guild_punchking_catalog.json` contains pinned `client`,
+`practice_only: true` and exactly three `variants`. Each variant has `id` (1–3),
+`season_id` (native season row ID), `calendar_id` and seven ordered `days`.
+Each day has `id` (native arena monster row ID), `monster_id` (character spec ID),
+`stage_id`, `weak_point` and `element`. Prepare these from matching public
+`guildpunchking.Seasons`/`Monsters`, not a player's score or a guessed boss ID.
+All catalog values are checked against the preserved static tables before a
+selection is published. The local prepared rotations use season rows 36, 37
+and 35; the historical beta rows remain unchanged.
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales dka-season list
+.\.venv\Scripts\python.exe -m guardian_tales dka-season set 1 --day 1
+.\.venv\Scripts\python.exe -m guardian_tales dka-season set 2 --day 5
+.\.venv\Scripts\python.exe -m guardian_tales dka-season set 3 --day 7
+```
+
+The default reference directory for this command is `local/client-data/reference`;
+override it with `--reference-dir`. Days 1–7 are the basic, light, dark, fire,
+water, earth and space slimes. Native weakness names rotate through `Down`,
+`Poison` and `Aerial`; the latter two represent the injury/airborne weaknesses.
+The seven slimes keep their original stats, assets and stage. The command only
+selects a matching existing rotation and aligns its native calendar.
+
+`guild_punchking_selection.json` stores the variant/day, UTC content date,
+seven-day period, composed Raid body digest and generated static manifest. Its
+immutable `guild_punchking_static_<sha256>.bin` is published before the selection
+pointer is replaced atomically. The selected arena's KakaoGlobal period starts
+at today's UTC midnight minus day-1 and ends seven days later, minus one second.
+Other arena periods close in the past so they cannot override that choice.
+Other modes' calendar rows and other services' timestamps remain unchanged.
+The client is told `StartOfDay=00:00:00`; its native day calculation therefore
+selects exactly the requested slot without changing global server time.
+
+If Raid has its own override, the arena body composes over it. A later Raid
+change or later UTC content date rebuilds the arena calendar during the next
+static check/get. The requested day remains fixed on that later login. An open
+client crossing midnight must reload its tables; stage requests reject stale
+day/boss data. **Fully close and reopen the game after each selector change**;
+Reconnect alone retains its old static objects. The first code update also
+requires restarting the backend. No CDN or bridge reconfiguration is needed.
+
+The six implemented routes cover native entry, guild/member/user rankings,
+start and completion. This is a free practice policy: no official ranking data,
+rewards, coins, attempts, personal bests or imported profile state are written.
+The native result screen still receives the client battle result. Entry returns
+a seven-day `GuildRaid` status and partial `UserRaid` season pointer, preserving
+unrelated cached currencies. Saved DKA teams in the native `[1300,1400)` block
+can be selected with the normal preset selector; editing those definitions is
+still a separate unsupported contract. Start requires the chosen catalog boss
+and an existing nonempty owned team. Start/end store only local practice-session
+and epoch/sequence receipts, commit atomically and fence variant/day changes.
+Replays do not clear a later active battle. Unknown preserved arena progress is
+guarded rather than reset. Reward/shop/message operations remain separate.
+
 ## Original-client content boundary
 
 The prepared test used the base EN/ES content plus the Japanese voice supplement.

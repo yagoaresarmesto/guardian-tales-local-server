@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 600,
+    "tests_run": 612,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3257,5 +3257,32 @@
       "real_source_profile_unchanged": true
     },
     "post_fix_apk_claim_and_reward_rendering": "Pending backend reload, reconnect and retry"
+  },
+  "dungeon_kingdom_arena_rotations_and_days": {
+    "date": "2026-11-18",
+    "observed_unsupported_route": "/guild-punchking/enter",
+    "observed_pending_schema": {"IsPartial": "bool"},
+    "operator_request": "Command selection of all three DKA rotations and any day/slime 1-7",
+    "selector_command": "dka-season set VARIANT --day DAY",
+    "native_calendar_contract": "UTC content day minus selected season From indexes the seven native monster IDs; actual seven-day interval required; season-off uses calendar activation",
+    "calendar_policy": "Compose over selected Raid static body, activate selected DKA global calendar, close other DKA calendars, retain other tables/modes/services and global server time",
+    "later_raid_selection_and_utc_date_refresh": true,
+    "native_stage_contract": "Start MonsterId -> Messages; end nonnegative Int32 Damage/Boolean Abandoned -> GuildRaid, IsRenew and Abandoned",
+    "rankings": "Empty native lists; nullable MyRank and zero MyScore for guild/user views",
+    "saved_team_selection": "Native DKA type 13, IDs [1300,1400), GuildPunchKing pointer; captured owned definitions only",
+    "practice_policy": "No rewards, coins, costs, saved personal bests, official rankings or profile changes; session/receipt tables only",
+    "active_session_and_request_receipts_are_atomic_and_selection_fenced": true,
+    "synthetic_regressions": 12,
+    "full_windows_tests": 612,
+    "real_public_catalog_and_private_account_check": {
+      "result": "PASS",
+      "variant_day_combinations": 21,
+      "cloned_start_end_and_exact_retries": true,
+      "all_profile_sections_preserved": true,
+      "actual_pending_entry_and_rankings_read_only": true,
+      "real_database_writes": 0
+    },
+    "initial_local_selection": {"variant": 1, "day": 1},
+    "post_fix_apk_lobby_combat_and_result_return": "Pending backend reload and full game restart; reconnect alone does not reload static objects"
   }
 }

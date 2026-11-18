@@ -37,6 +37,7 @@ flowchart LR
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
 | `beginner.py` | Eligibility, atomic multi-mission rewards, claim bits and persistent retry receipts |
 | `challenges.py`, `challenge_progress.py` | Catalog challenge progress, imported official baselines, contiguous next/all-step claims and atomic rewards/receipts |
+| `punchking.py`, `punchking_static.py` | Dungeon Kingdom Arena practice, rotation/day calendar composition and battle-session receipts |
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
@@ -275,6 +276,10 @@ The original response was not captured. The APK selection subsequently succeeded
 its saved receipt, pointer and revision matched, with unrelated state preserved.
 Raid selection was tested through the protocol against an in-memory clone of
 the actual account; its first post-fix APK change remains unverified.
+
+The native DKA preset type is 13, using `[1300,1400)` and the
+`GuildPunchKing` selected-mode field. Selection now also supports existing owned
+teams in this block. Other definition editing remains Orbital-only.
 
 All preset mutations and their receipt replays now return a compact `User`
 resource containing only `Id`, `Cas` and the complete `SelectedPresetId` map.

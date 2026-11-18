@@ -6,7 +6,21 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **600 passing tests on Windows Python 3.11**. Twelve imported
+The suite has **612 passing tests on Windows Python 3.11**. Twelve Dungeon
+Kingdom Arena regressions cover all three rotations and seven days, consistent
+native seven-day calendars, unrelated-table/service preservation, composition
+with later Raid changes, UTC daily refresh, exact authenticated route schemas,
+owned arena-team selection, start/end/abandon receipts, stale selections and
+transaction rollback. The public real catalog and an in-memory copy of the
+actual account also passed all 21 combinations through start/end/retry, with all
+profile sections unchanged. The actual pending entry and empty ranking routes
+passed against the read-only real database with zero writes. The initial local
+choice is variant 1, day 1; runtime schemas and calendar behavior are inferred
+from matching native methods. APK lobby, combat and result/menu return remain
+pending backend reload and a full game restart. See
+[selector and evidence](official-save-experiment.md#dungeon-kingdom-arena-rotations-and-days).
+
+Twelve earlier imported
 challenge regressions cover official baselines, saved native counter rules,
 next/all-step batches, dynamic new progress, asset/stackable/cosmetic rewards,
 reopen/reconnect/current-state retries, malformed inputs, numeric guards and

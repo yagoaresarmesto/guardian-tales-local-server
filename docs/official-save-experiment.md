@@ -1693,6 +1693,65 @@ SQLite source was read-only and its profile remained unchanged. Original officia
 claim responses were not captured; APK reward rendering and refresh still require
 backend reload, reconnect and the user's retry.
 
+## Dungeon Kingdom Arena rotations and days
+
+The failing guild mode was `/guild-punchking/enter`, not PvP Arena or Conquest.
+Read-only native inspection confirmed `IsPartial: bool`. The user requested all
+three DKA rotations selectable by command, and an independent choice of day/slime
+1–7. The matching public table has 37 historical seasons; its recent seasons
+repeat three seven-monster patterns. Native weakness orders begin respectively
+Down/Injury/Airborne, Injury/Airborne/Down and Airborne/Down/Injury. All use the
+same preserved arena stage and existing assets. Public official notes describe
+the original daily slime rotation and 90-second automatic battles with unlimited
+challenges; see the [mode introduction](https://www.guardiantales.com/news/4261)
+and [a later rotation schedule](https://www.guardiantales.com/news/4747).
+
+Native `GuildPunchKingClient.IsSeasonOff` checks the selected public calendar.
+`GetMonsterSpecIdBySeasonId` subtracts content-day start dates and indexes its
+seven native monster IDs. `GetTotalDayList` uses the complete calendar interval.
+Changing only a server season ID would leave an off-season button or wrong boss.
+The new `dka-season set VARIANT --day DAY` command publishes a separate immutable
+static body and selection manifest. It activates the matching seven-day global
+calendar with the requested day aligned to UTC today and closes other DKA
+calendars. The original static source, monster definitions, other modes' dates
+and other services' values are retained. It composes over the current Raid
+override and refreshes after a later Raid selection or new UTC content date.
+The user's server clock and profile are never moved or rewritten. A full client
+restart is required after any choice; reconnect retains the cached table objects.
+
+Native entry callback consumes `GuildRaid`; its status is a seven-row dated list
+with per-user dictionaries. A partial `UserRaid` season pointer retains other
+resources. Ranking callbacks consume empty `Rankings` lists, with nullable
+`MyRank` and zero `MyScore` where required. Stage start accepts exactly
+`MonsterId` and its callback reads `Messages` before creating the stage. End
+accepts nonnegative Int32 `Damage` and Boolean `Abandoned`; its callback reads
+`GuildRaid`, `IsRenew` and `Abandoned` before the native result routine. The new
+practice response supplies these shapes without rewards, attempt/currency costs,
+personal-best persistence or invented official scores. Native DKA preset type
+13 maps existing captured teams to `[1300,1400)` and
+`User.SelectedPresetId.GuildPunchKing`; selecting those teams is supported.
+Current party/equipment, other preset modes and all inventory remain unchanged.
+
+`punchking_active` and `punchking_requests` store only local practice-session
+state and epoch/sequence receipts. Start validates the selected day/boss and an
+existing nonempty owned DKA team. End requires a matching active selection;
+both its completion and abandonment clear that session atomically. Exact retries
+do not overwrite a later battle or reward twice; mismatched bodies/selections
+reject. Existing nonzero saved arena seasons are guarded rather than reset.
+Shop/reward redemption, user comments and score validation remain separate.
+
+Twelve new regressions cover all 21 combinations, native schema/bounds,
+authentication, read-only menu views, owned team selection, UTC rollover,
+Raid/arena composition in either order, stale-session fences and rollback.
+An independent check used the actual public tables and an in-memory copy of the
+saved account for all 21 selections, start/end and exact retry. Every profile
+section remained equal to the original. Actual pending entry and ranking reads
+also passed with the real SQLite connection write-disabled: zero real writes.
+The local external catalog is prepared and the initial choice is variant 1,
+day 1. These are host/native-contract results. Actual APK scene entry, combat
+and result/menu return require backend reload and full client restart; they have
+not yet been observed and are not established by passing host checks.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

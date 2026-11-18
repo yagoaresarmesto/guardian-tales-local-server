@@ -25,6 +25,11 @@ from .packet_reader import lz4_block
 from .play_menu import PLAY_MENU_ROUTES
 from .play_menu import read as play_menu_read
 from .protocol import Packet, PacketError
+from .punchking import END as PUNCHKING_END
+from .punchking import ROUTES as PUNCHKING_ROUTES
+from .punchking import START as PUNCHKING_START
+from .punchking import handle as handle_punchking
+from .punchking_static import bootstrap_override as punchking_bootstrap_override
 from .raid_static import bootstrap_override as raid_bootstrap_override
 from .reference import compressed_empty_list
 from .snapshots import (
@@ -49,6 +54,7 @@ BOOTSTRAP_ROUTES = (
     *PLAY_MENU_ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
+    *PUNCHKING_ROUTES,
 )
 STATIC_SEEDS = {
     "/static-data/resource-url": ("resource_urls.bin", 2),
@@ -206,6 +212,20 @@ class BootstrapSession:
         if route not in BOOTSTRAP_ROUTES:
             raise PacketError("API operation not implemented")
         body = read_json_body(request)
+        if route in PUNCHKING_ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                operation_id = None
+                if route in (PUNCHKING_START, PUNCHKING_END):
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                return json_response(
+                    request,
+                    handle_punchking(self.store.account, route, body, operation_id),
+                )
+            except ValueError as error:
+                raise PacketError(str(error)) from error
         if self.signed_in and is_imported(self.store.db):
             if route in ACCOUNT_ROUTES and route not in ACCOUNT_READS | IMPORTED_MUTATIONS:
                 raise PacketError("Imported-account operation requires its own validated contract")
@@ -592,7 +612,9 @@ class BootstrapSession:
         if route in STATIC_SEEDS:
             filename, kind = STATIC_SEEDS[route]
             try:
-                seed = raid_bootstrap_override(self.store.references, filename, body)
+                seed = punchking_bootstrap_override(self.store.references, filename, body)
+                if seed is None:
+                    seed = raid_bootstrap_override(self.store.references, filename, body)
                 if seed is None:
                     seed = self.store.references.read_bytes(filename)
             except ValueError as exc:

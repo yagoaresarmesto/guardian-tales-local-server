@@ -7,7 +7,7 @@ from .snapshots import CLIENT, preserved_read
 
 GEAR_FIELDS = ("Weapon1", "Weapon2", "Accessory", "Orb1", "Orb2", "Merch", "Relic")
 MAX_REVISION = 0x7FFFFFFFFFFFFFFF
-SELECTION_FIELDS = {400: "InfiniteTower", 700: "GuildRaidAndConquest"}
+SELECTION_FIELDS = {400: "InfiniteTower", 700: "GuildRaidAndConquest", 1300: "GuildPunchKing"}
 
 
 def integer(value, minimum=0):
@@ -116,7 +116,7 @@ def set_selected(account, body, operation_id):
     base = body["PresetId"] // 100 * 100
     field = SELECTION_FIELDS.get(base)
     if field is None:
-        raise ValueError("Only saved Orbital and Raid/Conquest preset selection is supported")
+        raise ValueError("Select an existing supported Orbital, Raid/Conquest or Arena preset")
     encoded = json.dumps(body, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_selection_requests WHERE operation_id=?", (operation_id,)
