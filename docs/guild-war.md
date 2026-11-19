@@ -116,7 +116,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and twenty-three War regressions cover native schemas, fresh/imported
+Four meteor and twenty-five War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -212,6 +212,23 @@ verified that lobby with all three entries still available. The current process'
 bounded log check contained no missing-21644 or GuildWarResult exception frames.
 This verifies this cooperative attack result path, not Single/Multi combat or
 persistent War score/progression/rewards.
+
+## Abandoning an unfinished stage
+
+`/guild-war/abandon-stage` handles leaving a battle before its result. Native
+SendGuildWarAbandonStage creates a parameterless packet; its coroutine yields
+the request without reading response fields. The local handler accepts the native
+empty body and null/empty-object aliases, returning `{}` after the enabled-season,
+completed-prologue, owned-membership and preserved-progress checks used by entry.
+The trial has no persisted active battle to refund or delete. Abandoning does not
+record a clear, damage, attempt, cost, reward, character lock or profile revision.
+
+Two regressions exercise native wire framing, fresh/imported account guards,
+malformed parameters, repetition and reconnect with query-only SQLite. The real
+source database also passed empty/null/object/repeat requests through the wire
+codec with zero writes or profile changes. The running backend was reloaded;
+after reconnect the user confirmed leaving the battle succeeds. No full game
+restart or change to the saved Guild War activation is required for this handler.
 
 Two additional atomic-file regressions cover transient Windows sharing locks,
 bounded retries, preserved old output and immediate propagation of access denial.

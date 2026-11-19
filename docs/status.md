@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **703 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **705 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and twenty-three Guild War regressions cover native entry schemas,
+Four guild meteor and twenty-five Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -67,6 +67,14 @@ entries retained. No matching result exception appeared in the current process's
 bounded log check. Single/Multi combat
 and the basic-course UI remain unfinished. See
 [commands, contracts and boundaries](guild-war.md).
+
+Leaving an unfinished War stage now acknowledges native parameterless
+`/guild-war/abandon-stage` with `{}`. The enabled local trial, membership and
+preserved-progress guards remain active. It records no battle result, attempt,
+cost, reward or account change. Native empty/null/object framing and repeats
+passed against real read-only source SQLite with zero writes. After backend
+reload and reconnect the user confirmed abandonment succeeds; two regressions
+cover framing, fresh/imported guards, invalid parameters and reconnect.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

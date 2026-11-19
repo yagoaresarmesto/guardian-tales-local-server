@@ -72,6 +72,7 @@ ACCOUNT_READS = frozenset(
         "/guild/claim-guild-daily-attendance",
         "/guild-meteor/enter",
         "/guild-war/enter",
+        "/guild-war/abandon-stage",
         "/guild-war/get-all-castle-simple-infos",
         "/guild-war/start-coop-stage",
         "/guild-war/end-coop-stage/v2",

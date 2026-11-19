@@ -23,6 +23,7 @@ CASTLES = "/guild-war/get-all-castle-simple-infos"
 RECORDS = "/guild-war/get-battle-records"
 START_COOP = "/guild-war/start-coop-stage"
 END_COOP = "/guild-war/end-coop-stage/v2"
+ABANDON = "/guild-war/abandon-stage"
 MAX_DAMAGE = 0x7FFFFFFFFFFFFFFF
 UNLOCK = "/user/claim-unlock-feature-rewards"
 
@@ -142,6 +143,16 @@ def battle_records(account, request):
     # Native result-to-lobby synchronization consumes three arrays, including
     # daily status. This stateless trial has no saved battles or guild rankings.
     return {"LatestBattleRecords": [], "CoopDefenseInGuildRanking": [], "DailyBattleStatus": []}
+
+
+def abandon_stage(account, request):
+    if request is not None and (not isinstance(request, dict) or request):
+        raise ValueError("Guild War abandonment accepts no parameters")
+    enter(account, {"isPartial": True})
+    # The native routine sends a parameterless request and yields it without
+    # consuming response resources. The stateless trial has nothing to refund,
+    # unlock or delete, and abandonment must not record a completed battle.
+    return {}
 
 
 def start_coop(account, request):

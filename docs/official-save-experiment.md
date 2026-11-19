@@ -2006,7 +2006,7 @@ The guarded `/guild-war/enter` trial accepts native lowercase `isPartial` and
 returns correctly typed fresh UserRaid.GuildWar / GuildWarInfo collections in
 phase 1 for the cooperative lobby. It preserves existing account state and
 rejects nonempty saved War progress; battles, claims, purchases and other War
-APIs remain unfinished. Twenty-nine new regressions and read-only real-account wire
+APIs remain unfinished. Thirty-one new regressions and read-only real-account wire
 checks cover these contracts. The first APK trial reached the basic-course
 prerequisite popup and redirected to Play > Others, where the entry was absent.
 Metadata identifies the missing GuildWarSingle feature as 126. The derived static
@@ -2067,6 +2067,15 @@ to the War menu; a fresh window observation verified the lobby with all three
 entries available. The current process's bounded log check contained no matching
 missing-item/result exception. Persistent progression and other War modes retain
 their unfinished boundaries.
+
+The next observed failure occurred when leaving an unfinished battle:
+`/guild-war/abandon-stage`. Native SendGuildWarAbandonStage sends no parameters,
+and its coroutine does not consume response resources. The guarded local trial
+now returns `{}` without recording results, attempts, refunds, rewards, character
+locks or profile changes. Two regressions and real-source read-only wire checks
+cover empty/null/object bodies, retries/reconnect and rejection of unsupported
+parameters or saved progression. The actual backend was reloaded and the user
+confirmed the stage can be abandoned after reconnect.
 Bounded Windows sharing-lock retries
 also retain atomic selector publication after repeated transient test failures.
 See [usage and detailed limitations](guild-war.md).

@@ -19,6 +19,7 @@ from guardian_tales.guild_raid import CATALOG as RAID_CATALOG
 from guardian_tales.guild_raid import SELECTION as RAID_SELECTION
 from guardian_tales.guild_raid import select_season
 from guardian_tales.guild_war import (
+    ABANDON,
     CASTLES,
     END_COOP,
     MAX_DAMAGE,
@@ -38,7 +39,7 @@ from guardian_tales.guild_war_static import (
     load_selection,
 )
 from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import PacketError, encode_packet
+from guardian_tales.protocol import Packet, PacketError, encode_packet
 from guardian_tales.raid_static import compress, decode, digest, records
 from tests.test_guild_raid import synthetic_catalog, synthetic_static
 from tests.test_snapshots import request, synthetic_snapshot
@@ -693,3 +694,58 @@ class GuildWarTests(unittest.TestCase):
             with self.subTest(body=body), self.assertRaises(PacketError):
                 self.call(body, RECORDS)
         self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_native_abandon_acknowledgment_is_empty_and_read_only_across_framing_and_retries(self):
+        profile = self.install()
+        enable(self.ref)
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        native = parse_packet(
+            encode_packet(Packet(0, b"", body_type=0, api=ABANDON, sequence_id=15))
+        )
+        for packet in (native, request(ABANDON), request(ABANDON, {}), native):
+            self.assertEqual(
+                read_json_body(parse_packet(encode_packet(self.session.handle(packet)))), {}
+            )
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+        self.db.execute("PRAGMA query_only=OFF")
+        self.session = BootstrapSession(self.store)
+        self.session.handle(
+            request("/auth/sign-in", {"AuthKind": 0, "AccessToken": "synthetic", "Reconnect": True})
+        )
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        self.assertEqual(self.call(None, ABANDON), {})
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+
+    def test_abandon_requires_enabled_authenticated_guild_trial_and_rejects_parameters_or_saved_progress(
+        self,
+    ):
+        with self.assertRaises(PacketError):
+            self.call(None, ABANDON)
+        original = self.install(False)
+        with self.assertRaises(PacketError):
+            self.call(None, ABANDON)
+        enable(self.ref)
+        self.assertEqual(self.call({}, ABANDON), {})
+        before = list(self.db.iterdump())
+        for body in ([], False, 0, "", {"stageId": 850030005}, {"Claim": True}):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, ABANDON)
+        self.assertEqual(list(self.db.iterdump()), before)
+        for mutate in (
+            lambda p: p.update(GuildMember=None),
+            lambda p: p["UserRaid"].update(GuildWar={"SeasonId": 1, "PlayCount": 2}),
+        ):
+            profile = copy.deepcopy(original)
+            mutate(profile)
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            before = list(self.db.iterdump())
+            with self.assertRaises(PacketError):
+                self.call(None, ABANDON)
+            self.assertEqual(list(self.db.iterdump()), before)
