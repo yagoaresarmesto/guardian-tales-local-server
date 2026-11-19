@@ -11,6 +11,7 @@ from .guild_war_static import (
     FEATURE_ID,
     PHASES,
     SELECTION,
+    castle_specs,
     cooperative_stage_ids,
     enable,
     load_selection,
@@ -21,6 +22,7 @@ from .reference import ReferenceData
 
 ROUTE = "/guild-war/enter"
 CASTLES = "/guild-war/get-all-castle-simple-infos"
+CASTLE_DETAIL = "/guild-war/get-castle-detail-info"
 RECORDS = "/guild-war/get-battle-records"
 RANKING = "/guild-war/get-ranking"
 COIN_RANKING = "/guild-war/get-guild-coin-ranking"
@@ -146,14 +148,48 @@ def season_read_context(account, request):
         or request["seasonId"] != 1
     ):
         raise ValueError("Guild War reads require native seasonId 1")
-    enter(account, {"isPartial": True})
+    return enter(account, {"isPartial": True})
 
 
 def castle_infos(account, request):
-    season_read_context(account, request)
-    # Native Multi lobby consumes GuildWarCastleSimpleInfo[]. No other guild's
-    # captures, ownership or markings are available in this local trial.
-    return {"CastleSimpleInfos": []}
+    view = season_read_context(account, request)
+    if view["GuildWarInfo"]["Phase"] not in (3, 4):
+        return {"CastleSimpleInfos": []}
+    specs = castle_specs(account.references, load_selection(account.references))
+    # Native Multi lobby needs a row for each selectable castle. The map comes
+    # from the matching static deployment; neutral ownership is a local mock.
+    return {
+        "CastleSimpleInfos": [
+            {"CastleId": value, "CaptureGuildId": 0, "MarkingCount": 0, "CaptureDays": 0}
+            for value in specs
+        ]
+    }
+
+
+def castle_detail(account, request):
+    if (
+        not isinstance(request, dict)
+        or set(request) != {"castleId"}
+        or type(request["castleId"]) is not int
+    ):
+        raise ValueError("Guild War castle details require native castleId")
+    view = enter(account, {"isPartial": True})
+    if view["GuildWarInfo"]["Phase"] not in (3, 4):
+        raise ValueError("Select a Dispute phase and reopen its lobby")
+    specs = castle_specs(account.references, load_selection(account.references))
+    if request["castleId"] not in specs:
+        raise ValueError("Select a castle in the enabled Guild War deployment")
+    # Native detail callback consumes int[], battle-detail[] and a dictionary
+    # keyed by int64. Empty history does not claim a capture or completed battle.
+    return {
+        "CastleId": request["castleId"],
+        "CaptureGuildId": 0,
+        "CaptureDays": 0,
+        "DefenseBuffIds": [],
+        "TodayBattleStatus": [],
+        "BattleHistory": {},
+        "NotExistCastleData": False,
+    }
 
 
 def battle_records(account, request):

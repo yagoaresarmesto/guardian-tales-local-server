@@ -5,6 +5,7 @@ import hashlib
 import json
 import time
 from datetime import datetime, timedelta, timezone
+from functools import lru_cache
 
 from .punchking_static import atomic_write
 from .punchking_static import bootstrap_override as arena_override
@@ -330,6 +331,68 @@ def cooperative_stage_ids(references, selection):
     if not stages or len(set(stages)) != len(stages):
         raise ValueError("Missing or ambiguous cooperative Guild War stages")
     return set(stages)
+
+
+def castle_specs(references, selection):
+    """Read only the enabled season's native castle deployment catalog."""
+    rows = _castle_specs(prepared_body(references, selection), selection["season_id"])
+    return {
+        value: {"Id": value, "GroupId": group, "Grade": grade, "SpotId": spot}
+        for value, group, grade, spot in rows
+    }
+
+
+@lru_cache(maxsize=2)
+def _castle_specs(body, season_id):
+    # Recheck the file digest on every read, but decode matching static data once.
+    # Immutable cache rows prevent callers from altering subsequent responses.
+    _, items = records(decode(body))
+    war = json.loads(items["guildwar"][1])
+    seasons = war.get("Seasons") if isinstance(war, dict) else None
+    if (
+        not isinstance(seasons, list)
+        or len(seasons) != 1
+        or not isinstance(seasons[0], dict)
+        or seasons[0].get("Id") != season_id
+        or type(seasons[0].get("CastleDeployGroupId")) is not int
+        or seasons[0]["CastleDeployGroupId"] <= 0
+    ):
+        raise ValueError("Invalid Guild War castle deployment group")
+    group = seasons[0]["CastleDeployGroupId"]
+    specs, spots = war.get("CastleSpecs"), war.get("CastleDeploySpots")
+    if not isinstance(specs, list) or not isinstance(spots, list):
+        raise ValueError("Missing native Guild War castle deployment")
+    spot_ids = []
+    for spot in spots:
+        if not isinstance(spot, dict) or type(spot.get("SpotId")) is not int or spot["SpotId"] <= 0:
+            raise ValueError("Invalid Guild War castle spot")
+        spot_ids.append(spot["SpotId"])
+    if len(set(spot_ids)) != len(spot_ids):
+        raise ValueError("Ambiguous Guild War castle spots")
+    selected, used_spots = {}, set()
+    for row in specs:
+        if not isinstance(row, dict) or type(row.get("GroupId")) is not int:
+            raise ValueError("Invalid Guild War castle specification")
+        if row["GroupId"] != group:
+            continue
+        if (
+            type(row.get("Id")) is not int
+            or not 0 < row["Id"] <= 0x7FFFFFFF
+            or row["Id"] in selected
+            or type(row.get("Grade")) is not int
+            or row["Grade"] not in (1, 2, 3, 4)
+            or type(row.get("SpotId")) is not int
+            or row["SpotId"] not in spot_ids
+            or row["SpotId"] in used_spots
+        ):
+            raise ValueError("Invalid or ambiguous Guild War castle deployment")
+        selected[row["Id"]] = row
+        used_spots.add(row["SpotId"])
+    if not selected:
+        raise ValueError("The enabled Guild War season has no native castles")
+    return tuple(
+        (row["Id"], row["GroupId"], row["Grade"], row["SpotId"]) for row in selected.values()
+    )
 
 
 def bootstrap_override(references, filename, request):

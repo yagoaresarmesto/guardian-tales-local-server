@@ -80,8 +80,8 @@ GuildWarMultiLobby.Begin, with unmatched value CoopOffense. Its native phase
 switch accepts only 3 or 4; entry selects Coop for 1/2 and Multi for 3/4. After
 phase 3, backend reload and a full game restart, the user confirmed Dispute opens.
 The lab currently uses `multi-offense`; the cooperative command above returns to
-the previously verified battle path. Castle lists remain empty and Multi combat
-and results remain unfinished. Manual navigation to another phase's lobby still
+the previously verified battle path. Dispute now exposes neutral selectable castles;
+Multi combat and results remain unfinished. Manual navigation to another phase's lobby still
 requires selecting that phase first.
 
 The next actual request acknowledged guide 2026 through `/user/mark-tutorial`.
@@ -160,7 +160,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and thirty-six War regressions cover native schemas, fresh/imported
+Four meteor and forty-two War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -182,11 +182,40 @@ clone with only those two changes and zero retry writes. Final APK help/menu
 completion passed after reload: the user confirmed the mode starts. The next
 observed request came from the Multi lobby:
 `/guild-war/get-all-castle-simple-infos` with native integer `seasonId: 1`.
-It now returns exactly `CastleSimpleInfos: []`, whose native type is
+It initially returned `CastleSimpleInfos: []`, whose native type is
 GuildWarCastleSimpleInfo[]. Authentication, enabled trial, season and membership
 guards remain in place. The local view has no recovered other-guild captures or
 markings. Real-account read-only request/retry checks passed with zero writes;
 the user confirmed the castle-list fix passes and reported another error.
+
+## Selectable Dispute castles
+
+The empty list let Dispute load but left its castle buttons inactive. In phases
+3/4 the list now contains only the enabled season's native CastleSpecs deployment
+group (1001: 40 castles across grades 1..4). Each GuildWarCastleSimpleInfo has
+CastleId and neutral local CaptureGuildId, MarkingCount and CaptureDays values of
+zero. Cooperative phases retain the empty list. No rival guild or capture is
+created, and the underlying static response is unchanged.
+
+`/guild-war/get-castle-detail-info` accepts exactly integer `castleId` from that
+deployment, with the same active-trial, membership and preserved-progress guards
+and a Dispute-phase requirement. The native callback reads CastleId,
+CaptureGuildId, CaptureDays, DefenseBuffIds (Int32[]), TodayBattleStatus
+(GuildWarCastleBattleDetail[]), BattleHistory (Int64-keyed dictionary of
+GuildWarCastleBattleResult) and NotExistCastleData (Boolean). The local detail is
+neutral, with empty buffs/status/history and NotExistCastleData false.
+
+Six regressions cover fresh/imported preservation, native schemas, mismatched
+phases/groups, corrupt or ambiguous catalogs and isolated immutable cache rows.
+Every request verifies the prepared file digest; a bounded two-entry cache avoids
+repeated static decompression. All 40 real-source castle details and list/retries
+passed through the wire codec on read-only/query-only account SQLite with zero
+writes and an unchanged profile. After backend reload and reentering Dispute,
+the user confirmed a castle can be selected and its information opens. This
+verifies map/detail navigation; Multi stage entry/results and persistent captures
+remain unfinished. No game restart or new phase command is required for this fix.
+
+## Cooperative stage entry and results
 
 The next actual pending call was `/guild-war/start-coop-stage`, with integer
 `stageId` and `presetId`. Native SendGuildWarStartCoopStage supplies those exact

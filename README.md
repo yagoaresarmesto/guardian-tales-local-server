@@ -108,7 +108,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Normal-party members | Ordered one-to-four owned heroes, leader changes and trailing-slot removal persist with compact responses and retry receipts; equipment and mode presets retained; APK save check pending |
 | Dungeon Kingdom Arena practice | Three rotations and days 1–7 selectable by command; entry/start/end and saved arena teams host-tested; no rewards or saved scores; APK combat pending |
 | Guild meteor entry | Fresh local meteor menu loads in the APK; native empty progress lists/maps, automatic season selection and no rewards; excavation actions pending |
-| Guild War season trial | Reversible season/phase commands; APK cooperative attack entry/result/exit and abandonment verified; Dispute menu/introduction and empty rankings; empty exchange catalog; no saved battle progression or rewards |
+| Guild War season trial | Reversible season/phase commands; APK cooperative attack entry/result/exit and abandonment verified; Dispute menu/introduction and selectable neutral castles with details; empty rankings/exchange; no saved battle progression or rewards |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
 | Own profile card | Card request completed; empty friend prerequisite added; uncaptured decorations/social fields empty; APK rendering pending |

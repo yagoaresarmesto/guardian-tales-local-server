@@ -2115,6 +2115,21 @@ passed, retaining phase, window and waiver with zero source writes. After full
 restart a native read-only probe confirmed zero shop rows; the current process's
 bounded log check had no matching shop exception. The user confirmed the empty
 exchange opens and allows returning without a freeze.
+
+The user then reported inactive Dispute castle buttons. The earlier empty list
+now expands in phases 3/4 to the matching season's CastleDeployGroupId 1001:
+40 native castle specifications across grades 1..4, each with neutral local owner,
+marking count and capture days. Cooperative views stay empty. A new guarded
+`/guild-war/get-castle-detail-info` reader accepts native integer castleId from
+that deployment and returns neutral identity plus typed empty DefenseBuffIds,
+TodayBattleStatus and BattleHistory, with NotExistCastleData false. No account,
+static table, rival guild, battle result, resource or reward is changed.
+Six regressions and real-source read-only wire checks passed: all 40 details and
+repeated map reads preserved the source profile with zero writes. A bounded
+immutable cache avoids repeating static decompression while checking the file
+digest on every request. The backend was reloaded; after reentering Dispute the
+user confirmed selecting a castle opens its information. Multi stage entry and
+results remain unfinished.
 Bounded Windows sharing-lock retries
 also retain atomic selector publication after repeated transient test failures.
 See [usage and detailed limitations](guild-war.md).

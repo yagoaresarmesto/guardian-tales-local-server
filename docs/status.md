@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **716 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **722 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and thirty-six Guild War regressions cover native entry schemas,
+Four guild meteor and forty-two Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -109,6 +109,17 @@ zero active offers, retained phase 3 and no source writes. After full restart a
 native read-only probe confirmed zero loaded rows, with no matching exception in
 the process's bounded log check. The user confirmed shop entry/return succeeds;
 real purchases remain unfinished.
+
+Dispute's empty castle list previously left its map buttons inactive. Phases 3/4
+now expose the selected native deployment's 40 castles with neutral ownership,
+marking counts and capture days. The guarded native castle-detail read returns
+empty typed status/history/buff collections for those IDs, without writes or
+invented rival guilds. All 40 details and repeated lists passed through the wire
+codec against real read-only SQLite with an unchanged profile and zero writes.
+Six regressions cover fresh/imported state, schemas, phase/membership/progression
+guards, corrupt catalogs and bounded immutable caching. After backend reload and
+reentering Dispute the user confirmed castle selection opens its information.
+Multi combat/results and persistent captures remain unfinished.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

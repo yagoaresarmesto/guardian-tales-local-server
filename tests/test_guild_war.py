@@ -20,6 +20,7 @@ from guardian_tales.guild_raid import SELECTION as RAID_SELECTION
 from guardian_tales.guild_raid import select_season
 from guardian_tales.guild_war import (
     ABANDON,
+    CASTLE_DETAIL,
     CASTLES,
     COIN_RANKING,
     END_COOP,
@@ -37,6 +38,7 @@ from guardian_tales.guild_war_static import (
     SELECTION,
     base_body,
     bootstrap_override,
+    castle_specs,
     cooperative_stage_ids,
     enable,
     load_selection,
@@ -63,7 +65,22 @@ def synthetic_war_static(catalog):
     content["guildwar"] = json.dumps(
         {
             "Seasons": [
-                {"Id": 1, "SeasonDateId": 5500001, "CastleStageGroupId": 2001, "ShopGroupId": 4001}
+                {
+                    "Id": 1,
+                    "SeasonDateId": 5500001,
+                    "CastleStageGroupId": 2001,
+                    "CastleDeployGroupId": 1001,
+                    "ShopGroupId": 4001,
+                }
+            ],
+            "CastleSpecs": [
+                {"Id": 1, "GroupId": 1001, "Grade": 1, "SpotId": 1},
+                {"Id": 2, "GroupId": 1001, "Grade": 4, "SpotId": 2},
+                {"Id": 101, "GroupId": 1002, "Grade": 2, "SpotId": 1},
+            ],
+            "CastleDeploySpots": [
+                {"SpotId": 1, "Coordinate": [0.2, 0.2], "SectionNumber": 1},
+                {"SpotId": 2, "Coordinate": [3.1, 0.4], "SectionNumber": 1},
             ],
             "ShopSet": [
                 {"Id": 1, "GroupId": 4001, "Coins": 10, "Rewards": [{"ItemId": 101, "Amount": 1}]},
@@ -595,6 +612,152 @@ class GuildWarTests(unittest.TestCase):
                 self.call(body, CASTLES)
         self.assertEqual(list(self.db.iterdump()), before)
 
+    def test_dispute_castles_use_only_active_deployment_and_keep_neutral_state_without_writes(self):
+        for imported in (False, True):
+            profile = self.install(imported)
+            for phase in (3, 4):
+                enable(self.ref, phase=phase)
+                self.db.execute("PRAGMA query_only=ON")
+                before, writes = list(self.db.iterdump()), self.db.total_changes
+                expected = {
+                    "CastleSimpleInfos": [
+                        {
+                            "CastleId": value,
+                            "CaptureGuildId": 0,
+                            "MarkingCount": 0,
+                            "CaptureDays": 0,
+                        }
+                        for value in (1, 2)
+                    ]
+                }
+                for _ in range(2):
+                    self.assertEqual(self.call({"seasonId": 1}, CASTLES), expected)
+                self.assertEqual(self.store.account.profile(), profile)
+                self.assertEqual(list(self.db.iterdump()), before)
+                self.assertEqual(self.db.total_changes, writes)
+                self.db.execute("PRAGMA query_only=OFF")
+
+    def test_native_castle_detail_returns_typed_neutral_history_for_each_dispute_castle(self):
+        profile = self.install()
+        for phase in (3, 4):
+            enable(self.ref, phase=phase)
+            self.db.execute("PRAGMA query_only=ON")
+            before, writes = list(self.db.iterdump()), self.db.total_changes
+            for value in (1, 2, 1):
+                self.assertEqual(
+                    self.call({"castleId": value}, CASTLE_DETAIL),
+                    {
+                        "CastleId": value,
+                        "CaptureGuildId": 0,
+                        "CaptureDays": 0,
+                        "DefenseBuffIds": [],
+                        "TodayBattleStatus": [],
+                        "BattleHistory": {},
+                        "NotExistCastleData": False,
+                    },
+                )
+            self.assertEqual(self.store.account.profile(), profile)
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, writes)
+            self.db.execute("PRAGMA query_only=OFF")
+
+    def test_castle_details_reject_unknown_deployment_native_schema_and_non_dispute_phase(self):
+        body = {"castleId": 1}
+        with self.assertRaises(PacketError):
+            self.call(body, CASTLE_DETAIL)
+        self.install()
+        with self.assertRaises(PacketError):
+            self.call(body, CASTLE_DETAIL)
+        for phase in (1, 2):
+            enable(self.ref, phase=phase)
+            with self.assertRaises(PacketError):
+                self.call(body, CASTLE_DETAIL)
+        enable(self.ref, phase=3)
+        before = list(self.db.iterdump())
+        for invalid in (
+            None,
+            {},
+            {"CastleId": 1},
+            {"castleId": True},
+            {"castleId": 1.0},
+            {"castleId": 0},
+            {"castleId": -1},
+            {"castleId": 101},
+            {"castleId": 1, "seasonId": 1},
+        ):
+            with self.subTest(body=invalid), self.assertRaises(PacketError):
+                self.call(invalid, CASTLE_DETAIL)
+        self.now += timedelta(days=8)
+        with self.assertRaises(PacketError):
+            self.call(body, CASTLE_DETAIL)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_castle_reads_preserve_saved_war_progress_and_require_owned_guild(self):
+        profile = self.install()
+        enable(self.ref, phase=3)
+        for alter in (
+            lambda p: p.update(GuildMember=None),
+            lambda p: p["UserRaid"].update(GuildWar={"SeasonId": 99, "GuildWarCoin": 100}),
+        ):
+            changed = copy.deepcopy(profile)
+            alter(changed)
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(changed),))
+            before, writes = list(self.db.iterdump()), self.db.total_changes
+            for route, body in ((CASTLES, {"seasonId": 1}), (CASTLE_DETAIL, {"castleId": 1})):
+                with self.subTest(route=route), self.assertRaises(PacketError):
+                    self.call(body, route)
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, writes)
+
+    def test_castle_catalog_rejects_digest_mismatch_missing_groups_and_ambiguous_spots(self):
+        selection = enable(self.ref, phase=3)
+        self.assertEqual(set(castle_specs(self.ref, selection)), {1, 2})
+        path = self.root / f"guild_war_static_{selection['static_data_sha256']}.bin"
+        source = path.read_bytes()
+        path.write_bytes(source[:-1] + bytes([source[-1] ^ 1]))
+        with self.assertRaises(ValueError):
+            castle_specs(self.ref, selection)
+        lines, items = records(decode(source))
+        war = json.loads(items["guildwar"][1])
+        for alter in (
+            lambda w: w["Seasons"][0].pop("CastleDeployGroupId"),
+            lambda w: w["Seasons"][0].update(CastleDeployGroupId=True),
+            lambda w: w.update(CastleSpecs=[]),
+            lambda w: w["CastleSpecs"].append(copy.deepcopy(w["CastleSpecs"][0])),
+            lambda w: w["CastleSpecs"][0].update(Id=True),
+            lambda w: w["CastleSpecs"][0].update(Grade=5),
+            lambda w: w["CastleSpecs"][0].update(SpotId=99),
+            lambda w: w["CastleSpecs"][1].update(SpotId=1),
+            lambda w: w["CastleDeploySpots"].append(copy.deepcopy(w["CastleDeploySpots"][0])),
+        ):
+            changed = copy.deepcopy(war)
+            alter(changed)
+            rows = list(lines)
+            rows[items["guildwar"][0] + 1] = json.dumps(changed) + "\n"
+            with (
+                patch(
+                    "guardian_tales.guild_war_static.prepared_body",
+                    return_value=compress("".join(rows).encode()),
+                ),
+                self.assertRaises(ValueError),
+            ):
+                castle_specs(self.ref, selection)
+
+    def test_castle_catalog_cache_keeps_responses_isolated_and_decodes_matching_body_once(self):
+        selection = enable(self.ref, phase=3)
+        from guardian_tales import guild_war_static
+
+        guild_war_static._castle_specs.cache_clear()
+        with patch("guardian_tales.guild_war_static.decode", wraps=decode) as decoder:
+            first = castle_specs(self.ref, selection)
+            first[1]["Grade"] = 99
+            first.pop(2)
+            second = castle_specs(self.ref, selection)
+            self.assertEqual(set(second), {1, 2})
+            self.assertEqual(second[1]["Grade"], 1)
+            self.assertEqual(decoder.call_count, 1)
+
     def test_cooperative_loading_acknowledges_source_stages_and_owned_team_without_writes(self):
         profile = self.install()
         enable(self.ref, skip_basic=True)
@@ -994,7 +1157,7 @@ class GuildWarTests(unittest.TestCase):
         self.db.execute("PRAGMA query_only=ON")
         before, writes = list(self.db.iterdump()), self.db.total_changes
         self.assertEqual(self.call({"isPartial": False})["GuildWarInfo"]["Phase"], 3)
-        self.assertEqual(self.call({"seasonId": 1}, CASTLES), {"CastleSimpleInfos": []})
+        self.assertEqual(len(self.call({"seasonId": 1}, CASTLES)["CastleSimpleInfos"]), 2)
         self.assertEqual(self.call(None, ABANDON), {})
         for route, body in (
             (START_COOP, {"stageId": 850030005, "presetId": 701}),
