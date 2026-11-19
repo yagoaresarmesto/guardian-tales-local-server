@@ -31,6 +31,7 @@ from guardian_tales.guild_war import (
 )
 from guardian_tales.guild_war_static import (
     OVERLAY_POLICY,
+    PHASES,
     SELECTION,
     base_body,
     bootstrap_override,
@@ -749,3 +750,101 @@ class GuildWarTests(unittest.TestCase):
             with self.assertRaises(PacketError):
                 self.call(None, ABANDON)
             self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_cli_phase_choice_uses_native_values_and_survives_recomposition_without_account_changes(
+        self,
+    ):
+        profile = self.install()
+        before = list(self.db.iterdump())
+        first_period = None
+        for name, phase in PHASES.items():
+            out = io.StringIO()
+            with redirect_stdout(out):
+                main(["enable", "--skip-basic", "--phase", name, "--reference-dir", str(self.root)])
+            status = json.loads(out.getvalue())
+            self.assertEqual((status["phase"], status["phase_name"]), (phase, name))
+            self.assertEqual(self.call({"isPartial": False})["GuildWarInfo"]["Phase"], phase)
+            self.assertTrue(load_selection(self.ref)["skip_basic"])
+            first_period = first_period or status["period"]
+            self.assertEqual(status["period"], first_period)
+        select_season(self.ref, 2)
+        bootstrap_override(self.ref, "static_data_get.bin", None)
+        current = load_selection(self.ref)
+        self.assertEqual(current["phase"], 4)
+        self.assertEqual(current["period"], first_period)
+        self.assertTrue(current["skip_basic"])
+        enable(self.ref)
+        self.assertEqual(load_selection(self.ref)["phase"], 4)
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.source.read_bytes(), self.original)
+
+    def test_phase_selection_rejects_invalid_native_values_and_legacy_defaults_to_cooperative_offense(
+        self,
+    ):
+        self.install()
+        selection = enable(self.ref)
+        path = self.root / SELECTION
+        before = path.read_bytes()
+        for phase in (False, True, 0, 5, "3", 1.5):
+            with self.subTest(phase=phase), self.assertRaises(ValueError):
+                enable(self.ref, phase=phase)
+            self.assertEqual(path.read_bytes(), before)
+            path.write_text(json.dumps(dict(selection, phase=phase)))
+            with self.assertRaises(ValueError):
+                load_selection(self.ref)
+            path.write_bytes(before)
+        selection.pop("phase")
+        path.write_text(json.dumps(selection))
+        self.assertEqual(self.call({"isPartial": True})["GuildWarInfo"]["Phase"], 1)
+        self.assertEqual(enable(self.ref)["phase"], 1)
+
+    def test_imported_multi_lobby_guide_acknowledgments_only_save_seen_flags_and_revision_once(
+        self,
+    ):
+        profile = self.install()
+        expected = copy.deepcopy(profile)
+        for phase, ids in ((3, [2025, 2026]), (4, [2028, 2029])):
+            enable(self.ref, phase=phase)
+            expected["UserProgress"]["Tutorials"].extend(ids)
+            expected["UserProgress"]["Cas"] += 1
+            result = self.call({"tutorialIds": ids}, "/user/mark-tutorial")
+            self.assertEqual(result, {"UserProgress": expected["UserProgress"]})
+            self.assertEqual(self.store.account.profile(), expected)
+            writes = self.db.total_changes
+            self.assertEqual(self.call({"tutorialIds": ids}, "/user/mark-tutorial"), result)
+            self.assertEqual(self.db.total_changes, writes)
+
+    def test_multi_lobby_guides_require_matching_active_trial_and_keep_gameplay_ids_blocked(self):
+        self.install()
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.call({"tutorialIds": [2026]}, "/user/mark-tutorial")
+        enable(self.ref)
+        with self.assertRaises(PacketError):
+            self.call({"tutorialIds": [2026]}, "/user/mark-tutorial")
+        enable(self.ref, phase=3)
+        for ids in ([2029], [2026, 2028], [2026, 2019], [2026, 200], [2027], [2026, True]):
+            with self.subTest(ids=ids), self.assertRaises(PacketError):
+                self.call({"tutorialIds": ids}, "/user/mark-tutorial")
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_multi_phase_keeps_safe_reads_and_abandonment_but_rejects_cached_cooperative_battle_calls(
+        self,
+    ):
+        profile = self.install()
+        enable(self.ref, phase=3)
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        self.assertEqual(self.call({"isPartial": False})["GuildWarInfo"]["Phase"], 3)
+        self.assertEqual(self.call({"seasonId": 1}, CASTLES), {"CastleSimpleInfos": []})
+        self.assertEqual(self.call(None, ABANDON), {})
+        for route, body in (
+            (START_COOP, {"stageId": 850030005, "presetId": 701}),
+            (END_COOP, {"stageId": 850030005, "damages": [0], "additionalDamage": 0}),
+        ):
+            with self.subTest(route=route), self.assertRaises(PacketError):
+                self.call(body, route)
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)

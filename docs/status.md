@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **705 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **710 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and twenty-five Guild War regressions cover native entry schemas,
+Four guild meteor and thirty Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -75,6 +75,21 @@ cost, reward or account change. Native empty/null/object framing and repeats
 passed against real read-only source SQLite with zero writes. After backend
 reload and reconnect the user confirmed abandonment succeeds; two regressions
 cover framing, fresh/imported guards, invalid parameters and reconnect.
+
+The Dispute transition threw a native SwitchExpressionException because its Multi
+lobby received cooperative phase 1; it accepts only 3/4. The new explicit
+`guild-war enable --phase` selector supports four native choices and preserves
+the selection across restarts and calendar/parent refresh, retaining legacy
+default 1. Cooperative battle calls reject stale Multi-phase views. Phase-3 entry,
+castle reads and abandonment passed against real read-only source SQLite with
+zero writes. After reload/full restart the user confirmed Dispute opens. Its
+next UI guide acknowledgment, 2026, is now allowed along with the three matching
+Multi lobby guides, gated by active trial, phase and owned guild. A source-account
+memory-clone check changed only the seen-help flag and revision once, without
+real source writes. The user confirmed continuation after reload/reconnect.
+The lab currently selects `multi-offense`; `coop-offense` restores the verified
+cooperative attack path. Multi combat/results remain unfinished. Three phase
+and two scoped-guide regressions cover persistence, validation and state retention.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

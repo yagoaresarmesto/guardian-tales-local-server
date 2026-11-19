@@ -23,6 +23,7 @@ from .snapshots import CLIENT
 SELECTION = "guild_war_selection.json"
 FEATURE_ID = 126
 OVERLAY_POLICY = 3
+PHASES = {"coop-offense": 1, "coop-defense": 2, "multi-offense": 3, "multi-defense": 4}
 START_INACTIVE = "2000-01-01T00:00:00+00:00"
 END_INACTIVE = "2000-01-07T23:59:59+00:00"
 
@@ -47,11 +48,13 @@ def load_selection(references):
     value = references.json(SELECTION)
     if (
         not isinstance(value, dict)
-        or set(value) - {"skip_basic", "overlay_policy"}
+        or set(value) - {"skip_basic", "overlay_policy", "phase"}
         != {"client", "season_id", "period", "base_sha256"} | MANIFEST_KEYS
         or "overlay_policy" in value
         and (type(value["overlay_policy"]) is not int or value["overlay_policy"] != OVERLAY_POLICY)
         or type(value.get("skip_basic", False)) is not bool
+        or type(value.get("phase", 1)) is not int
+        or value.get("phase", 1) not in PHASES.values()
         or value["client"] != CLIENT
         or type(value["season_id"]) is not int
         or value["season_id"] != 1
@@ -76,7 +79,7 @@ def load_selection(references):
     return value
 
 
-def enable(references, source=None, skip_basic=None):
+def enable(references, source=None, skip_basic=None, phase=None):
     source = base_body(references) if source is None else source
     lines, items = records(decode(source))
     if (
@@ -114,6 +117,9 @@ def enable(references, source=None, skip_basic=None):
     if war_id in raid_ids:
         raise ValueError("Guild War and Raid cannot share a calendar")
     previous = load_selection(references)
+    phase = (previous or {}).get("phase", 1) if phase is None else phase
+    if type(phase) is not int or phase not in PHASES.values():
+        raise ValueError("Select a native Guild War phase from 1 to 4")
     skip_basic = (previous or {}).get("skip_basic", False) if skip_basic is None else skip_basic
     if type(skip_basic) is not bool:
         raise ValueError("Guild War skip-basic policy must be Boolean")
@@ -250,6 +256,7 @@ def enable(references, source=None, skip_basic=None):
         "period": period,
         "base_sha256": hashlib.sha256(source).hexdigest(),
         "skip_basic": skip_basic,
+        "phase": phase,
         "overlay_policy": OVERLAY_POLICY,
         "static_data_sha256": sha256,
         "static_data_checksum": checksum,

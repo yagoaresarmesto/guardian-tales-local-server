@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 from .guild_menu import own_guild
 from .guild_war_static import (
     FEATURE_ID,
+    PHASES,
     SELECTION,
     cooperative_stage_ids,
     enable,
@@ -26,6 +27,7 @@ END_COOP = "/guild-war/end-coop-stage/v2"
 ABANDON = "/guild-war/abandon-stage"
 MAX_DAMAGE = 0x7FFFFFFFFFFFFFFF
 UNLOCK = "/user/claim-unlock-feature-rewards"
+LOBBY_GUIDE_PHASES = {2025: 3, 2026: 3, 2028: 4, 2029: 4}
 
 
 def unlock(account, request):
@@ -84,8 +86,8 @@ def enter(account, request):
     next_update = min(
         (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0), end
     ).isoformat()
-    # Native phase 1 or 2 selects the cooperative lobby. This is an initial
-    # menu view, without server battles, currency delivery or invented clears.
+    # Native phases 1/2 select Coop and 3/4 select Multi. Cross-phase native
+    # scene initialization can throw, so the trial phase is an explicit choice.
     return {
         "UserRaid": {
             "UserId": profile["User"]["Id"],
@@ -102,7 +104,7 @@ def enter(account, request):
         },
         "GuildWarInfo": {
             "SeasonId": 1,
-            "Phase": 1,
+            "Phase": selection.get("phase", 1),
             "NextUpdateTime": next_update,
             "CanRewards": [],
             "CoopOffenseDamage": 0,
@@ -118,6 +120,20 @@ def enter(account, request):
         },
         "AddedItems": [],
     }
+
+
+def lobby_guide_ids(account, tutorial_ids):
+    requested = {
+        value for value in tutorial_ids if type(value) is int and value in LOBBY_GUIDE_PHASES
+    }
+    if not requested:
+        return set()
+    phase = enter(account, {"isPartial": True})["GuildWarInfo"]["Phase"]
+    if any(LOBBY_GUIDE_PHASES[value] != phase for value in requested):
+        raise ValueError("Guild War lobby guides require their matching enabled local phase")
+    # Matching tutorial2 groups only narrate/focus lobby UI. Acknowledgment
+    # records seen help, without executing actions or validating a battle.
+    return requested
 
 
 def season_read_context(account, request):
@@ -164,7 +180,9 @@ def start_coop(account, request):
         or not 700 <= request["presetId"] < 800
     ):
         raise ValueError("Guild War cooperative entry requires native stageId and owned presetId")
-    enter(account, {"isPartial": True})
+    view = enter(account, {"isPartial": True})
+    if view["GuildWarInfo"]["Phase"] not in (1, 2):
+        raise ValueError("Select a cooperative Guild War phase and reopen its lobby")
     selection = load_selection(account.references)
     if request["stageId"] not in cooperative_stage_ids(account.references, selection):
         raise ValueError("Select a cooperative stage in the enabled Guild War season")
@@ -191,6 +209,8 @@ def end_coop(account, request):
             "Guild War cooperative exit requires a stage and nonnegative int64 damages"
         )
     view = enter(account, {"isPartial": True})
+    if view["GuildWarInfo"]["Phase"] not in (1, 2):
+        raise ValueError("Select a cooperative Guild War phase and reopen its lobby")
     selection = load_selection(account.references)
     if request["stageId"] not in cooperative_stage_ids(account.references, selection):
         raise ValueError("Select a cooperative stage in the enabled Guild War season")
@@ -207,6 +227,11 @@ def main(argv=None):
     parser.add_argument("action", choices=("enable", "disable", "status"))
     parser.add_argument("--reference-dir", help="Same reference directory as the backend")
     parser.add_argument(
+        "--phase",
+        choices=PHASES,
+        help="Local trial phase; existing choice is retained when omitted",
+    )
+    parser.add_argument(
         "--skip-basic",
         action="store_true",
         help="Temporarily waive the basic-course prerequisite without recording stage clears",
@@ -215,7 +240,11 @@ def main(argv=None):
     references = ReferenceData(args.reference_dir)
     try:
         if args.action == "enable":
-            selection = enable(references, skip_basic=args.skip_basic)
+            selection = enable(
+                references,
+                skip_basic=args.skip_basic,
+                phase=PHASES[args.phase] if args.phase else None,
+            )
         elif args.action == "disable":
             (references.directory / SELECTION).unlink(missing_ok=True)
             selection = None
@@ -230,6 +259,16 @@ def main(argv=None):
                         selection.get("skip_basic", False) if selection else False
                     ),
                     "period": selection["period"] if selection else None,
+                    "phase": selection.get("phase", 1) if selection else None,
+                    "phase_name": (
+                        next(
+                            name
+                            for name, value in PHASES.items()
+                            if value == selection.get("phase", 1)
+                        )
+                        if selection
+                        else None
+                    ),
                     "scope": "Experimental menus and free cooperative combat entry/exit; progression, score and rewards are not implemented",
                     "apply": "Fully close and reopen the game after enable/disable; Raid selection and saved account are retained",
                 },

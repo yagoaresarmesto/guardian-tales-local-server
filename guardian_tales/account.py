@@ -63,6 +63,7 @@ from .guild_war import battle_records as guild_war_battle_records
 from .guild_war import castle_infos as guild_war_castle_infos
 from .guild_war import end_coop as end_guild_war_coop
 from .guild_war import enter as enter_guild_war
+from .guild_war import lobby_guide_ids as guild_war_lobby_guide_ids
 from .guild_war import start_coop as start_guild_war_coop
 from .guild_war import unlock as unlock_guild_war
 from .hero_knowledge import claim_hero_knowledge
@@ -977,10 +978,16 @@ class AccountStore:
 
     def mark_tutorial(self, request):
         """Persist known UI acknowledgments, keeping gameplay changes separate."""
+        war_guides = (
+            guild_war_lobby_guide_ids(self, request["tutorialIds"])
+            if isinstance(request, dict) and isinstance(request.get("tutorialIds"), list)
+            else set()
+        )
         allowed = (
             set(PASSIVE_HELP_TUTORIALS)
             | set(POST_INN_TUTORIALS)
             | catalog_tutorial_ids(self.references)
+            | war_guides
         )
         if (
             not isinstance(request, dict)
@@ -994,15 +1001,21 @@ class AccountStore:
                 "Only tutorial IDs from the configured catalog or built-in help are supported"
             )
         if is_imported(self.db) and any(
-            value not in PASSIVE_HELP_TUTORIALS for value in request["tutorialIds"]
+            value not in PASSIVE_HELP_TUTORIALS and value not in war_guides
+            for value in request["tutorialIds"]
         ):
-            raise ValueError("Imported accounts accept only passive help acknowledgments")
+            raise ValueError(
+                "Imported accounts accept only passive help or enabled War lobby guides"
+            )
         profile = self.profile()
         progress = profile["UserProgress"]
         if self.needs_prologue():
             raise ValueError("Finish local account creation before recording tutorials")
         if (
-            any(value not in PASSIVE_HELP_TUTORIALS for value in request["tutorialIds"])
+            any(
+                value not in PASSIVE_HELP_TUTORIALS and value not in war_guides
+                for value in request["tutorialIds"]
+            )
             and not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED
         ):
             raise ValueError("Complete Inn before acknowledging its completion tutorial")

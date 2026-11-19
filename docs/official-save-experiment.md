@@ -2006,7 +2006,7 @@ The guarded `/guild-war/enter` trial accepts native lowercase `isPartial` and
 returns correctly typed fresh UserRaid.GuildWar / GuildWarInfo collections in
 phase 1 for the cooperative lobby. It preserves existing account state and
 rejects nonempty saved War progress; battles, claims, purchases and other War
-APIs remain unfinished. Thirty-one new regressions and read-only real-account wire
+APIs remain unfinished. Thirty-six new regressions and read-only real-account wire
 checks cover these contracts. The first APK trial reached the basic-course
 prerequisite popup and redirected to Play > Others, where the entry was absent.
 Metadata identifies the missing GuildWarSingle feature as 126. The derived static
@@ -2076,6 +2076,23 @@ locks or profile changes. Two regressions and real-source read-only wire checks
 cover empty/null/object bodies, retries/reconnect and rejection of unsupported
 parameters or saved progression. The actual backend was reloaded and the user
 confirmed the stage can be abandoned after reconnect.
+
+Opening Dispute while the local view remained CoopOffense then froze its Multi
+lobby. No API was pending; Unity reported SwitchExpressionException in
+GuildWarMultiLobby.Begin. The native switch accepts only phases 3/4. An explicit
+`guild-war enable --phase` choice now persists one of the four native phases,
+defaulting legacy selections to 1 and retaining valid period, waiver and phase
+during recomposition. Existing cooperative battle calls reject a mismatched
+Multi phase. Real-account phase-3 entry/castle/abandon/repeat wire checks passed
+read-only with zero writes. After full restart the user confirmed Dispute opens.
+The next rejected packet marked tutorial 2026 seen. The four native Multi lobby
+introductions (2025/2026 for phase 3, 2028/2029 for phase 4) now have scoped trial,
+phase and ownership guards; other imported gameplay tutorial IDs stay blocked.
+Their source tutorial2 groups contain only presentation/interaction actions.
+The actual 2026 request passed on an in-memory account clone with only seen-help
+and its revision changing once; retries made no writes and the source stayed
+unchanged. After reload/reconnect the user confirmed continuation. The lab now
+uses multi-offense; Multi combat and persistent progression remain unfinished.
 Bounded Windows sharing-lock retries
 also retain atomic selector publication after repeated transient test failures.
 See [usage and detailed limitations](guild-war.md).

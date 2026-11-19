@@ -37,6 +37,8 @@ Use the same reference directory as the backend:
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-offense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war status --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war disable --reference-dir local/client-data/reference
 ```
@@ -52,8 +54,48 @@ checks these two lists; it does not use the similarly named
 `Constants.SingleClearedStageIds`. Empty trial lists waive those prerequisites. It
 does not add stage clears or change UserProgress, and normal `enable` without
 the flag restores the source prerequisite. Automatic recomposition retains the
-chosen policy. The lab currently uses this flag to try the cooperative entry
-while the basic-course button is unavailable.
+chosen policy. The lab keeps this flag enabled while the basic-course button
+is unavailable, including when switching trial phases.
+
+`--phase` on `enable` selects a local native phase:
+
+| Choice | Value | Lobby |
+|---|---|---|
+| `coop-offense` | 1 | Cooperative attack |
+| `coop-defense` | 2 | Cooperative defense |
+| `multi-offense` | 3 | Dispute attack |
+| `multi-defense` | 4 | Dispute defense |
+
+The choice persists in the selection and survives parent/calendar refresh. Omit
+the flag to retain it; legacy selections without a phase use 1. Status reports
+both its native value and command name. Change phases outside a battle and fully
+reopen the game before entering the corresponding lobby. Cooperative start/end
+calls from an old cached lobby reject when a Multi phase is selected, while safe
+reads and abandonment remain available. This is an explicit trial selection, not
+automatic season scheduling or a grant of completed phases.
+
+Opening Dispute while the trial reported phase 1 caused an infinite transition
+with no pending API request. Unity logged a SwitchExpressionException in
+GuildWarMultiLobby.Begin, with unmatched value CoopOffense. Its native phase
+switch accepts only 3 or 4; entry selects Coop for 1/2 and Multi for 3/4. After
+phase 3, backend reload and a full game restart, the user confirmed Dispute opens.
+The lab currently uses `multi-offense`; the cooperative command above returns to
+the previously verified battle path. Castle lists remain empty and Multi combat
+and results remain unfinished. Manual navigation to another phase's lobby still
+requires selecting that phase first.
+
+The next actual request acknowledged guide 2026 through `/user/mark-tutorial`.
+Native MultiLobby.Begin selects guides 2025/2026 in phase 3 and 2028/2029 in phase
+4 for guild-role-specific introductions. Matching tutorial2 groups 2025 and 2026
+contain 145 and 95 presentation steps: narration, focus, illustrations, dimming,
+blocking, waits and interaction. These do not grant rewards or complete battles.
+Only these four additional guide IDs are accepted, with enabled/valid trial,
+matching phase and owned-membership guards. Their acknowledgment saves only seen
+flags and one UserProgress revision, with no retry writes. Gameplay and other
+configured tutorial IDs remain blocked for imported accounts. The actual 2026
+packet passed on an in-memory source-account clone with exactly those changes
+and unchanged real source data. After backend reload and reconnect the user
+confirmed the introduction completes without that error.
 
 Activation prepares season 1 / calendar 5500001 as a seven-day UTC period. The
 initial lab activation covers 2026-11-18 through 2026-11-25, with an exclusive end.
@@ -108,15 +150,15 @@ for testing War entry; the individual course UI remains unresolved.
 
 `/guild-war/enter` accepts exactly Boolean **`isPartial`**, with a lowercase i.
 The native callback consumes GuildWarInfo and the shared UserRaid resource.
-The trial provides typed empty progress collections and native phase 1, which
-selects the cooperative lobby. Existing saved Guild War progression rejects;
+The trial provides typed empty progress collections and the selected native phase
+(default 1, selecting the cooperative lobby). Saved Guild War progression rejects;
 the fresh menu cannot overwrite it. Account state, assets, other-mode currencies,
 clears, teams and revisions are retained without database writes. This trial
 retains stage prerequisites by default and never claims completed combat. The phase, empty
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and twenty-five War regressions cover native schemas, fresh/imported
+Four meteor and thirty War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and

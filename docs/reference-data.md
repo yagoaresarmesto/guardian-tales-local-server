@@ -90,6 +90,9 @@ adds one local no-reward feature-126 rule, and stores a reversible
 `guild_war_selection.json`. Overlay policy 3 zeros only the cooperative participation
 coin count, preventing an absent reward spec from aborting the result UI; legacy
 selections upgrade at bootstrap while retaining their valid period and waiver.
+An optional native `phase` from 1 to 4 controls the matching Coop/Multi lobby;
+`guild-war enable --phase ...` persists that choice without account changes.
+Omitted phase retains the choice, and legacy selections default to 1.
 Optional `--skip-basic` waives only the War course
 prerequisite in that response without recording stage clears. It layers above Raid/arena
 preparation, retaining their files and source data. These experiment inputs and
