@@ -1182,6 +1182,7 @@ class GuildWarTests(unittest.TestCase):
 
     def test_cooperative_catalog_rejects_tampered_body_and_ambiguous_native_stage_groups(self):
         selection = enable(self.ref)
+        self.assertEqual(cooperative_stage_ids(self.ref, selection), {850030005, 850040001})
         path = self.root / f"guild_war_static_{selection['static_data_sha256']}.bin"
         source = path.read_bytes()
         path.write_bytes(source[:-1] + bytes([source[-1] ^ 1]))
@@ -1208,6 +1209,59 @@ class GuildWarTests(unittest.TestCase):
                 self.assertRaises(ValueError),
             ):
                 cooperative_stage_ids(self.ref, selection)
+
+    def test_cooperative_catalog_reuses_decoding_across_battles_without_sharing_mutable_results(
+        self,
+    ):
+        from guardian_tales import guild_war_static
+
+        profile = self.install()
+        selection = enable(self.ref, phase=2)
+        guild_war_static._cooperative_stage_ids.cache_clear()
+        self.addCleanup(guild_war_static._cooperative_stage_ids.cache_clear)
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        with patch("guardian_tales.guild_war_static.decode", wraps=decode) as decoder:
+            stages = cooperative_stage_ids(self.ref, selection)
+            stages.clear()
+            stages.add(850010002)
+            for _ in range(3):
+                self.assertEqual(self.call({"stageId": 850040001, "presetId": 701}, START_COOP), {})
+                self.assertFalse(
+                    self.call(
+                        {"stageId": 850040001, "damages": [0], "additionalDamage": 0}, END_COOP
+                    )["Cancelled"]
+                )
+            self.assertEqual(cooperative_stage_ids(self.ref, selection), {850030005, 850040001})
+            with self.assertRaises(PacketError):
+                self.call({"stageId": 850010002, "presetId": 701}, START_COOP)
+            self.assertEqual(decoder.call_count, 1)
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+
+    def test_cooperative_catalog_refreshes_for_new_content_and_validates_season_on_cache_hits(self):
+        from guardian_tales import guild_war_static
+
+        selection = enable(self.ref)
+        guild_war_static._cooperative_stage_ids.cache_clear()
+        self.addCleanup(guild_war_static._cooperative_stage_ids.cache_clear)
+        expected = {850030005, 850040001}
+        self.assertEqual(cooperative_stage_ids(self.ref, selection), expected)
+        with self.assertRaises(ValueError):
+            cooperative_stage_ids(self.ref, dict(selection, season_id=2))
+        path = self.root / f"guild_war_static_{selection['static_data_sha256']}.bin"
+        lines, items = records(decode(path.read_bytes()))
+        war = json.loads(items["guildwar"][1])
+        war["CastleStageSet"][1]["DefenceStageIds"] = [850040002]
+        raw = json.dumps(war)
+        at = items["guildwar"][0]
+        lines[at + 1], lines[at + 3] = raw + "\n", digest(raw.encode()) + "\n"
+        body = compress("".join(lines).encode())
+        changed = dict(selection, static_data_sha256=hashlib.sha256(body).hexdigest())
+        (self.root / f"guild_war_static_{changed['static_data_sha256']}.bin").write_bytes(body)
+        self.assertEqual(cooperative_stage_ids(self.ref, changed), {850030005, 850040002})
+        self.assertEqual(cooperative_stage_ids(self.ref, selection), expected)
 
     def test_native_cooperative_result_refreshes_menu_without_score_cost_rewards_or_writes(self):
         profile = self.install()

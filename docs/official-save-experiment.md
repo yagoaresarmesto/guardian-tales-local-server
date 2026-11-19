@@ -2182,6 +2182,19 @@ date parse errors, with no pending API. Their causal relationship is unresolved;
 no client preference was changed while the user continued battle testing.
 See [usage and detailed limitations](guild-war.md).
 
+The user later reported cooperative defense works and asked about brief loading
+delays. Read-only profiling identified full-static-data decompression on every
+cooperative start/end request. Unprofiled source-account handlers took about
+1.5-1.8 seconds before a bounded content-and-season-keyed immutable catalog cache
+was added. Current file SHA-256 validation still precedes cache lookup; new body
+content and season IDs cannot reuse the wrong catalog, and callers receive
+isolated sets. Seven-repeat median handlers measured 27.2 ms for start and
+21.2 ms for end; session/packet processing measured 27.8/21.8 ms. The source profile
+was unchanged with zero writes. The first catalog lookup after backend restart
+still took 1.48 seconds. These are host-side timings; APK timing after reload and
+combat frame rate remain unmeasured. Two regressions cover repeat loading and
+cache isolation/refresh, and the existing tampering case now checks a warm cache.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

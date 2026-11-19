@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **732 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **734 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and fifty-two Guild War regressions cover native entry schemas,
+Four guild meteor and fifty-four Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -146,6 +146,18 @@ had no missing-medal/result error frames. Victory remains separately unverified.
 Guild Information can still be empty; native UI-load
 and cached-date parse exceptions were observed with no pending request, and no
 client preference was changed during the user's battle tests.
+
+The user subsequently reported cooperative defense works, with occasional stage
+loading delay. Read-only profiling found that each cooperative start/end decoded
+the full static body, taking approximately 1.5-1.8 seconds per handler. A bounded
+content-and-season-keyed immutable stage cache now reuses this validation, while
+checking the current file digest on every request and isolating returned sets.
+Seven-repeat source-account medians fell to 27.2 ms for start and 21.2 ms for end;
+session/packet measurements were 27.8/21.8 ms, with zero writes and an unchanged
+profile. The first lookup after backend restart still prepares the catalog in
+about 1.48 seconds. Two regressions cover repeated battles, result isolation and
+content/season changes; the corruption regression also warms the cache first.
+APK timing after reload and in-combat frame-rate improvement are not established.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

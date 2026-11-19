@@ -325,7 +325,13 @@ def prepared_body(references, selection):
 
 
 def cooperative_stage_ids(references, selection):
-    _, items = records(decode(prepared_body(references, selection)))
+    # Verify the current file before reusing an immutable, content-keyed catalog.
+    return set(_cooperative_stage_ids(prepared_body(references, selection), selection["season_id"]))
+
+
+@lru_cache(maxsize=2)
+def _cooperative_stage_ids(body, season_id):
+    _, items = records(decode(body))
     war = json.loads(items["guildwar"][1])
     seasons = war.get("Seasons") if isinstance(war, dict) else None
     sets = war.get("CastleStageSet") if isinstance(war, dict) else None
@@ -333,7 +339,7 @@ def cooperative_stage_ids(references, selection):
         not isinstance(seasons, list)
         or len(seasons) != 1
         or not isinstance(seasons[0], dict)
-        or seasons[0].get("Id") != selection["season_id"]
+        or seasons[0].get("Id") != season_id
         or type(seasons[0].get("CastleStageGroupId")) is not int
         or not isinstance(sets, list)
         or any(not isinstance(row, dict) for row in sets)
@@ -355,7 +361,7 @@ def cooperative_stage_ids(references, selection):
         stages.extend(values)
     if not stages or len(set(stages)) != len(stages):
         raise ValueError("Missing or ambiguous cooperative Guild War stages")
-    return set(stages)
+    return frozenset(stages)
 
 
 def castle_specs(references, selection):

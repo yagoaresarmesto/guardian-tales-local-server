@@ -323,6 +323,31 @@ The cache contained a date in month/day/year form after selecting English.
 Their causal relationship is not established. No client preference was changed,
 and the empty view remains unresolved while battle testing continues.
 
+## Cooperative loading performance
+
+After testing the defense variants, the user reported that cooperative defense
+works but entering stages can pause briefly. A read-only source-account profile
+identified repeated full-static-data decompression in cooperative stage
+validation. Before the change, unprofiled start calls took 1,504-1,706 ms and end
+calls took 1,490-1,770 ms on the prepared Windows host. That synchronous work also
+delays other requests handled by the backend event loop.
+
+Cooperative validation now keeps at most two immutable stage-ID sets, keyed by
+the exact compressed body and season ID. Every request still reads the current
+file and checks its SHA-256 digest before consulting the cache. A changed body
+gets a new catalog; a different season still validates against that body. Public
+callers receive separate mutable sets. No account-derived or result data is cached.
+
+Seven-repeat read-only measurements against native defense stage 850040001 gave
+median start/end handler times of 27.2/21.2 ms; session/packet round trips measured
+27.8/21.8 ms. Source writes were zero and the profile was unchanged. These are
+host-side measurements, excluding TLS, bridge transport and client asset loading.
+The first catalog lookup after backend restart still took 1,478 ms; later lookups
+had a 9.7 ms median. Repeated start/end calls, result isolation, content/season
+changes and file tampering after cache warming have regression coverage. Client
+loading-time improvement remains to be confirmed after backend reload; this is
+not an in-combat frame-rate measurement.
+
 ## Cooperative stage entry and results
 
 The next actual pending call was `/guild-war/start-coop-stage`, with integer
