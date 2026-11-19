@@ -118,10 +118,28 @@ returning the full preserved village with no writes. Invalid non-null timestamps
 wrong types and unexpected fields still reject. A new authenticated-session
 regression and the real request on an in-memory backup passed; the snapshot and
 bootstrap modules pass 34 tests. After reloading the backend and restarting the
-APK, the owner confirmed the lobby loads. Access after that restart reused the
-local session created during the first attempt; the owner did not separately
-verify pressing Guest again. This establishes restored-profile lobby entry, while
-a final repeat with cleared app data and explicit Guest selection remains pending.
+APK, the owner confirmed the lobby loads. That restart reused the local session
+created during the first attempt.
+
+A final repeat cleared only the new instance's Android app data, retaining the
+matching APK and the restored host database. Before launch, the client had zero
+downloaded files and no saved preferences. The client then completed a new local
+platform sign-up, game sign-in, account fetch and village entry. The owner
+confirmed the imported heroes and equipment in the lobby. No new rejected or
+unsupported API counters appeared; SQLite integrity passed and the canonical
+saved profile was identical to its pre-reset backup. This verifies fresh local
+session creation and restored-profile lobby entry without reusing Android account
+caches. It does not establish additional gameplay support.
+
+After this cold start, the owner also completed **Download All**. All 1,738
+selected on-demand bundles matched the local content manifest, with no missing
+or mismatched bundles. **Check and organize downloaded files** also completed;
+all 1,738 hashes still matched afterward. This selected set excludes ZIP staging
+files, ETag files and the unselected Japanese voice/dialogue bundles. The lab
+content started with the published content package and added French text resources and three missing
+Spanish banners; those supplements are not yet included in that published
+package. See the [download transport verification](mumu-client.md#download-transfers-through-adb-reverse)
+for the preceding transfer correction.
 
 ## Current implementation boundary
 
