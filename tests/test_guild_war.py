@@ -24,6 +24,7 @@ from guardian_tales.guild_war import (
     CASTLES,
     COIN_RANKING,
     END_COOP,
+    GUILD_SUMMARY,
     MAX_DAMAGE,
     RANKING,
     RECORDS,
@@ -757,6 +758,130 @@ class GuildWarTests(unittest.TestCase):
             self.assertEqual(set(second), {1, 2})
             self.assertEqual(second[1]["Grade"], 1)
             self.assertEqual(decoder.call_count, 1)
+
+    def test_selected_defense_castle_consistently_uses_owned_guild_without_persisting_a_capture(
+        self,
+    ):
+        for imported in (False, True):
+            profile = self.install(imported)
+            enable(self.ref, phase=4, defend_castle=2)
+            self.db.execute("PRAGMA query_only=ON")
+            before, writes = list(self.db.iterdump()), self.db.total_changes
+            for _ in range(2):
+                self.assertEqual(
+                    self.call({"isPartial": False})["GuildWarInfo"]["CapturedCastleId"], 2
+                )
+                rows = self.call({"seasonId": 1}, CASTLES)["CastleSimpleInfos"]
+                self.assertEqual([v["CaptureGuildId"] for v in rows], [0, 7])
+                self.assertTrue(all(v["CaptureDays"] == v["MarkingCount"] == 0 for v in rows))
+                self.assertEqual(self.call({"castleId": 1}, CASTLE_DETAIL)["CaptureGuildId"], 0)
+                detail = self.call({"castleId": 2}, CASTLE_DETAIL)
+                self.assertEqual(detail["CaptureGuildId"], 7)
+                self.assertEqual(detail["TodayBattleStatus"], [])
+                self.assertEqual(detail["BattleHistory"], {})
+                self.assertEqual(detail["DefenseBuffIds"], [])
+                summary = self.call({"GuildId": 7}, GUILD_SUMMARY)["GuildSummary"]
+                self.assertEqual(summary["Guild"]["Id"], 7)
+                self.assertEqual(summary["GuildMembers"], [profile["GuildMember"]])
+                self.assertIsNone(summary["Rank"])
+                self.assertIsNone(summary["TotalDamage"])
+            self.assertEqual(self.store.account.profile(), profile)
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, writes)
+            self.db.execute("PRAGMA query_only=OFF")
+
+    def test_defense_castle_selection_is_retained_on_refresh_and_cleared_explicitly_or_on_phase_change(
+        self,
+    ):
+        selection = enable(self.ref, phase=4, defend_castle=1)
+        self.assertEqual(enable(self.ref)["defend_castle"], 1)
+        self.assertEqual(enable(self.ref)["period"], selection["period"])
+        self.now += timedelta(days=8)
+        refreshed = bootstrap_override(self.ref, "static_data_check.bin", {})
+        self.assertFalse(json.loads(refreshed)["UpToDate"])
+        self.assertEqual(load_selection(self.ref)["defend_castle"], 1)
+        self.assertEqual(enable(self.ref, defend_castle=0)["defend_castle"], 0)
+        enable(self.ref, defend_castle=1)
+        self.assertEqual(enable(self.ref, phase=3)["defend_castle"], 0)
+        self.assertEqual(enable(self.ref, phase=4)["defend_castle"], 0)
+
+    def test_defense_castle_selector_rejects_wrong_phase_unknown_castles_and_bad_types_atomically(
+        self,
+    ):
+        enable(self.ref, phase=4, defend_castle=1)
+        saved = (self.root / SELECTION).read_bytes()
+        for value in (True, 1.0, "1", -1, 0x80000000, 101, 999):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                enable(self.ref, defend_castle=value)
+            self.assertEqual((self.root / SELECTION).read_bytes(), saved)
+        for phase in (1, 2, 3):
+            with self.subTest(phase=phase), self.assertRaises(ValueError):
+                enable(self.ref, phase=phase, defend_castle=1)
+            self.assertEqual((self.root / SELECTION).read_bytes(), saved)
+        original = json.loads(saved)
+        for changes in ({"defend_castle": True}, {"defend_castle": -1}, {"phase": 2}):
+            (self.root / SELECTION).write_text(json.dumps(original | changes))
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                load_selection(self.ref)
+
+    def test_owned_castle_summary_rejects_foreign_guilds_disabled_trial_and_bad_native_parameters(
+        self,
+    ):
+        with self.assertRaises(PacketError):
+            self.call({"GuildId": 7}, GUILD_SUMMARY)
+        profile = self.install()
+        enable(self.ref, phase=4)
+        with self.assertRaises(PacketError):
+            self.call({"GuildId": 7}, GUILD_SUMMARY)
+        enable(self.ref, defend_castle=1)
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        for body in (
+            None,
+            {},
+            {"guildId": 7},
+            {"GuildId": True},
+            {"GuildId": 8},
+            {"GuildId": 7, "SeasonId": 1},
+        ):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, GUILD_SUMMARY)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+        for alter in (
+            lambda p: p.update(GuildMember=None),
+            lambda p: p["UserRaid"].update(GuildWar={"SeasonId": 1, "CapturedCastleId": 2}),
+        ):
+            changed = copy.deepcopy(profile)
+            alter(changed)
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(changed),))
+            saved, writes = list(self.db.iterdump()), self.db.total_changes
+            with self.assertRaises(PacketError):
+                self.call({"GuildId": 7}, GUILD_SUMMARY)
+            self.assertEqual(list(self.db.iterdump()), saved)
+            self.assertEqual(self.db.total_changes, writes)
+
+    def test_defense_castle_command_reports_explicit_mock_and_neutral_reset(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            main(
+                [
+                    "enable",
+                    "--phase",
+                    "multi-defense",
+                    "--defend-castle",
+                    "2",
+                    "--reference-dir",
+                    str(self.root),
+                ]
+            )
+        result = json.loads(output.getvalue())
+        self.assertEqual(result["local_defense_castle"], 2)
+        self.assertEqual(result["phase"], 4)
+        output = io.StringIO()
+        with redirect_stdout(output):
+            main(["enable", "--defend-castle", "0", "--reference-dir", str(self.root)])
+        self.assertEqual(json.loads(output.getvalue())["local_defense_castle"], 0)
 
     def test_cooperative_loading_acknowledges_source_stages_and_owned_team_without_writes(self):
         profile = self.install()

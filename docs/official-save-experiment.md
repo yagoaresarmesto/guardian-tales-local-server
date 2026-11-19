@@ -2132,6 +2132,21 @@ user confirmed selecting a castle opens its information. Multi stage entry and
 results remain unfinished.
 Bounded Windows sharing-lock retries
 also retain atomic selector publication after repeated transient test failures.
+
+The subsequent defense trial clarified that the requested mode was the second
+Fortress/Dispute tab. A cooperative phase there throws SwitchExpressionException
+with CoopDefense; `coop-defense` only fits the first lobby. Phase 4 loads the map
+but neutral castles still select Siege Battle. Native OnClickEnter chooses the
+defense stage list when the selected castle matches CapturedCastleId, while
+IsCaptureGuild compares its CaptureGuildId with the owned guild ID. The opt-in
+`--defend-castle` selector now presents one validated native castle as locally
+owned in phase 4, consistently across entry, map and detail, with no saved capture.
+Zero resets the mock, another phase clears it, and phase-4 refresh retains it.
+Only the matching owned GuildSummary is available, with existing guild/member
+data and null rank/damage. Five regressions and repeated real-source read-only
+entry/list/all-40-details/summary checks passed without source writes or changes.
+After backend reload and full game restart the user confirmed Defense Battle
+appears for the owned castle. Multi battle entry/results remain unfinished.
 See [usage and detailed limitations](guild-war.md).
 
 ## Host readiness before the APK check

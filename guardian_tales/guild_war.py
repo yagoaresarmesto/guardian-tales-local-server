@@ -23,6 +23,7 @@ from .reference import ReferenceData
 ROUTE = "/guild-war/enter"
 CASTLES = "/guild-war/get-all-castle-simple-infos"
 CASTLE_DETAIL = "/guild-war/get-castle-detail-info"
+GUILD_SUMMARY = "/guild/get-guild-summary"
 RECORDS = "/guild-war/get-battle-records"
 RANKING = "/guild-war/get-ranking"
 COIN_RANKING = "/guild-war/get-guild-coin-ranking"
@@ -78,6 +79,9 @@ def enter(account, request):
     now = utc_now()
     if not start <= now < end:
         raise ValueError("Restart the game to refresh its Guild War calendar")
+    defense_castle = selection.get("defend_castle", 0)
+    if defense_castle and defense_castle not in castle_specs(account.references, selection):
+        raise ValueError("The local defense castle is not in the enabled deployment")
     if account.needs_prologue():
         raise ValueError("Complete the prologue before entering Guild War")
     guild = own_guild(account, None)["Guild"]
@@ -114,7 +118,7 @@ def enter(account, request):
             "CoopOffenseDamage": 0,
             "CoopDefenseDamage": 0,
             "MarkedCastleId": 0,
-            "CapturedCastleId": 0,
+            "CapturedCastleId": defense_castle,
             "LatestBattleCastleId": 0,
             "BuffIds": [],
             "GuildWarPoint": 0,
@@ -156,11 +160,19 @@ def castle_infos(account, request):
     if view["GuildWarInfo"]["Phase"] not in (3, 4):
         return {"CastleSimpleInfos": []}
     specs = castle_specs(account.references, load_selection(account.references))
+    castle = view["GuildWarInfo"]["CapturedCastleId"]
+    owner = own_guild(account, None)["Guild"]["Id"] if castle else 0
     # Native Multi lobby needs a row for each selectable castle. The map comes
-    # from the matching static deployment; neutral ownership is a local mock.
+    # from the matching static deployment. Only an explicit defense selection
+    # supplies local ownership; it never persists a captured castle.
     return {
         "CastleSimpleInfos": [
-            {"CastleId": value, "CaptureGuildId": 0, "MarkingCount": 0, "CaptureDays": 0}
+            {
+                "CastleId": value,
+                "CaptureGuildId": owner if value == castle else 0,
+                "MarkingCount": 0,
+                "CaptureDays": 0,
+            }
             for value in specs
         ]
     }
@@ -179,16 +191,42 @@ def castle_detail(account, request):
     specs = castle_specs(account.references, load_selection(account.references))
     if request["castleId"] not in specs:
         raise ValueError("Select a castle in the enabled Guild War deployment")
+    owner = (
+        own_guild(account, None)["Guild"]["Id"]
+        if request["castleId"] == view["GuildWarInfo"]["CapturedCastleId"]
+        else 0
+    )
     # Native detail callback consumes int[], battle-detail[] and a dictionary
-    # keyed by int64. Empty history does not claim a capture or completed battle.
+    # keyed by int64. The local ownership view carries no completed battle history.
     return {
         "CastleId": request["castleId"],
-        "CaptureGuildId": 0,
+        "CaptureGuildId": owner,
         "CaptureDays": 0,
         "DefenseBuffIds": [],
         "TodayBattleStatus": [],
         "BattleHistory": {},
         "NotExistCastleData": False,
+    }
+
+
+def guild_summary(account, request):
+    if (
+        not isinstance(request, dict)
+        or set(request) != {"GuildId"}
+        or type(request["GuildId"]) is not int
+    ):
+        raise ValueError("The local castle summary requires native GuildId")
+    view = enter(account, {"isPartial": True})
+    guild = own_guild(account, None)
+    if not view["GuildWarInfo"]["CapturedCastleId"] or request["GuildId"] != guild["Guild"]["Id"]:
+        raise ValueError("Only the enabled defense trial's owned guild summary is available")
+    return {
+        "GuildSummary": {
+            "Guild": guild["Guild"],
+            "GuildMembers": guild["GuildMembers"],
+            "TotalDamage": None,
+            "Rank": None,
+        }
     }
 
 
@@ -284,6 +322,11 @@ def main(argv=None):
         help="Local trial phase; existing choice is retained when omitted",
     )
     parser.add_argument(
+        "--defend-castle",
+        type=int,
+        help="Present one native castle as locally owned in multi-defense; 0 clears the mock",
+    )
+    parser.add_argument(
         "--skip-basic",
         action="store_true",
         help="Temporarily waive the basic-course prerequisite without recording stage clears",
@@ -296,6 +339,7 @@ def main(argv=None):
                 references,
                 skip_basic=args.skip_basic,
                 phase=PHASES[args.phase] if args.phase else None,
+                defend_castle=args.defend_castle,
             )
         elif args.action == "disable":
             (references.directory / SELECTION).unlink(missing_ok=True)
@@ -321,6 +365,7 @@ def main(argv=None):
                         if selection
                         else None
                     ),
+                    "local_defense_castle": selection.get("defend_castle", 0) if selection else 0,
                     "scope": "Experimental menus and free cooperative combat entry/exit; progression, score and rewards are not implemented",
                     "apply": "Fully close and reopen the game after enable/disable; Raid selection and saved account are retained",
                 },

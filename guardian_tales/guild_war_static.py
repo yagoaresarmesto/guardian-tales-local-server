@@ -49,7 +49,7 @@ def load_selection(references):
     value = references.json(SELECTION)
     if (
         not isinstance(value, dict)
-        or set(value) - {"skip_basic", "overlay_policy", "phase"}
+        or set(value) - {"skip_basic", "overlay_policy", "phase", "defend_castle"}
         != {"client", "season_id", "period", "base_sha256"} | MANIFEST_KEYS
         or "overlay_policy" in value
         and (
@@ -59,6 +59,10 @@ def load_selection(references):
         or type(value.get("skip_basic", False)) is not bool
         or type(value.get("phase", 1)) is not int
         or value.get("phase", 1) not in PHASES.values()
+        or type(value.get("defend_castle", 0)) is not int
+        or not 0 <= value.get("defend_castle", 0) <= 0x7FFFFFFF
+        or value.get("defend_castle", 0) > 0
+        and value.get("phase", 1) != 4
         or value["client"] != CLIENT
         or type(value["season_id"]) is not int
         or value["season_id"] != 1
@@ -83,7 +87,7 @@ def load_selection(references):
     return value
 
 
-def enable(references, source=None, skip_basic=None, phase=None):
+def enable(references, source=None, skip_basic=None, phase=None, defend_castle=None):
     source = base_body(references) if source is None else source
     lines, items = records(decode(source))
     if (
@@ -124,6 +128,19 @@ def enable(references, source=None, skip_basic=None, phase=None):
     phase = (previous or {}).get("phase", 1) if phase is None else phase
     if type(phase) is not int or phase not in PHASES.values():
         raise ValueError("Select a native Guild War phase from 1 to 4")
+    if defend_castle is None:
+        defend_castle = (previous or {}).get("defend_castle", 0) if phase == 4 else 0
+    if (
+        type(defend_castle) is not int
+        or not 0 <= defend_castle <= 0x7FFFFFFF
+        or defend_castle > 0
+        and phase != 4
+    ):
+        raise ValueError(
+            "A local defense castle requires phase multi-defense and a native castle ID"
+        )
+    if defend_castle and defend_castle not in {row[0] for row in _castle_specs(source, 1)}:
+        raise ValueError("Select a defense castle from the enabled native deployment")
     skip_basic = (previous or {}).get("skip_basic", False) if skip_basic is None else skip_basic
     if type(skip_basic) is not bool:
         raise ValueError("Guild War skip-basic policy must be Boolean")
@@ -277,6 +294,7 @@ def enable(references, source=None, skip_basic=None, phase=None):
         "base_sha256": hashlib.sha256(source).hexdigest(),
         "skip_basic": skip_basic,
         "phase": phase,
+        "defend_castle": defend_castle,
         "overlay_policy": OVERLAY_POLICY,
         "static_data_sha256": sha256,
         "static_data_checksum": checksum,

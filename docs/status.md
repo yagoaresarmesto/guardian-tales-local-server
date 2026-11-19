@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **722 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **727 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and forty-two Guild War regressions cover native entry schemas,
+Four guild meteor and forty-seven Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -87,7 +87,7 @@ next UI guide acknowledgment, 2026, is now allowed along with the three matching
 Multi lobby guides, gated by active trial, phase and owned guild. A source-account
 memory-clone check changed only the seen-help flag and revision once, without
 real source writes. The user confirmed continuation after reload/reconnect.
-The lab currently selects `multi-offense`; `coop-offense` restores the verified
+The first Dispute trial selected `multi-offense`; `coop-offense` restores the verified
 cooperative attack path. Multi combat/results remain unfinished. Three phase
 and two scoped-guide regressions cover persistence, validation and state retention.
 
@@ -120,6 +120,15 @@ Six regressions cover fresh/imported state, schemas, phase/membership/progressio
 guards, corrupt catalogs and bounded immutable caching. After backend reload and
 reentering Dispute the user confirmed castle selection opens its information.
 Multi combat/results and persistent captures remain unfinished.
+
+Fortress defense selection now has an explicit phase-4 `--defend-castle` option.
+Entry, map and detail present only the selected native castle as owned by the
+local guild, without recording a capture or changing saved progress. The guarded
+owned GuildSummary read uses the existing local guild/member and null rank/damage.
+Five regressions and repeated real-source read-only entry/list/all-40-details/
+summary checks passed without writes or profile changes. After backend reload and
+full game restart the user confirmed Defense Battle appears for the owned castle.
+This establishes its selection UI; Multi battle entry/results remain unfinished.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

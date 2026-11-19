@@ -41,6 +41,7 @@ Use the same reference directory as the backend:
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-offense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-defense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --defend-castle 1 --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war status --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war disable --reference-dir local/client-data/reference
 ```
@@ -173,7 +174,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and forty-two War regressions cover native schemas, fresh/imported
+Four meteor and forty-seven War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -227,6 +228,43 @@ writes and an unchanged profile. After backend reload and reentering Dispute,
 the user confirmed a castle can be selected and its information opens. This
 verifies map/detail navigation; Multi stage entry/results and persistent captures
 remain unfinished. No game restart or new phase command is required for this fix.
+
+## Local Fortress defense selection
+
+`coop-defense` selects the first cooperative lobby. Defense of a castle in the
+second Fortress/Dispute tab instead requires `multi-defense` and a locally owned
+castle. Selecting phase 4 alone keeps the neutral map and does not select a
+defense stage: native OnClickEnter chooses DefenceStageIds only when the selected
+castle matches GuildWarInfo.CapturedCastleId. IsCaptureGuild separately compares
+the detail's CaptureGuildId with the owned guild ID.
+
+`guild-war enable --phase multi-defense --defend-castle 1` explicitly presents
+native castle 1 as owned in the trial response. Keep `--skip-basic` enabled in
+the lab as shown above. The selector accepts only a positive ID in the matching
+season's deployment, or zero to restore the neutral map. Omission retains the
+choice in phase 4, including calendar/parent refresh; choosing another phase
+clears it. Legacy selections without the field stay neutral. Bad types, unknown
+IDs and an explicit positive selection in another phase reject before publication.
+
+Entry, the castle list and its detail agree on this client-only ownership. Other
+castles remain neutral, with empty buffs, battle history and capture days. No
+capture, clear, damage, guild points, reward or account revision is persisted.
+Prepared static content retains its existing overlay scope. Every owned view
+still checks authentication, active season, owned membership and preserved War
+progression. Saved War progression cannot be replaced by the trial.
+
+The owned-castle popup can request `/guild/get-guild-summary` with exact integer
+GuildId. Only the trial's own guild is available. Its native GuildSummary holds
+the existing local Guild and saved member, with nullable TotalDamage and Rank
+left null; foreign guild summaries remain unsupported. This read grants nothing
+and makes no database writes.
+
+Five regressions cover fresh/imported state, consistent ownership, native summary
+guards, CLI reset, invalid input, atomic rejection and refresh retention. The real
+read-only source audit checked entry, all 40 details, list and owned summary
+twice, with an unchanged profile and zero writes. After backend reload and full
+game restart, the user confirmed the owned castle offers Defense Battle. This
+verifies the defense selection UI; Multi battle start/end remain unfinished.
 
 ## Cooperative stage entry and results
 

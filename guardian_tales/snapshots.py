@@ -75,6 +75,7 @@ ACCOUNT_READS = frozenset(
         "/guild-war/abandon-stage",
         "/guild-war/get-all-castle-simple-infos",
         "/guild-war/get-castle-detail-info",
+        "/guild/get-guild-summary",
         "/guild-war/start-coop-stage",
         "/guild-war/end-coop-stage/v2",
         "/guild-war/get-battle-records",

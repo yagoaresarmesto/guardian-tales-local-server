@@ -56,6 +56,7 @@ from .guild_war import CASTLE_DETAIL as GUILD_WAR_CASTLE_DETAIL
 from .guild_war import CASTLES as GUILD_WAR_CASTLES
 from .guild_war import COIN_RANKING as GUILD_WAR_COIN_RANKING
 from .guild_war import END_COOP as GUILD_WAR_END_COOP
+from .guild_war import GUILD_SUMMARY as GUILD_WAR_GUILD_SUMMARY
 from .guild_war import RANKING as GUILD_WAR_RANKING
 from .guild_war import RECORDS as GUILD_WAR_RECORDS
 from .guild_war import ROUTE as GUILD_WAR_ENTRY
@@ -68,6 +69,7 @@ from .guild_war import castle_infos as guild_war_castle_infos
 from .guild_war import coin_rankings as guild_war_coin_rankings
 from .guild_war import end_coop as end_guild_war_coop
 from .guild_war import enter as enter_guild_war
+from .guild_war import guild_summary as guild_war_guild_summary
 from .guild_war import lobby_guide_ids as guild_war_lobby_guide_ids
 from .guild_war import rankings as guild_war_rankings
 from .guild_war import start_coop as start_guild_war_coop
@@ -153,6 +155,7 @@ ACCOUNT_ROUTES = (
     GUILD_WAR_ABANDON,
     GUILD_WAR_CASTLES,
     GUILD_WAR_CASTLE_DETAIL,
+    GUILD_WAR_GUILD_SUMMARY,
     GUILD_WAR_START_COOP,
     GUILD_WAR_END_COOP,
     GUILD_WAR_RECORDS,
@@ -1224,6 +1227,8 @@ class AccountStore:
             return guild_war_castle_infos(self, request)
         if route == GUILD_WAR_CASTLE_DETAIL:
             return guild_war_castle_detail(self, request)
+        if route == GUILD_WAR_GUILD_SUMMARY:
+            return guild_war_guild_summary(self, request)
         if route == GUILD_WAR_UNLOCK:
             return unlock_guild_war(self, request)
         if route == GUILD_WAR_ENTRY:
