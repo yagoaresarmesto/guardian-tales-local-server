@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Select saved Orbital/Raid teams and manage Orbital definitions without gear changes."""
+"""Save Orbital and Raid party presets and manage per-mode team selections."""
 
 import json
 
@@ -8,6 +8,8 @@ from .snapshots import CLIENT, preserved_read
 GEAR_FIELDS = ("Weapon1", "Weapon2", "Accessory", "Orb1", "Orb2", "Merch", "Relic")
 MAX_REVISION = 0x7FFFFFFFFFFFFFFF
 SELECTION_FIELDS = {400: "InfiniteTower", 700: "GuildRaidAndConquest", 1300: "GuildPunchKing"}
+# Pinned 3.57.0 EU constants: PresetCountS3[GuildRaidAndConquest - 1].
+RAID_PRESET_COUNT = 30
 
 
 def integer(value, minimum=0):
@@ -142,7 +144,7 @@ def set_selected(account, body, operation_id):
     return {"User": selection_resource(user)}
 
 
-def new_definition(references, group, incoming):
+def orbital_slot_count(references):
     path = references.directory / "orbital_preset_catalog.json"
     if not path.is_file() or path.stat().st_size > 4096:
         raise ValueError("Creating an Orbital preset requires a matching external catalog")
@@ -155,34 +157,38 @@ def new_definition(references, group, incoming):
         or catalog["count"] > 100
     ):
         raise ValueError("Invalid Orbital preset catalog")
-    count = catalog["count"]
+    return catalog["count"]
+
+
+def new_definition(references, group, incoming, base):
+    count = RAID_PRESET_COUNT if base == 700 else orbital_slot_count(references)
     # The native list builds missing slots from the mode's base ID and uses
     # Order=999 for an unsaved definition. Existing teams keep their order.
     if (
-        not 400 <= incoming["Id"] < 400 + count
+        not base <= incoming["Id"] < base + count
         or type(incoming["Order"]) is not int
         or incoming["Order"] != 999
     ):
-        raise ValueError("Create an unused configured Orbital slot with native empty order")
+        raise ValueError("Create an unused configured party slot with native empty order")
     teams = [
         row
         for row in group["Presets"]
-        if isinstance(row, dict) and integer(row.get("Id")) and 400 <= row["Id"] < 500
+        if isinstance(row, dict) and integer(row.get("Id")) and base <= row["Id"] < base + 100
     ]
     if (
         len(teams) >= count
         or len({row["Id"] for row in teams}) != len(teams)
         or any(
-            not 400 <= row["Id"] < 400 + count
+            not base <= row["Id"] < base + count
             or not integer(row.get("Order"))
             or row["Order"] >= 999
             for row in teams
         )
     ):
-        raise ValueError("Invalid saved Orbital slot count or order")
+        raise ValueError("Invalid saved slot count or order for this preset mode")
     order = max((row["Order"] for row in teams), default=-1) + 1
     if order >= 999:
-        raise ValueError("No supported order remains for a new Orbital preset")
+        raise ValueError("No supported order remains for a new party preset")
     return {"Id": incoming["Id"], "Order": order}
 
 
@@ -194,12 +200,15 @@ def save_party(account, body, operation_id):
         or not isinstance(body["PartyPreset"], dict)
         or set(body["PartyPreset"]) != {"Id", "Name", "Order", "Characters"}
         or not integer(body["PartyPreset"]["Id"])
-        or not 400 <= body["PartyPreset"]["Id"] < 500
         or not isinstance(operation_id, str)
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError("Save one Orbital party preset with a Boolean SetSelected")
+        raise ValueError("Save one party preset with a Boolean SetSelected")
+    incoming = body["PartyPreset"]
+    base = incoming["Id"] // 100 * 100
+    if base not in (400, 700):
+        raise ValueError("Saving party definitions is supported for Orbital and Raid/Conquest")
     encoded = json.dumps(body, sort_keys=True, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_edit_requests WHERE operation_id=?", (operation_id,)
@@ -210,18 +219,19 @@ def save_party(account, body, operation_id):
         if previous[0] != encoded:
             raise ValueError("Preset edit request identity was reused with different data")
         return {"UserPartyPreset2": group, "User": selection_resource(profile["User"])}
-    incoming = body["PartyPreset"]
     matches = [
         i
         for i, p in enumerate(group["Presets"])
         if isinstance(p, dict) and p.get("Id") == incoming["Id"]
     ]
     if len(matches) > 1:
-        raise ValueError("Saving requires an unambiguous Orbital preset")
+        raise ValueError("Saving requires an unambiguous party preset")
     creating = not matches
     index = matches[0] if matches else len(group["Presets"])
     original = (
-        new_definition(account.references, group, incoming) if creating else group["Presets"][index]
+        new_definition(account.references, group, incoming, base)
+        if creating
+        else group["Presets"][index]
     )
     name = incoming["Name"]
     try:
@@ -274,7 +284,9 @@ def save_party(account, body, operation_id):
             group["Presets"][index] = edited
         group["Cas"] += 1
     selected_changed = (
-        choose_orbital(profile["User"], edited["Id"]) if body["SetSelected"] else False
+        choose_preset(profile["User"], edited["Id"], SELECTION_FIELDS[base], base)
+        if body["SetSelected"]
+        else False
     )
     with account.db:
         if changed:
