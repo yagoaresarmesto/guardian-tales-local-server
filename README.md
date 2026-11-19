@@ -1,221 +1,310 @@
 # Guardian Tales Local Server
 
-An experimental Python server for the **Guardian Tales 3.57.0 Android client**.
-It implements the observed game transport, local guest identity, prologue account
-creation, persistent character storage, the first campaign phase's clear path,
-initial lobby queries, and a read-only resource server.
+An experimental local Python server for the **Guardian Tales 3.57.0 Android
+client, Google Play European service, version code 431**.
 
-**This is not a complete offline version of the game.** In the prepared test
-environment, the original APK completed the prologue, recovered the saved
-character after restart, displayed the lobby and world map, and received its
-first daily reward with Internet access blocked. The user also played the first
-campaign phase, **Inn**, through its clear exit and returned to the world map.
-The first connecting passage's entry, observed encounters and clear exit also
-passed with the same saved account.
-Optional collectibles, later phases, general equipment changes, battle validation and
-most other game systems remain unfinished.
+The main workflow is **loading an existing, privately preserved account into a
+clean local installation**, then testing its heroes, equipment and supported
+game modes. Account import and the local practice tools are available on
+**`main`**; an old experimental branch is not required.
 
-## Use the matching APK with preserved offline content
+The prepared Windows/MuMu lab has restored the imported account into a clean
+client, verified its heroes and equipment, completed resource downloads and the
+downloaded-file check, and tested supported local combat paths. English and
+French text were also checked with the expanded content pack. See the
+[clean-client restore observations](docs/official-save-experiment.md#restore-an-existing-local-account-into-a-clean-client).
 
-Start with the [offline content guide](docs/offline-content.md). It explains
-which Release attachments to download, exactly where to put them, how to import
-and verify them, and how to start both the backend and resource CDN. The
-[3.57.0 European content release](https://github.com/yagoaresarmesto/guardian-tales-local-server/releases/tag/content-3.57.0-eu-20261117)
-contains the preserved resource packages and matching bootstrap/catalog data.
-Supply your own compatible APK. A new installation creates its own local guest;
-no existing player's save is distributed.
+**This is not a complete offline recreation of the official game.** Available
+assets do not implement an unsupported API or recover uncaptured account data.
+Some screens use empty responses, and several local practice modes deliberately
+grant no rewards or save no battle results. Full campaign progression, real
+multiplayer and the remaining official systems are unfinished.
 
-Android hostname routing and TLS trust still need a dedicated test setup. The
-guide distinguishes those integration requirements from importing the content.
-The remaining backend limitations below continue to apply.
+## What you need
 
-## Guild War: recommended siege practice
+- **Windows, Python 3.11+, Git and an OpenSSL CLI** for the documented PyCharm
+  setup. There are no third-party Python runtime dependencies.
+- **MuMu Player 12 / Android 12**, a dedicated non-main test instance with root
+  support, and your own matching APK with any required splits. Other client
+  versions, regions and emulator arrangements have not been validated.
+- **Compatible game files and reference catalogs**, supplied separately from
+  the source. Keep every content ZIP part with its matching manifest.
+- **Your private save**, either a complete local `server.sqlite3` backup or a
+  validated account-snapshot JSON. These are different input formats.
+
+The repository contains no player's save, APK or generated certificate keys.
+Obtain compatible common content through the maintainer's supplied links and
+supply your private account backup separately. The [published content release](https://github.com/yagoaresarmesto/guardian-tales-local-server/releases/tag/content-3.57.0-eu-20261117)
+is an older EN/ES baseline; newer supplied packs can include additional languages
+and mode catalogs. Use the manifest belonging to your pack, and do not mix parts
+from different releases or assume they cover the same features.
+
+## Set up an imported account
+
+These examples use **PowerShell in PyCharm**, from the repository root. Use the
+same paths in every terminal. The [PyCharm guide](docs/pycharm.md),
+[content guide](docs/offline-content.md) and [MuMu guide](docs/mumu-client.md)
+cover the individual tools; their fresh-guest examples do not replace the save
+restoration step below.
+
+### 1. Clone `main` and select Python
+
+```powershell
+git clone --branch main https://github.com/yagoaresarmesto/guardian-tales-local-server.git
+cd guardian-tales-local-server
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe --version
+```
+
+Select `.venv` as the PyCharm interpreter. If the Windows `py` launcher is not
+installed, create the environment using your installed Python executable.
+Certificate generation needs OpenSSL; the tools also check the usual Git for
+Windows OpenSSL location. No `pip install` is needed to run from the checkout.
+
+### 2. Import the common game content
+
+Place `content-manifest.json` and **all of its original ZIP parts** together in
+[`local/downloads/`](local/downloads/README.md). Keep those ZIPs compressed; the
+content importer handles extraction and integrity checks.
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales content import --manifest local/downloads/content-manifest.json --output local/client-data
+.\.venv\Scripts\python.exe -m guardian_tales content check --data-dir local/client-data
+```
+
+Use a new or empty output directory. The resulting resource files go under
+`local/client-data/resources/files/`; bootstrap responses and mode catalogs go
+under `local/client-data/reference/`. These are common game data, separate from
+the writable account database. See [file placement and content verification](docs/offline-content.md).
+
+### 3. Restore the save before starting the backend
 
 > [!IMPORTANT]
-> In the prepared Guild War lab, this is the recommended command for testing
-> siege attacks across the castle map. It selects **Prep Round** and clears the
-> marked target so you can use the practice path without marking each castle.
+> **Restore or import the account before the first backend start.** Starting the
+> server against an empty state directory can create a new starter account.
+> Keep the original backup untouched and use a separate working copy.
+
+For a **save ZIP containing `server.sqlite3`**, extract the save ZIP into the
+repository's `import/` folder. This ZIP is extracted manually, unlike the common
+content ZIPs. Verify the supplied checksum when one is provided. For a plain
+SQLite backup, place that complete file there directly.
+
+```text
+import/
+  server.sqlite3
+  server.sqlite3.sha256    Optional supplied checksum
+```
+
+With the backend stopped, copy the database into the working state directory:
+
+```powershell
+New-Item -ItemType Directory -Path .\local\state -Force | Out-Null
+[System.IO.File]::Copy((Resolve-Path -LiteralPath '.\import\server.sqlite3').Path, (Join-Path $PWD.Path 'local\state\server.sqlite3'), $false)
+```
+
+The copy refuses to overwrite an existing database. If one already exists,
+preserve it and choose a separate state directory rather than replacing it.
+Use that directory consistently with every later `--data-dir` argument.
+The database belongs on the **computer**, not inside Android's game folders.
+
+If your input is instead a **validated account-snapshot JSON**, use these
+commands **instead of copying an SQLite file**. The destination must be empty:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales snapshot inspect --input .\import\account-snapshot.json
+.\.venv\Scripts\python.exe -m guardian_tales snapshot import --input .\import\account-snapshot.json --data-dir .\local\state
+```
+
+The snapshot importer does not accept SQLite backups. It also does not log in to
+the official service or download an account. Preserving a still-accessible
+official account is a separate observation workflow; its original capture tools
+are not part of a public source clone. See [snapshot format and account preservation](docs/official-save-experiment.md#inspect-and-import-a-snapshot).
+
+### 4. Generate certificates and start the three services
+
+Generate your own APK-compatible certificates once:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales client-cert
+```
+
+This creates `local/client-tls/`. Existing keys are not overwritten. Both the
+backend and bridge must use the same certificate directory. The basic
+`generate_dev_cert.py` certificate is for backend probes; use `client-cert` for
+the game's hostnames. See [certificate setup and renewal](docs/mumu-client.md#2-generate-the-apk-certificate).
+
+**Terminal 1 — backend:**
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales serve --data-dir local/state --cert-dir local/client-tls --reference-dir local/client-data/reference
+```
+
+**Terminal 2 — resource CDN:**
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales assets --resource-root local/client-data/resources/files --port 18081 --journal local/cdn-requests.jsonl
+```
+
+Check [backend health](http://127.0.0.1:17657/health). A snapshot-derived save
+should report `imported_account: true`; compare the loaded account with the
+intended backup. The CDN should also serve the
+[Android resource index](http://127.0.0.1:18081/master-global-v3.57.0/Android.index).
+A healthy backend alone does not verify resource downloads or Android routing.
+
+**Terminal 3 — Android bridge:** first follow the
+[short setup/restoration check](docs/mumu-client.md#4-run-a-short-routing-check-then-the-play-session)
+with the game closed. For the regular session, replace the example index/name
+below with **your actual dedicated instance**:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales android-bridge run --index 1 --name GT357-Import-Test --cdn-port 18081 --minutes 500
+```
+
+Wait for **`BRIDGE READY`**, then open the game. Choose **Login as Guest** if a
+sign-in choice appears: the local server loads the restored PC database and uses
+its own local guest credentials. An official-account login is not required for
+this local test.
+
+Keep all three terminals running. Verify your expected heroes, equipment and
+inventory. If the game shows a starter profile or asks you to replay the
+prologue, stop and check the state path before changing anything. Copying files
+into `import/` alone does not make the backend load them.
+
+### 5. Stop safely and keep the save
+
+Press **Ctrl+C in the bridge terminal first** and wait for restoration /
+`BRIDGE INACTIVE`. Then stop the backend and CDN with Ctrl+C, and close the
+dedicated emulator. If the bridge reports that a previous session needs
+restoration, use the [documented restore action](docs/mumu-client.md#5-stop-and-restore)
+for the same instance; keep its session record until cleanup succeeds.
+
+The working save remains at `local/state/server.sqlite3`. Stop its backend
+before making a plain file backup, or use a coherent SQLite backup procedure.
+Keep the full database and verify its integrity/checksum. Changing a Git branch
+does not isolate or back up this runtime state.
+
+## Current scope
+
+The table summarizes the imported-account workflow. Detailed evidence and
+per-operation limits are recorded in the [status notes](docs/status.md) and
+[account experiment log](docs/official-save-experiment.md); an automated check
+and an actual APK observation are different forms of verification.
+
+| Area | Current behavior and limits |
+|---|---|
+| Account and clean-client restore | Preserved profile, owned heroes/equipment and startup reads load locally; only observed account data is preserved, and detailed campaign coverage varies. |
+| Summons | One- and ten-hero local draws worked in the APK. Rates, payment variants and catalogs are local rules; importing a profile does not recover official summon logic or history. |
+| Equipment and relics | Catalog-backed local enhancement, limit breaks, engraving, option changes and locks. Prepared free policies retain materials for supported operations; actual APK coverage varies by operation. |
+| Jewels, hero experience and collection systems | Additional local handlers and retry-safe persistence are implemented. Several result/claim paths have automated coverage but still need their documented APK checks. |
+| Teams and presets | Saved formations plus preset selection, editing, deletion and creation; several Orbital operations were verified in the APK. Other team/preset paths retain their individual limits. |
+| Village and mastery | Resource collection, mastery upgrades/reset and selected no-reward mocks; fixed base-camp mastery rewards require an explicit debug policy. |
+| Raid | Local season selection, menu, combat and return were verified with the prepared account, including season 46 in French. Empty rankings/history and no-reward battle acknowledgments; no official raid settlement. |
+| Dungeon Kingdom Arena | Three rotations and days 1–7 selectable by command. A configured menu/combat/return path was verified in French; every variant/day combination has not been separately verified in the APK. No saved scores or rewards. |
+| Guild War | Cooperative attack/defense, marked-target siege and selected-castle defense trials, plus Prep Round practice. Confirmed entry/result/menu paths depend on phase and selection; no saved captures, competitive results or battle rewards. |
+| Orbital Lift | Entry, defeat and menu return observed. The opt-in victory path saves progress without rewards; actual APK victory remains unverified. |
+| Social, passes and events | Partial reads, local placeholders and selected reward/no-reward policies. Empty views are intentional in some areas; real peers, purchases and full event progression are unavailable. |
+| Resources and languages | Local manifest-checked downloads; clean-client download/organization and EN/FR changes were verified with expanded content. Available languages and mode assets depend on the supplied pack. |
+
+Configured free/no-reward behavior is part of the local experiment, not a claim
+to reproduce official economy rules. Use the matching reference catalogs and
+read each mode's prerequisites before enabling it. All connections to one
+backend share **one local account**; this is a loopback development server,
+not a public multiplayer service.
+
+## Practice commands
+
+Run selectors against the **same reference directory as the backend**, outside
+battle. After changing seasons, variants or Guild War settings, **fully close
+and reopen the game** to reload its cached static data. Reconnect alone may
+retain the previous selection.
+
+Mode selections are stored with the reference data, separately from the account
+database; restoring the save alone does not activate them. Guild War overrides
+the guild calendars while enabled. Disable its trial before returning to the
+parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
+
+### Raid and Dungeon Kingdom Arena
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales raid-season list --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales raid-season set 46 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales dka-season list --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales dka-season set 1 --day 1 --reference-dir local/client-data/reference
+```
+
+Raid seasons available depend on the supplied catalog. DKA accepts variants
+1–3 and days 1–7. See the [Raid season selector](docs/reference-data.md#experimental-local-raid-catalog)
+and [DKA selector](docs/reference-data.md#dungeon-kingdom-arena-practice-selector)
+for catalog requirements, composition and limits.
+
+### Guild War: recommended siege practice
+
+> [!IMPORTANT]
+> **Recommended attack practice:** Prep Round with no marked target allows
+> practice entry across the castle map without marking each castle by command.
+> This path worked in the prepared APK test.
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
 ```
 
-Run it outside battle, then **fully close and reopen the game**. Keep the backend,
-resource CDN and bridge running.
-
 > [!IMPORTANT]
-> **Recommended defense practice:** select one local owned castle in Prep Round.
-> Castle 21 is a displayed-level-150 example. The user confirmed this practice
-> configuration works too.
+> **Recommended defense practice:** select one local owned castle in Prep
+> Round. Castle 21 is a displayed-level-150 example confirmed in the APK.
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --round prep --defend-castle 21 --reference-dir local/client-data/reference
 ```
 
-Again, **fully close and reopen the game**, then choose the selected castle.
-See the [highlighted practice commands](docs/guild-war.md#recommended-siege-practice-command)
-for prerequisites and the other variants.
+Restart the game after either command. Defense retains the selected-castle
+requirement. These are local trials requiring the prepared catalogs and owned
+guild membership; they do not grant persistent castle ownership. All four
+phases, status/disable commands and other variants are documented in the
+[Guild War guide](docs/guild-war.md).
 
-## Quick backend test
+For controlled gem/Festival-point grants, use the
+[administration guide](docs/administration.md) with the same account state
+directory. Writes require stopping the backend first.
 
-Clone the repository and run these commands with **Python 3.11 or newer**:
+## Starting a new account
 
-```sh
-git clone https://github.com/yagoaresarmesto/guardian-tales-local-server.git
-cd guardian-tales-local-server
-python scripts/generate_dev_cert.py
-python -m guardian_tales demo
-python -m guardian_tales serve
-```
+Creating a fresh local guest remains an **experimental secondary path**. Its
+prologue, persistence and early campaign clear paths were previously exercised,
+but a full playthrough from zero is not the project's main workflow. Later
+campaign interactions and general progression remain incomplete.
 
-Certificate generation requires an installed **OpenSSL CLI**. On Windows the
-script also checks the usual Git for Windows OpenSSL location. Use `py -3.11`
-instead of `python` if that is how Python is installed on your computer.
-There are no third-party Python runtime dependencies and installation is optional.
+Use a separate empty state directory for that experiment. See the
+[early campaign checkpoint](docs/first-phase-checkpoint.md) and
+[verified limitations](docs/status.md). For a source-only synthetic demonstration
+without an APK or real save, run `python -m guardian_tales demo`.
 
-The demo uses synthetic requests and a temporary database, then stops. The server
-command runs until **Ctrl+C** and keeps the local account in
-`local/state/server.sqlite3`. Check [http://127.0.0.1:17657/health](http://127.0.0.1:17657/health)
-after starting it.
+## Documentation and source layout
 
-| Address | Purpose |
-|---|---|
-| `127.0.0.1:10100` | Binary game protocol over TLS |
-| `127.0.0.1:10500` | Platform configuration and local guest APIs over HTTPS |
-| `127.0.0.1:17657` | HTTP health/status endpoint |
-| `127.0.0.1:18080` | Optional, separately started resource CDN |
-
-Starting the backend does **not** install the game, configure an emulator, import
-game resources, or make the official APK connect to it automatically. Use the
-[content guide](docs/offline-content.md) to obtain and import the separate data
-release, and [client integration](docs/client-integration.md) for routing and TLS
-trust requirements.
-
-The pinned client baseline is **Android 3.57.0, Google Play, European service**,
-with compatible bootstrap data and preserved resources from the same content
-snapshot. Other versions and distributions have not been validated. See the
-[compatibility details](docs/client-integration.md#client-version-and-content-compatibility).
-
-## Current scope
-
-| Component | State |
-|---|---|
-| TLS handshake, framing, checksum, LZ4, Ping/Pong | Implemented; protocol regression fixtures included |
-| Platform configuration and local guest credentials | Implemented for one local guest |
-| New account, prologue name/avatar/weapon selection | Persistent in SQLite; repeated completion is idempotent |
-| Lobby, collection, inbox and catalog reads | Initial empty responses; no social or purchase functionality |
-| World map and stage entry | Catalog prerequisites, one-time stamina and free reentry; prepared catalog covers Inn, the first passage, the second main phase and one discovered side stage |
-| Daily attendance | Fresh accounts: catalog asset rewards; imported accounts: explicit no-reward mock, once per UTC day |
-| Resource delivery | Read-only manifest allowlist; ETags, HEAD and single byte ranges |
-| Quest registration | Known chapter quests can be registered in Inn with an external catalog; early main-quest checkpoints persist; other progression pending |
-| Side-stage map discovery | Verified map targets persist as discovered; configured entry can require finding the map; side-stage gameplay remains pending |
-| First-phase collectibles | Purple coins, star pieces, three named items and glove-chest receipts persist without duplicate grants; mixed currency batches are atomic |
-| Monster reports | Inn handles plus external stage catalogs; atomic rewards once per stage/handle, provisional local rates, no battle validation |
-| Inn clear exit and first grade reward | Persistent completion, 50 free gems once, completion tutorial acknowledgment |
-| Configured later clear exits | External exit/encounter prerequisites, saved completion and earned openings; additional clear rewards pending |
-| Local currency administration | Audited gem and season-bound Festival point grants, idempotent operation IDs and exclusive offline writes |
-| Gem stamina purchases | Fresh/imported accounts: external price tiers, atomic free-gem costs and stored stamina, UTC quota and retry receipts |
-| Knight leveling | External catalog supplies level targets and story caps; single/multiple-level spending and reconnect receipts; limit breaks/blessings pending |
-| Imported hero leveling | Opt-in free experience for owned catalog heroes, including limit breaks, blessings and myth caps; atomic save/retry checks passed; APK retry pending |
-| Mission book | Inn, knight level 2, stamina and configured hero-draw milestones; atomic batches and persistent reward receipts; other missions pending |
-| Hero collection/draw challenges | Configured thresholds, next-step or all-earned-step batches, atomic asset rewards and persistent step/request receipts |
-| Imported achievements | Saved official steps form a nonpaying baseline; 15 verified progress rules, 13 available groups/1,190 catalog steps, atomic new rewards and retries; APK claim pending |
-| Hero collection knowledge | Fresh guests retain initial acquisition claims; imported accounts calculate all eight native hero-book objective types from saved progression, with official baselines and atomic retry receipts; imported APK verification pending |
-| Ad inbox initialization | Returns saved local ad state; ad playback and reward claims remain pending |
-| Summons screen entry | Optional local hero candidate catalog with matching checksums; empty fallback without external data |
-| Hero wishlist | Up to five distinct catalog heroes persist without spending currency or granting inventory |
-| Local hero draws | One/ten draws with configured probabilities, free gems or either controller type; new heroes, duplicate crystals, mileage and persistent retry receipts |
-| Pickup-ticket exchange check | Preserves imported event-coupon counters without conversion; empty fresh guests supported; redemption/expiration pending |
-| Play-menu prerequisites | Read-only cooperative placeholder with captured presets and saved rift settings; both APK reads succeeded after reconnect; mode gameplay unfinished |
-| Infinite-tower entry | Returns the saved floor and formation without changing progress; APK entry observed; battles and rewards unfinished |
-| Infinite-tower rankings | Empty local leaderboard list; APK query succeeded; no official rank or player entries inferred |
-| Orbital phase loading trial | APK loading and defeat return observed; guarded known-floor loading preserves saved state |
-| Orbital stage closing | Non-clear exits preserve all state; opt-in victories save highest floor without rewards; actual APK victory pending |
-| Orbital/Raid preset selection | Orbital verified in APK; saved Raid/Conquest selection host-tested with atomic choice and retry receipts |
-| Normal-party members | Ordered one-to-four owned heroes, leader changes and trailing-slot removal persist with compact responses and retry receipts; equipment and mode presets retained; APK save check pending |
-| Dungeon Kingdom Arena practice | Three rotations and days 1–7 selectable by command; entry/start/end and saved arena teams host-tested; no rewards or saved scores; APK combat pending |
-| Guild meteor entry | Fresh local meteor menu loads in the APK; native empty progress lists/maps, automatic season selection and no rewards; excavation actions pending |
-| Guild War season trial | Reversible phase/round/castle commands; cooperative and marked-target siege/selected-castle defense entry/result/return verified; unmarked-castle attack and selected-castle defense Prep Round practice work in APK; empty rankings/exchange; no saved battle progression or rewards |
-| Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
-| Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
-| Own profile card | Card request completed; empty friend prerequisite added; uncaptured decorations/social fields empty; APK rendering pending |
-| Friend menu reads | Empty friend/recommendation views; saved social settings, counts and gifts retained; social writes unavailable |
-| Orbital preset creation/application | Two APK creations persisted; current state matches save/delete history and selections |
-| Preset response performance | Compact selection resources avoid resending heroes/inventory; cloned-account responses shrink by 97–99.9%; APK latency check pending |
-| Village resource collection | APK gold collection verified; full soul points retained; saved clocks and retry receipts |
-| Guardian base-camp debug collection | Opt-in fixed mastery-point reward; four APK collections credited the requested 100 million each |
-| Princess gift | No-reward mock; one APK acknowledgment saved its timer/revision with other village fields preserved |
-| Regenerating village obstacle | Explicit no-reward/no-payment mock restarts the configured machine's regeneration; APK retry pending |
-| Free equipment enhancement | Opt-in experience from owned hammers; three APK upgrades saved with all hammer stacks retained; validated engraving bonus supported |
-| Source-preserving jewel decomposition | Catalog powder rewards for all 20 prepared jewel grades, with owned stacks retained and atomic retry receipts; APK result/retention check pending |
-| Guaranteed free jewel upgrades | Owned loose or relic-socket jewels advance one catalog grade with guaranteed success, retained gold/powder and atomic retry receipts; APK result check pending |
-| Free equipment limit breaks | Two APK operations reached 5 breaks with gold, hammers, experience and other profile fields retained |
-| Free equipment option values | Seven APK rolls and one accepted proposal saved with resources retained; existing identities/locks preserved |
-| Free first equipment engraving | One APK engraving saved; gold, hammers, experience and limit breaks retained; matching public attribute tier |
-| Free equipment option locks | Three APK locks saved with selected values retained through later rolls and resources intact |
-| Free relic option changes | Two APK rolls/discards observed with material inventory retained; acceptance tested in memory; public slot pools |
-| Guardian mastery skill upgrades | Catalog-backed spending and class limits; 34 APK upgrades matched saved skills and costs |
-| Guardian mastery reset | Refund, configured free-gem payment and cooldown saved atomically; one APK reset verified |
-| Natural stamina recharge | APK recharge verified against saved ticks and adjusted cap; reserve/gems intact |
-| Tutorial acknowledgments | Built-in help plus optional known-ID catalog; other UI markers require Inn cleared; no gameplay actions or rewards |
-| Guardian Pass | Entry returns saved state; season 58's free level-1 reward grants 30 reserve stamina once; other progression and claims pending |
-| Festival Pass | Initial free points, local shop availability and configured asset/stackable/individual item redemptions; sticker packs and other progression pending |
-| Temporal-event entry | Reads preserved `UserEvent` without season initialization or rewards; 14 catalog families reviewed; APK entry and individual event actions pending |
-| Guild menu | Saved own membership in a named local placeholder; inactive notices, empty no-reward attendance mock, no-op raid preparation and opt-in local season selection; raid combat and peer roster pending |
-| Later phase gameplay and remaining rewards | Unfinished; entry support alone does not implement a phase's interactions or clear rules |
-| Multiplayer, guild systems and purchases | Not implemented |
-
-All connections share the same local account. Incoming provider tokens are not
-validated against an official service or retained. This is a loopback development
-server, not a service for public hosting.
-
-## Documentation
-
-- [Fresh installation in PyCharm on Windows](docs/pycharm.md)
-- [Connect a dedicated MuMu Android 12 instance](docs/mumu-client.md)
-- [Offline content: downloads, exact file placement and startup](docs/offline-content.md)
-- [Setup and server commands](docs/setup.md)
-- [Grant gems/Festival points and inspect administrative history](docs/administration.md)
-- [How the components work](docs/architecture.md)
-- [External reference data and resources](docs/reference-data.md)
-- [Connecting a test client](docs/client-integration.md)
-- [Observed packet protocol](docs/protocol.md)
-- [Verified behavior and limitations](docs/status.md)
-- [Experimental private-account snapshot import](docs/official-save-experiment.md)
-- [Temporal-event families and offline integration](docs/live-events.md)
-- [Guild meteor entry and Guild War activation commands](docs/guild-war.md)
-- [API inventory and implementation plan](docs/implementation-plan.md)
-- [Inn checkpoint and next steps](docs/first-phase-checkpoint.md)
-- [Development, tests, CI and GitHub preparation](docs/development.md)
-- [Test groups and focused validation commands](tests/README.md)
-
-Hosted test results are available in [GitHub Actions](https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml).
-
-## Repository contents
+- [Restore a complete SQLite save into a clean client](docs/official-save-experiment.md#restore-an-existing-local-account-into-a-clean-client)
+- [Private JSON snapshot validation/import](docs/official-save-experiment.md#inspect-and-import-a-snapshot)
+- [PyCharm setup](docs/pycharm.md), [common content](docs/offline-content.md) and [MuMu bridge](docs/mumu-client.md)
+- [All server options](docs/setup.md), [reference catalogs](docs/reference-data.md) and [local administration](docs/administration.md)
+- [Guild War](docs/guild-war.md) and [temporal-event integration](docs/live-events.md)
+- [Architecture](docs/architecture.md), [protocol](docs/protocol.md) and [client integration](docs/client-integration.md)
+- [Verified status](docs/status.md), [implementation inventory](docs/implementation-plan.md) and [development checks](docs/development.md)
+- [Organized test groups](tests/README.md) and [GitHub Actions](https://github.com/yagoaresarmesto/guardian-tales-local-server/actions/workflows/ci.yml)
 
 ```text
 guardian_tales/        Server package and command-line tools
-  templates/          Reconstructed empty-account and lobby templates
-tests/                Behavioral regressions and protocol/synthetic fixtures
-scripts/              Certificate generation and source-package checks
-docs/                 Setup, architecture, protocol and current status
-.github/workflows/    CI configuration
-local/                Runtime inputs and state; download instructions included
-import/               Private save/import staging; empty marker included
+docs/                 Setup, mode guides and verification records
+tests/                Synthetic fixtures and regression tests
+scripts/              Certificate helpers and source checks
+import/               Private save inputs; initially an empty tracked marker
+local/downloads/      Common content ZIP parts and their manifest
+local/client-data/    Imported common resources and reference catalogs
+local/state/          Working server.sqlite3 account database
+local/client-tls/     Locally generated certificate keys
 ```
 
-The source tree excludes account databases, certificate keys, game archives,
-downloaded assets, captured bootstrap payloads, and tools tied to a particular
-computer. Preserved resources and matching reference data are distributed
-separately as Release attachments with a [content notice](docs/content-notice.md).
-The built-in templates contain empty local state, not a reference player's account.
-The tracked [download folder instructions](local/downloads/README.md) keep
-`local/downloads/` present after cloning; its downloaded files remain ignored.
-The `import/` folder is reserved for private saves and associated import inputs.
-Its empty `.gitkeep` retains the folder in clones and source ZIPs. Other contents
-are ignored by Git and rejected by source checks/packaging even if force-added.
-Follow the [save import and restore guide](docs/official-save-experiment.md);
-placing files in this folder alone does not load them into the backend.
+`import/` and runtime files under `local/` are excluded from source distribution.
+Keep account backups private: they contain player identifiers and can include
+local guest credentials. Git ignores are a convenience, not access control.
+The source contains reconstructed empty templates, not a reference player's save.
 
 ## License
 

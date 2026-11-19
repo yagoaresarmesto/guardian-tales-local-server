@@ -1,7 +1,8 @@
 # Official-account preservation experiment
 
-This research is isolated on `experiment/official-save-import`. It investigates
-preserving an owner's existing 3.57.0 European account for this local backend.
+Account snapshot import and local save restoration are available on `main`.
+The work began on `experiment/official-save-import`; the observations below
+record preserving an owner's existing 3.57.0 European account for this backend.
 An experimental importer now loads a validated private snapshot into a new
 SQLite state directory. Account fetch, preserved startup reads and local sign-in
 passed a private input check. **The APK now reaches the imported lobby**, following
