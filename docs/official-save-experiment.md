@@ -105,6 +105,10 @@ with `serve --data-dir`; the database stays on the host. Install the matching ba
 APK and split into the new instance without copying Android preferences, SDK
 credentials or downloaded game data. The local Guest option supplies local
 platform credentials and selects the account already in that state directory.
+Local Raid, Dungeon Kingdom Arena and Guild War selectors live in the reference
+directory, separately from SQLite. Configure the desired local mode selections
+for that directory and fully reopen the game after changing its static tables.
+Restoring the account database alone does not activate those practice modes.
 
 The Windows reproduction on `experiment/clean-apk-import` used a backup whose
 57 tables matched the stopped source, plus a newly installed 3.57.0/431 APK.
@@ -136,10 +140,22 @@ selected on-demand bundles matched the local content manifest, with no missing
 or mismatched bundles. **Check and organize downloaded files** also completed;
 all 1,738 hashes still matched afterward. This selected set excludes ZIP staging
 files, ETag files and the unselected Japanese voice/dialogue bundles. The lab
-content started with the published content package and added French text resources and three missing
-Spanish banners; those supplements are not yet included in that published
-package. See the [download transport verification](mumu-client.md#download-transfers-through-adb-reverse)
+content started with the published content package and added French locale
+resources, localized banners and DKA menu/interface backgrounds; those supplements
+are not yet included in the published package. See the
+[download transport verification](mumu-client.md#download-transfers-through-adb-reverse)
 for the preceding transfer correction.
+
+The same clean client subsequently switched text from Spanish to English and
+French. The owner confirmed the lobby and hero/inventory texts in both languages.
+The three cached locale text files matched the local manifest. The first DKA
+entry rejected because this reference directory had no arena selector. The real
+request passed without writes on an in-memory account copy with variant 1/day 1;
+after selecting it in the lab and reopening the client, the owner confirmed the
+French DKA menu and combat entry/return. Two start/end cycles completed without
+new rejected or unsupported API counters. The
+[arena selector guide](reference-data.md#dungeon-kingdom-arena-practice-selector)
+describes the required separate configuration.
 
 ## Current implementation boundary
 
