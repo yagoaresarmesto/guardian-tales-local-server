@@ -39,6 +39,8 @@ Use the same reference directory as the backend:
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-offense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-defense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war status --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war disable --reference-dir local/client-data/reference
 ```
@@ -79,10 +81,21 @@ with no pending API request. Unity logged a SwitchExpressionException in
 GuildWarMultiLobby.Begin, with unmatched value CoopOffense. Its native phase
 switch accepts only 3 or 4; entry selects Coop for 1/2 and Multi for 3/4. After
 phase 3, backend reload and a full game restart, the user confirmed Dispute opens.
-The lab currently uses `multi-offense`; the cooperative command above returns to
+The first Dispute trial used `multi-offense`; the cooperative command above returns to
 the previously verified battle path. Dispute now exposes neutral selectable castles;
 Multi combat and results remain unfinished. Manual navigation to another phase's lobby still
 requires selecting that phase first.
+
+The English Fortress tab also opens the Multi lobby. Switching there while
+`coop-defense` (2) is selected reproduces the same native switch exception,
+this time with CoopDefense, before any API request remains pending. Select
+`multi-defense` (4) for that defense menu, or `multi-offense` (3) for its attack
+menu, and fully close/reopen the game to recover the blocked transition. The
+selector does not automatically follow navigation between Coop and Fortress.
+The phase-4 castle list and all 40 details passed repeated wire checks against
+read-only source SQLite without profile changes or writes.
+After selecting phase 4 and fully restarting the game, the user confirmed the
+Fortress tab loads. This verifies its menu, not Multi defense combat or results.
 
 The next actual request acknowledged guide 2026 through `/user/mark-tutorial`.
 Native MultiLobby.Begin selects guides 2025/2026 in phase 3 and 2028/2029 in phase
