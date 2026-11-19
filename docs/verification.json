@@ -3559,7 +3559,9 @@
         "source_profile_unchanged": true
       },
       "apk_cooperative_defense_before_optimization": "User reports it works, with occasional loading delay",
-      "apk_loading_improvement_after_reload": "Not verified",
+      "apk_loading_improvement_after_reload": "PASS: user confirms less waiting during repeated cooperative entry/exit; qualitative observation only",
+      "applies_to": ["coop-offense start/end", "coop-defense start/end"],
+      "other_war_catalog_caches": "Castle-map and selected-castle defense validation already use separate bounded caches",
       "combat_frame_rate_improvement": "Not measured"
     },
     "cooperative_stage_exit": {"route": "/guild-war/end-coop-stage/v2", "native_request": {"stageId": "Int32", "damages": "Up to four nonnegative Int64 values", "additionalDamage": "Nonnegative Int64; combined sum fits Int64"}, "response": "Cancelled false, unchanged fresh GuildWarInfo, empty AddedItems", "same_active_season_membership_and_native_stage_guards": true, "damage_score_progression_attempts_locks_costs_and_rewards_persisted": false, "client_static_participation_reward": "Absent item 21644 originally appended locally; overlay now zeros only PlayCoopCoinReward to suppress it", "real_account_read_only_wire_and_repeat": "PASS", "real_source_database_writes": 0, "real_source_profile_unchanged": true, "apk_result_and_menu_return": "PASS after full restart: complete cooperative attack result observed; user confirmed Exit returns, and menu was observed"},

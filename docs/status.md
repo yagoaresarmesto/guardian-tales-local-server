@@ -157,7 +157,9 @@ session/packet measurements were 27.8/21.8 ms, with zero writes and an unchanged
 profile. The first lookup after backend restart still prepares the catalog in
 about 1.48 seconds. Two regressions cover repeated battles, result isolation and
 content/season changes; the corruption regression also warms the cache first.
-APK timing after reload and in-combat frame-rate improvement are not established.
+After backend reload the user confirmed less waiting during repeated cooperative
+entry/exit. This is qualitative APK confirmation; end-to-end loading latency and
+in-combat frame-rate improvement remain unmeasured.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

@@ -344,9 +344,12 @@ median start/end handler times of 27.2/21.2 ms; session/packet round trips measu
 host-side measurements, excluding TLS, bridge transport and client asset loading.
 The first catalog lookup after backend restart still took 1,478 ms; later lookups
 had a 9.7 ms median. Repeated start/end calls, result isolation, content/season
-changes and file tampering after cache warming have regression coverage. Client
-loading-time improvement remains to be confirmed after backend reload; this is
-not an in-combat frame-rate measurement.
+changes and file tampering after cache warming have regression coverage. After
+backend reload the user confirmed repeated cooperative entry/exit feels faster.
+This is a qualitative APK observation, not a measured end-to-end loading time or
+an in-combat frame-rate measurement. Castle-map and selected-castle defense
+validation already use their own bounded caches; this change targets cooperative
+attack/defense start and end calls.
 
 ## Cooperative stage entry and results
 

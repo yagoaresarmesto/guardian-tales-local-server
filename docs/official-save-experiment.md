@@ -2191,7 +2191,8 @@ content and season IDs cannot reuse the wrong catalog, and callers receive
 isolated sets. Seven-repeat median handlers measured 27.2 ms for start and
 21.2 ms for end; session/packet processing measured 27.8/21.8 ms. The source profile
 was unchanged with zero writes. The first catalog lookup after backend restart
-still took 1.48 seconds. These are host-side timings; APK timing after reload and
+still took 1.48 seconds. These are host-side timings; after backend reload the
+user confirmed repeated cooperative entry/exit feels faster. APK latency and
 combat frame rate remain unmeasured. Two regressions cover repeat loading and
 cache isolation/refresh, and the existing tampering case now checks a warm cache.
 
