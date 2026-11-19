@@ -30,6 +30,41 @@ balances and the database remain unchanged. Excavation/refresh/pickaxe claims
 remain unsupported. After a backend reload the user confirmed the APK menu loads;
 the health counter also recorded a completed entry.
 
+## Recommended siege practice command
+
+> [!IMPORTANT]
+> **Recommended for testing Guild War attacks across the castle map:** use Prep
+> Round with no marked target. The user confirmed this practice path works and
+> prefers it for trying the castles without selecting each target by command.
+
+With the prepared backend/reference data, completed prologue and local guild
+membership, run this outside battle:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
+```
+
+**Fully close and reopen the game**, then select a castle and use its practice
+entry. Keep the backend, resource CDN and bridge running. The source deployment
+contains 40 castles; individual practice results for all 40 were not separately
+enumerated. This command is also highlighted in the repository README.
+
+> [!IMPORTANT]
+> **Recommended for defense practice:** select one local owned castle in Prep
+> Round. The user confirmed this configuration works and requested the same
+> important marking as the attack command. Castle 21 is a displayed-level-150
+> example.
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --round prep --defend-castle 21 --reference-dir local/client-data/reference
+```
+
+Fully restart the game again and choose that castle. Defense retains the
+selected-castle requirement; changing the ID chooses another native castle.
+This combination passes host validation, and the user confirmed it loads and
+plays in practice after full restart. Individual defense practice outcomes for
+every castle were not separately enumerated.
+
 ## Guild War commands
 
 Use the same reference directory as the backend:
@@ -39,6 +74,9 @@ Use the same reference directory as the backend:
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --attack-castle 21 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round combat --attack-castle 21 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round auto --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-offense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-defense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --reference-dir local/client-data/reference
@@ -121,15 +159,16 @@ the overlay makes all Global Raid periods inactive while Guild War is enabled.
 It preserves their selection files and composes above the existing Raid and
 Dungeon Kingdom Arena calendar preparation. The overlay changes Global calendars,
 adds one local unlock rule, suppresses cooperative and Multi participation rewards,
-empties the active season's shop group and optionally waives Single prerequisites.
+empties the active season's shop group, optionally waives Single prerequisites
+and optionally selects Multi preparation/combat round timing.
 Other shop groups, tables, modes and calendar services
 retain their parent content. Disabling removes only the War selection file, so
 the parent Raid/arena bootstrap resumes. The original static source is immutable.
 
 The selection stores checksums, revision, parent digest, selected period and
-`overlay_policy: 5`. Existing selections without a policy or at policy 3/4 remain
+`overlay_policy: 6`. Existing selections without a policy or at policy 3/4/5 remain
 readable and are re-prepared at bootstrap, retaining their valid window, phase
-and skip-basic choice.
+and skip-basic/castle choices. Older selections default to automatic round timing.
 Bootstrap also re-prepares the overlay if the parent changes or the period expires;
 a parent change within the window retains the window. Prepared bodies are
 immutable and digest checked. Static get/check responses share one checksum.
@@ -176,7 +215,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and sixty-three War regressions cover native schemas, fresh/imported
+Four meteor and sixty-seven War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -387,6 +426,45 @@ four-stage selection, then confirmed an attack stage loads and is playable.
 The user then confirmed the result and return to the castle menu. The particular
 victory/defeat outcome was not separately identified. The existing empty labels
 in the castle popup remain unresolved.
+
+### Preparation and combat round timing
+
+`--round prep` selects preparation timing for the Multi lobby; `--round combat`
+selects combat timing, and `--round auto` restores the matching source schedule.
+Forced timing is allowed only in phases 3/4. Omission retains the choice across
+Multi phase changes and parent/calendar refresh. Changing to a cooperative phase
+resets it to auto; an explicit forced round in a cooperative phase rejects.
+Change this outside battle and fully close/reopen the game to replace cached
+static constants. The round selector is separate from phase and castle selection.
+
+Native IsMultiBattleRoundStarted compares server time with ContentToday plus
+Constants.MultiBattleRoundStartTime hours. Overlay policy 6 sets that one count
+to 24 for prep or 0 for combat; auto preserves the source value 12. Neither the
+clock nor calendar window is shifted. The new checksum prefix is
+`local-guild-war-v6`; older overlays upgrade with their window/phase/castles and
+waiver retained. Existing reward suppression remains unchanged. Native UI rounds
+are still time comparisons, so the exact day-start instant is the boundary for
+forced combat.
+
+The client has a distinct practice path: OnPracticeButtonClick passes the
+practice flag through EnterStageInternal to StartMultiPracticeStageRoutine,
+which calls the local StartStage path rather than the ordinary Multi start API.
+This supports testing the preparation/practice UI separately from a marked
+Combat Round target. The prep command above deliberately uses attack-castle 0
+to leave all castles unmarked. After running it and fully restarting the game,
+the user reported it works well and prefers this path for testing attacks.
+Individual practice results for all 40 castles were not separately enumerated.
+
+Four regressions cover exact round-only War-table changes, auto restoration,
+checksum changes, policy-5 upgrade, phase/refresh retention, invalid modes/source
+hours, atomic rejection and CLI status. A private preparation against the actual
+composed source verified hours 24/0/12 and only the expected War constant change.
+All 40 unmarked map/detail reads passed on real read-only SQLite with zero
+writes and an unchanged profile. The immutable source and actual active selector
+were unchanged by that private check. Read-only native inspection after the APK
+restart confirmed phase 3, start hour 24, IsBattleRound false, no marked/captured
+castle and all four suppressed participation counts still zero, with no pending
+request. This establishes the loaded prep selection alongside the user report.
 
 ## Remaining guild-information UI issues
 

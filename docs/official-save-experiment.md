@@ -2232,6 +2232,32 @@ playable. The user then confirmed the result and return to the castle menu;
 the particular victory/defeat outcome was not separately identified.
 The existing empty labels remain a separate unresolved UI issue.
 
+The user next requested a command for preparation-round practice. Native code
+has a separate StartMultiPracticeStageRoutine path, reached with the practice
+flag rather than the ordinary Multi start API. The new `--round prep|combat|auto`
+selector prepares policy-6 static data: only MultiBattleRoundStartTime is changed
+to 24/0 for prep/combat, with the source value 12 restored by auto. The server
+clock and season window stay unchanged. Multi phase changes/refresh retain the
+choice; cooperative phases reset it to auto, and old selectors upgrade to auto
+while preserving valid state. Four regressions passed for scoped changes,
+restoration, checksums, upgrade/refresh, validation, atomic rejection and CLI use.
+A private real-source preparation verified hours 24/0/12 and unchanged other War
+data. Read-only entry/all-40-map/details checks had zero writes and unchanged
+profile/source/active selector. The supplied prep command clears the siege target
+to test unmarked-castle practice. After full restart the user reported it works
+well and prefers it for testing attacks. Read-only native inspection confirmed
+phase 3, start hour 24, IsBattleRound false, no marked/captured target and zero
+participation counts, with no pending API. Individual castle results were not
+separately enumerated.
+
+At the user's request, the unmarked Prep Round attack command is highlighted as
+important/recommended in the README and War guide. The equivalent
+`multi-defense --round prep --defend-castle 21` command was supplied for defense
+practice testing; unlike the attack browse path, it selects an owned trial
+castle. The user confirmed it works after restart and asked for the same important
+marking. Both commands now have important callouts in the README and War guide;
+individual defense-practice results for every castle were not separately listed.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

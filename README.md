@@ -29,6 +29,33 @@ Android hostname routing and TLS trust still need a dedicated test setup. The
 guide distinguishes those integration requirements from importing the content.
 The remaining backend limitations below continue to apply.
 
+## Guild War: recommended siege practice
+
+> [!IMPORTANT]
+> In the prepared Guild War lab, this is the recommended command for testing
+> siege attacks across the castle map. It selects **Prep Round** and clears the
+> marked target so you can use the practice path without marking each castle.
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
+```
+
+Run it outside battle, then **fully close and reopen the game**. Keep the backend,
+resource CDN and bridge running.
+
+> [!IMPORTANT]
+> **Recommended defense practice:** select one local owned castle in Prep Round.
+> Castle 21 is a displayed-level-150 example. The user confirmed this practice
+> configuration works too.
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --round prep --defend-castle 21 --reference-dir local/client-data/reference
+```
+
+Again, **fully close and reopen the game**, then choose the selected castle.
+See the [highlighted practice commands](docs/guild-war.md#recommended-siege-practice-command)
+for prerequisites and the other variants.
+
 ## Quick backend test
 
 Clone the repository and run these commands with **Python 3.11 or newer**:
@@ -108,7 +135,7 @@ snapshot. Other versions and distributions have not been validated. See the
 | Normal-party members | Ordered one-to-four owned heroes, leader changes and trailing-slot removal persist with compact responses and retry receipts; equipment and mode presets retained; APK save check pending |
 | Dungeon Kingdom Arena practice | Three rotations and days 1–7 selectable by command; entry/start/end and saved arena teams host-tested; no rewards or saved scores; APK combat pending |
 | Guild meteor entry | Fresh local meteor menu loads in the APK; native empty progress lists/maps, automatic season selection and no rewards; excavation actions pending |
-| Guild War season trial | Reversible season/phase commands; APK cooperative attack entry/result/exit verified; Fortress castle details, local defense ownership and guarded free defense entry/exit; empty rankings/exchange; no saved battle progression or rewards |
+| Guild War season trial | Reversible phase/round/castle commands; cooperative and marked-target siege/selected-castle defense entry/result/return verified; unmarked-castle attack and selected-castle defense Prep Round practice work in APK; empty rankings/exchange; no saved battle progression or rewards |
 | Orbital preset editing | Existing team save verified in APK; captured seeds, heroes and inventory retained |
 | Orbital preset deletion | APK deletion verified; other teams and owned inventory retained |
 | Own profile card | Card request completed; empty friend prerequisite added; uncaptured decorations/social fields empty; APK rendering pending |

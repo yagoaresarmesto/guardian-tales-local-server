@@ -23,8 +23,9 @@ from .snapshots import CLIENT
 
 SELECTION = "guild_war_selection.json"
 FEATURE_ID = 126
-OVERLAY_POLICY = 5
+OVERLAY_POLICY = 6
 PHASES = {"coop-offense": 1, "coop-defense": 2, "multi-offense": 3, "multi-defense": 4}
+ROUND_MODES = {"auto": None, "prep": 24, "combat": 0}
 START_INACTIVE = "2000-01-01T00:00:00+00:00"
 END_INACTIVE = "2000-01-07T23:59:59+00:00"
 
@@ -49,12 +50,13 @@ def load_selection(references):
     value = references.json(SELECTION)
     if (
         not isinstance(value, dict)
-        or set(value) - {"skip_basic", "overlay_policy", "phase", "defend_castle", "attack_castle"}
+        or set(value)
+        - {"skip_basic", "overlay_policy", "phase", "defend_castle", "attack_castle", "round_mode"}
         != {"client", "season_id", "period", "base_sha256"} | MANIFEST_KEYS
         or "overlay_policy" in value
         and (
             type(value["overlay_policy"]) is not int
-            or value["overlay_policy"] not in (3, 4, OVERLAY_POLICY)
+            or value["overlay_policy"] not in (3, 4, 5, OVERLAY_POLICY)
         )
         or type(value.get("skip_basic", False)) is not bool
         or type(value.get("phase", 1)) is not int
@@ -67,6 +69,10 @@ def load_selection(references):
         or not 0 <= value.get("attack_castle", 0) <= 0x7FFFFFFF
         or value.get("attack_castle", 0) > 0
         and value.get("phase", 1) != 3
+        or type(value.get("round_mode", "auto")) is not str
+        or value.get("round_mode", "auto") not in ROUND_MODES
+        or value.get("round_mode", "auto") != "auto"
+        and value.get("phase", 1) not in (3, 4)
         or value["client"] != CLIENT
         or type(value["season_id"]) is not int
         or value["season_id"] != 1
@@ -92,7 +98,13 @@ def load_selection(references):
 
 
 def enable(
-    references, source=None, skip_basic=None, phase=None, defend_castle=None, attack_castle=None
+    references,
+    source=None,
+    skip_basic=None,
+    phase=None,
+    defend_castle=None,
+    attack_castle=None,
+    round_mode=None,
 ):
     source = base_body(references) if source is None else source
     lines, items = records(decode(source))
@@ -158,6 +170,15 @@ def enable(
         raise ValueError("A local siege target requires phase multi-offense and a native castle ID")
     if attack_castle and attack_castle not in {row[0] for row in _castle_specs(source, 1)}:
         raise ValueError("Select a siege target from the enabled native deployment")
+    if round_mode is None:
+        round_mode = (previous or {}).get("round_mode", "auto") if phase in (3, 4) else "auto"
+    if (
+        type(round_mode) is not str
+        or round_mode not in ROUND_MODES
+        or round_mode != "auto"
+        and phase not in (3, 4)
+    ):
+        raise ValueError("Select auto round timing, or prep/combat for a native Multi phase")
     skip_basic = (previous or {}).get("skip_basic", False) if skip_basic is None else skip_basic
     if type(skip_basic) is not bool:
         raise ValueError("Guild War skip-basic policy must be Boolean")
@@ -195,6 +216,15 @@ def enable(
     # to keep supported exits rewardless without manufacturing item specs.
     for key in participation:
         constants[key] = 0
+    if (
+        type(constants.get("MultiBattleRoundStartTime")) is not int
+        or not 0 <= constants["MultiBattleRoundStartTime"] <= 24
+    ):
+        raise ValueError("Invalid native Guild War battle-round start hour")
+    if round_mode != "auto":
+        # The native predicate compares server time with ContentToday plus this
+        # many hours. Preserve the clock and calendar; select only the War round.
+        constants["MultiBattleRoundStartTime"] = ROUND_MODES[round_mode]
     if skip_basic:
         stage_set_id = constants.get("SingleStageSetId")
         stage_sets = war.get("CastleStageSet")
@@ -283,7 +313,7 @@ def enable(
     if revision > 0x7FFFFFFF:
         raise ValueError("Guild War static revision exceeds the native range")
     checksum = digest(
-        b"local-guild-war-v5\n"
+        f"local-guild-war-v{OVERLAY_POLICY}\n".encode()
         + items["__checksum__"][1].encode()
         + b"\n"
         + text.encode()
@@ -320,6 +350,7 @@ def enable(
         "phase": phase,
         "defend_castle": defend_castle,
         "attack_castle": attack_castle,
+        "round_mode": round_mode,
         "overlay_policy": OVERLAY_POLICY,
         "static_data_sha256": sha256,
         "static_data_checksum": checksum,

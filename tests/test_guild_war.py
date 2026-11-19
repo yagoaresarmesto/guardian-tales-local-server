@@ -93,6 +93,7 @@ def synthetic_war_static(catalog):
             ],
             "SyntheticKeep": [1, 2],
             "Constants": {
+                "MultiBattleRoundStartTime": 12,
                 "SingleClearedStageIds": [850020002],
                 "SingleStageSetId": 1,
                 "PlayCoopCoinReward": 10,
@@ -374,6 +375,153 @@ class GuildWarTests(unittest.TestCase):
             with self.assertRaises(PacketError):
                 self.call({}, route)
 
+    def test_round_selector_changes_only_native_start_hour_and_auto_restores_source_without_writes(
+        self,
+    ):
+        self.install()
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        baseline = enable(self.ref, phase=3, attack_castle=1, skip_basic=True)
+        expected = json.loads(
+            records(decode(bootstrap_override(self.ref, "static_data_get.bin", None)))[1][
+                "guildwar"
+            ][1]
+        )
+        checksums = {}
+        for mode, hour in (("prep", 24), ("combat", 0), ("auto", 12)):
+            selected = enable(self.ref, round_mode=mode)
+            actual = json.loads(
+                records(decode(bootstrap_override(self.ref, "static_data_get.bin", None)))[1][
+                    "guildwar"
+                ][1]
+            )
+            changed = copy.deepcopy(expected)
+            changed["Constants"]["MultiBattleRoundStartTime"] = hour
+            self.assertEqual(actual, changed)
+            self.assertEqual(
+                (
+                    selected["phase"],
+                    selected["attack_castle"],
+                    selected["period"],
+                    selected["skip_basic"],
+                ),
+                (3, 1, baseline["period"], True),
+            )
+            self.assertEqual(load_selection(self.ref)["round_mode"], mode)
+            checksums[mode] = selected["static_data_checksum"]
+        self.assertEqual(len(set(checksums.values())), 3)
+        self.assertEqual(checksums["auto"], baseline["static_data_checksum"])
+        self.assertEqual(self.source.read_bytes(), self.original)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+
+    def test_round_policy5_upgrade_and_multi_refresh_retain_valid_choices_and_coop_resets_timing(
+        self,
+    ):
+        legacy = enable(self.ref, phase=3, attack_castle=1, skip_basic=True)
+        path = self.root / f"guild_war_static_{legacy['static_data_sha256']}.bin"
+        lines, items = records(decode(path.read_bytes()))
+        old_checksum = digest(b"synthetic-policy5-auto-round")
+        at = items["__checksum__"][0]
+        lines[at + 1], lines[at + 3] = old_checksum + "\n", digest(old_checksum.encode()) + "\n"
+        body = compress("".join(lines).encode())
+        legacy.pop("round_mode")
+        legacy.update(
+            overlay_policy=5,
+            static_data_sha256=hashlib.sha256(body).hexdigest(),
+            static_data_checksum=old_checksum,
+        )
+        (self.root / f"guild_war_static_{legacy['static_data_sha256']}.bin").write_bytes(body)
+        (self.root / SELECTION).write_text(json.dumps(legacy))
+        check = json.loads(
+            bootstrap_override(self.ref, "static_data_check.bin", {"Checksum": old_checksum})
+        )
+        selected = load_selection(self.ref)
+        self.assertFalse(check["UpToDate"])
+        self.assertEqual(
+            (
+                selected["overlay_policy"],
+                selected["round_mode"],
+                selected["attack_castle"],
+                selected["period"],
+            ),
+            (OVERLAY_POLICY, "auto", 1, legacy["period"]),
+        )
+        enable(self.ref, round_mode="prep")
+        self.assertEqual(enable(self.ref)["round_mode"], "prep")
+        defense = enable(self.ref, phase=4, defend_castle=2)
+        self.assertEqual((defense["round_mode"], defense["defend_castle"]), ("prep", 2))
+        self.now += timedelta(days=8)
+        bootstrap_override(self.ref, "static_data_check.bin", {})
+        self.assertEqual(load_selection(self.ref)["round_mode"], "prep")
+        cooperative = enable(self.ref, phase=2)
+        self.assertEqual(
+            (cooperative["round_mode"], cooperative["attack_castle"], cooperative["defend_castle"]),
+            ("auto", 0, 0),
+        )
+        self.assertEqual(self.source.read_bytes(), self.original)
+
+    def test_round_selector_rejects_wrong_types_phases_and_bad_source_hours_atomically(self):
+        enable(self.ref, phase=3, round_mode="prep")
+        path = self.root / SELECTION
+        saved = path.read_bytes()
+        for value in (True, 1, "", "PREP", "battle", [], {}):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                enable(self.ref, round_mode=value)
+            self.assertEqual(path.read_bytes(), saved)
+        for phase in (1, 2):
+            with self.subTest(phase=phase), self.assertRaises(ValueError):
+                enable(self.ref, phase=phase, round_mode="prep")
+            self.assertEqual(path.read_bytes(), saved)
+        lines, items = records(decode(self.original))
+        original = json.loads(items["guildwar"][1])
+        for value in (None, True, -1, 25, 12.0):
+            changed = copy.deepcopy(original)
+            if value is None:
+                changed["Constants"].pop("MultiBattleRoundStartTime")
+            else:
+                changed["Constants"]["MultiBattleRoundStartTime"] = value
+            raw = json.dumps(changed)
+            rows = list(lines)
+            at = items["guildwar"][0]
+            rows[at + 1], rows[at + 3] = raw + "\n", digest(raw.encode()) + "\n"
+            with self.subTest(hour=value), self.assertRaises(ValueError):
+                enable(self.ref, source=compress("".join(rows).encode()), round_mode="prep")
+            self.assertEqual(path.read_bytes(), saved)
+        selection = json.loads(saved)
+        for changes in (
+            {"round_mode": True},
+            {"round_mode": []},
+            {"round_mode": "unknown"},
+            {"phase": 1},
+        ):
+            path.write_text(json.dumps(selection | changes))
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                load_selection(self.ref)
+
+    def test_round_command_reports_prep_combat_and_auto_without_implicit_target_selection(self):
+        for mode in ("prep", "combat", "auto"):
+            output = io.StringIO()
+            with redirect_stdout(output):
+                main(
+                    [
+                        "enable",
+                        "--phase",
+                        "multi-offense",
+                        "--round",
+                        mode,
+                        "--attack-castle",
+                        "0",
+                        "--reference-dir",
+                        str(self.root),
+                    ]
+                )
+            result = json.loads(output.getvalue())
+            self.assertEqual((result["round_mode"], result["local_attack_castle"]), (mode, 0))
+        output = io.StringIO()
+        with redirect_stdout(output):
+            main(["status", "--reference-dir", str(self.root)])
+        self.assertEqual(json.loads(output.getvalue())["round_mode"], "auto")
+
     def test_static_bootstrap_cache_hashes_match_the_enabled_compressed_body(self):
         selection = enable(self.ref)
         body = self.session.handle(request("/static-data/get", {"ClientVersions": {}})).body
@@ -593,7 +741,7 @@ class GuildWarTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), self.original)
         self.assertEqual(self.store.account.profile(), profile)
         self.assertEqual(list(self.db.iterdump()), before)
-        for invalid in (False, 2, 6):
+        for invalid in (False, 2, OVERLAY_POLICY + 1):
             (self.root / SELECTION).write_text(json.dumps(dict(upgraded, overlay_policy=invalid)))
             with self.subTest(policy=invalid), self.assertRaises(ValueError):
                 load_selection(self.ref)
@@ -954,7 +1102,7 @@ class GuildWarTests(unittest.TestCase):
         )
         selection = load_selection(self.ref)
         self.assertFalse(checked["UpToDate"])
-        self.assertEqual(selection["overlay_policy"], 5)
+        self.assertEqual(selection["overlay_policy"], OVERLAY_POLICY)
         self.assertEqual(
             (selection["phase"], selection["defend_castle"], selection["period"]),
             (4, 1, previous["period"]),

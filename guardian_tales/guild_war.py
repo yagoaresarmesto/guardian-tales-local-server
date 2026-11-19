@@ -10,6 +10,7 @@ from .guild_menu import own_guild
 from .guild_war_static import (
     FEATURE_ID,
     PHASES,
+    ROUND_MODES,
     SELECTION,
     castle_specs,
     cooperative_stage_ids,
@@ -380,6 +381,12 @@ def main(argv=None):
         help="Mark one native siege target in multi-offense without saving guild progress; 0 clears it",
     )
     parser.add_argument(
+        "--round",
+        dest="round_mode",
+        choices=ROUND_MODES,
+        help="Multi round timing: auto follows source hours; prep/combat select a local round",
+    )
+    parser.add_argument(
         "--skip-basic",
         action="store_true",
         help="Temporarily waive the basic-course prerequisite without recording stage clears",
@@ -394,6 +401,7 @@ def main(argv=None):
                 phase=PHASES[args.phase] if args.phase else None,
                 defend_castle=args.defend_castle,
                 attack_castle=args.attack_castle,
+                round_mode=args.round_mode,
             )
         elif args.action == "disable":
             (references.directory / SELECTION).unlink(missing_ok=True)
@@ -421,6 +429,7 @@ def main(argv=None):
                     ),
                     "local_defense_castle": selection.get("defend_castle", 0) if selection else 0,
                     "local_attack_castle": selection.get("attack_castle", 0) if selection else 0,
+                    "round_mode": selection.get("round_mode", "auto") if selection else None,
                     "scope": "Experimental menus; free cooperative and Fortress siege/selected-castle defense entry/exit; persistent progression, score and rewards are not implemented",
                     "apply": "Fully close and reopen the game after enable/disable; Raid selection and saved account are retained",
                 },

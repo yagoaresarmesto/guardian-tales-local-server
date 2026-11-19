@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **743 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **747 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and sixty-three Guild War regressions cover native entry schemas,
+Four guild meteor and sixty-seven Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -195,6 +195,29 @@ opens the stage selection, then confirmed an attack stage loads and is playable.
 The user then confirmed the result and return to the castle menu. The particular
 victory/defeat outcome was not separately identified.
 The pre-existing empty castle-popup labels also remain unresolved.
+
+Guild War now has a Multi `--round prep|combat|auto` selector, separate from phase
+and target selection. Native round timing uses ContentToday plus a source hour;
+policy 6 overrides only MultiBattleRoundStartTime to 24/0 for preparation/combat,
+or preserves the source value 12 in auto. Server time and calendar windows stay
+unchanged. Legacy policy-5 selectors upgrade with auto timing and preserve their
+phase, castles, valid window and waiver. Multi omission/refresh retains the mode;
+cooperative phases reset to auto. Four regressions cover exact table changes,
+restoration, checksums, upgrade/retention, invalid input and CLI status. Real-source
+private preparations verified hours 24/0/12 with only the expected War constant
+change, and all 40 unmarked map/detail reads passed on read-only SQLite with zero
+writes and unchanged profile/source/active selector. Native inspection found a
+separate local Multi practice entry path. After the prep/unmarked command and
+full restart the user reported it works well and prefers it for testing attacks.
+Read-only native inspection confirmed phase 3, start hour 24, IsBattleRound false,
+no marked/captured castle and retained zero participation counts, with no pending
+API. Individual practice outcomes for all 40 castles were not separately recorded.
+The user requested this attack command be marked important; the README and War
+guide now highlight it as the recommended siege-practice path. The user also
+confirmed `multi-defense --round prep --defend-castle 21` works in practice after
+restart, and requested it be highlighted too. Both commands now have important
+callouts in the README and guide. Defense retains the selected-castle requirement;
+individual practice outcomes for every defense castle were not separately listed.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object
