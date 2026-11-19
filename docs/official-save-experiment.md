@@ -2258,6 +2258,29 @@ castle. The user confirmed it works after restart and asked for the same importa
 marking. Both commands now have important callouts in the README and War guide;
 individual defense-practice results for every castle were not separately listed.
 
+## French interface text in the Windows lab
+
+Changing text language to French saved `frFR` and restarted the client, which
+requested `media/staticdata/strings-bin-frFR`. The local CDN returned 404 because
+the preserved content contained EN/ES strings. Backend counters showed no new
+rejected or unsupported API calls during this failure.
+
+The matching public `live/global/0491` CDN still supplied the French file. The
+English resource's remote size and ETag matched the local file, whose MD5 also
+matched that ETag. The 8,018,592-byte French download passed its length and MD5
+checks before being saved with its ETag and SHA-256 manifest entry. Four further
+requested French resources were preserved: the chat/name word lists and the
+Roadmap 3.57 and Meteor banners. These remain external lab files, outside Git;
+the published content release still contains EN/ES text. The existing manifest
+entries were retained, following the [resource layout](reference-data.md#preservation-manifest).
+
+After the CDN reload, the APK downloaded the French strings with HTTP 200,
+fetched its account and entered the lobby. The user confirmed the lobby displays
+French text. Read-only inspection verified saved language `frFR` and a downloaded
+French cache file whose SHA-256 matches the local CDN copy. All five added
+resources passed local HTTP/hash checks, and no new rejected or unsupported API
+calls appeared. Other screens and their localized assets need separate APK checks.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all
