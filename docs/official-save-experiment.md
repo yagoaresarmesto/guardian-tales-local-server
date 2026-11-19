@@ -2006,7 +2006,7 @@ The guarded `/guild-war/enter` trial accepts native lowercase `isPartial` and
 returns correctly typed fresh UserRaid.GuildWar / GuildWarInfo collections in
 phase 1 for the cooperative lobby. It preserves existing account state and
 rejects nonempty saved War progress; battles, claims, purchases and other War
-APIs remain unfinished. Thirty-six new regressions and read-only real-account wire
+APIs remain unfinished. Forty new regressions and read-only real-account wire
 checks cover these contracts. The first APK trial reached the basic-course
 prerequisite popup and redirected to Play > Others, where the entry was absent.
 Metadata identifies the missing GuildWarSingle feature as 126. The derived static
@@ -2093,6 +2093,15 @@ The actual 2026 request passed on an in-memory account clone with only seen-help
 and its revision changing once; retries made no writes and the source stayed
 unchanged. After reload/reconnect the user confirmed continuation. The lab now
 uses multi-offense; Multi combat and persistent progression remain unfinished.
+
+The guild-information path next requested `/guild-war/get-ranking` and the
+separate `/guild-war/get-guild-coin-ranking`, each with native integer seasonId
+1. They now return empty native defense/coin ranking views: default rank zero
+with an empty RankingGuildEntry array, and an empty GuildWarCoinRewardRecord
+array. No other-guild ranks, coin settlement, points, rewards or profile changes
+are generated. Four regressions and both actual request/retry wire checks passed
+with query-only/read-only source SQLite and zero writes. The user confirmed each
+view loads after backend reload/reconnect.
 Bounded Windows sharing-lock retries
 also retain atomic selector publication after repeated transient test failures.
 See [usage and detailed limitations](guild-war.md).

@@ -22,6 +22,8 @@ from .reference import ReferenceData
 ROUTE = "/guild-war/enter"
 CASTLES = "/guild-war/get-all-castle-simple-infos"
 RECORDS = "/guild-war/get-battle-records"
+RANKING = "/guild-war/get-ranking"
+COIN_RANKING = "/guild-war/get-guild-coin-ranking"
 START_COOP = "/guild-war/start-coop-stage"
 END_COOP = "/guild-war/end-coop-stage/v2"
 ABANDON = "/guild-war/abandon-stage"
@@ -159,6 +161,20 @@ def battle_records(account, request):
     # Native result-to-lobby synchronization consumes three arrays, including
     # daily status. This stateless trial has no saved battles or guild rankings.
     return {"LatestBattleRecords": [], "CoopDefenseInGuildRanking": [], "DailyBattleStatus": []}
+
+
+def rankings(account, request):
+    season_read_context(account, request)
+    # Native fields are Int32 and RankingGuildEntry[]. Zero is the client's
+    # untouched rank value; this local trial has no ranked defense results.
+    return {"CoopDefenseMyGuildRank": 0, "CoopDefenseTopRanking": []}
+
+
+def coin_rankings(account, request):
+    season_read_context(account, request)
+    # Native coin-rank synchronization consumes GuildWarCoinRewardRecord[].
+    # No local battle points, settlement records or coin rewards are generated.
+    return {"GuildCoinRanking": []}
 
 
 def abandon_stage(account, request):

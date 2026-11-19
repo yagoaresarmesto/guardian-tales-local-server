@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **710 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **714 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and thirty Guild War regressions cover native entry schemas,
+Four guild meteor and thirty-four Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -90,6 +90,14 @@ real source writes. The user confirmed continuation after reload/reconnect.
 The lab currently selects `multi-offense`; `coop-offense` restores the verified
 cooperative attack path. Multi combat/results remain unfinished. Three phase
 and two scoped-guide regressions cover persistence, validation and state retention.
+
+Guild War's defense and coin ranking reads now return native empty views for
+season 1: zero/default CoopDefenseMyGuildRank with an empty CoopDefenseTopRanking,
+and an empty GuildCoinRanking array. They do not create ranks, settle battles or
+grant currency/rewards. The actual packets and repeats passed against real
+read-only source SQLite without writes or profile changes. The user confirmed
+both screens load after backend reload/reconnect. Four regressions cover native
+schemas, fresh/imported guards, retries and query-only state retention.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

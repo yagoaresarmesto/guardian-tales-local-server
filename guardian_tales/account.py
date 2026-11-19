@@ -53,7 +53,9 @@ from .guild_raid import rankings as guild_raid_rankings
 from .guild_raid import start_stage as enter_raid_stage
 from .guild_war import ABANDON as GUILD_WAR_ABANDON
 from .guild_war import CASTLES as GUILD_WAR_CASTLES
+from .guild_war import COIN_RANKING as GUILD_WAR_COIN_RANKING
 from .guild_war import END_COOP as GUILD_WAR_END_COOP
+from .guild_war import RANKING as GUILD_WAR_RANKING
 from .guild_war import RECORDS as GUILD_WAR_RECORDS
 from .guild_war import ROUTE as GUILD_WAR_ENTRY
 from .guild_war import START_COOP as GUILD_WAR_START_COOP
@@ -61,9 +63,11 @@ from .guild_war import UNLOCK as GUILD_WAR_UNLOCK
 from .guild_war import abandon_stage as abandon_guild_war_stage
 from .guild_war import battle_records as guild_war_battle_records
 from .guild_war import castle_infos as guild_war_castle_infos
+from .guild_war import coin_rankings as guild_war_coin_rankings
 from .guild_war import end_coop as end_guild_war_coop
 from .guild_war import enter as enter_guild_war
 from .guild_war import lobby_guide_ids as guild_war_lobby_guide_ids
+from .guild_war import rankings as guild_war_rankings
 from .guild_war import start_coop as start_guild_war_coop
 from .guild_war import unlock as unlock_guild_war
 from .hero_knowledge import claim_hero_knowledge
@@ -149,6 +153,8 @@ ACCOUNT_ROUTES = (
     GUILD_WAR_START_COOP,
     GUILD_WAR_END_COOP,
     GUILD_WAR_RECORDS,
+    GUILD_WAR_RANKING,
+    GUILD_WAR_COIN_RANKING,
     GUILD_WAR_UNLOCK,
     "/guild-raid2/reset",
     "/guild-raid2/enter",
@@ -1199,6 +1205,10 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route == GUILD_WAR_COIN_RANKING:
+            return guild_war_coin_rankings(self, request)
+        if route == GUILD_WAR_RANKING:
+            return guild_war_rankings(self, request)
         if route == GUILD_WAR_ABANDON:
             return abandon_guild_war_stage(self, request)
         if route == GUILD_WAR_RECORDS:

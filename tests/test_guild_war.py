@@ -21,8 +21,10 @@ from guardian_tales.guild_raid import select_season
 from guardian_tales.guild_war import (
     ABANDON,
     CASTLES,
+    COIN_RANKING,
     END_COOP,
     MAX_DAMAGE,
+    RANKING,
     RECORDS,
     ROUTE,
     START_COOP,
@@ -750,6 +752,80 @@ class GuildWarTests(unittest.TestCase):
             with self.assertRaises(PacketError):
                 self.call(None, ABANDON)
             self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_native_defense_ranking_view_is_empty_without_guild_progress_rewards_or_database_writes(
+        self,
+    ):
+        profile = self.install()
+        enable(self.ref, phase=3)
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        for _ in range(2):
+            self.assertEqual(
+                self.call({"seasonId": 1}, RANKING),
+                {"CoopDefenseMyGuildRank": 0, "CoopDefenseTopRanking": []},
+            )
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+
+    def test_ranking_requires_authenticated_enabled_trial_and_exact_known_native_season(self):
+        with self.assertRaises(PacketError):
+            self.call({"seasonId": 1}, RANKING)
+        self.install(False)
+        with self.assertRaises(PacketError):
+            self.call({"seasonId": 1}, RANKING)
+        enable(self.ref)
+        self.assertEqual(
+            self.call({"seasonId": 1}, RANKING),
+            {"CoopDefenseMyGuildRank": 0, "CoopDefenseTopRanking": []},
+        )
+        before = list(self.db.iterdump())
+        for body in (
+            None,
+            {},
+            {"SeasonId": 1},
+            {"seasonId": True},
+            {"seasonId": 2},
+            {"seasonId": 1, "Claim": True},
+        ):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, RANKING)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_native_guild_coin_ranking_is_an_empty_array_without_settlement_rewards_or_profile_writes(
+        self,
+    ):
+        profile = self.install()
+        enable(self.ref, phase=3)
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        for _ in range(2):
+            self.assertEqual(self.call({"seasonId": 1}, COIN_RANKING), {"GuildCoinRanking": []})
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+
+    def test_coin_ranking_requires_authenticated_enabled_trial_and_exact_native_season(self):
+        with self.assertRaises(PacketError):
+            self.call({"seasonId": 1}, COIN_RANKING)
+        self.install(False)
+        with self.assertRaises(PacketError):
+            self.call({"seasonId": 1}, COIN_RANKING)
+        enable(self.ref)
+        self.assertEqual(self.call({"seasonId": 1}, COIN_RANKING), {"GuildCoinRanking": []})
+        before = list(self.db.iterdump())
+        for body in (
+            None,
+            {},
+            {"SeasonId": 1},
+            {"seasonId": True},
+            {"seasonId": 2},
+            {"seasonId": 1, "Claim": True},
+        ):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(body, COIN_RANKING)
+        self.assertEqual(list(self.db.iterdump()), before)
 
     def test_cli_phase_choice_uses_native_values_and_survives_recomposition_without_account_changes(
         self,

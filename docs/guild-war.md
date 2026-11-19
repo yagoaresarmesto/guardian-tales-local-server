@@ -3,7 +3,7 @@
 The pinned Android 3.57.0 client contains separate meteor and Guild War screens.
 Meteor entry now loads a fresh local guild view. Guild War has an opt-in calendar
 and menu-entry trial, with guarded cooperative entry and result acknowledgments.
-Persistent damage/progression, rankings, castle writes, purchases and rewards
+Persistent damage/progression, competitive rankings, castle writes, purchases and rewards
 remain unfinished.
 
 ## Meteor entry
@@ -158,7 +158,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and thirty War regressions cover native schemas, fresh/imported
+Four meteor and thirty-four War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -254,6 +254,27 @@ verified that lobby with all three entries still available. The current process'
 bounded log check contained no missing-21644 or GuildWarResult exception frames.
 This verifies this cooperative attack result path, not Single/Multi combat or
 persistent War score/progression/rewards.
+
+## Empty ranking views
+
+The observed `/guild-war/get-ranking` request accepts exactly integer `seasonId:
+1`. Native SyncRankingInfo consumes CoopDefenseMyGuildRank (Int32) and
+CoopDefenseTopRanking (RankingGuildEntry[]). The local response keeps the native
+untouched rank value zero and returns an empty top list. No ranked defense result
+or other guild placement is invented. The user confirmed the preceding screen
+opens after reload/reconnect, then encountered the separate coin ranking request.
+
+`/guild-war/get-guild-coin-ranking` accepts the same season schema. Native
+SendGuildWarGetGuildCoinRanking consumes `GuildCoinRanking`, a
+GuildWarCoinRewardRecord array. The local response supplies an empty array, with
+no settlement records, generated points or reward/currency grant. After reload
+and reconnect the user confirmed that view loads too.
+
+Both reads share the enabled/valid trial, prologue, membership and preserved-war
+guards. Four regressions cover fresh/imported authentication, exact native
+capitalization/types, unsupported seasons, retries and query-only preservation.
+Each actual pending request and repeat passed through the session/wire codec on
+real read-only/query-only SQLite with zero writes or profile changes.
 
 ## Abandoning an unfinished stage
 

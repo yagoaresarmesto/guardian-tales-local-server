@@ -77,6 +77,8 @@ ACCOUNT_READS = frozenset(
         "/guild-war/start-coop-stage",
         "/guild-war/end-coop-stage/v2",
         "/guild-war/get-battle-records",
+        "/guild-war/get-ranking",
+        "/guild-war/get-guild-coin-ranking",
         "/user/claim-unlock-feature-rewards",
         "/guild-raid2/reset",
         "/guild-raid2/enter",
