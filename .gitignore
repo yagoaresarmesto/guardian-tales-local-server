@@ -1,4 +1,6 @@
 # Local credentials, reference captures, resources and persistent account state
+/import/*
+!/import/.gitkeep
 /local/*
 !/local/downloads/
 /local/downloads/*

@@ -235,6 +235,16 @@ roots with their manifests. Include a prepared initial ZIP in a root; create
 available on-demand ZIPs with [the archive builder](setup.md#build-on-demand-resource-archives)
 before packing. All raw members must also be indexed by the source manifests.
 
+The allowlist also supports the optional local-practice catalogs for imported
+progress, village/mastery, equipment/relic/jewel mocks, Orbital, Raid, Meteor and
+Dungeon Kingdom Arena. These catalogs retain their explicit policies, including
+configured free operations and debug grants. Review those policies when preparing
+a shared pack. Runtime season selectors, generated mode overlays, account saves
+and guest credentials are excluded. Select a season separately after installation.
+Older published packs remain valid; rebuilding is required to include catalogs
+or resources added since their release. Use the updated importer for packs that
+contain these newer catalog names.
+
 ```sh
 python -m guardian_tales content build --reference-dir local/reference --resource-root local/preserved/resources/files --resource-root local/ondemand-pack/resources/files --output local/new-release --content-id example-snapshot
 ```

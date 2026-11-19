@@ -60,6 +60,8 @@ def check_repository():
         if path.name.startswith(("KpUser", ".env")) or path.name == "global-metadata.dat":
             problems.append(f"Local-only input path: {relative}")
         data = path.read_bytes()
+        if Path(relative).parts[0] == "import" and (relative != "import/.gitkeep" or data):
+            problems.append(f"Private import input or nonempty placeholder: {relative}")
         if PRIVATE_KEY.search(data) or PERSONAL_PATH.search(data):
             problems.append(f"Private key or personal absolute path in: {relative}")
         if path.suffix == ".md":

@@ -94,6 +94,64 @@ class ContentPackTests(unittest.TestCase):
             import_pack(self.release / "content-manifest.json", output)
         self.assertFalse(output.exists())
 
+    def test_practice_catalogs_round_trip_without_saved_accounts_or_mode_selections(self):
+        names = (
+            "attendance_mock_catalog.json",
+            "basecamp_harvest_catalog.json",
+            "guardian_mastery_catalog.json",
+            "guardian_mastery_reset_catalog.json",
+            "guild_meteor_entry_catalog.json",
+            "guild_punchking_catalog.json",
+            "guild_raid_entry_catalog.json",
+            "imported_challenge_mission_catalog.json",
+            "imported_hero_knowledge_catalog.json",
+            "imported_training_catalog.json",
+            "jewel_decompose_mock_catalog.json",
+            "jewel_upgrade_mock_catalog.json",
+            "orbital_completion_catalog.json",
+            "orbital_entry_catalog.json",
+            "orbital_preset_catalog.json",
+            "relic_option_mock_catalog.json",
+            "stamina_regen_catalog.json",
+            "village_gift_mock_catalog.json",
+            "village_harvest_catalog.json",
+            "village_obstacle_mock_catalog.json",
+            "weapon_engrave_mock_catalog.json",
+            "weapon_enhance_debug_catalog.json",
+            "weapon_limit_break_mock_catalog.json",
+            "weapon_option_mock_catalog.json",
+        )
+        expected = {}
+        for name in names:
+            data = json.dumps({"synthetic_practice_catalog": name}).encode()
+            (self.reference / name).write_bytes(data)
+            expected[name] = data
+        excluded = (
+            "guild_raid_selection.json",
+            "guild_punchking_selection.json",
+            "guild_war_selection.json",
+            "guild_war_static_" + "0" * 64 + ".bin",
+            "guest_secrets.json",
+            "server.sqlite3",
+        )
+        for name in excluded:
+            (self.reference / name).write_bytes(b"synthetic private runtime state")
+        manifest = self.prepare()
+        for name in expected:
+            self.assertIn(name, manifest["references"])
+        for name in excluded:
+            self.assertNotIn(name, manifest["references"])
+            self.assertNotIn("reference/" + name, manifest["payload"])
+        output = self.folder / "installed"
+        self.assertEqual(
+            import_pack(self.release / "content-manifest.json", output)["result"], "PASS"
+        )
+        for name, data in expected.items():
+            self.assertEqual((output / "reference" / name).read_bytes(), data)
+        for name in excluded:
+            self.assertFalse((output / "reference" / name).exists())
+        self.assertEqual(check(output)["result"], "PASS")
+
     def test_unsafe_manifest_paths_and_account_reference_are_rejected(self):
         self.prepare()
         path = self.release / "content-manifest.json"

@@ -157,6 +157,12 @@ new rejected or unsupported API counters. The
 [arena selector guide](reference-data.md#dungeon-kingdom-arena-practice-selector)
 describes the required separate configuration.
 
+The owner also verified the French Raid menu, combat and return with local
+season 46 in the same clean client. The start and end routes succeeded without
+new rejected or unsupported API counters, and the saved profile remained
+identical to its pre-reset value. An in-memory preflight also passed the composed
+Raid 46 and DKA 1/day 1 static selection without account writes.
+
 ## Current implementation boundary
 
 The imported account uses a protected network mode. Account fetch and known reads

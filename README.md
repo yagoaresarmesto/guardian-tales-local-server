@@ -201,6 +201,7 @@ scripts/              Certificate generation and source-package checks
 docs/                 Setup, architecture, protocol and current status
 .github/workflows/    CI configuration
 local/                Runtime inputs and state; download instructions included
+import/               Private save/import staging; empty marker included
 ```
 
 The source tree excludes account databases, certificate keys, game archives,
@@ -210,6 +211,11 @@ separately as Release attachments with a [content notice](docs/content-notice.md
 The built-in templates contain empty local state, not a reference player's account.
 The tracked [download folder instructions](local/downloads/README.md) keep
 `local/downloads/` present after cloning; its downloaded files remain ignored.
+The `import/` folder is reserved for private saves and associated import inputs.
+Its empty `.gitkeep` retains the folder in clones and source ZIPs. Other contents
+are ignored by Git and rejected by source checks/packaging even if force-added.
+Follow the [save import and restore guide](docs/official-save-experiment.md);
+placing files in this folder alone does not load them into the backend.
 
 ## License
 
