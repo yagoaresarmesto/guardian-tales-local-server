@@ -38,6 +38,7 @@ Use the same reference directory as the backend:
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --attack-castle 21 --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-offense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-defense --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --reference-dir local/client-data/reference
@@ -175,7 +176,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and fifty-nine War regressions cover native schemas, fresh/imported
+Four meteor and sixty-three War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -327,8 +328,9 @@ GuildBuffIds/CastleBuffIds; completion consumes Cancelled, GuildWarInfo and
 AddedItems and uses the same policy-5 participation-reward suppression.
 
 The server accepts only SiegeStageIds in the unique season CastleStageGroupId
-set for each grade present in the active castle deployment. The preserved
-season has 16 allowed stages, four per grade. Missing/ambiguous sets, duplicates,
+set for grades present in the active castle deployment. Without a selected target,
+the preserved season has 16 allowed stages, four per grade. Selecting a target
+restricts combat to its grade's four stages. Missing/ambiguous sets, duplicates,
 out-of-range IDs, other-season/group stages, cooperative stages and defense
 stages reject. The native request contains stageId/presetId, without a castle ID;
 this is a catalog-bound combat trial, not persistent target/capture settlement.
@@ -351,8 +353,40 @@ profile, immutable source static body and persisted selection were unchanged by
 that check. Requests were inferred from the native contract. After reload/full
 restart the user confirmed the menu opens but reported stage entry may be
 unavailable. A read-only native probe found phase 3, IsBattleRound true and no
-pending request. The exact blocked control, APK battle and result/menu return
-remain unverified.
+pending request. The user then confirmed the only visible blank bottom button
+returns to the map, and that the window was opened from a blue castle.
+
+### Selecting a local siege target
+
+Read-only native inspection identified castle 21 in phase 3 with the combat round
+active, no selected target (MarkedCastleId zero), isMarked false, no cooperative
+prerequisite block and no season-end block. Native SetBattleUI selects the
+`not_marked` button state in that case. `--attack-castle ID` now explicitly marks
+one native castle as the local siege target, without fabricating a rival guild,
+capturing a castle or saving guild/account progress. Entry supplies MarkedCastleId
+and only that map row has MarkingCount 1. CaptureGuildId and CapturedCastleId stay
+zero. The selected target's native grade restricts start/end to its SiegeStageIds.
+
+For example, enable `multi-offense --attack-castle 21` using the full command
+above. Fully close/reopen the game and select the marked castle. IDs 1/2/4/8 are
+examples of the four source grades; 21 shares grade 1 with castle 1. Use
+`--attack-castle 0` for the unmarked map. Omitting the flag in phase 3 retains the
+target, including parent/calendar refresh; choosing another phase clears it.
+A positive target in another phase, bad types or IDs outside the deployment
+reject before publishing. Legacy selections without the key stay unmarked.
+The defense selector remains independent and phase-4-only.
+
+Four additional regressions cover consistent entry/map views, selected-grade
+battle guards, no writes, refresh/reset/phase/legacy behavior, invalid input,
+atomic rejection and CLI status. Repeated real-source read-only entry/map/detail
+and all four target-21 stage start/end wire checks passed; another-grade stage
+rejected. The profile, immutable source and persisted selection were unchanged
+by the check. The backend was reloaded and target 21 selected for the APK trial.
+After full restart the user confirmed the entry button appears and opens the
+four-stage selection, then confirmed an attack stage loads and is playable.
+The user then confirmed the result and return to the castle menu. The particular
+victory/defeat outcome was not separately identified. The existing empty labels
+in the castle popup remain unresolved.
 
 ## Remaining guild-information UI issues
 

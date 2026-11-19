@@ -1216,6 +1216,124 @@ class GuildWarTests(unittest.TestCase):
             self.assertEqual(self.db.total_changes, writes)
             self.db.execute("PRAGMA query_only=OFF")
 
+    def test_siege_target_marks_one_neutral_castle_and_limits_battles_to_its_grade_without_writes(
+        self,
+    ):
+        profile = self.install()
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        for castle, stages, other_stage in (
+            (1, {850050077, 850050079, 850050090, 850050094}, 850050005),
+            (2, {850050005, 850050007, 850050018, 850050022}, 850050077),
+        ):
+            selection = enable(self.ref, phase=3, attack_castle=castle)
+            self.assertEqual(offense_stage_ids(self.ref, selection), stages)
+            view = self.call({"isPartial": True})["GuildWarInfo"]
+            self.assertEqual((view["MarkedCastleId"], view["CapturedCastleId"]), (castle, 0))
+            rows = self.call({"seasonId": 1}, CASTLES)["CastleSimpleInfos"]
+            self.assertTrue(all(row["CaptureGuildId"] == row["CaptureDays"] == 0 for row in rows))
+            self.assertEqual(
+                [row["CastleId"] for row in rows if row["MarkingCount"] == 1], [castle]
+            )
+            for row in rows:
+                self.assertEqual(row["MarkingCount"], int(row["CastleId"] == castle))
+            detail = self.call({"castleId": castle}, CASTLE_DETAIL)
+            self.assertEqual(detail["CaptureGuildId"], 0)
+            self.assertEqual(detail["BattleHistory"], {})
+            for stage in stages:
+                self.assertEqual(
+                    self.call({"stageId": stage, "presetId": 701}, START_MULTI),
+                    {"GuildBuffIds": [], "CastleBuffIds": []},
+                )
+                self.assertEqual(
+                    self.call({"stageId": stage, "damages": [0], "additionalDamage": 0}, END_MULTI),
+                    {"Cancelled": False, "GuildWarInfo": view, "AddedItems": []},
+                )
+            for route, body in (
+                (START_MULTI, {"stageId": other_stage, "presetId": 701}),
+                (END_MULTI, {"stageId": other_stage, "damages": [0], "additionalDamage": 0}),
+            ):
+                with self.subTest(route=route), self.assertRaises(PacketError):
+                    self.call(body, route)
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+        self.assertEqual(self.source.read_bytes(), self.original)
+
+    def test_siege_target_survives_refresh_and_clears_on_reset_phase_change_or_legacy_selection(
+        self,
+    ):
+        selection = enable(self.ref, phase=3, attack_castle=1)
+        self.assertEqual(enable(self.ref)["attack_castle"], 1)
+        self.assertEqual(enable(self.ref)["period"], selection["period"])
+        self.now += timedelta(days=8)
+        bootstrap_override(self.ref, "static_data_check.bin", {})
+        self.assertEqual(load_selection(self.ref)["attack_castle"], 1)
+        self.assertEqual(enable(self.ref, attack_castle=0)["attack_castle"], 0)
+        enable(self.ref, attack_castle=1)
+        defense = enable(self.ref, phase=4, defend_castle=2)
+        self.assertEqual((defense["attack_castle"], defense["defend_castle"]), (0, 2))
+        offense = enable(self.ref, phase=3)
+        self.assertEqual((offense["attack_castle"], offense["defend_castle"]), (0, 0))
+        offense.pop("attack_castle")
+        (self.root / SELECTION).write_text(json.dumps(offense))
+        self.assertEqual(load_selection(self.ref).get("attack_castle", 0), 0)
+
+    def test_siege_target_selector_rejects_invalid_types_phases_and_deployments_atomically(self):
+        self.install()
+        enable(self.ref, phase=3, attack_castle=1)
+        path = self.root / SELECTION
+        saved = path.read_bytes()
+        for value in (True, 1.0, "1", -1, 0x80000000, 101, 999):
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                enable(self.ref, attack_castle=value)
+            self.assertEqual(path.read_bytes(), saved)
+        for phase in (1, 2, 4):
+            with self.subTest(phase=phase), self.assertRaises(ValueError):
+                enable(self.ref, phase=phase, attack_castle=1)
+            self.assertEqual(path.read_bytes(), saved)
+        original = json.loads(saved)
+        for changes in ({"attack_castle": True}, {"attack_castle": -1}, {"phase": 4}):
+            path.write_text(json.dumps(original | changes))
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                load_selection(self.ref)
+        path.write_text(json.dumps(original | {"attack_castle": 999}))
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        with self.assertRaises(PacketError):
+            self.call({"isPartial": True})
+        with self.assertRaises(ValueError):
+            offense_stage_ids(self.ref, load_selection(self.ref))
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+
+    def test_siege_target_command_reports_explicit_target_status_and_reset(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            main(
+                [
+                    "enable",
+                    "--phase",
+                    "multi-offense",
+                    "--attack-castle",
+                    "2",
+                    "--reference-dir",
+                    str(self.root),
+                ]
+            )
+        result = json.loads(output.getvalue())
+        self.assertEqual(
+            (result["local_attack_castle"], result["local_defense_castle"], result["phase"]),
+            (2, 0, 3),
+        )
+        output = io.StringIO()
+        with redirect_stdout(output):
+            main(["status", "--reference-dir", str(self.root)])
+        self.assertEqual(json.loads(output.getvalue())["local_attack_castle"], 2)
+        output = io.StringIO()
+        with redirect_stdout(output):
+            main(["enable", "--attack-castle", "0", "--reference-dir", str(self.root)])
+        self.assertEqual(json.loads(output.getvalue())["local_attack_castle"], 0)
+
     def test_defense_castle_selection_is_retained_on_refresh_and_cleared_explicitly_or_on_phase_change(
         self,
     ):

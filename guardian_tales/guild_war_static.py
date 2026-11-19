@@ -49,7 +49,7 @@ def load_selection(references):
     value = references.json(SELECTION)
     if (
         not isinstance(value, dict)
-        or set(value) - {"skip_basic", "overlay_policy", "phase", "defend_castle"}
+        or set(value) - {"skip_basic", "overlay_policy", "phase", "defend_castle", "attack_castle"}
         != {"client", "season_id", "period", "base_sha256"} | MANIFEST_KEYS
         or "overlay_policy" in value
         and (
@@ -63,6 +63,10 @@ def load_selection(references):
         or not 0 <= value.get("defend_castle", 0) <= 0x7FFFFFFF
         or value.get("defend_castle", 0) > 0
         and value.get("phase", 1) != 4
+        or type(value.get("attack_castle", 0)) is not int
+        or not 0 <= value.get("attack_castle", 0) <= 0x7FFFFFFF
+        or value.get("attack_castle", 0) > 0
+        and value.get("phase", 1) != 3
         or value["client"] != CLIENT
         or type(value["season_id"]) is not int
         or value["season_id"] != 1
@@ -87,7 +91,9 @@ def load_selection(references):
     return value
 
 
-def enable(references, source=None, skip_basic=None, phase=None, defend_castle=None):
+def enable(
+    references, source=None, skip_basic=None, phase=None, defend_castle=None, attack_castle=None
+):
     source = base_body(references) if source is None else source
     lines, items = records(decode(source))
     if (
@@ -141,6 +147,17 @@ def enable(references, source=None, skip_basic=None, phase=None, defend_castle=N
         )
     if defend_castle and defend_castle not in {row[0] for row in _castle_specs(source, 1)}:
         raise ValueError("Select a defense castle from the enabled native deployment")
+    if attack_castle is None:
+        attack_castle = (previous or {}).get("attack_castle", 0) if phase == 3 else 0
+    if (
+        type(attack_castle) is not int
+        or not 0 <= attack_castle <= 0x7FFFFFFF
+        or attack_castle > 0
+        and phase != 3
+    ):
+        raise ValueError("A local siege target requires phase multi-offense and a native castle ID")
+    if attack_castle and attack_castle not in {row[0] for row in _castle_specs(source, 1)}:
+        raise ValueError("Select a siege target from the enabled native deployment")
     skip_basic = (previous or {}).get("skip_basic", False) if skip_basic is None else skip_basic
     if type(skip_basic) is not bool:
         raise ValueError("Guild War skip-basic policy must be Boolean")
@@ -302,6 +319,7 @@ def enable(references, source=None, skip_basic=None, phase=None, defend_castle=N
         "skip_basic": skip_basic,
         "phase": phase,
         "defend_castle": defend_castle,
+        "attack_castle": attack_castle,
         "overlay_policy": OVERLAY_POLICY,
         "static_data_sha256": sha256,
         "static_data_checksum": checksum,
@@ -384,12 +402,19 @@ def defense_stage_ids(references, selection):
 def offense_stage_ids(references, selection):
     if selection.get("phase", 1) != 3:
         raise ValueError("Select multi-offense before entering a Fortress siege stage")
-    return _offense_stage_ids(prepared_body(references, selection), selection["season_id"])
+    return _offense_stage_ids(
+        prepared_body(references, selection),
+        selection["season_id"],
+        selection.get("attack_castle", 0),
+    )
 
 
 @lru_cache(maxsize=2)
-def _offense_stage_ids(body, season_id):
-    grades = {row[2] for row in _castle_specs(body, season_id)}
+def _offense_stage_ids(body, season_id, castle_id):
+    castles = {row[0]: row for row in _castle_specs(body, season_id)}
+    if castle_id and castle_id not in castles:
+        raise ValueError("The selected siege target is missing from the native deployment")
+    grades = {castles[castle_id][2]} if castle_id else {row[2] for row in castles.values()}
     _, items = records(decode(body))
     war = json.loads(items["guildwar"][1])
     group = war["Seasons"][0].get("CastleStageGroupId")

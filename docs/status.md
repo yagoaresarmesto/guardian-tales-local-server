@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **739 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **743 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and fifty-nine Guild War regressions cover native entry schemas,
+Four guild meteor and sixty-three Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -178,7 +178,23 @@ an unchanged profile/source body and unchanged persisted selection. No target
 capture, score, attempt, lock, resource cost or reward is saved. After reload/full
 restart the user confirmed the menu loads but reported stage entry may be
 unavailable. A read-only native probe found phase 3, IsBattleRound true and no
-pending API. The exact blocked control and APK battle/result remain unverified.
+pending API. The following target-selection check identified the blocked control.
+
+The user then confirmed that the blue-castle popup only offers a blank bottom
+button that returns to the map. Read-only native fields showed castle 21,
+phase 3, combat round active, MarkedCastleId zero and isMarked false, with no
+cooperative/season-end block. Native button setup selects `not_marked` there.
+The new phase-3 `--attack-castle` selector supplies one explicit local target and
+one map marking, retaining zero ownership and no saved progress. Its grade's
+four siege stages are accepted; other grades reject. Zero clears the target,
+phase-3 omission/refresh retains it, and another phase clears it. Legacy sidecars
+stay unmarked. Four regressions and repeated real-source read-only wire checks
+passed without profile/source/selection changes or writes. The backend is
+reloaded with target 21. After full restart the user confirmed the entry button
+opens the stage selection, then confirmed an attack stage loads and is playable.
+The user then confirmed the result and return to the castle menu. The particular
+victory/defeat outcome was not separately identified.
+The pre-existing empty castle-popup labels also remain unresolved.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

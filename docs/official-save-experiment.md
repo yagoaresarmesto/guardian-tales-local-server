@@ -2215,6 +2215,23 @@ the user confirmed the menu loads, but stage entry may be unavailable. A native
 read-only probe found phase 3, IsBattleRound true and no pending request; actual
 APK combat and result/menu return remain unverified.
 
+The user clarified that the blue-castle popup has only one blank bottom button,
+which closes it. A read-only native probe identified castle 21 in phase 3 with
+combat active, MarkedCastleId zero, isMarked false and no cooperative/season-end
+block. Native SetBattleUI uses the `not_marked` button layout. The explicit
+`--attack-castle` selector now provides a local marked siege target, without
+invented rival ownership, capture, resources or saved guild progress. The map
+marks only that target and combat is restricted to its native grade's four siege
+stages. Phase-3 omission/refresh retains it, zero resets it, and another phase
+clears it; legacy selectors remain unmarked. Four regressions and real-source
+read-only target-21 entry/map/detail/start/end/retry checks passed, with another
+grade rejected and no writes or source/profile/selection changes. The backend
+was reloaded and target 21 selected. After full restart the user confirmed the
+entry button opens the stage selection, then an attack stage loads and is
+playable. The user then confirmed the result and return to the castle menu;
+the particular victory/defeat outcome was not separately identified.
+The existing empty labels remain a separate unresolved UI issue.
+
 ## Host readiness before the APK check
 
 The fresh Windows clone imported the public Release content successfully: all

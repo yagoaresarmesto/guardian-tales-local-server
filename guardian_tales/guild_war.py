@@ -84,8 +84,12 @@ def enter(account, request):
     if not start <= now < end:
         raise ValueError("Restart the game to refresh its Guild War calendar")
     defense_castle = selection.get("defend_castle", 0)
-    if defense_castle and defense_castle not in castle_specs(account.references, selection):
-        raise ValueError("The local defense castle is not in the enabled deployment")
+    attack_castle = selection.get("attack_castle", 0)
+    if any(
+        value and value not in castle_specs(account.references, selection)
+        for value in (defense_castle, attack_castle)
+    ):
+        raise ValueError("The local trial castle is not in the enabled deployment")
     if account.needs_prologue():
         raise ValueError("Complete the prologue before entering Guild War")
     guild = own_guild(account, None)["Guild"]
@@ -121,7 +125,7 @@ def enter(account, request):
             "CanRewards": [],
             "CoopOffenseDamage": 0,
             "CoopDefenseDamage": 0,
-            "MarkedCastleId": 0,
+            "MarkedCastleId": attack_castle,
             "CapturedCastleId": defense_castle,
             "LatestBattleCastleId": 0,
             "BuffIds": [],
@@ -166,6 +170,7 @@ def castle_infos(account, request):
     specs = castle_specs(account.references, load_selection(account.references))
     castle = view["GuildWarInfo"]["CapturedCastleId"]
     owner = own_guild(account, None)["Guild"]["Id"] if castle else 0
+    marked = view["GuildWarInfo"]["MarkedCastleId"]
     # Native Multi lobby needs a row for each selectable castle. The map comes
     # from the matching static deployment. Only an explicit defense selection
     # supplies local ownership; it never persists a captured castle.
@@ -174,7 +179,7 @@ def castle_infos(account, request):
             {
                 "CastleId": value,
                 "CaptureGuildId": owner if value == castle else 0,
-                "MarkingCount": 0,
+                "MarkingCount": int(value == marked),
                 "CaptureDays": 0,
             }
             for value in specs
@@ -370,6 +375,11 @@ def main(argv=None):
         help="Present one native castle as locally owned in multi-defense; 0 clears the mock",
     )
     parser.add_argument(
+        "--attack-castle",
+        type=int,
+        help="Mark one native siege target in multi-offense without saving guild progress; 0 clears it",
+    )
+    parser.add_argument(
         "--skip-basic",
         action="store_true",
         help="Temporarily waive the basic-course prerequisite without recording stage clears",
@@ -383,6 +393,7 @@ def main(argv=None):
                 skip_basic=args.skip_basic,
                 phase=PHASES[args.phase] if args.phase else None,
                 defend_castle=args.defend_castle,
+                attack_castle=args.attack_castle,
             )
         elif args.action == "disable":
             (references.directory / SELECTION).unlink(missing_ok=True)
@@ -409,6 +420,7 @@ def main(argv=None):
                         else None
                     ),
                     "local_defense_castle": selection.get("defend_castle", 0) if selection else 0,
+                    "local_attack_castle": selection.get("attack_castle", 0) if selection else 0,
                     "scope": "Experimental menus; free cooperative and Fortress siege/selected-castle defense entry/exit; persistent progression, score and rewards are not implemented",
                     "apply": "Fully close and reopen the game after enable/disable; Raid selection and saved account are retained",
                 },
