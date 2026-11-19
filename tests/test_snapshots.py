@@ -237,7 +237,8 @@ class SnapshotTests(unittest.TestCase):
             valid = {"isPartial": False, "lastLobbyShopUpdated": "2026-01-01T00:00:00Z"}
             for body in (
                 {**valid, "isPartial": 0},
-                {**valid, "lastLobbyShopUpdated": None},
+                {**valid, "lastLobbyShopUpdated": 0},
+                {**valid, "lastLobbyShopUpdated": False},
                 {**valid, "lastLobbyShopUpdated": "2026-99-99T00:00:00Z"},
                 {**valid, "lastLobbyShopUpdated": "2026-01-01T00:00:00"},
                 {**valid, "lastLobbyShopUpdated": "synthetic-private-value"},
@@ -249,6 +250,42 @@ class SnapshotTests(unittest.TestCase):
                 self.assertNotIn("synthetic-private-value", str(error.exception))
             self.assertEqual(db.total_changes, before)
             self.assertEqual(session.store.account.profile(), self.snapshot["profile"])
+
+    def test_fresh_guest_session_loads_imported_village_without_shop_cache(self):
+        import_snapshot(self.source, self.state)
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            store = GuestStore(db)
+            session = BootstrapSession(store)
+            credentials = store.platform_credentials()
+            signed_in = json.loads(
+                session.handle(
+                    request(
+                        "/auth/sign-in",
+                        {
+                            "AuthKind": 0,
+                            "AccessToken": credentials["kongAccessToken"],
+                            "Reconnect": False,
+                        },
+                    )
+                ).body
+            )
+            self.assertFalse(signed_in["NeedPrologue"])
+            self.assertEqual(
+                json.loads(session.handle(request("/auth/fetch-account")).body),
+                self.snapshot["profile"],
+            )
+            changes = db.total_changes
+            expected = self.snapshot["startup_reads"]["/lobby-village/enter"]["value"]
+            for partial in (False, True):
+                response = session.handle(
+                    request(
+                        "/lobby-village/enter",
+                        {"isPartial": partial, "lastLobbyShopUpdated": None},
+                    )
+                )
+                self.assertEqual(json.loads(response.body), expected)
+            self.assertEqual(db.total_changes, changes)
+            self.assertEqual(store.account.profile(), self.snapshot["profile"])
 
     def test_imported_event_coupon_check_preserves_counters_and_inventory(self):
         self.snapshot["profile"]["UserShop"]["SummonPickUpTickets"] = {"12": 7, "17": 0}

@@ -164,15 +164,20 @@ def validate_preserved_request(route, body):
         or not isinstance(body, dict)
         or set(body) != {"isPartial", "lastLobbyShopUpdated"}
         or type(body["isPartial"]) is not bool
-        or not isinstance(body["lastLobbyShopUpdated"], str)
-        or not re.fullmatch(
-            r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})",
-            body["lastLobbyShopUpdated"],
-        )
+    ):
+        raise ValueError("Unsupported parameters for a preserved startup read")
+    # A clean installation has no shop cache. Both cache hints still receive the
+    # preserved full village; they never initialize or refresh shop state.
+    timestamp = body["lastLobbyShopUpdated"]
+    if timestamp is None:
+        return
+    if not isinstance(timestamp, str) or not re.fullmatch(
+        r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,7})?(?:Z|[+-]\d{2}:\d{2})",
+        timestamp,
     ):
         raise ValueError("Unsupported parameters for a preserved startup read")
     try:
-        datetime.fromisoformat(body["lastLobbyShopUpdated"])
+        datetime.fromisoformat(timestamp)
     except ValueError as error:
         raise ValueError("Invalid village shop cache timestamp") from error
     # These are native cache hints. This imported account returns its preserved

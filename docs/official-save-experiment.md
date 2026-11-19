@@ -89,6 +89,40 @@ the prologue. The local platform issues its own guest UUID and credentials.
 Reopening the database preserves the profile. Catalog startup does not unlock
 additional stages or rewrite imported progress.
 
+## Restore an existing local account into a clean client
+
+An existing local SQLite backup is different from the original snapshot JSON.
+Restore the complete `server.sqlite3` into a separate empty state directory to
+retain later equipment changes, presets, currencies, receipts and local identity.
+Stop the source backend before preparing the backup, verify SQLite integrity and
+keep the original copy private. Refuse an existing destination database rather
+than overwriting another save. The `snapshot import` command above accepts the
+validated JSON format; it does not restore an SQLite backup.
+
+Use an independent checkout, virtual environment, compatible content, certificates
+and [dedicated MuMu instance](mumu-client.md). Select the restored state explicitly
+with `serve --data-dir`; the database stays on the host. Install the matching base
+APK and split into the new instance without copying Android preferences, SDK
+credentials or downloaded game data. The local Guest option supplies local
+platform credentials and selects the account already in that state directory.
+
+The Windows reproduction on `experiment/clean-apk-import` used a backup whose
+57 tables matched the stopped source, plus a newly installed 3.57.0/431 APK.
+The public content check passed for 15,915 resources and 19 reference files.
+An in-memory check passed local guest sign-in, exact profile fetch and the four
+preserved startup reads. The clean APK subsequently completed local platform
+sign-up, game sign-in, resource downloads and account fetch, then its first
+village request was rejected because `lastLobbyShopUpdated` was null. This is a
+missing client cache hint. It is now accepted with either Boolean partial flag,
+returning the full preserved village with no writes. Invalid non-null timestamps,
+wrong types and unexpected fields still reject. A new authenticated-session
+regression and the real request on an in-memory backup passed; the snapshot and
+bootstrap modules pass 34 tests. After reloading the backend and restarting the
+APK, the owner confirmed the lobby loads. Access after that restart reused the
+local session created during the first attempt; the owner did not separately
+verify pressing Guest again. This establishes restored-profile lobby entry, while
+a final repeat with cleared app data and explicit Guest selection remains pending.
+
 ## Current implementation boundary
 
 The imported account uses a protected network mode. Account fetch and known reads
@@ -207,10 +241,11 @@ result or a claim of complete account preservation.
 The first imported APK attempt stopped at `/lobby-village/enter`: the preserved
 read handler had incorrectly required every startup request to be empty. The
 native `SendEnterLobbyVillage` builder and the live pending request both establish
-`isPartial` as a Boolean and `lastLobbyShopUpdated` as a timestamp with an offset.
-The handler now validates those exact cache hints, including seven-digit .NET
-fractional seconds, and returns the preserved full village without refreshing its
-shop or changing the account. Other preserved reads still reject unexpected
+`isPartial` as a Boolean and `lastLobbyShopUpdated` as a nullable timestamp. A
+cached installation supplies an offset timestamp; a clean installation supplies
+null. The handler validates those exact cache hints, including seven-digit .NET
+fractional seconds, and returns the preserved full village without refreshing
+its shop or changing the account. Other preserved reads still reject unexpected
 parameters. Empty bodies remain accepted for existing local probes.
 
 Regressions cover both partial flags, timestamp bounds/types, invalid parameters,
