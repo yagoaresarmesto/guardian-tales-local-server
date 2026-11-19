@@ -13,7 +13,8 @@ A fresh APK installation then signed in as a new local guest, downloaded and
 extracted the initial content, and completed the prologue through this bridge
 using the public Release pack. The selected additional-resource download also
 completed after restarting the CDN; its 1,753 installed on-demand files matched
-the pack's SHA-256 hashes. The initial transfer cuts remain unexplained; later
+the pack's SHA-256 hashes. Those early transfer cuts were not diagnosed in that
+run. A later clean-import reproduction and the CDN adjustment are described below;
 gameplay remains subject to the [documented coverage](status.md).
 
 ## 1. Prepare the dedicated instance
@@ -76,6 +77,32 @@ The bridge verifies the backend's hostname certificates and the CDN before
 changing the emulator. It does not turn off TLS verification.
 The CDN terminal prints `Local CDN: manifest-listed resource files: ...`.
 Its local journal records requested paths, availability and HTTP response codes.
+
+### Download transfers through ADB reverse
+
+Use the current CDN before a large additional-resource download. It serves
+HTTP/1.1 with explicit response lengths, supporting persistent connections and
+byte ranges. Idle connections have a 30-second socket timeout. Response journal
+entries are written after each request, including requests on a reused connection;
+query strings, cookies and authentication headers are excluded.
+
+In the clean-import Windows lab, the APK reported Curl error 18 despite HTTP 200
+responses. A cached ZIP contained 2,872,320 of the server's 2,873,569 bytes. An
+Android curl comparison through a temporary reverse mapping reproduced the same
+1,249-byte tail loss with the HTTP/1.0 handler: seven of eight downloads matched.
+All eight HTTP/1.1 downloads matched their SHA-256. This is evidence for that
+transport case, not a diagnosis of every earlier interrupted download.
+
+After restarting the updated CDN, the owner reported the additional download
+finished. A read-only comparison verified all 1,738 selected English-voice
+on-demand content files against the local manifests. ZIP staging files and ETag
+metadata are counted separately. The owner then completed the downloaded-file
+check/organization. All 1,738 content hashes still matched afterward, and the
+incomplete ZIP staging file had been removed. Persistent full/HEAD/conditional/range
+requests and one-response-per-request journaling have automated regression coverage.
+
+If an already running CDN predates an update, reload that CDN before retrying the
+download. The backend and bridge can remain active while an idle CDN is reloaded.
 
 ## 4. Run a short routing check, then the play session
 

@@ -43,6 +43,9 @@ class ResourceLibrary:
 
 def handler_for(library, journal=None):
     class Handler(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.1"
+        timeout = 30
+
         def log_message(self, *args):
             pass
 
@@ -50,11 +53,14 @@ def handler_for(library, journal=None):
             self.response_code = code
             return super().send_response(code, message)
 
-        def finish(self):
+        def handle_one_request(self):
+            self.response_code = None
+            self.command = None
+            self.path = ""
             try:
-                return super().finish()
+                return super().handle_one_request()
             finally:
-                if journal:
+                if journal and self.response_code is not None:
                     with Path(journal).open("a", encoding="utf-8") as out:
                         out.write(
                             json.dumps(

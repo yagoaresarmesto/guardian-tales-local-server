@@ -221,6 +221,7 @@ rights and is not relicensed by this project. See [content notice](content-notic
 | SHA-256 verification fails | Re-download the named release part from the same release; do not edit the manifest |
 | Output directory is not empty | Choose a new content output folder; retain your separate state folder |
 | Download dialog fails or CDN returns 404 | Check both processes, the resource root and import result; the health URL tests only the backend |
+| Download fails with Curl error 18 despite HTTP 200 | Reload the current CDN for persistent HTTP/1.1 transfers, then retry; see the [ADB reverse transfer check](mumu-client.md#download-transfers-through-adb-reverse) |
 | Clean client cannot load static tables | Use `--reference-dir local/client-data/reference`; the source-only default is not this content directory |
 | APK cannot connect but health works | Check the Android bridge, game hostname routing, received TLS certificate and trust |
 | Another APK/region requests missing files | Return to the pinned compatible baseline; this pack is not a universal version converter |
