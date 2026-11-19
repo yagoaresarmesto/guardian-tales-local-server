@@ -13,6 +13,7 @@ from .guild_war_static import (
     SELECTION,
     castle_specs,
     cooperative_stage_ids,
+    defense_stage_ids,
     enable,
     load_selection,
     utc_now,
@@ -29,6 +30,8 @@ RANKING = "/guild-war/get-ranking"
 COIN_RANKING = "/guild-war/get-guild-coin-ranking"
 START_COOP = "/guild-war/start-coop-stage"
 END_COOP = "/guild-war/end-coop-stage/v2"
+START_MULTI = "/guild-war/start-multi-stage"
+END_MULTI = "/guild-war/end-multi-stage/v2"
 ABANDON = "/guild-war/abandon-stage"
 MAX_DAMAGE = 0x7FFFFFFFFFFFFFFF
 UNLOCK = "/user/claim-unlock-feature-rewards"
@@ -283,7 +286,7 @@ def start_coop(account, request):
     return {}
 
 
-def end_coop(account, request):
+def check_result_request(request):
     if (
         not isinstance(request, dict)
         or set(request) != {"stageId", "damages", "additionalDamage"}
@@ -295,9 +298,11 @@ def end_coop(account, request):
         or not 0 <= request["additionalDamage"] <= MAX_DAMAGE
         or sum(request["damages"]) + request["additionalDamage"] > MAX_DAMAGE
     ):
-        raise ValueError(
-            "Guild War cooperative exit requires a stage and nonnegative int64 damages"
-        )
+        raise ValueError("Guild War exit requires a stage and nonnegative int64 damages")
+
+
+def end_coop(account, request):
+    check_result_request(request)
     view = enter(account, {"isPartial": True})
     if view["GuildWarInfo"]["Phase"] not in (1, 2):
         raise ValueError("Select a cooperative Guild War phase and reopen its lobby")
@@ -307,6 +312,38 @@ def end_coop(account, request):
     # The native result callback refreshes GuildWarInfo and consumes AddedItems.
     # A free trial exit acknowledges the result without validating/persisting
     # damage, recording attempts/clears or granting rewards.
+    return {"Cancelled": False, "GuildWarInfo": view["GuildWarInfo"], "AddedItems": []}
+
+
+def defense_context(account, stage_id):
+    view = enter(account, {"isPartial": True})
+    selection = load_selection(account.references)
+    if stage_id not in defense_stage_ids(account.references, selection):
+        raise ValueError("Select a defense stage for the trial's owned castle grade")
+    return view
+
+
+def start_multi(account, request):
+    if (
+        not isinstance(request, dict)
+        or set(request) != {"stageId", "presetId"}
+        or type(request["stageId"]) is not int
+        or type(request["presetId"]) is not int
+        or not 700 <= request["presetId"] < 800
+    ):
+        raise ValueError("Fortress defense entry requires native stageId and owned presetId")
+    defense_context(account, request["stageId"])
+    owned_party_preset(account.db, account.profile(), request["presetId"])
+    # Native Multi entry reads two int arrays before loading the local stage.
+    # No trial guild/castle upgrades or buffs are manufactured.
+    return {"GuildBuffIds": [], "CastleBuffIds": []}
+
+
+def end_multi(account, request):
+    check_result_request(request)
+    view = defense_context(account, request["stageId"])
+    # Acknowledge the local result without validating/storing damage, captures,
+    # attempts or locks. Policy 5 also suppresses client-added coin/medal items.
     return {"Cancelled": False, "GuildWarInfo": view["GuildWarInfo"], "AddedItems": []}
 
 
@@ -366,7 +403,7 @@ def main(argv=None):
                         else None
                     ),
                     "local_defense_castle": selection.get("defend_castle", 0) if selection else 0,
-                    "scope": "Experimental menus and free cooperative combat entry/exit; progression, score and rewards are not implemented",
+                    "scope": "Experimental menus; free cooperative and selected-castle Fortress defense entry/exit; persistent progression, score and rewards are not implemented",
                     "apply": "Fully close and reopen the game after enable/disable; Raid selection and saved account are retained",
                 },
                 indent=2,

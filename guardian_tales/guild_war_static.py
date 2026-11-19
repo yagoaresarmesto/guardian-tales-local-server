@@ -23,7 +23,7 @@ from .snapshots import CLIENT
 
 SELECTION = "guild_war_selection.json"
 FEATURE_ID = 126
-OVERLAY_POLICY = 4
+OVERLAY_POLICY = 5
 PHASES = {"coop-offense": 1, "coop-defense": 2, "multi-offense": 3, "multi-defense": 4}
 START_INACTIVE = "2000-01-01T00:00:00+00:00"
 END_INACTIVE = "2000-01-07T23:59:59+00:00"
@@ -54,7 +54,7 @@ def load_selection(references):
         or "overlay_policy" in value
         and (
             type(value["overlay_policy"]) is not int
-            or value["overlay_policy"] not in (3, OVERLAY_POLICY)
+            or value["overlay_policy"] not in (3, 4, OVERLAY_POLICY)
         )
         or type(value.get("skip_basic", False)) is not bool
         or type(value.get("phase", 1)) is not int
@@ -161,16 +161,23 @@ def enable(references, source=None, skip_basic=None, phase=None, defend_castle=N
     # shop instead of manufacturing a spec, purchase or reward.
     war["ShopSet"] = [row for row in shops if row["GroupId"] != shop_group]
     constants = war.get("Constants")
-    if (
-        not isinstance(constants, dict)
-        or type(constants.get("PlayCoopCoinReward")) is not int
-        or not 0 <= constants["PlayCoopCoinReward"] <= 0x7FFFFFFF
+    participation = (
+        "PlayCoopCoinReward",
+        "PlayMultiCoinReward",
+        "PlayMultiBattleMedalReward",
+        "GetPointPlay",
+    )
+    if not isinstance(constants, dict) or any(
+        type(constants.get(key)) is not int or not 0 <= constants[key] <= 0x7FFFFFFF
+        for key in participation
     ):
-        raise ValueError("Missing native Guild War cooperative participation reward")
-    # Native EndCoop adds item 21644 to AddedItems locally when this is positive.
-    # That absent item spec crashes the result UI even with an empty server list.
-    # Keep the free trial rewardless in both the response and client decoration.
-    constants["PlayCoopCoinReward"] = 0
+        raise ValueError("Missing native Guild War participation rewards")
+    # Native callbacks append these items locally even with empty AddedItems.
+    # Item 21644 is absent; Multi adds medal 21661 from GetPointPlay (offset
+    # 0xc4), rather than its named medal field at 0x68. Suppress decorations
+    # to keep supported exits rewardless without manufacturing item specs.
+    for key in participation:
+        constants[key] = 0
     if skip_basic:
         stage_set_id = constants.get("SingleStageSetId")
         stage_sets = war.get("CastleStageSet")
@@ -259,7 +266,7 @@ def enable(references, source=None, skip_basic=None, phase=None, defend_castle=N
     if revision > 0x7FFFFFFF:
         raise ValueError("Guild War static revision exceeds the native range")
     checksum = digest(
-        b"local-guild-war-v4\n"
+        b"local-guild-war-v5\n"
         + items["__checksum__"][1].encode()
         + b"\n"
         + text.encode()
@@ -358,6 +365,46 @@ def castle_specs(references, selection):
         value: {"Id": value, "GroupId": group, "Grade": grade, "SpotId": spot}
         for value, group, grade, spot in rows
     }
+
+
+def defense_stage_ids(references, selection):
+    if selection.get("phase", 1) != 4 or not selection.get("defend_castle", 0):
+        raise ValueError("Select a local defense castle in multi-defense first")
+    return _defense_stage_ids(
+        prepared_body(references, selection), selection["season_id"], selection["defend_castle"]
+    )
+
+
+@lru_cache(maxsize=2)
+def _defense_stage_ids(body, season_id, castle_id):
+    castles = {row[0]: row for row in _castle_specs(body, season_id)}
+    if castle_id not in castles:
+        raise ValueError("The selected defense castle is missing from the native deployment")
+    _, items = records(decode(body))
+    war = json.loads(items["guildwar"][1])
+    group = war["Seasons"][0].get("CastleStageGroupId")
+    rows = war.get("CastleStageSet")
+    if type(group) is not int or group <= 0 or not isinstance(rows, list):
+        raise ValueError("Invalid Guild War defense stage group")
+    if any(not isinstance(row, dict) for row in rows):
+        raise ValueError("Invalid Guild War stage set")
+    matches = [
+        row
+        for row in rows
+        if row.get("GroupId") == group
+        and row.get("StageSetType") == f"MultiGrade{castles[castle_id][2]}"
+    ]
+    if len(matches) != 1:
+        raise ValueError("Expected one matching native castle-grade defense set")
+    stages = matches[0].get("DefenceStageIds")
+    if (
+        not isinstance(stages, list)
+        or not stages
+        or any(type(value) is not int or not 0 < value <= 0x7FFFFFFF for value in stages)
+        or len(set(stages)) != len(stages)
+    ):
+        raise ValueError("Invalid native castle defense stages")
+    return frozenset(stages)
 
 
 @lru_cache(maxsize=2)

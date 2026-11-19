@@ -2146,7 +2146,40 @@ Only the matching owned GuildSummary is available, with existing guild/member
 data and null rank/damage. Five regressions and repeated real-source read-only
 entry/list/all-40-details/summary checks passed without source writes or changes.
 After backend reload and full game restart the user confirmed Defense Battle
-appears for the owned castle. Multi battle entry/results remain unfinished.
+appears for the owned castle. The guarded defense handlers below extend this
+selection; Multi attack and persistent captures remain unfinished.
+
+The next actual packet was `/guild-war/start-multi-stage` for defense 850060004,
+with integer stageId/presetId. It now returns native empty GuildBuffIds and
+CastleBuffIds arrays after validating the owned captured preset and the selected
+castle grade's unique native DefenceStageIds list. The v2 Multi completion uses
+the cooperative damage schema and returns Cancelled false, the unchanged trial
+GuildWarInfo and empty AddedItems. Neither route writes results, captures,
+attempts, resources, locks or rewards. Five regressions cover schemas, Int64
+bounds, ownership/grade/catalog guards and legacy-overlay refresh. The actual
+start and inferred end/retries passed the wire codec on real read-only SQLite;
+the source profile and immutable static body remained unchanged. The user
+confirmed the phase loads after reload/restart.
+
+The API accepted the real defeat completion, then its result renderer failed on
+missing item 21661. Native Multi completion appends local participation items:
+21644 from PlayMultiCoinReward (offset 0x60), and 21661 from GetPointPlay (0xc4),
+rather than the named PlayMultiBattleMedalReward field (0x68). Policy 5 suppresses
+those counts plus the named Multi medal count, retaining the earlier cooperative
+coin suppression. Other source constants stay unchanged. A real War-table audit
+confirmed exactly those overrides, the existing shop filter and optional course
+waiver, with no profile writes or source replacement. Policy-4 selectors upgrade
+while retaining phase, castle, valid period and waiver. A full restart is needed
+to discard native cached counts. After full restart/replay the user confirmed
+the complete result and menu return. Read-only native inspection confirmed all
+four counts zero, with the cooperative medal count retained at 12; the current
+process's bounded log had no missing-21661 or GuildWarResult error frames.
+Victory has not been separately verified.
+
+Guild Information can still be empty without blocking the game. The process
+reported UISceneManager.LoadUIAsset null references and GetLastPhaseInfo cached
+date parse errors, with no pending API. Their causal relationship is unresolved;
+no client preference was changed while the user continued battle testing.
 See [usage and detailed limitations](guild-war.md).
 
 ## Host readiness before the APK check

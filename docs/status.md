@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **727 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **732 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and forty-seven Guild War regressions cover native entry schemas,
+Four guild meteor and fifty-two Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -64,7 +64,7 @@ restart the runtime count was zero with other reward constants retained; the APK
 displayed the complete cooperative attack result and Exit control. The user
 confirmed menu return, also verified by a fresh window observation with all three
 entries retained. No matching result exception appeared in the current process's
-bounded log check. Single/Multi combat
+bounded log check. Single combat, Multi attack
 and the basic-course UI remain unfinished. See
 [commands, contracts and boundaries](guild-war.md).
 
@@ -88,7 +88,7 @@ Multi lobby guides, gated by active trial, phase and owned guild. A source-accou
 memory-clone check changed only the seen-help flag and revision once, without
 real source writes. The user confirmed continuation after reload/reconnect.
 The first Dispute trial selected `multi-offense`; `coop-offense` restores the verified
-cooperative attack path. Multi combat/results remain unfinished. Three phase
+cooperative attack path. Multi attack and persistent results remain unfinished. Three phase
 and two scoped-guide regressions cover persistence, validation and state retention.
 
 Guild War's defense and coin ranking reads now return native empty views for
@@ -119,7 +119,7 @@ codec against real read-only SQLite with an unchanged profile and zero writes.
 Six regressions cover fresh/imported state, schemas, phase/membership/progression
 guards, corrupt catalogs and bounded immutable caching. After backend reload and
 reentering Dispute the user confirmed castle selection opens its information.
-Multi combat/results and persistent captures remain unfinished.
+Multi attack and persistent captures remain unfinished.
 
 Fortress defense selection now has an explicit phase-4 `--defend-castle` option.
 Entry, map and detail present only the selected native castle as owned by the
@@ -128,7 +128,24 @@ owned GuildSummary read uses the existing local guild/member and null rank/damag
 Five regressions and repeated real-source read-only entry/list/all-40-details/
 summary checks passed without writes or profile changes. After backend reload and
 full game restart the user confirmed Defense Battle appears for the owned castle.
-This establishes its selection UI; Multi battle entry/results remain unfinished.
+This initially established its selection UI; the guarded defense handlers below
+extend the trial to local battle entry/exit.
+
+Fortress defense entry now returns native empty GuildBuffIds/CastleBuffIds arrays
+after validating an owned captured preset and the selected castle grade's native
+DefenceStageIds. Its native v2 exit validates bounded nonnegative Int64 damage
+fields and acknowledges the result without saved score, captures, costs or rewards.
+Five regressions and real-source read-only request/retry checks passed with zero
+writes. The actual stage-850060004 start loaded in the APK after reload/restart.
+The API accepted its real defeat completion, then the result renderer failed on
+absent medal 21661. Policy 5 suppresses Multi coin/medal decoration and GetPointPlay,
+the count the callback actually uses for that medal, retaining other source data.
+The source War-table audit passed. After full restart/replay the user confirmed
+the result and menu return; native counts were zero and the bounded current log
+had no missing-medal/result error frames. Victory remains separately unverified.
+Guild Information can still be empty; native UI-load
+and cached-date parse exceptions were observed with no pending request, and no
+client preference was changed during the user's battle tests.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

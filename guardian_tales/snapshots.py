@@ -78,6 +78,8 @@ ACCOUNT_READS = frozenset(
         "/guild/get-guild-summary",
         "/guild-war/start-coop-stage",
         "/guild-war/end-coop-stage/v2",
+        "/guild-war/start-multi-stage",
+        "/guild-war/end-multi-stage/v2",
         "/guild-war/get-battle-records",
         "/guild-war/get-ranking",
         "/guild-war/get-guild-coin-ranking",

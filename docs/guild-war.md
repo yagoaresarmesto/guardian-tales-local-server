@@ -84,7 +84,7 @@ switch accepts only 3 or 4; entry selects Coop for 1/2 and Multi for 3/4. After
 phase 3, backend reload and a full game restart, the user confirmed Dispute opens.
 The first Dispute trial used `multi-offense`; the cooperative command above returns to
 the previously verified battle path. Dispute now exposes neutral selectable castles;
-Multi combat and results remain unfinished. Manual navigation to another phase's lobby still
+Multi attack and persistent result settlement remain unfinished. Manual navigation to another phase's lobby still
 requires selecting that phase first.
 
 The English Fortress tab also opens the Multi lobby. Switching there while
@@ -118,14 +118,14 @@ dated in 2099. Native LobbyMain.SetGuildContentButton tries active Raid first;
 the overlay makes all Global Raid periods inactive while Guild War is enabled.
 It preserves their selection files and composes above the existing Raid and
 Dungeon Kingdom Arena calendar preparation. The overlay changes Global calendars,
-adds one local unlock rule, zeros the cooperative participation coin count,
+adds one local unlock rule, suppresses cooperative and Multi participation rewards,
 empties the active season's shop group and optionally waives Single prerequisites.
 Other shop groups, tables, modes and calendar services
 retain their parent content. Disabling removes only the War selection file, so
 the parent Raid/arena bootstrap resumes. The original static source is immutable.
 
 The selection stores checksums, revision, parent digest, selected period and
-`overlay_policy: 4`. Existing selections without a policy or at policy 3 remain
+`overlay_policy: 5`. Existing selections without a policy or at policy 3/4 remain
 readable and are re-prepared at bootstrap, retaining their valid window, phase
 and skip-basic choice.
 Bootstrap also re-prepares the overlay if the parent changes or the period expires;
@@ -174,7 +174,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and forty-seven War regressions cover native schemas, fresh/imported
+Four meteor and fifty-two War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -264,7 +264,64 @@ guards, CLI reset, invalid input, atomic rejection and refresh retention. The re
 read-only source audit checked entry, all 40 details, list and owned summary
 twice, with an unchanged profile and zero writes. After backend reload and full
 game restart, the user confirmed the owned castle offers Defense Battle. This
-verifies the defense selection UI; Multi battle start/end remain unfinished.
+verifies the defense selection UI. The guarded defense entry/exit below extends
+this trial; Multi attack remains unsupported.
+
+## Free selected-castle defense entry and exit
+
+The observed `/guild-war/start-multi-stage` request uses integer stageId and
+presetId; the actual stage was 850060004. Native StartMultiStageRoutine reads
+GuildBuffIds and CastleBuffIds as Int32 arrays before starting the local stage.
+Both arrays are empty in the trial. Entry requires phase 4, a selected owned
+castle, a matching native stage and an owned captured 700-series preset with
+owned characters/equipment. A fresh account without captured presets rejects.
+Allowed stages come only from the season's CastleStageGroupId and the unique
+MultiGradeN set matching the selected castle's Grade, using DefenceStageIds.
+Siege, cooperative, other-grade and foreign stage lists do not qualify.
+
+`/guild-war/end-multi-stage/v2` accepts stageId, up to four nonnegative Int64
+damages and nonnegative Int64 additionalDamage, whose combined sum must fit.
+The same phase/castle/stage guards apply. Its native callback consumes Cancelled,
+GuildWarInfo and AddedItems. The response acknowledges the free local result
+with Cancelled false, the unchanged trial view and no AddedItems. No capture,
+damage, score, clear, attempt, character lock, resource or reward is persisted.
+The existing parameterless abandon handler remains available.
+
+Native completion also appends participation items locally. Policy 5 sets
+PlayMultiCoinReward and PlayMultiBattleMedalReward to zero and retains the earlier
+PlayCoopCoinReward suppression. A real defeat was accepted by the API but then
+failed in GuildWarResult.SetBoss / ItemBox.OnItemUpdate on absent item 21661.
+The callback actually reads GetPointPlay at offset 0xc4 for that medal, rather
+than the named medal field at 0x68. Policy 5 therefore zeros GetPointPlay too.
+Other constants, including PlayCoopBattleMedalReward, retain their source values.
+The full source War-table audit matched exactly these overrides, the empty shop
+and the optional basic-course waiver. The immutable source and real profile were
+unchanged, with zero writes in query-only/read-only start/end/retry checks.
+Existing policy-4 selections upgrade while retaining phase, owned castle, valid
+window and waiver. Fully restart the game after this update; reconnect retains
+the old native participation counts.
+
+Five additional regressions cover grade-bound entry/exit, owned teams, malformed
+native bodies, Int64 limits, preserved progress, corrupt or ambiguous catalogs
+and policy-4 upgrade. The actual pending start passed the wire codec read-only;
+after reload/restart the user confirmed the phase loads. The running API accepted
+the real defeat completion before the visual-medal failure. After a full restart
+and another battle, the user confirmed the complete result and menu return.
+A read-only native probe confirmed all four suppressed counts are zero, with
+PlayCoopBattleMedalReward retained at 12. The current process's bounded log had
+no missing-21661 or GuildWarResult error frames. Victory has not been separately
+verified; the same guarded completion schema covers the local defense exit.
+
+## Remaining guild-information UI issues
+
+The user reported an empty Guild Information view without a full game freeze.
+No API request was pending. Unity reported NullReferenceException in
+UISceneManager.LoadUIAsset while OpenGuildWarLogsRoutine was opening the window.
+The same process also reported DateTime FormatException in GetLastPhaseInfo;
+native code parses a cached LastGuildWarPhase date with DateTimeOffset.Parse.
+The cache contained a date in month/day/year form after selecting English.
+Their causal relationship is not established. No client preference was changed,
+and the empty view remains unresolved while battle testing continues.
 
 ## Cooperative stage entry and results
 
