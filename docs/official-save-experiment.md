@@ -2147,7 +2147,8 @@ data and null rank/damage. Five regressions and repeated real-source read-only
 entry/list/all-40-details/summary checks passed without source writes or changes.
 After backend reload and full game restart the user confirmed Defense Battle
 appears for the owned castle. The guarded defense handlers below extend this
-selection; Multi attack and persistent captures remain unfinished.
+selection; the free Multi siege trial is described below, while persistent
+captures remain unfinished.
 
 The next actual packet was `/guild-war/start-multi-stage` for defense 850060004,
 with integer stageId/presetId. It now returns native empty GuildBuffIds and
@@ -2174,7 +2175,10 @@ to discard native cached counts. After full restart/replay the user confirmed
 the complete result and menu return. Read-only native inspection confirmed all
 four counts zero, with the cooperative medal count retained at 12; the current
 process's bounded log had no missing-21661 or GuildWarResult error frames.
-Victory has not been separately verified.
+The user subsequently confirmed the remaining listed scenarios, including
+defense victory, abandonment/reentry, same-hero repeats, formation/preset changes
+and all four cooperative attack maps. These are user-reported checks without
+separate per-scenario native traces.
 
 Guild Information can still be empty without blocking the game. The process
 reported UISceneManager.LoadUIAsset null references and GetLastPhaseInfo cached
@@ -2195,6 +2199,21 @@ still took 1.48 seconds. These are host-side timings; after backend reload the
 user confirmed repeated cooperative entry/exit feels faster. APK latency and
 combat frame rate remain unmeasured. Two regressions cover repeat loading and
 cache isolation/refresh, and the existing tampering case now checks a warm cache.
+
+The next focus is `multi-offense` Siege Battle. Native phase-3 castle entry uses
+SiegeStageIds and the existing Multi start/end schemas. The guarded free trial
+now accepts only the active season's unique stage-group sets for deployed castle
+grades, yielding 16 native source stages. It validates the owned captured team
+and returns empty buff arrays, then acknowledges bounded Int64 results with
+unchanged trial info and no items. It persists no captures, damage, attempts,
+locks, costs or rewards and retains policy-5 client reward suppression. Five
+regressions cover repeated loading/results, reconnect, phase/catalog/team guards,
+saved progression, corruption and immutable caching. All 16 native-inferred
+source-stage start/end/retry/abandon sequences passed on real read-only SQLite
+without writes or profile/source/selection changes. After reload/full restart
+the user confirmed the menu loads, but stage entry may be unavailable. A native
+read-only probe found phase 3, IsBattleRound true and no pending request; actual
+APK combat and result/menu return remain unverified.
 
 ## Host readiness before the APK check
 

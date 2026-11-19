@@ -46,6 +46,7 @@ from guardian_tales.guild_war_static import (
     defense_stage_ids,
     enable,
     load_selection,
+    offense_stage_ids,
 )
 from guardian_tales.packet_reader import parse_packet
 from guardian_tales.protocol import Packet, PacketError, encode_packet
@@ -125,14 +126,14 @@ def synthetic_war_static(catalog):
                     "Id": 4,
                     "GroupId": 2001,
                     "StageSetType": "MultiGrade1",
-                    "SiegeStageIds": [850050077],
+                    "SiegeStageIds": [850050077, 850050079, 850050090, 850050094],
                     "DefenceStageIds": [850060004],
                 },
                 {
                     "Id": 5,
                     "GroupId": 2001,
                     "StageSetType": "MultiGrade4",
-                    "SiegeStageIds": [850050005],
+                    "SiegeStageIds": [850050005, 850050007, 850050018, 850050022],
                     "DefenceStageIds": [850060001],
                 },
             ],
@@ -596,6 +597,190 @@ class GuildWarTests(unittest.TestCase):
             (self.root / SELECTION).write_text(json.dumps(dict(upgraded, overlay_policy=invalid)))
             with self.subTest(policy=invalid), self.assertRaises(ValueError):
                 load_selection(self.ref)
+
+    def test_fortress_siege_start_end_retries_and_reconnect_preserve_the_account(self):
+        profile = self.install()
+        selection = enable(self.ref, phase=3)
+        stages = {
+            850050077,
+            850050079,
+            850050090,
+            850050094,
+            850050005,
+            850050007,
+            850050018,
+            850050022,
+        }
+        self.assertEqual(offense_stage_ids(self.ref, selection), stages)
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        expected = {
+            "Cancelled": False,
+            "GuildWarInfo": self.call({"isPartial": True})["GuildWarInfo"],
+            "AddedItems": [],
+        }
+        for stage in sorted(stages):
+            for _ in range(2):
+                self.assertEqual(
+                    self.call({"stageId": stage, "presetId": 701}, START_MULTI),
+                    {"GuildBuffIds": [], "CastleBuffIds": []},
+                )
+                for damages, additional in (([0], 0), ([MAX_DAMAGE - 1], 1)):
+                    self.assertEqual(
+                        self.call(
+                            {"stageId": stage, "damages": damages, "additionalDamage": additional},
+                            END_MULTI,
+                        ),
+                        expected,
+                    )
+            self.assertEqual(self.call(None, ABANDON), {})
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+        self.db.execute("PRAGMA query_only=OFF")
+        self.session = BootstrapSession(self.store)
+        self.session.handle(
+            request("/auth/sign-in", {"AuthKind": 0, "AccessToken": "synthetic", "Reconnect": True})
+        )
+        self.db.execute("PRAGMA query_only=ON")
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        self.assertEqual(
+            self.call({"stageId": 850050077, "presetId": 701}, START_MULTI),
+            {"GuildBuffIds": [], "CastleBuffIds": []},
+        )
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+
+    def test_fortress_siege_requires_active_phase_native_stage_and_owned_captured_team(self):
+        body = {"stageId": 850050077, "presetId": 701}
+        with self.assertRaises(PacketError):
+            self.call(body, START_MULTI)
+        self.install(False)
+        enable(self.ref, phase=3)
+        with self.assertRaises(PacketError):
+            self.call(body, START_MULTI)
+        self.install()
+        before, writes = list(self.db.iterdump()), self.db.total_changes
+        for phase in (1, 2, 4):
+            enable(self.ref, phase=phase)
+            with self.subTest(phase=phase), self.assertRaises(PacketError):
+                self.call(body, START_MULTI)
+        enable(self.ref, phase=3)
+        for invalid in (
+            None,
+            {},
+            dict(body, stageId=True),
+            dict(body, presetId=True),
+            dict(body, presetId=401),
+            dict(body, presetId=799),
+            dict(body, stageId=850060004),
+            dict(body, stageId=850030005),
+            dict(body, stageId=850010002),
+            dict(body, stageId=850050053),
+            dict(body, castleId=1),
+        ):
+            with self.subTest(body=invalid), self.assertRaises(PacketError):
+                self.call(invalid, START_MULTI)
+        result = {"stageId": 850050077, "damages": [0], "additionalDamage": 0}
+        for invalid in (
+            dict(result, damages=[True]),
+            dict(result, damages=[-1]),
+            dict(result, damages=[MAX_DAMAGE], additionalDamage=1),
+            dict(result, stageId=850060004),
+            dict(result, Rewards=[]),
+        ):
+            with self.subTest(body=invalid), self.assertRaises(PacketError):
+                self.call(invalid, END_MULTI)
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, writes)
+        with self.db:
+            self.db.execute(
+                "INSERT INTO party_preset_state VALUES(1,?)",
+                (json.dumps({"Presets": [{"Id": 701, "Characters": [{"Id": 999999}]}]}),),
+            )
+        with self.assertRaises(PacketError):
+            self.call(body, START_MULTI)
+
+    def test_fortress_siege_preserves_membership_saved_progress_and_season_guards(self):
+        profile = self.install()
+        enable(self.ref, phase=3)
+        calls = (
+            (START_MULTI, {"stageId": 850050077, "presetId": 701}),
+            (END_MULTI, {"stageId": 850050077, "damages": [0], "additionalDamage": 0}),
+        )
+        for mutate in (
+            lambda p: p.update(GuildMember=None),
+            lambda p: p["UserRaid"].update(GuildWar={"SeasonId": 1, "PlayCount": 3}),
+        ):
+            changed = copy.deepcopy(profile)
+            mutate(changed)
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(changed),))
+            before, writes = list(self.db.iterdump()), self.db.total_changes
+            for route, body in calls:
+                with self.subTest(route=route), self.assertRaises(PacketError):
+                    self.call(body, route)
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertEqual(self.db.total_changes, writes)
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        self.now += timedelta(days=8)
+        for route, body in calls:
+            with self.subTest(route=route), self.assertRaises(PacketError):
+                self.call(body, route)
+
+    def test_fortress_siege_catalog_rejects_tampering_and_invalid_native_grade_stage_sets(self):
+        selection = enable(self.ref, phase=3)
+        path = self.root / f"guild_war_static_{selection['static_data_sha256']}.bin"
+        source = path.read_bytes()
+        self.assertIn(850050077, offense_stage_ids(self.ref, selection))
+        path.write_bytes(source[:-1] + bytes([source[-1] ^ 1]))
+        with self.assertRaises(ValueError):
+            offense_stage_ids(self.ref, selection)
+        lines, items = records(decode(source))
+        war = json.loads(items["guildwar"][1])
+        for alter in (
+            lambda w: w["Seasons"][0].pop("CastleStageGroupId"),
+            lambda w: w["CastleStageSet"].append(copy.deepcopy(w["CastleStageSet"][3])),
+            lambda w: w["CastleStageSet"][3].update(GroupId=999),
+            lambda w: w["CastleStageSet"][3].update(SiegeStageIds=[]),
+            lambda w: w["CastleStageSet"][3].update(SiegeStageIds=[True]),
+            lambda w: w["CastleStageSet"][3].update(SiegeStageIds=[0x80000000]),
+            lambda w: w["CastleStageSet"][3].update(SiegeStageIds=[850050077, 850050077]),
+            lambda w: w["CastleStageSet"][4].update(SiegeStageIds=[850050077]),
+        ):
+            changed = copy.deepcopy(war)
+            alter(changed)
+            raw = json.dumps(changed)
+            rows = list(lines)
+            at = items["guildwar"][0]
+            rows[at + 1], rows[at + 3] = raw + "\n", digest(raw.encode()) + "\n"
+            with (
+                patch(
+                    "guardian_tales.guild_war_static.prepared_body",
+                    return_value=compress("".join(rows).encode()),
+                ),
+                self.assertRaises(ValueError),
+            ):
+                offense_stage_ids(self.ref, selection)
+
+    def test_fortress_siege_catalog_cache_reuses_content_and_retains_phase_and_season_guards(self):
+        from guardian_tales import guild_war_static
+
+        selection = enable(self.ref, phase=3)
+        castle_specs(self.ref, selection)
+        guild_war_static._offense_stage_ids.cache_clear()
+        self.addCleanup(guild_war_static._offense_stage_ids.cache_clear)
+        with patch("guardian_tales.guild_war_static.decode", wraps=decode) as decoder:
+            first = offense_stage_ids(self.ref, selection)
+            self.assertEqual(offense_stage_ids(self.ref, selection), first)
+            self.assertEqual(decoder.call_count, 1)
+        self.assertIsInstance(first, frozenset)
+        with self.assertRaises(ValueError):
+            offense_stage_ids(self.ref, dict(selection, phase=4))
+        with self.assertRaises(ValueError):
+            offense_stage_ids(self.ref, dict(selection, season_id=2))
 
     def test_fortress_defense_start_end_and_retries_follow_selected_grade_without_writes(self):
         profile = self.install()

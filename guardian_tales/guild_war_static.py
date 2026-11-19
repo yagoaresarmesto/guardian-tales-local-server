@@ -381,6 +381,45 @@ def defense_stage_ids(references, selection):
     )
 
 
+def offense_stage_ids(references, selection):
+    if selection.get("phase", 1) != 3:
+        raise ValueError("Select multi-offense before entering a Fortress siege stage")
+    return _offense_stage_ids(prepared_body(references, selection), selection["season_id"])
+
+
+@lru_cache(maxsize=2)
+def _offense_stage_ids(body, season_id):
+    grades = {row[2] for row in _castle_specs(body, season_id)}
+    _, items = records(decode(body))
+    war = json.loads(items["guildwar"][1])
+    group = war["Seasons"][0].get("CastleStageGroupId")
+    rows = war.get("CastleStageSet")
+    if type(group) is not int or group <= 0 or not isinstance(rows, list):
+        raise ValueError("Invalid Guild War siege stage group")
+    if any(not isinstance(row, dict) for row in rows):
+        raise ValueError("Invalid Guild War stage set")
+    stages = set()
+    for grade in sorted(grades):
+        matches = [
+            row
+            for row in rows
+            if row.get("GroupId") == group and row.get("StageSetType") == f"MultiGrade{grade}"
+        ]
+        if len(matches) != 1:
+            raise ValueError("Expected one native siege stage set per deployed castle grade")
+        values = matches[0].get("SiegeStageIds")
+        if (
+            not isinstance(values, list)
+            or not values
+            or any(type(value) is not int or not 0 < value <= 0x7FFFFFFF for value in values)
+            or len(set(values)) != len(values)
+            or stages.intersection(values)
+        ):
+            raise ValueError("Invalid or ambiguous native castle siege stages")
+        stages.update(values)
+    return frozenset(stages)
+
+
 @lru_cache(maxsize=2)
 def _defense_stage_ids(body, season_id, castle_id):
     castles = {row[0]: row for row in _castle_specs(body, season_id)}

@@ -16,6 +16,7 @@ from .guild_war_static import (
     defense_stage_ids,
     enable,
     load_selection,
+    offense_stage_ids,
     utc_now,
 )
 from .presets import owned_party_preset
@@ -315,11 +316,16 @@ def end_coop(account, request):
     return {"Cancelled": False, "GuildWarInfo": view["GuildWarInfo"], "AddedItems": []}
 
 
-def defense_context(account, stage_id):
+def multi_context(account, stage_id):
     view = enter(account, {"isPartial": True})
     selection = load_selection(account.references)
-    if stage_id not in defense_stage_ids(account.references, selection):
-        raise ValueError("Select a defense stage for the trial's owned castle grade")
+    stages = (
+        offense_stage_ids(account.references, selection)
+        if view["GuildWarInfo"]["Phase"] == 3
+        else defense_stage_ids(account.references, selection)
+    )
+    if stage_id not in stages:
+        raise ValueError("Select a native Fortress stage for the enabled local phase")
     return view
 
 
@@ -331,8 +337,8 @@ def start_multi(account, request):
         or type(request["presetId"]) is not int
         or not 700 <= request["presetId"] < 800
     ):
-        raise ValueError("Fortress defense entry requires native stageId and owned presetId")
-    defense_context(account, request["stageId"])
+        raise ValueError("Fortress entry requires native stageId and owned presetId")
+    multi_context(account, request["stageId"])
     owned_party_preset(account.db, account.profile(), request["presetId"])
     # Native Multi entry reads two int arrays before loading the local stage.
     # No trial guild/castle upgrades or buffs are manufactured.
@@ -341,7 +347,7 @@ def start_multi(account, request):
 
 def end_multi(account, request):
     check_result_request(request)
-    view = defense_context(account, request["stageId"])
+    view = multi_context(account, request["stageId"])
     # Acknowledge the local result without validating/storing damage, captures,
     # attempts or locks. Policy 5 also suppresses client-added coin/medal items.
     return {"Cancelled": False, "GuildWarInfo": view["GuildWarInfo"], "AddedItems": []}
@@ -403,7 +409,7 @@ def main(argv=None):
                         else None
                     ),
                     "local_defense_castle": selection.get("defend_castle", 0) if selection else 0,
-                    "scope": "Experimental menus; free cooperative and selected-castle Fortress defense entry/exit; persistent progression, score and rewards are not implemented",
+                    "scope": "Experimental menus; free cooperative and Fortress siege/selected-castle defense entry/exit; persistent progression, score and rewards are not implemented",
                     "apply": "Fully close and reopen the game after enable/disable; Raid selection and saved account are retained",
                 },
                 indent=2,

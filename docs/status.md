@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **734 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **739 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and fifty-four Guild War regressions cover native entry schemas,
+Four guild meteor and fifty-nine Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -64,7 +64,7 @@ restart the runtime count was zero with other reward constants retained; the APK
 displayed the complete cooperative attack result and Exit control. The user
 confirmed menu return, also verified by a fresh window observation with all three
 entries retained. No matching result exception appeared in the current process's
-bounded log check. Single combat, Multi attack
+bounded log check. Single combat, persistent result settlement
 and the basic-course UI remain unfinished. See
 [commands, contracts and boundaries](guild-war.md).
 
@@ -88,7 +88,8 @@ Multi lobby guides, gated by active trial, phase and owned guild. A source-accou
 memory-clone check changed only the seen-help flag and revision once, without
 real source writes. The user confirmed continuation after reload/reconnect.
 The first Dispute trial selected `multi-offense`; `coop-offense` restores the verified
-cooperative attack path. Multi attack and persistent results remain unfinished. Three phase
+cooperative attack path. Multi battle entry/exit now have free local trials;
+persistent results remain unfinished. Three phase
 and two scoped-guide regressions cover persistence, validation and state retention.
 
 Guild War's defense and coin ranking reads now return native empty views for
@@ -119,7 +120,7 @@ codec against real read-only SQLite with an unchanged profile and zero writes.
 Six regressions cover fresh/imported state, schemas, phase/membership/progression
 guards, corrupt catalogs and bounded immutable caching. After backend reload and
 reentering Dispute the user confirmed castle selection opens its information.
-Multi attack and persistent captures remain unfinished.
+The Multi combat trials below do not implement persistent captures.
 
 Fortress defense selection now has an explicit phase-4 `--defend-castle` option.
 Entry, map and detail present only the selected native castle as owned by the
@@ -142,7 +143,10 @@ absent medal 21661. Policy 5 suppresses Multi coin/medal decoration and GetPoint
 the count the callback actually uses for that medal, retaining other source data.
 The source War-table audit passed. After full restart/replay the user confirmed
 the result and menu return; native counts were zero and the bounded current log
-had no missing-medal/result error frames. Victory remains separately unverified.
+had no missing-medal/result error frames. The user subsequently confirmed all
+remaining listed tests: defense victory, defense abandonment/reentry, repeated
+same-hero combat, formation/preset changes and the four cooperative attack maps.
+These later checks are user-reported without separate per-scenario native traces.
 Guild Information can still be empty; native UI-load
 and cached-date parse exceptions were observed with no pending request, and no
 client preference was changed during the user's battle tests.
@@ -160,6 +164,21 @@ content/season changes; the corruption regression also warms the cache first.
 After backend reload the user confirmed less waiting during repeated cooperative
 entry/exit. This is qualitative APK confirmation; end-to-end loading latency and
 in-combat frame-rate improvement remain unmeasured.
+
+Fortress Siege Battle now has a phase-3 free combat trial using the native Multi
+start/end schemas and existing participation-reward suppression. The allowed
+catalog is restricted to the unique season stage-group SiegeStageIds for grades
+present in the native castle deployment: 16 source stages. The owned captured
+preset, authentication, membership, season and saved-progress guards remain;
+phase-4 defense retains its selected-castle restriction. Five regressions cover
+entry/end/retry/reconnect, grade lists, invalid phases/stages/teams/progress,
+corruption and immutable caching. Native-inferred requests for all 16 source
+stages passed repeated wire checks on real read-only SQLite with zero writes,
+an unchanged profile/source body and unchanged persisted selection. No target
+capture, score, attempt, lock, resource cost or reward is saved. After reload/full
+restart the user confirmed the menu loads but reported stage entry may be
+unavailable. A read-only native probe found phase 3, IsBattleRound true and no
+pending API. The exact blocked control and APK battle/result remain unverified.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

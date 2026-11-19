@@ -84,7 +84,8 @@ switch accepts only 3 or 4; entry selects Coop for 1/2 and Multi for 3/4. After
 phase 3, backend reload and a full game restart, the user confirmed Dispute opens.
 The first Dispute trial used `multi-offense`; the cooperative command above returns to
 the previously verified battle path. Dispute now exposes neutral selectable castles;
-Multi attack and persistent result settlement remain unfinished. Manual navigation to another phase's lobby still
+Multi attack/defense entry and exit are free local trials; persistent result
+settlement remains unfinished. Manual navigation to another phase's lobby still
 requires selecting that phase first.
 
 The English Fortress tab also opens the Multi lobby. Switching there while
@@ -174,7 +175,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and fifty-two War regressions cover native schemas, fresh/imported
+Four meteor and fifty-nine War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -226,8 +227,9 @@ repeated static decompression. All 40 real-source castle details and list/retrie
 passed through the wire codec on read-only/query-only account SQLite with zero
 writes and an unchanged profile. After backend reload and reentering Dispute,
 the user confirmed a castle can be selected and its information opens. This
-verifies map/detail navigation; Multi stage entry/results and persistent captures
-remain unfinished. No game restart or new phase command is required for this fix.
+initially verified map/detail navigation. The free Multi combat trial is described
+below; persistent captures remain unfinished. That map/detail fix did not require
+a game restart or a new phase command.
 
 ## Local Fortress defense selection
 
@@ -265,7 +267,7 @@ read-only source audit checked entry, all 40 details, list and owned summary
 twice, with an unchanged profile and zero writes. After backend reload and full
 game restart, the user confirmed the owned castle offers Defense Battle. This
 verifies the defense selection UI. The guarded defense entry/exit below extends
-this trial; Multi attack remains unsupported.
+this defense trial; the separate phase-3 siege trial is described below.
 
 ## Free selected-castle defense entry and exit
 
@@ -309,8 +311,48 @@ the real defeat completion before the visual-medal failure. After a full restart
 and another battle, the user confirmed the complete result and menu return.
 A read-only native probe confirmed all four suppressed counts are zero, with
 PlayCoopBattleMedalReward retained at 12. The current process's bounded log had
-no missing-21661 or GuildWarResult error frames. Victory has not been separately
-verified; the same guarded completion schema covers the local defense exit.
+no missing-21661 or GuildWarResult error frames. The user subsequently confirmed
+the remaining listed scenarios, including victory, defense abandonment/reentry,
+same-hero repeats, formation/preset changes and the four cooperative attack maps.
+This additional coverage is user-reported; no separate native trace was collected
+for each scenario.
+
+## Fortress siege combat
+
+`--phase multi-offense` now enables free local Siege Battle entry/exit on the
+castle map. Its existing native Multi start/end APIs use the same request and
+response schemas as defense. Native OnClickEnter chooses the selected castle
+grade's SiegeStageIds in phase 3. The start callback consumes empty Int32 arrays
+GuildBuffIds/CastleBuffIds; completion consumes Cancelled, GuildWarInfo and
+AddedItems and uses the same policy-5 participation-reward suppression.
+
+The server accepts only SiegeStageIds in the unique season CastleStageGroupId
+set for each grade present in the active castle deployment. The preserved
+season has 16 allowed stages, four per grade. Missing/ambiguous sets, duplicates,
+out-of-range IDs, other-season/group stages, cooperative stages and defense
+stages reject. The native request contains stageId/presetId, without a castle ID;
+this is a catalog-bound combat trial, not persistent target/capture settlement.
+The map remains neutral, with no fabricated rival guild. Phase-4 defense still
+requires its explicitly selected owned castle and matching defense stage.
+
+An owned captured 700-series preset and its owned members/equipment are required.
+The active trial, authentication, prologue, membership and preserved War-progress
+guards apply. Start returns empty buff arrays. The bounded Int64 completion
+returns Cancelled false, unchanged trial GuildWarInfo and empty AddedItems.
+Neither call saves damage, captures, attempts, hero locks, resources or rewards;
+the shared abandon handler remains available.
+
+Five regressions cover all four siege choices for each synthetic deployed grade,
+repeat/reconnect, wrong phases/stages/teams, preserved progress, corruption,
+catalog ambiguity and bounded immutable caching. All 16 native source stages
+passed repeated start/end/abandon wire checks on real read-only/query-only
+SQLite, including zero damage and the Int64 boundary. No writes occurred; the
+profile, immutable source static body and persisted selection were unchanged by
+that check. Requests were inferred from the native contract. After reload/full
+restart the user confirmed the menu opens but reported stage entry may be
+unavailable. A read-only native probe found phase 3, IsBattleRound true and no
+pending request. The exact blocked control, APK battle and result/menu return
+remain unverified.
 
 ## Remaining guild-information UI issues
 
@@ -391,7 +433,7 @@ local handler returns all three empty without inventing a battle history or
 rankings. The real request and repeat passed read-only with zero writes/profile
 changes. The API also accepted this follow-up after reload, and read-only pending
 inspection found no queued request. That alone did not establish a working result
-screen: the user reported a freeze. Single and Multi combat/result handlers remain
+screen: the user reported a freeze. Single combat and persistent result settlement remain
 unsupported.
 
 ## Cooperative result freeze
@@ -420,7 +462,8 @@ attack replay displayed the complete result, per-character damage and Exit butto
 The user confirmed Exit returns to the War menu, and a fresh window observation
 verified that lobby with all three entries still available. The current process's
 bounded log check contained no missing-21644 or GuildWarResult exception frames.
-This verifies this cooperative attack result path, not Single/Multi combat or
+This verifies this cooperative attack result path; separate Multi checks are
+documented above. It does not establish Single combat or
 persistent War score/progression/rewards.
 
 ## Empty exchange menu
