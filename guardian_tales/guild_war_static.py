@@ -22,7 +22,7 @@ from .snapshots import CLIENT
 
 SELECTION = "guild_war_selection.json"
 FEATURE_ID = 126
-OVERLAY_POLICY = 3
+OVERLAY_POLICY = 4
 PHASES = {"coop-offense": 1, "coop-defense": 2, "multi-offense": 3, "multi-defense": 4}
 START_INACTIVE = "2000-01-01T00:00:00+00:00"
 END_INACTIVE = "2000-01-07T23:59:59+00:00"
@@ -51,7 +51,10 @@ def load_selection(references):
         or set(value) - {"skip_basic", "overlay_policy", "phase"}
         != {"client", "season_id", "period", "base_sha256"} | MANIFEST_KEYS
         or "overlay_policy" in value
-        and (type(value["overlay_policy"]) is not int or value["overlay_policy"] != OVERLAY_POLICY)
+        and (
+            type(value["overlay_policy"]) is not int
+            or value["overlay_policy"] not in (3, OVERLAY_POLICY)
+        )
         or type(value.get("skip_basic", False)) is not bool
         or type(value.get("phase", 1)) is not int
         or value.get("phase", 1) not in PHASES.values()
@@ -123,6 +126,22 @@ def enable(references, source=None, skip_basic=None, phase=None):
     skip_basic = (previous or {}).get("skip_basic", False) if skip_basic is None else skip_basic
     if type(skip_basic) is not bool:
         raise ValueError("Guild War skip-basic policy must be Boolean")
+    shop_group = seasons[0].get("ShopGroupId")
+    shops = war.get("ShopSet")
+    if (
+        type(shop_group) is not int
+        or shop_group <= 0
+        or not isinstance(shops, list)
+        or any(
+            not isinstance(row, dict) or type(row.get("GroupId")) is not int or row["GroupId"] <= 0
+            for row in shops
+        )
+    ):
+        raise ValueError("Invalid native Guild War season shop group")
+    # Each shop row unconditionally resolves absent currency item 21644 for its
+    # icon. Native FindAll and SetUI support zero rows, so expose an empty trial
+    # shop instead of manufacturing a spec, purchase or reward.
+    war["ShopSet"] = [row for row in shops if row["GroupId"] != shop_group]
     constants = war.get("Constants")
     if (
         not isinstance(constants, dict)
@@ -222,7 +241,7 @@ def enable(references, source=None, skip_basic=None, phase=None):
     if revision > 0x7FFFFFFF:
         raise ValueError("Guild War static revision exceeds the native range")
     checksum = digest(
-        b"local-guild-war-v3\n"
+        b"local-guild-war-v4\n"
         + items["__checksum__"][1].encode()
         + b"\n"
         + text.encode()

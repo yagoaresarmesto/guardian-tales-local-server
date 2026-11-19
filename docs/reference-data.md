@@ -87,9 +87,11 @@ Guild meteor entry uses `guild_meteor_entry_catalog.json`; the
 Guild War activation validates the matching external `guildwar`, `guildraid2`,
 `seasondate` and `unlockfeature` records. It creates an immutable derived body,
 adds one local no-reward feature-126 rule, and stores a reversible
-`guild_war_selection.json`. Overlay policy 3 zeros only the cooperative participation
-coin count, preventing an absent reward spec from aborting the result UI; legacy
-selections upgrade at bootstrap while retaining their valid period and waiver.
+`guild_war_selection.json`. Overlay policy 4 retains the zero cooperative
+participation coin count and empties only the selected season's shop group,
+preventing its absent currency spec from aborting result/shop UI rendering.
+Other shop groups remain intact; selections without a policy or at policy 3
+upgrade at bootstrap while retaining their valid period, phase and waiver.
 An optional native `phase` from 1 to 4 controls the matching Coop/Multi lobby;
 `guild-war enable --phase ...` persists that choice without account changes.
 Omitted phase retains the choice, and legacy selections default to 1.

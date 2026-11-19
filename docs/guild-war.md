@@ -104,14 +104,16 @@ dated in 2099. Native LobbyMain.SetGuildContentButton tries active Raid first;
 the overlay makes all Global Raid periods inactive while Guild War is enabled.
 It preserves their selection files and composes above the existing Raid and
 Dungeon Kingdom Arena calendar preparation. The overlay changes Global calendars,
-adds one local unlock rule, zeros the cooperative participation coin count and
-optionally waives Single prerequisites. Other tables, modes and calendar services
+adds one local unlock rule, zeros the cooperative participation coin count,
+empties the active season's shop group and optionally waives Single prerequisites.
+Other shop groups, tables, modes and calendar services
 retain their parent content. Disabling removes only the War selection file, so
 the parent Raid/arena bootstrap resumes. The original static source is immutable.
 
 The selection stores checksums, revision, parent digest, selected period and
-`overlay_policy: 3`. Existing selections without a policy remain readable and
-are re-prepared at bootstrap, retaining their valid window and skip-basic choice.
+`overlay_policy: 4`. Existing selections without a policy or at policy 3 remain
+readable and are re-prepared at bootstrap, retaining their valid window, phase
+and skip-basic choice.
 Bootstrap also re-prepares the overlay if the parent changes or the period expires;
 a parent change within the window retains the window. Prepared bodies are
 immutable and digest checked. Static get/check responses share one checksum.
@@ -158,7 +160,7 @@ retains stage prerequisites by default and never claims completed combat. The ph
 progress and next-update/end values are local trial values, not captured official
 state. The user confirmed the War menu starts after the passive-help fix below.
 
-Four meteor and thirty-four War regressions cover native schemas, fresh/imported
+Four meteor and thirty-six War regressions cover native schemas, fresh/imported
 accounts, membership/progress guards, retries/reconnect, rollover, reversible
 calendar changes, parent composition, cache hashes, corrupt inputs and CLI use.
 The actual meteor packet and both War cache hints passed through the session and
@@ -167,7 +169,8 @@ writes or profile differences occurred. The real composed War calendar check
 covered 47 affected rows; all Raid periods were inactive, War was valid, and all
 other parent rows/services/tables plus the original source were preserved, apart
 from appending the single explicit no-reward feature rule, zeroing cooperative
-participation coins and the optional War prerequisite waiver. The basic-course
+participation coins, emptying the active shop group and the optional War
+prerequisite waiver. The basic-course
 button remains unresolved. With the corrected prerequisite waiver the APK
 completed `/guild-war/enter` and began loading the cooperative screen, then
 requested passive help acknowledgment 1037. Imported-account protection had
@@ -243,7 +246,7 @@ profile mutation is introduced. One added regression exercises legacy-overlay
 upgrade and malformed policy rejection; existing composition and reversal checks
 also verify the exact constant change and source restoration on disable. The real
 composed-table audit and read-only completion/retry checks passed with zero source
-writes. The lab overlay is prepared at policy 3, with its original period and
+writes. The initial reward-fix overlay was prepared at policy 3, with its original period and
 skip-basic choice. A backend reload and full game restart are required to replace
 the cached static data and abandoned scene coroutine; reconnect cannot repair
 that scene. After restart a read-only native probe confirmed PlayCoopCoinReward
@@ -254,6 +257,32 @@ verified that lobby with all three entries still available. The current process'
 bounded log check contained no missing-21644 or GuildWarResult exception frames.
 This verifies this cooperative attack result path, not Single/Multi combat or
 persistent War score/progression/rewards.
+
+## Empty exchange menu
+
+The next exchange-center freeze had no pending API request. Unity logged a
+NullReferenceException in GuildWarShopConstantsItem.Set, ItemUpdated and SetUI.
+Native item rendering unconditionally calls ItemSpec.GetById(21644) to retrieve
+the purchase-currency icon and throws if the spec is null. That spec was already
+confirmed missing in this pinned snapshot's result screen.
+
+The opt-in policy-4 overlay therefore removes only ShopSet rows whose GroupId
+matches the selected season's ShopGroupId (4001). The real source has five such
+offers. Other shop groups and the immutable parent source remain intact. Native
+GetShopListBySeasonId filters the flat list, and SetUI explicitly handles zero
+items, so an empty local catalog skips the invalid item renderer. No replacement
+spec/icon, coin balance, purchase counter, account migration or reward is created.
+Purchases and real exchange inventory remain unsupported.
+
+Two regressions cover policy-3 upgrade with old offers, matching checksum refresh,
+retained phase/window/waiver, unrelated-row preservation and malformed source
+rejection without replacing the prior selection. The actual composed-table audit
+and real read-only account entry/read/retry checks passed with zero source writes;
+the prepared active group contains zero offers and keeps phase 3. Backend reload
+and full game restart are required to discard the cached static list and frozen
+scene. After restart a read-only native probe confirmed zero loaded shop rows,
+and the current process's bounded log check contained no matching shop exception.
+The user confirmed the empty shop opens and allows returning without a freeze.
 
 ## Empty ranking views
 

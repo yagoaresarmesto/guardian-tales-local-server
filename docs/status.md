@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **714 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **716 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 71 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -16,7 +16,7 @@ regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
-Four guild meteor and thirty-four Guild War regressions cover native entry schemas,
+Four guild meteor and thirty-six Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
 reconnect, reversible calendar activation, parent composition, cache consistency,
 corrupt inputs and CLI commands. Meteor entry passed on the actual APK after
@@ -26,7 +26,7 @@ It retains Raid/arena selections while overriding Global War/Raid calendars and
 appending one explicit no-reward Global rule for the missing basic-course feature
 126. Its acknowledgment changes only bit 126 in a client-only response bitmap.
 The actual composed-table audit checked 47 affected rows; other tables, services
-and modes retained their parent content, apart from that added rule. Both entry
+and modes retained their parent content, apart from the documented War trial overrides. Both entry
 sequences passed against the real write-disabled source database without profile
 changes. The first APK War access reached the basic-course prerequisite popup
 and redirected to Play > Others; the missing feature rule was then identified
@@ -98,6 +98,17 @@ grant currency/rewards. The actual packets and repeats passed against real
 read-only source SQLite without writes or profile changes. The user confirmed
 both screens load after backend reload/reconnect. Four regressions cover native
 schemas, fresh/imported guards, retries and query-only state retention.
+
+The exchange center froze in native GuildWarShopConstantsItem.Set, with no queued
+API. Its row renderer resolves the same absent currency spec 21644. Overlay policy
+4 removes only the active season's five shop offers, preserving other groups and
+parent data; native filtering and UI initialization support an empty catalog.
+Two regressions cover legacy policy-3 upgrade, scope/cache/state preservation and
+malformed source rejection. The real table/read-only account audit passed, with
+zero active offers, retained phase 3 and no source writes. After full restart a
+native read-only probe confirmed zero loaded rows, with no matching exception in
+the process's bounded log check. The user confirmed shop entry/return succeeds;
+real purchases remain unfinished.
 
 Two guild-attendance regressions cover the explicitly requested empty-reward
 mock for `/guild/claim-guild-daily-attendance`: native no-body/null/empty-object

@@ -2006,7 +2006,7 @@ The guarded `/guild-war/enter` trial accepts native lowercase `isPartial` and
 returns correctly typed fresh UserRaid.GuildWar / GuildWarInfo collections in
 phase 1 for the cooperative lobby. It preserves existing account state and
 rejects nonempty saved War progress; battles, claims, purchases and other War
-APIs remain unfinished. Forty new regressions and read-only real-account wire
+APIs remain unfinished. Forty-two new regressions and read-only real-account wire
 checks cover these contracts. The first APK trial reached the basic-course
 prerequisite popup and redirected to Play > Others, where the entry was absent.
 Metadata identifies the missing GuildWarSingle feature as 126. The derived static
@@ -2102,6 +2102,19 @@ array. No other-guild ranks, coin settlement, points, rewards or profile changes
 are generated. Four regressions and both actual request/retry wire checks passed
 with query-only/read-only source SQLite and zero writes. The user confirmed each
 view loads after backend reload/reconnect.
+
+The next freeze occurred at the exchange center, without a pending API. Unity
+reported NullReferenceException in GuildWarShopConstantsItem.Set/ItemUpdated/SetUI;
+native Set unconditionally resolves absent currency spec 21644 for each offer's
+icon. The policy-4 overlay now removes only ShopSet entries in the active season's
+ShopGroupId 4001 (five real-source offers), retaining other groups/source data.
+The native flat-list filter and zero-item UI path support an empty local shop;
+no currency spec, balances, purchases, counters or rewards are manufactured.
+Two added regressions and the actual composed-table/read-only account audit
+passed, retaining phase, window and waiver with zero source writes. After full
+restart a native read-only probe confirmed zero shop rows; the current process's
+bounded log check had no matching shop exception. The user confirmed the empty
+exchange opens and allows returning without a freeze.
 Bounded Windows sharing-lock retries
 also retain atomic selector publication after repeated transient test failures.
 See [usage and detailed limitations](guild-war.md).

@@ -62,7 +62,13 @@ def synthetic_war_static(catalog):
     content["seasondate"] = json.dumps(calendar)
     content["guildwar"] = json.dumps(
         {
-            "Seasons": [{"Id": 1, "SeasonDateId": 5500001, "CastleStageGroupId": 2001}],
+            "Seasons": [
+                {"Id": 1, "SeasonDateId": 5500001, "CastleStageGroupId": 2001, "ShopGroupId": 4001}
+            ],
+            "ShopSet": [
+                {"Id": 1, "GroupId": 4001, "Coins": 10, "Rewards": [{"ItemId": 101, "Amount": 1}]},
+                {"Id": 2, "GroupId": 9999, "Coins": 20, "Rewards": [{"ItemId": 102, "Amount": 2}]},
+            ],
             "SyntheticKeep": [1, 2],
             "Constants": {
                 "SingleClearedStageIds": [850020002],
@@ -178,6 +184,7 @@ class GuildWarTests(unittest.TestCase):
             self.assertEqual(before[name], after[name])
         expected_war = json.loads(before["guildwar"][1])
         expected_war["Constants"]["PlayCoopCoinReward"] = 0
+        expected_war["ShopSet"] = [row for row in expected_war["ShopSet"] if row["GroupId"] != 4001]
         self.assertEqual(json.loads(after["guildwar"][1]), expected_war)
         original_features = json.loads(before["unlockfeature"][1])
         features = json.loads(after["unlockfeature"][1])
@@ -367,6 +374,78 @@ class GuildWarTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             load_selection(self.ref)
 
+    def test_policy_three_shop_upgrades_to_empty_active_group_retaining_phase_window_and_account(
+        self,
+    ):
+        profile = self.install()
+        before = list(self.db.iterdump())
+        selection = enable(self.ref, skip_basic=True, phase=3)
+        prepared = bootstrap_override(self.ref, "static_data_get.bin", None)
+        lines, items = records(decode(prepared))
+        war = json.loads(items["guildwar"][1])
+        war["ShopSet"] = json.loads(records(decode(self.original))[1]["guildwar"][1])["ShopSet"]
+        raw = json.dumps(war)
+        at = items["guildwar"][0]
+        lines[at + 1], lines[at + 3] = raw + "\n", digest(raw.encode()) + "\n"
+        old_checksum = digest(b"synthetic-before-empty-shop")
+        at = items["__checksum__"][0]
+        lines[at + 1] = old_checksum + "\n"
+        lines[at + 3] = digest(old_checksum.encode()) + "\n"
+        old_body = compress("".join(lines).encode())
+        legacy = dict(
+            selection,
+            overlay_policy=3,
+            static_data_sha256=hashlib.sha256(old_body).hexdigest(),
+            static_data_checksum=old_checksum,
+        )
+        (self.root / f"guild_war_static_{legacy['static_data_sha256']}.bin").write_bytes(old_body)
+        (self.root / SELECTION).write_text(json.dumps(legacy))
+        self.assertEqual(load_selection(self.ref)["overlay_policy"], 3)
+        update = json.loads(
+            bootstrap_override(self.ref, "static_data_check.bin", {"Checksum": old_checksum})
+        )
+        self.assertFalse(update["UpToDate"])
+        current = load_selection(self.ref)
+        self.assertEqual(current["overlay_policy"], OVERLAY_POLICY)
+        self.assertEqual(current["phase"], 3)
+        self.assertTrue(current["skip_basic"])
+        self.assertEqual(current["period"], selection["period"])
+        actual = json.loads(
+            records(decode(bootstrap_override(self.ref, "static_data_get.bin", None)))[1][
+                "guildwar"
+            ][1]
+        )
+        expected = copy.deepcopy(war)
+        expected["ShopSet"] = [row for row in expected["ShopSet"] if row["GroupId"] != 4001]
+        self.assertEqual(actual, expected)
+        self.assertEqual(actual["ShopSet"], [war["ShopSet"][1]])
+        self.assertEqual(self.source.read_bytes(), self.original)
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_empty_shop_policy_rejects_malformed_source_groups_without_replacing_selection(self):
+        enable(self.ref)
+        before = (self.root / SELECTION).read_bytes()
+        lines, items = records(decode(self.original))
+        war = json.loads(items["guildwar"][1])
+        for mutate in (
+            lambda w: w["Seasons"][0].update(ShopGroupId=0),
+            lambda w: w["Seasons"][0].update(ShopGroupId=True),
+            lambda w: w["Seasons"][0].pop("ShopGroupId"),
+            lambda w: w.update(ShopSet=None),
+            lambda w: w["ShopSet"][0].update(GroupId="4001"),
+        ):
+            changed = copy.deepcopy(war)
+            mutate(changed)
+            rows = list(lines)
+            raw = json.dumps(changed)
+            at = items["guildwar"][0]
+            rows[at + 1], rows[at + 3] = raw + "\n", digest(raw.encode()) + "\n"
+            with self.assertRaises(ValueError):
+                enable(self.ref, source=compress("".join(rows).encode()))
+            self.assertEqual((self.root / SELECTION).read_bytes(), before)
+        self.assertEqual(self.source.read_bytes(), self.original)
+
     def test_cli_enable_status_disable_and_missing_source_errors(self):
         for action, expected in (
             ("enable", True),
@@ -399,6 +478,7 @@ class GuildWarTests(unittest.TestCase):
         )
         expected = copy.deepcopy(original)
         expected["Constants"]["PlayCoopCoinReward"] = 0
+        expected["ShopSet"] = [row for row in expected["ShopSet"] if row["GroupId"] != 4001]
         expected["CastleStageSet"][0]["SiegeStageIds"] = []
         expected["CastleStageSet"][0]["DefenceStageIds"] = []
         self.assertEqual(altered, expected)
@@ -411,6 +491,7 @@ class GuildWarTests(unittest.TestCase):
         )
         expected = copy.deepcopy(original)
         expected["Constants"]["PlayCoopCoinReward"] = 0
+        expected["ShopSet"] = [row for row in expected["ShopSet"] if row["GroupId"] != 4001]
         self.assertEqual(restored, expected)
         self.assertEqual(self.store.account.profile(), profile)
         self.assertEqual(list(self.db.iterdump()), before)
@@ -453,7 +534,7 @@ class GuildWarTests(unittest.TestCase):
         self.assertEqual(self.source.read_bytes(), self.original)
         self.assertEqual(self.store.account.profile(), profile)
         self.assertEqual(list(self.db.iterdump()), before)
-        for invalid in (False, 2, 4):
+        for invalid in (False, 2, 5):
             (self.root / SELECTION).write_text(json.dumps(dict(upgraded, overlay_policy=invalid)))
             with self.subTest(policy=invalid), self.assertRaises(ValueError):
                 load_selection(self.ref)
