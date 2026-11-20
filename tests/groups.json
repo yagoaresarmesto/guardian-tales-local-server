@@ -5,11 +5,11 @@
   },
   "account": {
     "description": "Account import, profile customization and local administration",
-    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_admin", "test_admin_festival", "test_admin_imported"]
+    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_account_name", "test_admin", "test_admin_festival", "test_admin_imported"]
   },
   "content": {
     "description": "Reference data, content packs, archives and catalog contracts",
-    "modules": ["test_reference", "test_content_pack", "test_ondemand_archives", "test_quest_catalog", "test_tutorial_catalog"]
+    "modules": ["test_reference", "test_content_pack", "test_ondemand_archives", "test_quest_catalog", "test_tutorial_catalog", "test_nickname_static"]
   },
   "campaign": {
     "description": "Story entry, stage progress, completion and play menus",

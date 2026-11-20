@@ -48,6 +48,27 @@ class AssetTests(unittest.TestCase):
                 )
             )
             roots.append(root)
+            words = root / "media/banwords"
+            words.mkdir()
+            manifest_path = folder / "manifest.json"
+            manifest = json.loads(manifest_path.read_text())
+            for name in (
+                "kakao_en-US_name.txt",
+                "kakao_es-ES_name.txt",
+                "kakao_ko-KR_name.txt",
+                "kakao_en-US_chat.txt",
+                "other_name.txt",
+            ):
+                file = words / name
+                file.write_bytes(b"synthetic-blocked\nsecond-word\n")
+                Path(str(file) + ".etag").write_text('"preserved-word-list"')
+                manifest["files"].append(
+                    {
+                        "path": "resources/files/media/banwords/" + name,
+                        "sha256": hashlib.sha256(file.read_bytes()).hexdigest(),
+                    }
+                )
+            manifest_path.write_text(json.dumps(manifest))
         self.library = ResourceLibrary(roots)
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), handler_for(self.library))
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
@@ -90,6 +111,41 @@ class AssetTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertEqual(self.get(path)[0], 404)
+
+    def test_name_word_lists_refresh_cached_content_without_changing_preserved_files(self):
+        for name in ("kakao_en-US_name.txt", "kakao_es-ES_name.txt", "kakao_ko-KR_name.txt"):
+            path, sha = self.library.lookup("/media/banwords/" + name)
+            before = path.read_bytes(), Path(str(path) + ".etag").read_bytes()
+            for prefix in ("/", "/live/global/0491/", "/live/global/0491/master-global-v3.57.0/"):
+                code, headers, body = self.get(
+                    prefix + "media/banwords/" + name, {"If-None-Match": '"preserved-word-list"'}
+                )
+                self.assertEqual((code, body), (200, b"\n"))
+                self.assertNotEqual(headers["ETag"], '"preserved-word-list"')
+                self.assertEqual(int(headers["Content-Length"]), 1)
+                # Native Split with RemoveEmptyEntries creates a zero-word list.
+                self.assertEqual(body.split(), [])
+                self.assertEqual(
+                    self.get(prefix + "media/banwords/" + name, {"If-None-Match": headers["ETag"]})[
+                        0
+                    ],
+                    304,
+                )
+            self.assertEqual((path.read_bytes(), Path(str(path) + ".etag").read_bytes()), before)
+            self.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), sha)
+
+    def test_name_list_head_range_and_normal_chat_lists_keep_correct_http_framing(self):
+        path = "/media/banwords/kakao_en-US_name.txt"
+        code, headers, body = self.get(path, method="HEAD")
+        self.assertEqual((code, headers["Content-Length"], body), (200, "1", b""))
+        code, headers, body = self.get(path, {"Range": "bytes=0-0"})
+        self.assertEqual((code, headers["Content-Range"], body), (206, "bytes 0-0/1", b"\n"))
+        self.assertEqual(self.get(path, {"Range": "bytes=1-2"})[0], 416)
+        for name in ("kakao_en-US_chat.txt", "other_name.txt"):
+            code, headers, body = self.get("/media/banwords/" + name)
+            self.assertEqual((code, body), (200, b"synthetic-blocked\nsecond-word\n"))
+            self.assertEqual(headers["ETag"], '"preserved-word-list"')
+        self.assertEqual(self.get("/media/banwords/kakao_missing_name.txt")[0], 404)
 
     def test_full_head_conditional_and_range_share_one_persistent_connection(self):
         connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=3)

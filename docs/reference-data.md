@@ -6,6 +6,35 @@ versioned Release pack and creates `local/client-data/reference` plus a CDN
 resource root. This document describes individual input contracts and other
 preservation layouts.
 
+## Free local nickname changes
+
+`/user/change-name` accepts exactly `{"Name":"NewName"}` after sign-in and
+prologue completion. Nicknames retain the native 2..10 UTF-16-unit limit and
+reject control characters and invalid Unicode. The local server applies no word
+list, reserved-name rule, uniqueness check, cooldown or currency charge. Free and
+paid gems, tickets and spending counters remain unchanged. This is a local policy,
+not a reconstruction of official name-change pricing or moderation.
+
+Only `User.Name` and its `Cas` change. An existing owned `GuildMember` receives
+the same name and a revision increment when needed. These updates and an
+epoch/sequence receipt commit together; delayed retries return the latest saved
+name and cannot restore an earlier choice. Original imports, prologue selections,
+captured startup reads, inventory and other account progress are retained.
+
+The matching client checks paid gems before sending this request. The backend
+therefore overlays only `constants.ChangeNickCost=0` over its effective static
+data, after existing Raid, arena and Guild War overlays. It refreshes the record
+revision, content digest and aggregate checksum; static get/check responses share
+that checksum. Preserved bootstrap files stay unchanged.
+
+The CDN serves an empty list for manifest-listed
+`media/banwords/kakao_<locale>_name.txt` resources with a distinct ETag, refreshing
+previously cached lists. The native parser removes empty lines. This client list
+is shared by account and guild names; chat lists and other resources retain their
+original content. Preserved files, manifests and their ETags are never overwritten.
+No APK patch or Android data reset is needed. **After updating, fully close the
+game, restart both backend and CDN, and reopen it; the bridge can remain running.**
+
 ## What the source contains
 
 `guardian_tales/templates/` holds a reconstructed empty local-account template,

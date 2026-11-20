@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **836 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 77 modules. `validate --list-groups` reports
+The suite has **857 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 79 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -508,6 +508,22 @@ are explicitly empty/unknown in this local view. The own-user native callback
 uses the current representative avatar and device-local badge. No original
 profile-card response was captured; completing the card request alone does not
 establish a rendered popup.
+Twenty-one new nickname regressions cover the account mutation, composed static
+cost/cache contract and CDN name lists. `/user/change-name` accepts one structurally
+valid Name, updates only the user and owned guild-member names/revisions, and
+commits an atomic retry receipt. The requested local policy is free, with no word
+filter, cooldown or uniqueness check. Zero balances are supported; no assets,
+spending counters, inventory, progress or captured startup reads are altered.
+The native popup checks `ChangeNickCost` against paid gems and loads a localized
+name word list before sending. The final static overlay sets only that cost to
+zero over the effective mode tables, with consistent revisions/checksums. The CDN
+returns an empty name list under a new ETag, retaining chat lists and preserved
+resource bytes. Its name list also serves guild-name validation. The actual
+pending request passed on an in-memory account backup with zero source writes;
+the actual composed static data retained every other constant and table. APK
+verification of the updated cost, rename persistence and filter is pending.
+See [usage and restart requirements](reference-data.md#free-local-nickname-changes).
+
 Twelve representative-portrait regressions now cover
 `/user/select-representative-character`: any owned inventory hero can be selected
 with no fixed character list or extra catalog. Only the chosen ID and user

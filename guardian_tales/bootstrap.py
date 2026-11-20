@@ -16,10 +16,12 @@ import uuid
 from datetime import datetime, timezone
 
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
+from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
 from .jewel_upgrade import ROUTES as JEWEL_UPGRADE_ROUTES
 from .lobby import LOBBY_ROUTES
 from .lobby import respond as lobby_response
+from .nickname_static import bootstrap_seed as nickname_bootstrap_seed
 from .orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE
 from .orbital import end as end_orbital
 from .orbital import enter as enter_orbital
@@ -73,6 +75,15 @@ STATIC_SEEDS = {
 
 def utc_now():
     return datetime.now(timezone.utc).isoformat(timespec="microseconds")
+
+
+def static_seed(references, filename, body):
+    seed = guild_war_bootstrap_override(references, filename, body)
+    if seed is None:
+        seed = punchking_bootstrap_override(references, filename, body)
+    if seed is None:
+        seed = raid_bootstrap_override(references, filename, body)
+    return references.read_bytes(filename) if seed is None else seed
 
 
 class GuestStore:
@@ -335,6 +346,15 @@ class BootstrapSession:
                     return json_response(
                         request,
                         self.store.account.select_representative_character(body, operation_id),
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == ACCOUNT_NAME_ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.change_name(body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
@@ -676,13 +696,7 @@ class BootstrapSession:
         if route in STATIC_SEEDS:
             filename, kind = STATIC_SEEDS[route]
             try:
-                seed = guild_war_bootstrap_override(self.store.references, filename, body)
-                if seed is None:
-                    seed = punchking_bootstrap_override(self.store.references, filename, body)
-                if seed is None:
-                    seed = raid_bootstrap_override(self.store.references, filename, body)
-                if seed is None:
-                    seed = self.store.references.read_bytes(filename)
+                seed = nickname_bootstrap_seed(self.store.references, filename, body, static_seed)
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
             return Packet(

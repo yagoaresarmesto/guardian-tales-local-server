@@ -132,6 +132,7 @@ class SnapshotTests(unittest.TestCase):
                 "/summon/weapon",
                 "/tower-infinity/end-stage",
                 "/user/add-character-experience",
+                "/user/change-name",
                 "/user/charge-stamina",
                 "/user/charge-stamina-by-gem",
                 "/user/claim-daily-attendance",

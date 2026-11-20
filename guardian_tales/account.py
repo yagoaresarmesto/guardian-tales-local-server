@@ -11,6 +11,10 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
+from .account_name import change as change_account_name
+from .account_name import create_tables as create_account_name_tables
+from .account_name import valid_name
 from .attendance import claim as claim_imported_attendance
 from .attendance import create_tables as create_attendance_tables
 from .basecamp import create_tables as create_basecamp_tables
@@ -164,6 +168,7 @@ ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
     REPRESENTATIVE_CHARACTER_ROUTE,
+    ACCOUNT_NAME_ROUTE,
     PORTRAIT_FRAME_ROUTE,
     PROFILE_BADGE_ROUTE,
     "/user/save-party-member/v2",
@@ -261,15 +266,6 @@ ACCOUNT_ROUTES = (
 )
 
 
-def valid_name(name):
-    if not isinstance(name, str) or any(ord(c) < 32 or ord(c) == 127 for c in name):
-        return False
-    try:
-        return 2 <= len(name.encode("utf-16le")) // 2 <= 10
-    except UnicodeError:
-        return False
-
-
 def valid_prologue_info(info):
     fields = {"IsMale", "VoiceType", "Weapon1ItemId", "Weapon2ItemId", "BobLindaQuestGrade"}
     return (
@@ -295,6 +291,7 @@ class AccountStore:
         create_preset_tables(db)
         create_party_member_tables(db)
         create_representative_character_tables(db)
+        create_account_name_tables(db)
         create_weapon_summon_tables(db)
         create_portrait_frame_tables(db)
         create_village_tables(db)
@@ -1204,6 +1201,9 @@ class AccountStore:
 
     def select_representative_character(self, request, operation_id):
         return select_representative_character(self, request, operation_id)
+
+    def change_name(self, request, operation_id):
+        return change_account_name(self, request, operation_id)
 
     def select_portrait_frame(self, request, operation_id):
         return select_portrait_frame(self, request, operation_id)

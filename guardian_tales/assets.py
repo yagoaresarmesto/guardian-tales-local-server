@@ -92,9 +92,22 @@ def handler_for(library, journal=None):
                 self.send_error(404)
                 return
             path, sha = entry
-            total = path.stat().st_size
+            # The native name filter splits nonempty lines from these downloaded
+            # lists. Serve an empty list with a new ETag, retaining preserved files
+            # and all chat word lists. This shared client list also covers guild names.
+            local_name_list = (
+                path.parent.name == "banwords"
+                and path.parent.parent.name == "media"
+                and re.fullmatch(r"kakao_[A-Za-z0-9-]+_name\.txt", path.name) is not None
+            )
+            override = b"\n" if local_name_list else None
+            total = len(override) if override is not None else path.stat().st_size
             etag_file = Path(str(path) + ".etag")
-            etag = etag_file.read_text().strip() if etag_file.is_file() else None
+            etag = (
+                '"local-nickname-words-v1"'
+                if local_name_list
+                else etag_file.read_text().strip() if etag_file.is_file() else None
+            )
             if (
                 not etag
                 or "\r" in etag
@@ -132,6 +145,9 @@ def handler_for(library, journal=None):
             self.end_headers()
             if body:
                 try:
+                    if override is not None:
+                        self.wfile.write(override[start : end + 1])
+                        return
                     with path.open("rb") as src:
                         src.seek(start)
                         remaining = end - start + 1

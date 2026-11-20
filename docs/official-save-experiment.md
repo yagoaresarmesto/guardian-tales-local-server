@@ -173,6 +173,18 @@ Other empty social/catalog scaffolding still has the limitations documented in
 [status](status.md). Health exposes `imported_account: true` and lists the enabled
 mutation routes in `imported_account_mutation_routes`.
 
+Account nickname changes are also enabled through `/user/change-name`, with the
+owner-requested free/no-word-filter policy. Only the account name and existing
+owned guild-member name, their revisions and the retry receipt change. No paid
+or free gems, spending counters, inventory, progress, imported source or preserved
+startup reads are modified. The exact pending request passed on an in-memory
+backup of the real account with a read-only/query-only source. The static overlay
+also passed against the effective real mode tables, retaining other constants
+and all other table records. These are clone checks; the APK retest is pending.
+Restart both backend and CDN, then fully reopen the client to reload the zero
+cost and empty localized name list. The existing bridge can remain open. See
+[the nickname contract](reference-data.md#free-local-nickname-changes).
+
 Twenty-three mutations are now enabled: `/item/change-options`, `/item/apply-options`,
 `/item/change-relic-options/v2`, `/item/apply-relic-options`,
 `/item/change-lock-options`,
