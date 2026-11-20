@@ -120,7 +120,9 @@ def records(raw):
     return lines, result
 
 
-def prepare(references, season, previous_revision=0, *, lineup=None, rotation_tables=False):
+def prepare(
+    references, season, previous_revision=0, *, lineup=None, rotation_tables=False, hp_per_bar=None
+):
     source = references.directory / "static_data_get.bin"
     if not source.is_file() or not 5 <= source.stat().st_size <= MAX_PACKET:
         raise ValueError("Raid activation requires the matching external static_data_get.bin")
@@ -168,11 +170,18 @@ def prepare(references, season, previous_revision=0, *, lineup=None, rotation_ta
         }
     if lineup is not None:
         from .guild_raid import validate_season
-        from .raid_custom import append_binary_monsters, build_season, use_local_presentation
+        from .raid_custom import (
+            append_binary_monsters,
+            build_season,
+            set_hp_per_bar,
+            use_local_presentation,
+        )
 
         monsters = json.loads(updates["monsters"])
         monster_count = len(monsters)
         season = build_season(raid, monsters, season, selected, lineup)
+        if hp_per_bar is not None:
+            season = set_hp_per_bar(raid, season, selected, hp_per_bar)
         validate_season(season)
         use_local_presentation(raid, selected, references.directory)
         updates["guildraid2"] = json.dumps(raid, ensure_ascii=False, separators=(",", ":"))

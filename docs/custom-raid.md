@@ -52,6 +52,7 @@ Put the subcommand after `-m guardian_tales raid-season`.
 | Option | Example | What it does |
 | --- | --- | --- |
 | `--reference-dir` | `--reference-dir local/client-data/reference` | Uses the same reference directory as the running backend. Without it, the command reads `GT_REFERENCE_DIR` or falls back to `local/reference`. |
+| `--hp-per-bar` | `--hp-per-bar 100000000` | Sets each HP bar in the custom season for all four bosses. Omit it to use the stock bars. The command prints the applied HP per bar. |
 | `-h` or `--help` | `raid-season custom --help` | Shows the arguments for that subcommand. |
 
 The final word in each pair is the element. Boss names and elements are case
@@ -123,6 +124,19 @@ variants.
 The first Sandmonster in a custom lineup appears as **Sandy (jailed for your
 crimes)**. With multiple Sandmonsters, the later slots also show their element
 in the name.
+
+### Sandy and big hits
+
+Sandy's original AI replaces the usual Raid damage handler. The usual handler
+carries excess damage into the next HP bar. Sandy's handler applies the hit
+once, so a large hit can lose damage at the end of a 500,000-HP bar.
+`--hp-per-bar 100000000` gives large hits more room before the next boundary.
+This setting affects all four fights in that custom season. An in-game test
+with Fire Sandy confirmed that she took the expected damage with the 100M bars.
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales raid-season custom $raidLineup --reference-dir $raidRefs --hp-per-bar 100000000
+```
 
 Custom Raid runs as repeatable local practice. The game displays fight
 results, and the server returns an empty reward list. The project has checked

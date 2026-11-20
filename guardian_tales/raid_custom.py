@@ -181,6 +181,23 @@ def apply_sandmonster_scaling(monster):
     )
 
 
+def set_hp_per_bar(raid, season, season_row, hp_per_bar):
+    rounds = raid.get("Round")
+    if not isinstance(rounds, list) or any(not isinstance(row, dict) for row in rounds):
+        raise ValueError("Custom Raid HP requires the stock round table")
+    rows = [row for row in rounds if row.get("SetId") == season_row["RoundSet"]]
+    if sum(row.get("Round") == 1 for row in rows) != 1:
+        raise ValueError("Custom Raid HP requires the stock round set")
+    round_set = 1 + max(
+        [row["SetId"] for row in rounds]
+        + [row["RoundSet"] for row in raid["Seasons"] + raid.get("Seasons.Kong", [])]
+    )
+    rounds.extend(dict(row, SetId=round_set, BossHpBar=hp_per_bar) for row in rows)
+    season_row["RoundSet"] = round_set
+    first_round = dict(season["first_round"], boss_hp_bar=hp_per_bar)
+    return dict(season, round_set=round_set, first_round=first_round)
+
+
 def build_season(raid, monsters, season, season_row, lineup):
     by_id = {monster["Id"]: monster for monster in monsters}
     by_name = {monster["Name"]: monster for monster in monsters}

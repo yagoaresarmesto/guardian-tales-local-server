@@ -162,17 +162,19 @@ def find_season(catalog, season_id, selection=None):
     raise ValueError("Unknown local raid season; use raid-season list")
 
 
-def select_season(references, season_id=None, *, lineup=None):
+def select_season(references, season_id=None, *, lineup=None, hp_per_bar=None):
+    if hp_per_bar is not None and (lineup is None or not integer(hp_per_bar)):
+        raise ValueError("Custom Raid HP per bar must be a positive 32-bit integer")
     catalog = load_catalog(references)
     if lineup is None:
         season = find_season(catalog, season_id)
     else:
         season = min(catalog["seasons"], key=lambda s: s["season_id"])
     with StateLock(references.directory, filename=".raid_season.lock"):
-        return publish_selection(references, season, lineup)
+        return publish_selection(references, season, lineup, hp_per_bar)
 
 
-def publish_selection(references, season, lineup):
+def publish_selection(references, season, lineup, hp_per_bar):
     from .raid_static import atomic_replace, prepare
 
     previous = load_selection(references) or {}
@@ -182,6 +184,7 @@ def publish_selection(references, season, lineup):
         previous.get("static_data_revision", 0),
         lineup=lineup,
         rotation_tables=previous.get("rotation_tables", False),
+        hp_per_bar=hp_per_bar,
     )
     # Publish the immutable static body before atomically switching selection.
     # The client must reload its tables; SQLite and global time are untouched.
@@ -370,6 +373,9 @@ def main(argv=None):
             command.add_argument("season_id", type=int)
         elif action == "custom":
             command.add_argument("lineup", help="Four comma-separated boss and element pairs")
+            command.add_argument(
+                "--hp-per-bar", type=int, help="Practice HP per bar for all four bosses"
+            )
     args = parser.parse_args(argv)
     references = ReferenceData(args.reference_dir)
     try:
@@ -378,7 +384,7 @@ def main(argv=None):
                 from .raid_custom import parse_lineup
 
                 lineup = parse_lineup(args.lineup)
-                season = select_season(references, lineup=lineup)
+                season = select_season(references, lineup=lineup, hp_per_bar=args.hp_per_bar)
             else:
                 season = select_season(references, args.season_id)
             result = {
@@ -392,6 +398,7 @@ def main(argv=None):
                 result["lineup"] = [
                     f"{boss.title()} ({element.title()})" for boss, element in lineup
                 ]
+                result["hp_per_bar"] = season["first_round"]["boss_hp_bar"]
                 if (references.directory / WAR_SELECTION).exists():
                     result["visibility"] = "Run guild-war disable to show Raid in the game"
         else:

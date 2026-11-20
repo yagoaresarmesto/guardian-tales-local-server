@@ -137,6 +137,9 @@ class RaidStaticTests(unittest.TestCase):
     def test_custom_rotation_shares_stages_and_restores_stock_with_new_revisions(self):
         lines, before = records(decode(self.original))
         raid = json.loads(before["guildraid2"][1])
+        raid["Round"] = [
+            {"Round": n, "SetId": 1, "BossHpBar": 500000, "BuffLevel": 50} for n in (1, 2)
+        ]
         raid["BossDetails"].extend(
             [
                 {"Id": 1100627, "StageId": 810010002, "MonsterId": 100627, "MonsterRelation": 1},
@@ -222,11 +225,23 @@ class RaidStaticTests(unittest.TestCase):
         # Replace a generated element with the game’s existing unregistered monster.
         lineup[0] = ("sandmonster", "earth")
         lineup[-1] = ("ancient demon", "dark")
-        custom = select_season(self.ref, lineup=lineup)
+        for invalid in (0, -1, True, 0x80000000):
+            with self.subTest(hp_per_bar=invalid), self.assertRaises(ValueError):
+                select_season(self.ref, lineup=lineup, hp_per_bar=invalid)
+        self.assertEqual(selected_season(self.ref), custom)
+        custom = select_season(self.ref, lineup=lineup, hp_per_bar=100_000_000)
         self.assertEqual(selected_season(self.ref), custom)
         updated = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
         overlay = json.loads(updated["guildraid2"][1])
         self.assertEqual(overlay["BossDetails"][-1]["MonsterId"], 790012)
+        self.assertEqual(custom["first_round"]["boss_hp_bar"], 100_000_000)
+        self.assertEqual(overlay["Seasons"][0]["RoundSet"], custom["round_set"])
+        self.assertEqual(overlay["Seasons"][1], raid["Seasons"][1])
+        self.assertEqual(overlay["Round"][:2], raid["Round"])
+        self.assertEqual(
+            overlay["Round"][2:],
+            [dict(row, SetId=custom["round_set"], BossHpBar=100_000_000) for row in raid["Round"]],
+        )
         earth_detail = next(
             row for row in overlay["BossDetails"] if row["Id"] == custom["bosses"][0]["id"]
         )

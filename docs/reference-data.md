@@ -1644,6 +1644,11 @@ fixed Attack 2,000 and fixed Defense 900. This also applies to custom Earth
 Sandmonster. Invader Director already uses this profile in all six elements.
 See the [Custom Raid user guide](custom-raid.md) for the full command and boss list.
 
+When `custom` includes `--hp-per-bar`, preparation copies the template's round
+set and assigns that local set to the selected season. The new HP applies to
+all four bosses. The selected season's catalog entry reports the same first
+round HP.
+
 The derived body and matching custom season are published together through
 the selection file. `raid-season set ID` returns to the stock rotation. It
 publishes fresh table revisions so the client can replace cached custom data.
