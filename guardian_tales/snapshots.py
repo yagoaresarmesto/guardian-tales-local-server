@@ -50,6 +50,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/preset/set-selected-preset",
         "/preset/set-presets",
         "/preset/delete-preset",
+        "/preset/reorder-preset",
         "/user/charge-stamina",
         "/user/add-character-experience",
         "/mission/claim-challenge-all",

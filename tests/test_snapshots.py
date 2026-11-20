@@ -122,6 +122,7 @@ class SnapshotTests(unittest.TestCase):
                 "/mission/claim-challenge-all",
                 "/mission/claim-challenge-all-step",
                 "/preset/delete-preset",
+                "/preset/reorder-preset",
                 "/preset/set-presets",
                 "/preset/set-selected-preset",
                 "/summon/character",

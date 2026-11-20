@@ -719,6 +719,39 @@ the backup. Group/user revisions advanced three times, matching those operations
 SQLite integrity passed. Only the backend needs a restart; the existing save and
 CDN/bridge configuration are retained.
 
+## Reordering Raid and Orbital Lift presets
+
+The next report came from `/preset/reorder-preset`, which had no server handler.
+Read-only inspection found native `PresetType=7` and a 30-element `Order` array.
+The matching popup writes each saved ID's list position at index `Id % 100`;
+unsaved slots retain zero. Orbital Lift uses the same builder, with type 4 and
+five slots from the matching client constants. Its callback checks request
+success; the shared resource handler applies the current preset group.
+
+Both modes now update only their saved definitions' `Order` fields and the group
+revision, atomically with an epoch/sequence receipt. The response contains all
+current definitions, so the native dictionary replacement retains other modes.
+The account profile and selection pointers remain byte-for-byte unchanged.
+Replays return the latest group without restoring old order or deleted/recreated
+slots. Existing editing, selection and deletion keep using the original IDs.
+Other ordering modes remain unsupported, and definition edits still cannot
+smuggle an order change through `/preset/set-presets`.
+
+Thirteen regressions cover both modes, native framing, moves, mutation limits,
+retries/reopening, slot recreation, no-ops, invalid state, overflow and rollback.
+All 31 focused order/deletion/import tests pass. The actual Raid request and an
+equivalent Orbital request passed on an in-memory backup of the current account;
+a subsequent selected-Orbital deletion also preserved Raid teams/order/selection.
+The real SQLite connection was read-only/query-only, with zero diagnostic writes.
+The user confirmed both modes work and retain their order after reopening.
+Read-only verification found two Raid and one Orbital reorder, plus four explicit
+Apply calls and an Orbital deletion during testing. All eight requests replayed
+from the backup on a memory copy to exactly match the live account and group.
+Each reorder retained raw profile bytes; selection/account-revision changes came
+from the explicit Apply/delete calls. Final saved IDs, names, characters, gear and
+physical array order matched the backup, as did assets, other profile sections
+and imported startup data. SQLite integrity passed with zero source writes.
+
 ## Applying or creating an unused Orbital slot
 
 The rejected request was `/preset/set-presets`, rather than a separate Apply

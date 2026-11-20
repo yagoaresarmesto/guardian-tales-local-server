@@ -117,6 +117,8 @@ from .passes import (
 from .portrait_frame import ROUTE as PORTRAIT_FRAME_ROUTE
 from .portrait_frame import create_tables as create_portrait_frame_tables
 from .portrait_frame import select as select_portrait_frame
+from .preset_order import ROUTE as PRESET_REORDER_ROUTE
+from .preset_order import reorder as reorder_party_presets
 from .presets import create_tables as create_preset_tables
 from .presets import delete_existing as delete_existing_preset
 from .presets import save_party as save_party_preset
@@ -230,6 +232,7 @@ ACCOUNT_ROUTES = (
     "/preset/set-selected-preset",
     "/preset/set-presets",
     "/preset/delete-preset",
+    PRESET_REORDER_ROUTE,
     "/lobby-village/harvest-all",
     "/lobby-village/harvest-basecamp",
     "/lobby-village/receive-gift",
@@ -1180,6 +1183,9 @@ class AccountStore:
 
     def delete_party_preset(self, request, operation_id):
         return delete_existing_preset(self, request, operation_id)
+
+    def reorder_party_presets(self, request, operation_id):
+        return reorder_party_presets(self, request, operation_id)
 
     def harvest_village(self, request, operation_id, now=None):
         return harvest_village(self, request, operation_id, now)

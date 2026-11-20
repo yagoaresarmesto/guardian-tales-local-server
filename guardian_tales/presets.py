@@ -33,6 +33,10 @@ def create_tables(db):
         "CREATE TABLE IF NOT EXISTS preset_delete_requests "
         "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL)"
     )
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS preset_reorder_requests "
+        "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL)"
+    )
 
 
 def current_group(db):

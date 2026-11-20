@@ -25,7 +25,7 @@
   },
   "teams": {
     "description": "Normal parties, preset selection/editing and compact resources",
-    "modules": ["test_party_members", "test_preset_selection", "test_preset_edit", "test_preset_delete", "test_preset_create", "test_preset_payloads"]
+    "modules": ["test_party_members", "test_preset_selection", "test_preset_edit", "test_preset_delete", "test_preset_create", "test_preset_payloads", "test_preset_reorder"]
   },
   "rewards": {
     "description": "Missions, achievements, knowledge, passes, temporal events, stamina and attendance",

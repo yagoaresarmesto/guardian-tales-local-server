@@ -198,6 +198,26 @@ explicitly recreated slots. Other preset modes remain outside deletion support.
 After updating this backend behavior, close the game, restart the backend and
 reopen the game; CDN and bridge can remain running.
 
+`/preset/reorder-preset` uses the same handler for Orbital Lift (`PresetType=4`)
+and Raid/Conquest (`PresetType=7`). The native request contains exactly
+`PresetType` and `Order`: integer arrays of 5 or 30 entries, matching the pinned
+3.57.0 EU `PresetCountS3`. **The array contains positions, not preset IDs**:
+`Order[PresetId % 100]` gives the saved team's new zero-based position. Saved
+teams must occupy distinct positions `0..N-1`; unsaved slots remain zero.
+Unknown modes, invalid lengths/positions, ambiguous saved IDs and stale slot
+references reject without writes. No additional catalog is required.
+
+Only existing teams' `Order` fields and `UserPartyPreset2.Cas` change. Team IDs,
+names, members, equipment, the physical definition-array order, other modes and
+the complete account profile/selection map are preserved. The response contains
+the full current `UserPartyPreset2`, retaining all other teams during the native
+dictionary replacement. Order changes and an epoch/sequence receipt commit
+together. Unchanged order records only a receipt; a repeated receipt makes no
+writes and returns the latest group after later moves, deletion or recreation.
+Selecting, editing and deleting teams continues to use their original IDs in
+both modes. Fully close the game and restart the backend after this update;
+CDN and bridge can remain running.
+
 Creating a missing definition through `/preset/set-presets` additionally requires
 `orbital_preset_catalog.json` with the same pinned `client` object and integer
 `count` in `[1,100]`. The file is limited to 4 KiB. The inspected `PresetCount`

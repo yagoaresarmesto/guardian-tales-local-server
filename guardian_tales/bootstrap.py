@@ -30,6 +30,7 @@ from .party_members import ROUTE as PARTY_MEMBER_ROUTE
 from .play_menu import PLAY_MENU_ROUTES
 from .play_menu import read as play_menu_read
 from .portrait_frame import ROUTE as PORTRAIT_FRAME_ROUTE
+from .preset_order import ROUTE as PRESET_REORDER_ROUTE
 from .protocol import Packet, PacketError
 from .punchking import END as PUNCHKING_END
 from .punchking import ROUTES as PUNCHKING_ROUTES
@@ -512,6 +513,15 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.delete_party_preset(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == PRESET_REORDER_ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.reorder_party_presets(body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

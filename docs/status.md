@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **864 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 79 modules. `validate --list-groups` reports
+The suite has **877 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 80 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -729,6 +729,25 @@ save audit found two deletions around an explicit recreation/selection of the
 same slot, with the final definition absent. Every surviving team/order and
 other mode pointer, inventory, assets, progress and captured seed stayed intact.
 The group/user revision deltas matched those changes; SQLite integrity passed.
+Thirteen preset-order regressions cover the shared Orbital Lift/Raid handler at
+`/preset/reorder-preset`. Native mode 4/7 requests contain slot-indexed position
+arrays of length 5/30, with zero for unsaved slots and a complete permutation for
+saved teams. Only target `Order` fields and group revision change; account bytes,
+selected IDs, team members/gear, other modes and captured startup data remain
+unchanged. Validation, no-ops, revision ceilings, atomic rollback, reconnect and
+old retries after edits/deletion/recreation are covered. Integration checks also
+select/delete reordered teams by their original IDs in both modes. All 31 focused
+order/deletion/import checks pass. The actual pending Raid array and equivalent
+Orbital array passed on a memory backup of the real account, followed by deleting
+its selected Orbital team while retaining Raid order/selection. Diagnostic source
+writes were zero. The user then confirmed order persists after reopening in
+both modes. The APK completed two Raid reorders and one Orbital reorder. Its
+four additional Apply operations and one Orbital deletion also replayed from
+the backup to exactly match the live account/group. Each reorder left the raw
+profile unchanged; the other operations explain the selection/revision changes.
+Final IDs, names, members, equipment and definition-array order were preserved,
+as were assets, other profile sections and the captured seed. SQLite integrity
+passed, with zero diagnostic source writes.
 Ten Orbital preset-edit regressions cover
 exact mutation bounds, optional selection, omitted gear fields, no-ops, retries,
 reopening, schema/scope/ownership checks, empty teams and rollback/revision limits.
