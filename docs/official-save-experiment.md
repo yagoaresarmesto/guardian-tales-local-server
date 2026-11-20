@@ -11,6 +11,33 @@ and one- and ten-hero draws using selectable controllers in the APK. Wishlist
 changes and the other supported payment types have synthetic coverage only.
 Unlocked systems are not automatically implemented by import.
 
+## Backroom entry with an imported account
+
+The lobby-to-Backroom transition stopped at unsupported `/my-room/enter`.
+Read-only request inspection found exactly `IsPartial: false`; the native builder
+always sends that Boolean. Its coroutine consumes `UserMyRoom` and NewGetItems,
+and the native room singleton has Used, nullable Avatar Hero, X/Y offsets,
+WallPaper, Music and Favorites. That separate resource was not captured among
+the imported profile's seventeen sections.
+
+Entry now provides a read-only local default view, with no account or startup
+data replacement. The default wallpaper/music IDs come from free Default
+MyRoomMedia in the matching items table. Null Hero follows the current owned
+representative and costume. Zero wallpaper retains the existing bundled room
+background; the standalone default wallpaper image is absent from the prepared
+pack. Default music uses the present bgm_lobby_private bundle. NewGetItems and
+Favorites are empty. This does not restore uncaptured room customization or add
+paid/limited media; room edits, purchases and rewards remain separate contracts.
+
+Twelve synthetic regressions pass. The actual pending request, partial true and
+repeated entry passed on an in-memory account backup with SQLite query-only
+enabled, an identical database dump and zero diagnostic source writes. After
+backend reload, the user confirmed Backroom loads the character and returns to
+the lobby. Two entry calls completed with no rejections. The entire raw account
+row, imported startup data, current presets and 42 existing receipt/claim tables
+matched the pre-fix backup. No room table was created. SQLite integrity passed,
+with zero diagnostic source writes. Only the backend needs a restart.
+
 ## Observed sources
 
 A private, read-only observation of the matching Android client captured:

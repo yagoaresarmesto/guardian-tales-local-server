@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **882 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 80 modules. `validate --list-groups` reports
+The suite has **894 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 81 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -528,6 +528,25 @@ other profile sections/startup reads. SQLite integrity passed. The CDN refreshed
 the English name list with HTTP 200, then reused it with 304; a previously blocked
 name was not separately reported as tested.
 See [usage and restart requirements](reference-data.md#free-local-nickname-changes).
+
+Twelve Backroom-entry regressions cover `/my-room/enter` with native Boolean
+`IsPartial`. Its separate `UserMyRoom` singleton was not part of the imported
+profile, so entry supplies an explicit local default view and empty NewGetItems.
+Only free Default MyRoomMedia from the matching items table are made available;
+null Hero uses the current representative/costume, zero wallpaper keeps the
+bundled background and default music uses its existing bundle. Paid/limited
+media, purchases, edits and rewards are outside this entry operation. The entire
+account, startup data, presets and receipts remain unchanged, including with
+SQLite query-only enforcement. Tests cover framing/authentication, fresh/imported
+accounts, dynamic defaults and characters, reopen/repetition, invalid state and
+invalid catalogs. The exact pending request and partial/repeated entry passed
+on a write-disabled memory account backup with zero source writes. The user then
+confirmed the APK loads the character in Backroom and returns to the lobby. Two
+entry calls completed without rejections. Read-only verification found the entire
+raw account row, imported startup data, current presets and all 42 existing
+receipt/claim tables identical to the backup. No room storage was created and
+SQLite integrity passed, with zero diagnostic source writes. See
+[the entry contract](reference-data.md#backroom-entry).
 
 Twelve representative-portrait regressions now cover
 `/user/select-representative-character`: any owned inventory hero can be selected

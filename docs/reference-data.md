@@ -35,6 +35,30 @@ original content. Preserved files, manifests and their ETags are never overwritt
 No APK patch or Android data reset is needed. **After updating, fully close the
 game, restart both backend and CDN, and reopen it; the bridge can remain running.**
 
+## Backroom entry
+
+`/my-room/enter` accepts exactly Boolean `IsPartial` after sign-in and prologue
+completion. Both full and partial entry return native `UserMyRoom` and
+`NewGetItems: []`. This is a read-only local default view: the imported account
+did not include its separate room settings. No profile section, ownership record,
+balance, progress flag, captured startup response or other SQLite row is changed.
+
+The matching `items` table must contain exactly one free `Default` wallpaper and
+one free `Default` music item of type `MyRoomMedia`. Their IDs populate `Used`;
+only default music is selected. No fixed spec list or extra catalog is required,
+and paid/limited media are not granted. Null `Hero` uses the client's current
+representative character and costume; position offsets are zero and `Favorites`
+is empty. `WallPaper=0` retains the bundled background rather than requesting
+standalone wallpaper media absent from the prepared pack. The default music's
+bundle is present in that pack.
+
+The native resource has no account ID or revision fields. Entry omits `User` and
+other profile resources, so it cannot replace the saved account with room defaults.
+Repetition and reopening keep the same default view without database writes.
+Room edits, media purchases, favorites and friendship/visitor rewards remain
+separate unsupported operations. After updating, close the game and restart only
+the backend; CDN and bridge can remain running.
+
 ## What the source contains
 
 `guardian_tales/templates/` holds a reconstructed empty local-account template,

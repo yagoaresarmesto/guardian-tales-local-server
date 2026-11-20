@@ -103,6 +103,8 @@ from .missions import (
     FIRST_HERO_CHALLENGE_STEP,
 )
 from .monsters import record_defeated_monsters
+from .my_room import ROUTE as MY_ROOM_ENTRY
+from .my_room import enter as enter_my_room
 from .orbital import create_tables as create_orbital_tables
 from .party_members import create_tables as create_party_member_tables
 from .party_members import save as save_party_members
@@ -169,6 +171,7 @@ from .weapon_summon import draw as draw_weapons
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
+    MY_ROOM_ENTRY,
     REPRESENTATIVE_CHARACTER_ROUTE,
     ACCOUNT_NAME_ROUTE,
     PORTRAIT_FRAME_ROUTE,
@@ -1256,6 +1259,8 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route == MY_ROOM_ENTRY:
+            return enter_my_room(self, request)
         if route == GUILD_WAR_COIN_RANKING:
             return guild_war_coin_rankings(self, request)
         if route == GUILD_WAR_RANKING:
