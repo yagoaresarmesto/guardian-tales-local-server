@@ -95,6 +95,7 @@ class ItemSellTests(VillageFixture, unittest.TestCase):
         recreated = inventory_item(11, 202)
         recreated["Locked"] = True
         current["User"]["ItemWeapons"].append(recreated)
+        current["User"]["Characters"][0]["Weapon1"] = 11
         self.save_profile(current)
         before = list(self.db.iterdump())
         self.assertEqual(self.call(self.request), {"User": current["User"]})
@@ -144,15 +145,58 @@ class ItemSellTests(VillageFixture, unittest.TestCase):
         self.save_profile(current)
         self.reject(self.request)
 
-    def test_equipped_gear_in_any_character_slot_and_equipment_costumes_are_protected(self):
+    def test_sold_equipment_clears_only_its_nullable_character_slot_without_rewards(self):
         original = self.store.account.profile()
-        for field in EQUIPMENT_FIELDS:
+        for index, field in enumerate(sorted(EQUIPMENT_FIELDS)):
             current = copy.deepcopy(original)
             current["User"]["Characters"][0][field] = 11
             self.save_profile(current)
-            self.reject(self.request)
+            expected = self.expected_sale(current, self.request)
+            expected["User"]["Characters"][0][field] = None
+            self.assertEqual(
+                self.call(self.request, sequence=2700 + index), {"User": expected["User"]}
+            )
+            self.assertEqual(self.store.account.profile(), expected)
+
+    def test_equipment_costumes_remain_protected_without_an_unequip_contract(self):
+        original = self.store.account.profile()
         current = copy.deepcopy(original)
         current["User"]["Characters"][0]["EquipCostumes"] = {"1": 11}
+        self.save_profile(current)
+        self.reject(self.request)
+
+    def test_all_holders_are_cleared_but_unselected_equipment_and_hero_progress_remain(self):
+        current = self.store.account.profile()
+        hero = copy.deepcopy(current["User"]["Characters"][0])
+        hero.update(Id=2, Experience=765, Weapon1=11, Weapon2=13)
+        current["User"]["Characters"].append(hero)
+        current["User"]["CharacterIdCounter"] = 2
+        current["User"]["Characters"][0]["Weapon1"] = 11
+        self.save_profile(current)
+        request = {"SellItems": {"11": 1}}
+        expected = self.expected_sale(current, request)
+        for row in expected["User"]["Characters"]:
+            row["Weapon1"] = None
+        self.assertEqual(self.call(request), {"User": expected["User"]})
+        self.assertEqual(self.store.account.profile(), expected)
+
+    def test_partial_stack_sale_keeps_assignment_until_its_final_quantity_is_removed(self):
+        current = self.store.account.profile()
+        current["User"]["Characters"][0]["Costume"] = 41
+        self.save_profile(current)
+        request = {"SellItems": {"41": 3}}
+        expected = self.expected_sale(current, request)
+        self.assertEqual(self.call(request), {"User": expected["User"]})
+        final = {"SellItems": {"41": 9}}
+        expected = self.expected_sale(expected, final)
+        expected["User"]["Characters"][0]["Costume"] = None
+        self.assertEqual(self.call(final, sequence=2602), {"User": expected["User"]})
+        self.assertEqual(self.store.account.profile(), expected)
+
+    def test_rejected_batch_does_not_unequip_or_remove_any_of_its_valid_targets(self):
+        current = self.store.account.profile()
+        current["User"]["Characters"][0]["Weapon1"] = 11
+        self.item(current, 18)["Locked"] = True
         self.save_profile(current)
         self.reject(self.request)
 
@@ -287,6 +331,9 @@ class ItemSellTests(VillageFixture, unittest.TestCase):
             )
 
     def test_profile_receipt_and_proposal_failures_roll_back_every_debit(self):
+        current = self.store.account.profile()
+        current["User"]["Characters"][0]["Weapon1"] = 11
+        self.save_profile(current)
         with self.db:
             self.db.execute(
                 "INSERT INTO weapon_option_proposals VALUES(?,?,?,?,?,?)",

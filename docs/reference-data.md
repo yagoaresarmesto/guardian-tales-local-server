@@ -113,20 +113,24 @@ local sale policy grants **no gold, other reward or mission credit** and needs
 no extra price catalog; it does not reproduce official prices or eligibility.
 
 Each row must exist unambiguously in `ItemWeapons`, `ItemMiscs` or
-`ItemStackables`, have sufficient quantity and be unlocked. Equipped gear and
-equipment costumes, current captured/edited party-preset references, Training
-Room assignments and items with socketed jewels reject the entire batch.
-Remove those uses first; the server does not silently clear equipment, teams,
-training slots or sockets. Every target is validated before any write.
+`ItemStackables`, have sufficient quantity and be unlocked. Equipment-costume
+selections (`EquipCostumes`), current captured/edited party-preset references,
+Training Room assignments and items with socketed jewels reject the entire
+batch. Remove those protected uses first; teams, training slots and sockets
+are not silently cleared. Every target is validated before any write.
 
 Partial stacks retain their row and other fields. Depleted rows are removed;
-unselected items and list order stay intact. Only selected quantities/removals
+unselected items and list order stay intact. When a row is fully removed, any
+nullable character equipment field pointing to it is explicitly set to null.
+Other gear, hero progress and assignments to partially retained stacks stay
+unchanged. Only selected quantities/removals, these exact equipment references
 and one `User.Cas` increment change. Inventory allocation counters, balances,
 spending counters, collections and progression are preserved. Pending weapon or
 relic option proposals are discarded only for fully removed item IDs, in the
 same transaction as the profile and epoch/sequence receipt. Historical receipts
 remain. Old sale retries return current `User` without another debit or an old
 inventory snapshot; changing quantities under an existing identity rejects.
+A delayed retry preserves equipment assigned after the original removal.
 
 The response uses full current inventory arrays: the native `ParseItems` path
 replaces each supplied list and retains missing fields. The success callback
@@ -146,15 +150,18 @@ owned equipment row; this is not the sale quantity map. The batch bound is a
 local validation policy.
 
 Extraction reuses the sale protection checks and transaction: locked,
-equipped, preset-referenced, Training Room assigned or socketed items reject
-the whole batch before writing. Targets must belong to `ItemWeapons`, have
+equipment-costume selected, preset-referenced, Training Room assigned or
+socketed items reject the whole batch before writing. Fully removed equipment
+is cleared only from matching nullable character slots, just as in sales.
+Targets must belong to `ItemWeapons`, have
 amount one and rarity 4 in the existing matching
 `weapon_enhance_debug_catalog.json`. This pins eligibility to the preserved
 3.57.0 `ExtractableRarity`/`ExtractableMaxRarity` values, both 4. Missing,
 malformed or mismatched catalogs disable new extraction, while existing receipt
 replays remain available. Sales retain their catalog-free policy.
 
-Only the selected rows and one `User.Cas` increment change. **No Magic Metal,
+Only the selected rows, their matching character slots and one `User.Cas`
+increment change. **No Magic Metal,
 gold, other reward or mission credit is granted**, and all allocation/spending
 counters are preserved. Pending weapon/relic proposals are removed only for
 depleted targets. Profile, cleanup and `item_extract_requests` receipt commit

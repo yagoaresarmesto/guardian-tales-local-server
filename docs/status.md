@@ -6,14 +6,14 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **954 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **959 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 85 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
 retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
-teams selects 241 unique cases. Catalog omissions, duplicates and undiscovered
+teams selects 246 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
 Fifteen inventory-protection regressions cover `/item/lock` and `/item/unlock`,
@@ -31,7 +31,7 @@ rejections appeared and SQLite integrity passed. Extraction uses its separate
 guarded removal path below. See the
 [request and persistence contract](reference-data.md#inventory-item-protection).
 
-Nineteen no-gold sale regressions cover native `/item/sell` batches, partial
+Twenty-three no-gold sale regressions cover native `/item/sell` batches, partial
 stacks, full removal, resource preservation, protected/in-use targets,
 reconnect, canonical/delayed retries, proposal cleanup and atomic rollback.
 The actual eight-item request passed on a saved-account memory backup with only
@@ -49,7 +49,7 @@ passed. The client can still display a locally predicted gold notice; the
 explicit server policy credits zero. The separate merchandise sale route remains
 unfinished. See the [sale contract](reference-data.md#no-gold-batch-item-sales).
 
-Fourteen equipment-extraction regressions cover native `/item/extract` batches,
+Fifteen equipment-extraction regressions cover native `/item/extract` batches,
 zero Magic Metal/rewards, single-row rarity-4 eligibility, protected/in-use items,
 atomic cleanup/receipts, canonical/stale/cross-route retries and preservation of
 legacy sale records. The real two-item request passed on a saved-account memory
@@ -69,6 +69,26 @@ supplies eligibility; no new content or
 save import is needed. Its native notice may display predicted Magic Metal,
 while the persisted balance receives zero. See the
 [extraction contract](reference-data.md#equipment-extraction-without-magic-metal).
+
+Equipped-item removal now clears only nullable character fields pointing to
+fully removed inventory IDs. Partial stacks retain their assignments; unrelated
+gear/progress and later replacements on a delayed retry are preserved. Presets,
+Training Room slots, `EquipCostumes`, locked and socketed items remain protected.
+Five additional regressions and updated sale/extraction tests cover atomic slot
+cleanup and rejection/rollback. The native 25-item sale batch, including one
+equipped weapon, passed on an in-memory source-account backup with exactly its
+selected removals, one cleared slot and one revision; other profile data stayed
+unchanged with zero source writes. A verified coherent backup was retained.
+The user confirmed equipped-item sale, an empty slot, zero gold and persistence
+after reopening the APK. A read-only verification snapshot recorded eight new
+removal operations affecting 94 rows and two equipment slots, with three
+independent unlock requests; it included an actual equipped-item extraction and
+25-item sales. The entire profile matched exactly those operations. All assets,
+allocation counters and historical receipts remained intact; proposal cleanup
+matched only removed items, no new sale-route errors appeared, and SQLite
+integrity passed. Extraction's equipped-slot result was observed through the
+saved request/profile; its UI restart was not separately reported. See the
+[equipped-item contract and evidence](official-save-experiment.md#removing-equipped-items-through-sale-or-extraction).
 
 Four guild meteor and sixty-seven Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,

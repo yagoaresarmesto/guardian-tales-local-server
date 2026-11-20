@@ -162,12 +162,17 @@ class ItemExtractTests(VillageFixture, unittest.TestCase):
         for ident in (31, 41, 9999):
             self.reject({"ItemIds": [11, ident]})
 
-    def test_shared_equipment_training_preset_and_socket_guards_apply_to_extraction(self):
+    def test_equipped_extraction_clears_only_selected_slots_and_preserves_all_assets(self):
+        current = self.store.account.profile()
+        current["User"]["Characters"][0].update(Weapon1=11, Accessory1=12, Weapon2=13)
+        self.save_profile(current)
+        expected = self.expected(current, self.request["ItemIds"])
+        expected["User"]["Characters"][0].update(Weapon1=None, Accessory1=None)
+        self.assertEqual(self.call(self.request), {"User": expected["User"]})
+        self.assertEqual(self.store.account.profile(), expected)
+
+    def test_shared_training_preset_and_socket_guards_apply_to_extraction(self):
         original = self.store.account.profile()
-        profile = copy.deepcopy(original)
-        profile["User"]["Characters"][0]["Accessory1"] = 11
-        self.save_profile(profile)
-        self.reject(self.request)
         profile = copy.deepcopy(original)
         profile["User"]["TrainingSlots"] = {"2": {"ItemId": 11}}
         self.save_profile(profile)

@@ -104,14 +104,16 @@ rows to disappear through the shared resource handler.
 
 The user's requested local policy removes sold quantities with **zero gold**.
 It supports bounded batches across owned inventories, rejects insufficient,
-locked, equipped, preset-referenced, training-assigned or socketed targets as a
-whole, and preserves all unrelated account fields. Full removals also discard
+locked, equipment-costume selected, preset-referenced, training-assigned or
+socketed targets as a whole, and preserves all unrelated account fields.
+Fully removed equipment clears only matching nullable character slots.
+Full removals also discard
 only their pending weapon/relic option proposals. The profile, cleanup and
 retry receipt commit together; a delayed retry returns current state without
 another removal. Existing saved-account initialization adds only the new empty
 receipt table. No source save/content reimport or new price catalog is needed.
 
-Nineteen synthetic regressions cover eight-item and mixed batches, partial and
+The initial nineteen synthetic regressions cover eight-item and mixed batches, partial and
 depleted stacks, zero rewards, protection/use guards, canonical/stale retries,
 reconnect, fresh/imported accounts, revision limits, malformed/ambiguous data,
 the 256-item local bound and transaction failures. The captured eight-item
@@ -144,11 +146,13 @@ Metal reward notice from local precomputed data.
 The explicit user-requested local policy removes the selected equipment but
 grants **zero Magic Metal or other resources**. It reuses the guarded atomic
 sale removal path, adding owned single-row equipment and rarity-4 eligibility
-from the existing matching enhancement catalog. Locked, equipped, preset-used,
-training-assigned and socketed items remain protected. Full current inventory
+from the existing matching enhancement catalog. Locked, equipment-costume
+selected, preset-used, training-assigned and socketed items remain protected.
+Fully removed equipment clears matching nullable character slots, as in sales.
+Full current inventory
 lists remove the extracted rows through native resource application.
 
-Fourteen regressions cover native list validation, whole-batch protection,
+The initial fourteen regressions cover native list validation, whole-batch protection,
 rarity/catalog guards, reconnect, zero rewards, cleanup rollback, revision
 limits, existing sale replay and sale/extraction identity collisions. The real
 two-item request passed on an in-memory saved-account backup, changing only its
@@ -187,6 +191,32 @@ The native notice can still display predicted Magic Metal, while the server
 credits zero. This does not rewrite client content. With the existing matching
 equipment catalog, update/restart only the backend and fully reopen the game;
 retain the working save, CDN and bridge.
+
+## Removing equipped items through sale or extraction
+
+A later native sale batch selected 25 unlocked items, including one character's
+equipped primary weapon. None had a current preset or training reference. The
+initial server guard rejected the whole batch because it treated all character
+equipment as a protected use. Native sale and extraction routines both pass
+through the same confirmation-popup flow, and native item removal clears
+nullable primary/secondary weapon fields. This supports explicit slot clearing
+alongside removal; it is not an official captured server response.
+
+The shared removal path now validates the complete batch first, then sets only
+nullable character equipment references to depleted inventory IDs to null. It
+clears every matching holder without changing other gear, hero progress or
+assignments to remaining partial stacks. `EquipCostumes` selections, presets,
+Training Room assignments, locked rows and socketed items remain protected.
+The profile, cleared slots, pending-proposal cleanup and receipt are atomic.
+Old retries return current gear, preserving replacements made after a sale.
+Zero-gold and zero-Magic-Metal policies remain unchanged.
+
+Five additional regressions plus updated sale/extraction cases cover matching
+slots, multiple holders, partial stacks, mixed-batch rejection, cleanup failure
+rollback and later equipment after an old retry. The actual 25-item batch passed
+on an in-memory saved-account backup: exactly 25 rows and one slot were cleared,
+with one user revision and no other profile changes or source writes. A verified
+coherent backup was retained. APK checks are recorded in [status](status.md).
 
 ## Observed sources
 

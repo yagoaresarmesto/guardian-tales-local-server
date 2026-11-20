@@ -58,7 +58,12 @@ def protected_ids(account, user):
         for slot in training.values()
     ):
         raise ValueError("Invalid saved Training Room assignments")
-    protected = gear_references(characters)
+    # Validate nullable character slots, then detach them only after the entire
+    # removal batch passes. Equipment costumes still require their own contract.
+    gear_references(characters)
+    protected = gear_references(
+        [{"EquipCostumes": character.get("EquipCostumes")} for character in characters]
+    )
     protected.update(slot.get("ItemId", 0) for slot in training.values())
     protected.update(gear_references(preserved_read(account.db, "/preset/get-presets")))
     return protected
@@ -139,7 +144,7 @@ def dispose(account, body, operation_id, *, route=ROUTE, native_request=None):
                 or any(jewel not in (None, 0) for jewel in row["JewelSlots"])
             )
         ):
-            raise ValueError("Sale requires sufficient unlocked, unequipped and unused owned items")
+            raise ValueError("Removal requires sufficient unlocked items outside protected uses")
         targets.append((row, count))
     if user["Cas"] == MAX_REVISION:
         raise ValueError("Sale revision overflow")
@@ -150,6 +155,11 @@ def dispose(account, body, operation_id, *, route=ROUTE, native_request=None):
             removed.add(row["Id"])
     for key in INVENTORIES:
         user[key] = [row for row in user[key] if row["Id"] not in removed]
+    for character in user["Characters"]:
+        for field in EQUIPMENT_FIELDS:
+            if character.get(field) in removed:
+                # Explicit null clears the slot through native CharacterInfo.Apply.
+                character[field] = None
     user["Cas"] += 1
     with account.db:
         account.db.execute(
