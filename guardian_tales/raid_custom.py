@@ -1,7 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Build a local Raid boss set from the pinned client's encounters."""
 
+import json
 from itertools import count
+
+from .assets import ResourceLibrary
 
 BOSS_STAGES = {
     "altered mad panda mk-3": 810010021,
@@ -54,6 +57,36 @@ def parse_lineup(text):
     if len(set(lineup)) != 4:
         raise ValueError("Each slot must have a distinct boss and element combination")
     return lineup
+
+
+def use_local_presentation(raid, season_row, reference_dir):
+    pack = reference_dir.parent
+    if not (pack / "manifest.json").is_file():
+        return
+    library = ResourceLibrary([pack / "resources" / "files"])
+    candidates = sorted(
+        raid["Seasons"], key=lambda row: (row is season_row, row["Id"]), reverse=True
+    )
+    for candidate in candidates:
+        banner = available_locales(candidate.get("Banner"), library)
+        background = available_locales(candidate.get("Background"), library)
+        if banner and background:
+            season_row["Banner"] = json.dumps(banner)
+            season_row["Background"] = json.dumps(background)
+            for key in ("BackgroundPosition", *(f"ButtonPosition{i}" for i in range(1, 5))):
+                if key in candidate:
+                    season_row[key] = candidate[key]
+            return
+    raise ValueError("The local content pack has no complete Raid banner and background")
+
+
+def available_locales(encoded, library):
+    urls = json.loads(encoded) if encoded else {}
+    available = {locale: url for locale, url in urls.items() if library.lookup(url)}
+    if not available:
+        return None
+    fallback = available.get("enUS") or next(iter(available.values()))
+    return {locale: available.get(locale, fallback) for locale in dict.fromkeys(("enUS", *urls))}
 
 
 def build_season(raid, monsters, season, season_row, lineup):

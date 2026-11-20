@@ -22,7 +22,7 @@ from guardian_tales.guild_raid import (
     selected_season,
 )
 from guardian_tales.packet_reader import MAX_PACKET, PacketError, lz4_block
-from guardian_tales.raid_custom import parse_lineup
+from guardian_tales.raid_custom import parse_lineup, use_local_presentation
 from guardian_tales.raid_static import (
     LOCAL_FROM,
     LOCAL_TO,
@@ -228,6 +228,36 @@ class RaidStaticTests(unittest.TestCase):
         ):
             with self.subTest(text=text), self.assertRaises(ValueError):
                 parse_lineup(text)
+
+    def test_custom_rotation_finds_cdn_art_when_first_seasons_media_is_missing(self):
+        assets = ["media/guildraid/banner-fr.png", "media/guildraid/background.png"]
+        manifest = []
+        for asset in assets:
+            relative = f"resources/files/{asset}"
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"synthetic art")
+            manifest.append({"path": relative, "sha256": digest(path.read_bytes())})
+        (self.root / "manifest.json").write_text(json.dumps({"files": manifest}))
+        selected = {
+            "Id": 1,
+            "BossSet": 4,
+            "Banner": '{"enUS":"missing"}',
+            "Background": '{"enUS":"missing"}',
+        }
+        recent = {
+            "Id": 2,
+            "BossSet": 2,
+            "Banner": json.dumps({"enUS": "missing", "frFR": assets[0]}),
+            "Background": json.dumps({"enUS": assets[1]}),
+            "ButtonPosition1": [5, 10],
+        }
+        use_local_presentation({"Seasons": [selected, recent]}, selected, self.root / "reference")
+        self.assertEqual(json.loads(selected["Banner"]), {"enUS": assets[0], "frFR": assets[0]})
+        self.assertEqual(json.loads(selected["Background"]), {"enUS": assets[1]})
+        self.assertEqual(selected["ButtonPosition1"], recent["ButtonPosition1"])
+        self.assertEqual((selected["Id"], selected["BossSet"]), (1, 4))
+        self.assertEqual(json.loads(recent["Banner"])["enUS"], "missing")
 
     def test_bootstrap_serves_consistent_cache_hashes_and_new_selection_revisions_without_writes(
         self,

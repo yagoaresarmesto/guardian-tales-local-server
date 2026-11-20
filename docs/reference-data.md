@@ -1631,6 +1631,10 @@ exists, it copies the original Raid monster with the requested element. That
 changes the main boss's element. Existing attack scripts and linked monsters
 still follow the source encounter.
 
+With the paired local resource pack, custom selection uses a banner and
+background available from the local CDN. If the selected season's art is
+missing, it uses another season's art and button positions.
+
 The derived body and matching custom season are published together through
 the selection file. `raid-season set ID` returns to the stock rotation. It
 publishes fresh table revisions so the client can replace cached custom data.

@@ -163,12 +163,13 @@ def prepare(references, season, previous_revision=0, *, lineup=None, rotation_ta
         updates = {name: items[name][1] for name in ("guildraid2", "monsters")}
     if lineup is not None:
         from .guild_raid import validate_season
-        from .raid_custom import build_season
+        from .raid_custom import build_season, use_local_presentation
 
         monsters = json.loads(updates["monsters"])
         monster_count = len(monsters)
         season = build_season(raid, monsters, season, selected, lineup)
         validate_season(season)
+        use_local_presentation(raid, selected, references.directory)
         updates["guildraid2"] = json.dumps(raid, ensure_ascii=False, separators=(",", ":"))
         if len(monsters) != monster_count:
             updates["monsters"] = json.dumps(monsters, ensure_ascii=False, separators=(",", ":"))
