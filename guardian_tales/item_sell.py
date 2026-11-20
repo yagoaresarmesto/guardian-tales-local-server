@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Sell selected owned item quantities atomically under an explicit no-gold policy."""
+"""Shared protected inventory removal for zero-reward sales and extraction."""
 
 import json
 
@@ -7,17 +7,20 @@ from .item_lock import INVENTORIES, MAX_BATCH
 from .presets import GEAR_FIELDS
 from .snapshots import preserved_read
 from .village import MAX_REVISION, integer
-from .weapon_enhance import decimal_id
+from .weapon_enhance import decimal_id, load_catalog
 
 ROUTE = "/item/sell"
+EXTRACT = "/item/extract"
+RECEIPTS = {ROUTE: "item_sell_requests", EXTRACT: "item_extract_requests"}
 EQUIPMENT_FIELDS = frozenset((*GEAR_FIELDS, "Accessory1", "Costume"))
 
 
 def create_tables(db):
-    db.execute(
-        "CREATE TABLE IF NOT EXISTS item_sell_requests "
-        "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL)"
-    )
+    for table in RECEIPTS.values():
+        db.execute(
+            f"CREATE TABLE IF NOT EXISTS {table} "
+            "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL)"
+        )
 
 
 def gear_references(value):
@@ -62,8 +65,13 @@ def protected_ids(account, user):
 
 
 def sell(account, body, operation_id):
+    return dispose(account, body, operation_id)
+
+
+def dispose(account, body, operation_id, *, route=ROUTE, native_request=None):
     if (
-        not isinstance(body, dict)
+        route not in RECEIPTS
+        or not isinstance(body, dict)
         or set(body) != {"SellItems"}
         or not isinstance(body["SellItems"], dict)
         or not 1 <= len(body["SellItems"]) <= MAX_BATCH
@@ -76,19 +84,22 @@ def sell(account, body, operation_id):
         or account.needs_prologue()
     ):
         raise ValueError("Sell a bounded map of owned inventory IDs to positive quantities")
-    encoded = json.dumps(body, sort_keys=True, separators=(",", ":"))
+    encoded = json.dumps(
+        body if native_request is None else native_request, sort_keys=True, separators=(",", ":")
+    )
     profile = account.profile()
     user = profile["User"]
     if not integer(user.get("Id"), minimum=1) or not integer(user.get("Cas"), MAX_REVISION):
         raise ValueError("Invalid saved sale owner or revision")
-    previous = account.db.execute(
-        "SELECT request FROM item_sell_requests WHERE operation_id=?", (operation_id,)
-    ).fetchone()
-    if previous:
-        if previous[0] != encoded:
-            raise ValueError("Sale request identity was reused with different items or quantities")
-        # Never repeat a debit or restore inventory/balances from an old sale.
-        return {"User": user}
+    for saved_route, table in RECEIPTS.items():
+        previous = account.db.execute(
+            f"SELECT request FROM {table} WHERE operation_id=?", (operation_id,)
+        ).fetchone()
+        if previous:
+            if saved_route != route or previous[0] != encoded:
+                raise ValueError("Item-removal identity was reused for another route or selection")
+            # Never repeat a debit or restore inventory/balances from an old request.
+            return {"User": user}
     owned = {}
     for key in INVENTORIES:
         rows = user.get(key)
@@ -103,6 +114,8 @@ def sell(account, body, operation_id):
                 raise ValueError("Sale inventory IDs must be globally unambiguous")
             owned[row["Id"]] = row
     protected = protected_ids(account, user)
+    extractable = load_catalog(account.references)["weapons"] if route == EXTRACT else None
+    weapon_ids = {row["Id"] for row in user["ItemWeapons"]}
     targets = []
     for key, count in body["SellItems"].items():
         row = owned.get(int(key))
@@ -114,6 +127,12 @@ def sell(account, body, operation_id):
             or type(row.get("Locked")) is not bool
             or row["Locked"]
             or row["Id"] in protected
+            or extractable is not None
+            and (
+                row["Id"] not in weapon_ids
+                or row["Amount"] != 1
+                or extractable.get(str(row["ItemId"])) != 4
+            )
             or row.get("JewelSlots") is not None
             and (
                 not isinstance(row["JewelSlots"], list)
@@ -141,7 +160,7 @@ def sell(account, body, operation_id):
             account.db.executemany(
                 f"DELETE FROM {table} WHERE item_id=?", ((ident,) for ident in removed)
             )
-        account.db.execute("INSERT INTO item_sell_requests VALUES(?,?)", (operation_id, encoded))
+        account.db.execute(f"INSERT INTO {RECEIPTS[route]} VALUES(?,?)", (operation_id, encoded))
     # Explicit local policy: no gold, other rewards or mission credit are granted.
     # Full current inventory arrays replace the client's lists, removing sold rows.
     return {"User": user}

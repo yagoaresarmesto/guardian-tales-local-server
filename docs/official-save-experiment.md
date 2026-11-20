@@ -130,8 +130,63 @@ No new sale-route errors appeared and SQLite integrity passed. See
 
 The native success notice can still show its locally predicted gold amount;
 this policy does not change client content. Verify the real balance and its
-persistence, not that cosmetic notice. Merchandise's separate sale route and
-equipment extraction remain unfinished.
+persistence, not that cosmetic notice. Merchandise's separate sale route remains
+unfinished; equipment extraction is described below.
+
+## Equipment extraction without Magic Metal
+
+The next prepared APK request stopped at `/item/extract`, containing `ItemIds`
+with two owned, unlocked rarity-4 equipment inventory IDs. Native
+`SendExtractItems` confirms that list, unlike sale's quantity map. The success
+callback reads no extraction-specific response values and constructs its Magic
+Metal reward notice from local precomputed data.
+
+The explicit user-requested local policy removes the selected equipment but
+grants **zero Magic Metal or other resources**. It reuses the guarded atomic
+sale removal path, adding owned single-row equipment and rarity-4 eligibility
+from the existing matching enhancement catalog. Locked, equipped, preset-used,
+training-assigned and socketed items remain protected. Full current inventory
+lists remove the extracted rows through native resource application.
+
+Fourteen regressions cover native list validation, whole-batch protection,
+rarity/catalog guards, reconnect, zero rewards, cleanup rollback, revision
+limits, existing sale replay and sale/extraction identity collisions. The real
+two-item request passed on an in-memory saved-account backup, changing only its
+two removals and one revision. All balances and the imported seed stayed intact;
+the extraction retry and all eight legacy sale receipts returned current state
+without writes. A coherent pre-extraction backup passed integrity checking.
+
+After backend reload, the user confirmed extraction, zero Magic Metal credit
+and removal persisting across APK reopening. At the verification snapshot, two
+batches removed four equipment rows. The entire profile equals the backup with
+only those removals and two revisions applied. All assets and allocation
+counters remain unchanged, existing sale receipts are retained, and proposal
+cleanup matches only depleted targets. No new extraction-route errors appeared;
+SQLite integrity passed with zero diagnostic source writes.
+
+Extraction has its own canonical native-body receipts. Reordered ID lists replay
+current state with no writes; another selection or switching between sale and
+extraction under one identity rejects. Existing sale receipt rows and their
+format remain intact, and initialization adds only the new empty extraction
+receipt table. Cleanup of the removed targets' pending proposals commits with
+the profile/revision and receipt. No new reward or price catalog is introduced.
+
+Fourteen regressions cover the native batch, exact resource preservation,
+eligibility and use guards, malformed/duplicate IDs, limits, catalog removal,
+reconnect, stale/canonical and cross-route retries, legacy sale receipts,
+fresh-account/prologue/authentication guards and rollback. The actual two-item
+request passed on a saved-account memory backup: only those rows and one user
+revision changed. All balances, the imported seed and the remaining inventory
+were retained. Its retry and all eight existing sale receipts made zero writes
+and returned the current post-extraction profile. A new repeat extraction of
+removed IDs rejected. The diagnostic source was write-disabled and a coherent
+pre-extraction backup passed integrity checking. APK verification is recorded
+separately in [status](status.md).
+
+The native notice can still display predicted Magic Metal, while the server
+credits zero. This does not rewrite client content. With the existing matching
+equipment catalog, update/restart only the backend and fully reopen the game;
+retain the working save, CDN and bridge.
 
 ## Observed sources
 

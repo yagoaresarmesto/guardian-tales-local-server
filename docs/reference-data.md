@@ -100,8 +100,8 @@ makes no writes and returns current state, preserving later locks, stat changes
 or removals. Reordering the same batch retains its identity; changing its IDs
 or switching lock/unlock under that identity rejects. Both fresh accounts after
 the prologue and imported accounts use this path. Restart only the backend and
-fully reopen the game after updating. Selling and equipment extraction remain
-separate operations; equipment extraction remains unsupported.
+fully reopen the game after updating. Sales and equipment extraction use the
+separate contracts below.
 
 ## No-gold batch item sales
 
@@ -135,7 +135,41 @@ price calculated locally before sending the request. That notice may still
 display gold; the persisted balance is authoritative and receives zero.
 This change does not rewrite client content or its displayed price. Restart
 only the backend and reopen the game after updating. The distinct merchandise
-sale and equipment-extraction routes are outside this implementation.
+sale route remains unsupported; equipment extraction has its own contract below.
+
+## Equipment extraction without Magic Metal
+
+`/item/extract` accepts exactly `ItemIds`: a nonempty array of 1..256 distinct
+positive Int32 **equipment inventory IDs**. Native `SendExtractItems` and an
+actual two-item APK request confirm this shape. Each ID removes one complete
+owned equipment row; this is not the sale quantity map. The batch bound is a
+local validation policy.
+
+Extraction reuses the sale protection checks and transaction: locked,
+equipped, preset-referenced, Training Room assigned or socketed items reject
+the whole batch before writing. Targets must belong to `ItemWeapons`, have
+amount one and rarity 4 in the existing matching
+`weapon_enhance_debug_catalog.json`. This pins eligibility to the preserved
+3.57.0 `ExtractableRarity`/`ExtractableMaxRarity` values, both 4. Missing,
+malformed or mismatched catalogs disable new extraction, while existing receipt
+replays remain available. Sales retain their catalog-free policy.
+
+Only the selected rows and one `User.Cas` increment change. **No Magic Metal,
+gold, other reward or mission credit is granted**, and all allocation/spending
+counters are preserved. Pending weapon/relic proposals are removed only for
+depleted targets. Profile, cleanup and `item_extract_requests` receipt commit
+atomically; failures roll back the whole batch. Receipts use the canonical
+sorted native `ItemIds` body, return current inventory on old retries and reject
+reuse for another selection or for a sale. Existing sale receipts retain their
+format and history, with no profile or receipt rewrite during initialization.
+
+The response uses the same current `User` and full inventory lists as sales.
+The native success popup can show locally predicted Magic Metal; its notice
+does not establish a balance credit. Check the actual saved balance. No client
+content or displayed reward is rewritten. With the existing matching equipment
+catalog in place, only the backend needs restarting; no save/content reimport,
+CDN restart or bridge restart is needed. The separate merchandise sale route
+remains unfinished.
 
 ## What the source contains
 
@@ -188,7 +222,7 @@ not fetch missing bootstrap files from an official service.
 | `village_harvest_catalog.json` | Inn/facility gold and soul-point collection | Matching production/storage constants, building effects and follower bonuses |
 | `village_gift_mock_catalog.json` | Princess gift acknowledgment without rewards | Matching client and explicit local cooldown; no reward pool is read |
 | `village_obstacle_mock_catalog.json` | Regenerating obstacle acknowledgment without rewards/payment | Matching client and explicit regenerating obstacle specs/intervals |
-| `weapon_enhance_debug_catalog.json` | Explicit free equipment enhancement using owned hammers | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
+| `weapon_enhance_debug_catalog.json` | Free equipment enhancement and rarity eligibility for no-reward extraction | Matching client, public experience/rarity tables and level coefficients; owner-selected free policy |
 | `jewel_decompose_mock_catalog.json` | Jewel powder rewards without losing selected jewels | Matching client, explicit source-retention policy, public jewel spec grades and decomposition powder yields |
 | `jewel_upgrade_mock_catalog.json` | Guaranteed jewel upgrades without currency costs | Matching client, explicit free/always-success policy, closed public evolution graph, nominal powder bounds, relic specs and regional socket count |
 | `weapon_limit_break_mock_catalog.json` | Free equipment limit breaks using owned hammers | Matching client, eligible target origin rarities, hammer rarities and maximum count; explicit local mock |

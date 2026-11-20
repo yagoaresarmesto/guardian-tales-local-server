@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
+from .item_extract import ROUTE as ITEM_EXTRACT_ROUTE
 from .item_lock import ROUTES as ITEM_LOCK_ROUTES
 from .item_sell import ROUTE as ITEM_SELL_ROUTE
 from .jewel_upgrade import ROUTES as JEWEL_UPGRADE_ROUTES
@@ -367,6 +368,15 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.select_portrait_frame(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == ITEM_EXTRACT_ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.extract_items(body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

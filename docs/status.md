@@ -6,14 +6,14 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **940 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 84 modules. `validate --list-groups` reports
+The suite has **954 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 85 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
 retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
-teams selects 227 unique cases. Catalog omissions, duplicates and undiscovered
+teams selects 241 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
 Fifteen inventory-protection regressions cover `/item/lock` and `/item/unlock`,
@@ -27,8 +27,8 @@ diagnostic source writes. After backend restart, the user confirmed locking,
 unlocking and persistence across reopening the APK. Four saved receipts match
 the final flags; the full current profile equals the pre-fix backup with only
 those recorded protection changes and four user revisions. No new lock-route
-rejections appeared and SQLite integrity passed. Equipment extraction is
-not enabled by these protection routes. See the
+rejections appeared and SQLite integrity passed. Extraction uses its separate
+guarded removal path below. See the
 [request and persistence contract](reference-data.md#inventory-item-protection).
 
 Nineteen no-gold sale regressions cover native `/item/sell` batches, partial
@@ -46,8 +46,29 @@ user revisions applied to the backup. All assets, gold spending counters and
 the inventory allocation counter are unchanged. Proposal cleanup matches only
 depleted targets; no new sale-route errors appeared and SQLite integrity
 passed. The client can still display a locally predicted gold notice; the
-explicit server policy credits zero. Equipment extraction and the separate merchandise sale route
-remain unfinished. See the [sale contract](reference-data.md#no-gold-batch-item-sales).
+explicit server policy credits zero. The separate merchandise sale route remains
+unfinished. See the [sale contract](reference-data.md#no-gold-batch-item-sales).
+
+Fourteen equipment-extraction regressions cover native `/item/extract` batches,
+zero Magic Metal/rewards, single-row rarity-4 eligibility, protected/in-use items,
+atomic cleanup/receipts, canonical/stale/cross-route retries and preservation of
+legacy sale records. The real two-item request passed on a saved-account memory
+backup: only its selected removals and one revision changed, all assets and the
+imported seed were preserved, and both its retry and all eight existing sale
+receipts returned current inventory with no writes. New extraction of removed
+IDs rejected without changes. A coherent pre-extraction backup passed integrity
+checking with zero diagnostic source writes. After backend restart, the user
+confirmed multi-item extraction, zero Magic Metal credit and removal persisting
+after reopening the APK. At the verification snapshot, two batches removed four
+equipment rows. The complete profile matches only those removals and two user
+revisions applied to the backup; all assets, Magic Metal spending counters and
+the allocation counter are unchanged. Existing sale receipts remain intact,
+proposal cleanup matches only depleted targets, no new extraction-route errors
+appeared and SQLite integrity passed. The existing matching enhancement catalog
+supplies eligibility; no new content or
+save import is needed. Its native notice may display predicted Magic Metal,
+while the persisted balance receives zero. See the
+[extraction contract](reference-data.md#equipment-extraction-without-magic-metal).
 
 Four guild meteor and sixty-seven Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,

@@ -87,6 +87,8 @@ from .imported_hero_knowledge import claim as claim_imported_hero_knowledge
 from .imported_hero_knowledge import create_tables as create_imported_knowledge_tables
 from .imported_training import create_tables as create_imported_training_tables
 from .imported_training import train as train_imported_characters
+from .item_extract import ROUTE as ITEM_EXTRACT_ROUTE
+from .item_extract import extract as extract_items
 from .item_lock import ROUTES as ITEM_LOCK_ROUTES
 from .item_lock import change as change_item_locks
 from .item_lock import create_tables as create_item_lock_tables
@@ -252,6 +254,7 @@ ACCOUNT_ROUTES = (
     "/item/enhance-weapon",
     *ITEM_LOCK_ROUTES,
     ITEM_SELL_ROUTE,
+    ITEM_EXTRACT_ROUTE,
     "/item/decompose-jewel",
     "/item/upgrade-jewel",
     "/item/upgrade-jewel-from-relic",
@@ -1235,6 +1238,9 @@ class AccountStore:
 
     def sell_items(self, request, operation_id):
         return sell_items(self, request, operation_id)
+
+    def extract_items(self, request, operation_id):
+        return extract_items(self, request, operation_id)
 
     def decompose_jewels(self, request, operation_id):
         return decompose_jewels(self, request, operation_id)
