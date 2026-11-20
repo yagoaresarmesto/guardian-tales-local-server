@@ -56,6 +56,12 @@ Colosseum attack teams use the shared `/preset/set-presets` and
 and is placed after the highest saved Colosseum order. Applying or selecting
 the team stores its ID in `User.SelectedPresetId.ColosseumAttack`.
 
+Ranking and Battle Record use parameterless reads and return empty local lists.
+Season Stats accepts integer `SeasonId`, integer `Tier`, and Boolean `IsAttack`
+and shows an empty list for each filter. The local lobby still shows the saved
+personal trophy count and rank. Shop uses the shared empty local shop catalog.
+Rewards displays the tier reward schedule supplied by the client data.
+
 Open the Colosseum shield button to edit the practice defense. Saving the team
 or its positions stores the defense in the local database. After saving, use
 Refresh in the Colosseum lobby to load the updated team and positions in all

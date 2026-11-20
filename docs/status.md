@@ -31,6 +31,13 @@ returned the new team and positions for each practice opponent.
 Attack position saves use a separate per-preset table. The live client saved
 different attack and defense layouts while using the same team on both sides.
 
+Colosseum Ranking, Battle Record and Season Stats now have read-only empty
+responses. Query-only packet checks passed against a copy of the imported save
+for all three menus and the existing shop routes. The installed Colosseum table
+defines 22 reward tiers, and all reward items have matching item definitions.
+The user confirmed that Ranking, Battle Record, Season Stats, Shop and Rewards
+all opened in the APK after reloading the backend.
+
 Before the Colosseum changes, **993 tests passed on Windows Python 3.11**.
 Tests are cataloged into 14 logical groups. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original

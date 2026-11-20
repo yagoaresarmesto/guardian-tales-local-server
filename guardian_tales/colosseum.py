@@ -19,13 +19,25 @@ ENTRY = "/colosseum/enter"
 OPPONENTS = "/colosseum/get-opponents"
 REFRESH = "/colosseum/refresh-opponents"
 RANKING = "/colosseum/get-my-ranking"
+RANKINGS = "/colosseum/get-rankings"
+BATTLE_RECORDS = "/colosseum/get-battle-records"
+BATTLE_INFOS = "/colosseum/get-battle-infos"
 DEFENSE_PARTY = "/colosseum/get-defense-party"
 SET_DEFENSE_PRESET = "/colosseum/set-defense-party-preset"
 SET_DEFENSE_FORMATION = "/colosseum/set-defense-party-formation"
 SAVE_ATTACK_FORMATION = "/colosseum/save-formation"
 START = "/colosseum/start-stage/v2"
 END = "/colosseum/end-stage/v3"
-READ_ROUTES = (ENTRY, OPPONENTS, REFRESH, RANKING, DEFENSE_PARTY)
+READ_ROUTES = (
+    ENTRY,
+    OPPONENTS,
+    REFRESH,
+    RANKING,
+    RANKINGS,
+    BATTLE_RECORDS,
+    BATTLE_INFOS,
+    DEFENSE_PARTY,
+)
 DEFENSE_MUTATIONS = (SET_DEFENSE_PRESET, SET_DEFENSE_FORMATION)
 MUTATIONS = (*DEFENSE_MUTATIONS, SAVE_ATTACK_FORMATION)
 BATTLE_ROUTES = (START, END)
@@ -323,15 +335,30 @@ def read(account, route, request):
         raise ValueError("Complete the prologue before entering Colosseum")
     if route not in (*READ_ROUTES, *BATTLE_ROUTES):
         raise ValueError("Unsupported Colosseum read")
+    if route == BATTLE_INFOS:
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"SeasonId", "Tier", "IsAttack"}
+            or not integer(request["SeasonId"])
+            or type(request["Tier"]) is not int
+            or not -0x80000000 <= request["Tier"] <= 0x7FFFFFFF
+            or type(request["IsAttack"]) is not bool
+        ):
+            raise ValueError("Season Stats expects SeasonId, Tier and a Boolean IsAttack")
+        return {"Infos": []}
     if route not in BATTLE_ROUTES and request not in (None, {}):
         if route != ENTRY:
-            raise ValueError("Colosseum opponent, defense and ranking reads accept no parameters")
+            raise ValueError("This Colosseum read accepts no parameters")
         if (
             not isinstance(request, dict)
             or set(request) != {"IsPartial"}
             or type(request["IsPartial"]) is not bool
         ):
             raise ValueError("Colosseum entry expects a Boolean IsPartial cache hint")
+    if route == RANKINGS:
+        return {"Rankings": []}
+    if route == BATTLE_RECORDS:
+        return {"BattleRecords": []}
     profile = account.profile()
     if route == RANKING:
         ranking = profile.get("UserColosseum", {}).get("Ranking")

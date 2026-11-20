@@ -10,12 +10,15 @@ from pathlib import Path
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
 from guardian_tales.colosseum import (
+    BATTLE_INFOS,
+    BATTLE_RECORDS,
     DEFENSE_PARTY,
     END,
     ENTRY,
     OPPONENTS,
     PRACTICE_CONFIG,
     RANKING,
+    RANKINGS,
     REFRESH,
     ROUTES,
     SAVE_ATTACK_FORMATION,
@@ -128,6 +131,21 @@ class ColosseumEntryTests(unittest.TestCase):
             response = self.call(REFRESH, None)
             self.assertEqual(response["Opponents"], [])
             self.assertEqual(response["UserColosseum"], entry)
+
+    def test_public_colosseum_menus_return_empty_local_data_without_writes(self):
+        changes = self.db.total_changes
+        for route, key in ((RANKINGS, "Rankings"), (BATTLE_RECORDS, "BattleRecords")):
+            for body in (None, {}):
+                self.assertEqual(self.call(route, body), {key: []})
+            with self.assertRaises(PacketError):
+                self.call(route, {"SeasonId": 7})
+        for season, tier, is_attack in ((7, 0, True), (6, 5, False), (7, -1, False)):
+            query = {"SeasonId": season, "Tier": tier, "IsAttack": is_attack}
+            self.assertEqual(self.call(BATTLE_INFOS, query), {"Infos": []})
+        for body in (None, {"SeasonId": 7, "Tier": 5, "IsAttack": 0}, {"seasonId": 7}):
+            with self.assertRaises(PacketError):
+                self.call(BATTLE_INFOS, body)
+        self.assertEqual(self.db.total_changes, changes)
 
     def test_lobby_reads_require_sign_in(self):
         self.session.signed_in = False
