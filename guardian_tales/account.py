@@ -182,7 +182,7 @@ from .weapon_summon import draw as draw_weapons
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
-    *colosseum.READ_ROUTES,
+    *colosseum.ROUTES,
     MY_ROOM_ENTRY,
     TRAINING_ROOM_ENTRY,
     REPRESENTATIVE_CHARACTER_ROUTE,
@@ -1286,7 +1286,7 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
-        if route in colosseum.READ_ROUTES:
+        if route in colosseum.ROUTES:
             return colosseum.read(self, route, request)
         if route == TRAINING_ROOM_ENTRY:
             return enter_training_room(self, request)

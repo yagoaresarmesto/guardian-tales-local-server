@@ -13,6 +13,12 @@ The user confirmed that the lobby opened and Refresh completed in the APK.
 The running server recorded two successful refresh requests with the game still
 connected. The opponent list is empty.
 
+The optional Colosseum practice configuration projects a saved attack team into
+three opponent cards. Native inspection found that the lobby expects at least
+three opponents and three challenge counts before updating those cards. A
+query-only copy of the imported save returned the three cards with all equipped
+items and acknowledged two practice starts and results without writes.
+
 Before the Colosseum changes, **993 tests passed on Windows Python 3.11**.
 Tests are cataloged into 14 logical groups. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original

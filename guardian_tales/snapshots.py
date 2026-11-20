@@ -83,6 +83,8 @@ ACCOUNT_READS = frozenset(
         "/colosseum/get-opponents",
         "/colosseum/refresh-opponents",
         "/colosseum/get-my-ranking",
+        "/colosseum/start-stage/v2",
+        "/colosseum/end-stage/v3",
         "/my-room/enter",
         "/training-room/enter",
         # The client persists its own badge preference; the server only validates it.

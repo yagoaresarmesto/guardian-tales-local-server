@@ -9,7 +9,16 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.colosseum import ENTRY, OPPONENTS, RANKING, READ_ROUTES, REFRESH
+from guardian_tales.colosseum import (
+    END,
+    ENTRY,
+    OPPONENTS,
+    PRACTICE_CONFIG,
+    RANKING,
+    REFRESH,
+    ROUTES,
+    START,
+)
 from guardian_tales.packet_reader import parse_packet
 from guardian_tales.protocol import Packet, PacketError, encode_packet
 from guardian_tales.raid_static import compress, digest
@@ -21,6 +30,7 @@ class ColosseumEntryTests(unittest.TestCase):
         directory = tempfile.TemporaryDirectory()
         self.addCleanup(directory.cleanup)
         refs = Path(directory.name)
+        self.config = refs / PRACTICE_CONFIG
         table = b'{"Seasons":[{"SeasonId":7,"MapId":{"KakaoGlobal":31}}]}'
         (refs / "static_data_get.bin").write_bytes(
             compress(b"colosseum\n" + table + b"\n1\n" + digest(table).encode() + b"\n")
@@ -32,7 +42,13 @@ class ColosseumEntryTests(unittest.TestCase):
         user = saved["profile"]["User"]
         saved["profile"]["UserRecord"]["ColosseumRank"] = 7
         user["SelectedPresetId"]["ColosseumAttack"] = 601
-        self.preset = {"Id": 601, "Characters": [{"Id": user["Characters"][0]["Id"]}]}
+        self.preset = {
+            "Id": 601,
+            "Name": "Practice",
+            "Characters": [
+                {"Id": user["Characters"][0]["Id"], "Weapon1": user["ItemWeapons"][0]["Id"]}
+            ],
+        }
         saved["startup_reads"]["/preset/get-presets"]["value"]["UserPartyPreset2"] = {
             "Presets": [self.preset]
         }
@@ -105,6 +121,45 @@ class ColosseumEntryTests(unittest.TestCase):
 
     def test_lobby_reads_require_sign_in(self):
         self.session.signed_in = False
-        for route in READ_ROUTES:
+        for route in ROUTES:
             with self.subTest(route=route), self.assertRaises(PacketError):
                 self.call(route, None)
+
+    def test_practice_opponent_uses_the_saved_preset_and_resolves_its_equipment(self):
+        self.config.write_text('{"preset_id": 601}')
+        owner = self.session.store.account.profile()["User"]
+        opponents = self.call(OPPONENTS, None)["Opponents"]
+        self.assertEqual(len(opponents), 3)
+        opponent_ids = [opponent["User"]["Id"] for opponent in opponents]
+        self.assertEqual(len(set(opponent_ids)), 3)
+        expected_opponent = opponents[0]
+        user = expected_opponent["User"]
+        self.assertNotEqual(user["Id"], owner["Id"])
+        self.assertEqual(user["Name"], "Practice")
+        self.assertEqual(user["Party"]["Characters"], [self.preset["Characters"][0]["Id"]])
+        self.assertEqual(len(user["ItemWeapons"]), 1)
+        self.assertEqual(user["Characters"][0]["Weapon1"], user["ItemWeapons"][0]["Id"])
+        self.assertIsNone(user["Characters"][0]["Weapon2"])
+        self.assertEqual(self.call(REFRESH, None)["Opponents"], opponents)
+        lobby = self.call(ENTRY, None)["UserColosseum"]
+        self.assertEqual(lobby["OpponentIds"], opponent_ids)
+        self.assertEqual(lobby["Challenges"], [0, 0, 0])
+
+        start = {
+            "OpponentId": user["Id"],
+            "OpponentParty": [user["Characters"][0]["CharacterId"]],
+            "OpponentPositions": expected_opponent["Formation"]["Positions"],
+        }
+        result = {
+            "OpponentId": user["Id"],
+            "Result": 1,
+            "Damages": [[0]],
+            "OpponentLevels": [1],
+        }
+        for _ in range(2):
+            self.assertEqual(self.call(START, start), {})
+            self.assertEqual(self.call(END, result), {"AddedTrophy": 0, "AddedItems": []})
+        with self.assertRaises(PacketError):
+            self.call(START, dict(start, OpponentParty=[999]))
+        with self.assertRaises(PacketError):
+            self.call(END, dict(result, OpponentId=owner["Id"]))

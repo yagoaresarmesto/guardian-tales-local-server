@@ -45,19 +45,30 @@ season in the supplied `colosseum` table and shows the selected Colosseum attack
 preset as its initial defense preview.
 
 On opening the lobby the client can also call `/colosseum/get-opponents` and
-`/colosseum/get-my-ranking` without parameters. The local responses contain an
-empty `Opponents` list and the player's saved `Ranking`. The Refresh button calls
-the parameterless `/colosseum/refresh-opponents` and returns the same empty list
+`/colosseum/get-my-ranking` without parameters. The local responses contain the
+configured opponent list and the player's saved `Ranking`. The Refresh button
+calls `/colosseum/refresh-opponents` without parameters and returns that list
 for free. Entry, list reads and manual refresh use the next local weekly reset
-as the refresh time so the client can cache the list. These routes require
-sign-in and a completed prologue and make no SQLite writes. Opponent selection,
-battles and ticket spending are outside this lobby implementation.
+as the refresh time so the client can cache the list.
 
 Colosseum attack teams use the shared `/preset/set-presets` and
 `/preset/set-selected-preset` handlers. The matching `PresetCountS3[5]` defines
 30 slots with IDs 600 through 629. A new team uses `Order=999` in the request
 and is placed after the highest saved Colosseum order. Applying or selecting
 the team stores its ID in `User.SelectedPresetId.ColosseumAttack`.
+
+To list one local practice opponent, add `colosseum_practice.json` to the external
+reference directory. Set `preset_id` to the ID of a saved, populated Colosseum
+attack team. The server builds a separate opponent with the preset's name, heroes
+and equipped items, using grid positions 12, 3, 19 and 9 in team order. The client
+requires three cards, so each card uses the same team with a distinct local ID.
+Without the file, the opponent list is empty. Fully reopen the game or use Refresh
+to load the configured list.
+
+The practice start and result handlers accept the configured opponent and use
+the client's native start and end request fields. The result grants zero trophies
+and an empty reward list. The lobby and practice requests require sign-in and
+a completed prologue. They make no SQLite writes, including ticket consumption.
 
 ## Backroom entry
 
