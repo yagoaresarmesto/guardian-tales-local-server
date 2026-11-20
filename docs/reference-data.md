@@ -53,6 +53,12 @@ as the refresh time so the client can cache the list. These routes require
 sign-in and a completed prologue and make no SQLite writes. Opponent selection,
 battles and ticket spending are outside this lobby implementation.
 
+Colosseum attack teams use the shared `/preset/set-presets` and
+`/preset/set-selected-preset` handlers. The matching `PresetCountS3[5]` defines
+30 slots with IDs 600 through 629. A new team uses `Order=999` in the request
+and is placed after the highest saved Colosseum order. Applying or selecting
+the team stores its ID in `User.SelectedPresetId.ColosseumAttack`.
+
 ## Backroom entry
 
 `/my-room/enter` accepts exactly Boolean `IsPartial` after sign-in and prologue

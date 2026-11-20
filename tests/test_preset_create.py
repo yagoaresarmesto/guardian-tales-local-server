@@ -66,6 +66,33 @@ class PresetCreateTests(PresetFixture, unittest.TestCase):
         self.assertEqual(current_group(self.db)["Presets"][-1]["Characters"], [])
         self.reject_without_writes({"PresetId": 403}, "/preset/set-selected-preset")
 
+    def test_colosseum_creation_and_edits_share_the_attack_selection(self):
+        self.catalog.unlink()
+        group = copy.deepcopy(self.initial_group)
+        existing = dict(group["Presets"][2], Id=612, Order=14)
+        group["Presets"].append(existing)
+        with self.db:
+            self.db.execute("INSERT INTO party_preset_state VALUES(1,?)", (json.dumps(group),))
+        original = self.store.account.profile()
+        body = self.new_body(629)
+        created = self.call(body)
+        self.assertEqual(created["UserPartyPreset2"]["Presets"][:-1], group["Presets"])
+        self.assertEqual(created["UserPartyPreset2"]["Presets"][-1]["Order"], 15)
+        expected = copy.deepcopy(original)
+        expected["User"]["SelectedPresetId"]["ColosseumAttack"] = 629
+        expected["User"]["Cas"] += 1
+        self.assertEqual(self.store.account.profile(), expected)
+
+        edited = self.body(629)
+        edited["PartyPreset"]["Name"] = "Edited"
+        self.call(edited, sequence=32)
+        self.call({"PresetId": 612}, "/preset/set-selected-preset", sequence=33)
+        current = self.call(body)
+        self.assertEqual(current["UserPartyPreset2"]["Presets"][-1]["Name"], "Edited")
+        self.assertEqual(current["User"]["SelectedPresetId"]["ColosseumAttack"], 612)
+        self.reject_without_writes(self.new_body(630))
+        self.reject_without_writes({"PresetId": 630}, "/preset/set-selected-preset")
+
     def test_catalog_is_needed_only_for_new_slots_and_not_receipt_replays(self):
         body = self.new_body()
         self.catalog.unlink()

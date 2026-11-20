@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Save Orbital and Raid party presets and manage per-mode team selections."""
+"""Save party presets and manage per-mode team selections."""
 
 import json
 
@@ -7,9 +7,16 @@ from .snapshots import CLIENT, preserved_read
 
 GEAR_FIELDS = ("Weapon1", "Weapon2", "Accessory", "Orb1", "Orb2", "Merch", "Relic")
 MAX_REVISION = 0x7FFFFFFFFFFFFFFF
-SELECTION_FIELDS = {400: "InfiniteTower", 700: "GuildRaidAndConquest", 1300: "GuildPunchKing"}
-# Pinned 3.57.0 EU constants: PresetCountS3[GuildRaidAndConquest - 1].
+SELECTION_FIELDS = {
+    400: "InfiniteTower",
+    600: "ColosseumAttack",
+    700: "GuildRaidAndConquest",
+    1300: "GuildPunchKing",
+}
+# Pinned 3.57.0 EU constants: PresetCountS3[mode - 1].
+COLOSSEUM_PRESET_COUNT = 30
 RAID_PRESET_COUNT = 30
+FIXED_CREATION_COUNTS = {600: COLOSSEUM_PRESET_COUNT, 700: RAID_PRESET_COUNT}
 
 
 def integer(value, minimum=0):
@@ -81,16 +88,18 @@ def owned_party_preset(db, profile, preset_id):
 
 def choose_preset(user, preset_id, field, base):
     selected, revision = user.get("SelectedPresetId"), user.get("Cas")
+    if not isinstance(selected, dict):
+        raise ValueError("Invalid saved party selection")
+    current = selected.get(field, 0 if base == 600 else None)
     if (
-        not isinstance(selected, dict)
-        or not integer(selected.get(field))
-        or selected[field] != 0
-        and not base <= selected[field] < base + 100
+        not integer(current)
+        or current != 0
+        and not base <= current < base + 100
         or type(revision) is not int
         or not 0 <= revision <= MAX_REVISION
     ):
         raise ValueError("Invalid saved party selection or account revision")
-    if selected[field] == preset_id:
+    if current == preset_id:
         return False
     if revision == MAX_REVISION:
         raise ValueError("Account revision exceeds the supported range")
@@ -121,8 +130,8 @@ def set_selected(account, body, operation_id):
         raise ValueError("Select an existing supported party preset after completing the prologue")
     base = body["PresetId"] // 100 * 100
     field = SELECTION_FIELDS.get(base)
-    if field is None:
-        raise ValueError("Select an existing supported Orbital, Raid/Conquest or Arena preset")
+    if field is None or base == 600 and body["PresetId"] >= base + COLOSSEUM_PRESET_COUNT:
+        raise ValueError("Select an existing supported preset within its mode's slots")
     encoded = json.dumps(body, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_selection_requests WHERE operation_id=?", (operation_id,)
@@ -165,7 +174,7 @@ def orbital_slot_count(references):
 
 
 def new_definition(references, group, incoming, base):
-    count = RAID_PRESET_COUNT if base == 700 else orbital_slot_count(references)
+    count = orbital_slot_count(references) if base == 400 else FIXED_CREATION_COUNTS[base]
     # The native list builds missing slots from the mode's base ID and uses
     # Order=999 for an unsaved definition. Existing teams keep their order.
     if (
@@ -211,8 +220,12 @@ def save_party(account, body, operation_id):
         raise ValueError("Save one party preset with a Boolean SetSelected")
     incoming = body["PartyPreset"]
     base = incoming["Id"] // 100 * 100
-    if base not in (400, 700):
-        raise ValueError("Saving party definitions is supported for Orbital and Raid/Conquest")
+    if (
+        base not in (400, 600, 700)
+        or base == 600
+        and incoming["Id"] >= base + COLOSSEUM_PRESET_COUNT
+    ):
+        raise ValueError("Save an Orbital, Colosseum attack, or Raid/Conquest preset in its slots")
     encoded = json.dumps(body, sort_keys=True, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_edit_requests WHERE operation_id=?", (operation_id,)
