@@ -90,6 +90,9 @@ from .imported_training import train as train_imported_characters
 from .item_lock import ROUTES as ITEM_LOCK_ROUTES
 from .item_lock import change as change_item_locks
 from .item_lock import create_tables as create_item_lock_tables
+from .item_sell import ROUTE as ITEM_SELL_ROUTE
+from .item_sell import create_tables as create_item_sell_tables
+from .item_sell import sell as sell_items
 from .items import inventory_item
 from .jewel_decompose import create_tables as create_jewel_decompose_tables
 from .jewel_decompose import decompose as decompose_jewels
@@ -248,6 +251,7 @@ ACCOUNT_ROUTES = (
     "/lobby-village/remove-obstacle",
     "/item/enhance-weapon",
     *ITEM_LOCK_ROUTES,
+    ITEM_SELL_ROUTE,
     "/item/decompose-jewel",
     "/item/upgrade-jewel",
     "/item/upgrade-jewel-from-relic",
@@ -320,6 +324,7 @@ class AccountStore:
         create_weapon_engrave_tables(db)
         create_weapon_option_lock_tables(db)
         create_item_lock_tables(db)
+        create_item_sell_tables(db)
         create_relic_option_tables(db)
         create_orbital_tables(db)
         db.execute(
@@ -1227,6 +1232,9 @@ class AccountStore:
 
     def change_item_locks(self, request, operation_id, route):
         return change_item_locks(self, request, operation_id, route)
+
+    def sell_items(self, request, operation_id):
+        return sell_items(self, request, operation_id)
 
     def decompose_jewels(self, request, operation_id):
         return decompose_jewels(self, request, operation_id)

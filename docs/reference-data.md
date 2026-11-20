@@ -101,7 +101,41 @@ or removals. Reordering the same batch retains its identity; changing its IDs
 or switching lock/unlock under that identity rejects. Both fresh accounts after
 the prologue and imported accounts use this path. Restart only the backend and
 fully reopen the game after updating. Selling and equipment extraction remain
-separate unsupported operations.
+separate operations; equipment extraction remains unsupported.
+
+## No-gold batch item sales
+
+`/item/sell` accepts exactly `SellItems`: a map of 1..256 canonical positive
+decimal **inventory IDs** to positive Int32 quantities. Native `SendSellItems`
+and an actual eight-item APK request confirm this map, not an array of item
+specification IDs. The batch bound is a local validation policy. This explicit
+local sale policy grants **no gold, other reward or mission credit** and needs
+no extra price catalog; it does not reproduce official prices or eligibility.
+
+Each row must exist unambiguously in `ItemWeapons`, `ItemMiscs` or
+`ItemStackables`, have sufficient quantity and be unlocked. Equipped gear and
+equipment costumes, current captured/edited party-preset references, Training
+Room assignments and items with socketed jewels reject the entire batch.
+Remove those uses first; the server does not silently clear equipment, teams,
+training slots or sockets. Every target is validated before any write.
+
+Partial stacks retain their row and other fields. Depleted rows are removed;
+unselected items and list order stay intact. Only selected quantities/removals
+and one `User.Cas` increment change. Inventory allocation counters, balances,
+spending counters, collections and progression are preserved. Pending weapon or
+relic option proposals are discarded only for fully removed item IDs, in the
+same transaction as the profile and epoch/sequence receipt. Historical receipts
+remain. Old sale retries return current `User` without another debit or an old
+inventory snapshot; changing quantities under an existing identity rejects.
+
+The response uses full current inventory arrays: the native `ParseItems` path
+replaces each supplied list and retains missing fields. The success callback
+reads no sale-specific response values, but builds its reward notice from a
+price calculated locally before sending the request. That notice may still
+display gold; the persisted balance is authoritative and receives zero.
+This change does not rewrite client content or its displayed price. Restart
+only the backend and reopen the game after updating. The distinct merchandise
+sale and equipment-extraction routes are outside this implementation.
 
 ## What the source contains
 

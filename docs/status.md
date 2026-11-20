@@ -6,14 +6,14 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **921 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 83 modules. `validate --list-groups` reports
+The suite has **940 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 84 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
 retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
-teams selects 208 unique cases. Catalog omissions, duplicates and undiscovered
+teams selects 227 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
 
 Fifteen inventory-protection regressions cover `/item/lock` and `/item/unlock`,
@@ -27,9 +27,27 @@ diagnostic source writes. After backend restart, the user confirmed locking,
 unlocking and persistence across reopening the APK. Four saved receipts match
 the final flags; the full current profile equals the pre-fix backup with only
 those recorded protection changes and four user revisions. No new lock-route
-rejections appeared and SQLite integrity passed. Selling and equipment
-extraction are not enabled by these protection routes. See the
+rejections appeared and SQLite integrity passed. Equipment extraction is
+not enabled by these protection routes. See the
 [request and persistence contract](reference-data.md#inventory-item-protection).
+
+Nineteen no-gold sale regressions cover native `/item/sell` batches, partial
+stacks, full removal, resource preservation, protected/in-use targets,
+reconnect, canonical/delayed retries, proposal cleanup and atomic rollback.
+The actual eight-item request passed on a saved-account memory backup with only
+the requested removals and one user revision changed. All balances and other
+items remained intact; retries made no writes and a new resale of removed IDs
+rejected. The source connection was write-disabled and a coherent pre-sale
+backup passed integrity checking. After backend restart, the user confirmed
+multi-item sales, zero gold credit and removal persisting across APK reopening.
+At the verification snapshot, eight sales removed 145 inventory rows, including
+25-item batches. The full profile matches only those recorded sales and eight
+user revisions applied to the backup. All assets, gold spending counters and
+the inventory allocation counter are unchanged. Proposal cleanup matches only
+depleted targets; no new sale-route errors appeared and SQLite integrity
+passed. The client can still display a locally predicted gold notice; the
+explicit server policy credits zero. Equipment extraction and the separate merchandise sale route
+remain unfinished. See the [sale contract](reference-data.md#no-gold-batch-item-sales).
 
 Four guild meteor and sixty-seven Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,

@@ -79,7 +79,7 @@ return current state without restoring an old lock or inventory snapshot.
 No balance, item quantity, equipment assignment, option value/lock, engraving,
 pending reroll proposal or imported startup seed changes. No catalog additions,
 save reimport or CDN/bridge restart are required. Equipment selling/extraction
-remain outside this change.
+remain separate from these protection controls.
 
 Fifteen synthetic regressions cover single unlock, mixed inventory batches,
 preservation, canonical and stale retries, reconnect/new login, receipt and
@@ -91,6 +91,47 @@ persistence after reopening the APK. Four receipts match the final flags, and
 the full saved profile matches the pre-fix backup with only the recorded flags
 and four user revisions applied. No new lock-route errors appeared; SQLite
 integrity passed. See [verification status](status.md).
+
+## Batch item sales without gold
+
+The prepared APK stopped at `/item/sell` with eight entries in `SellItems`, each
+mapping an owned inventory ID string to quantity one. All eight were unlocked,
+unequipped weapons with no current preset or Training Room reference. Native
+`SendSellItems` confirms the route/key, while the success callback uses its
+precomputed local reward notice rather than sale-specific response fields.
+Native `User.ParseItems` replaces supplied inventory lists, allowing depleted
+rows to disappear through the shared resource handler.
+
+The user's requested local policy removes sold quantities with **zero gold**.
+It supports bounded batches across owned inventories, rejects insufficient,
+locked, equipped, preset-referenced, training-assigned or socketed targets as a
+whole, and preserves all unrelated account fields. Full removals also discard
+only their pending weapon/relic option proposals. The profile, cleanup and
+retry receipt commit together; a delayed retry returns current state without
+another removal. Existing saved-account initialization adds only the new empty
+receipt table. No source save/content reimport or new price catalog is needed.
+
+Nineteen synthetic regressions cover eight-item and mixed batches, partial and
+depleted stacks, zero rewards, protection/use guards, canonical/stale retries,
+reconnect, fresh/imported accounts, revision limits, malformed/ambiguous data,
+the 256-item local bound and transaction failures. The captured eight-item
+request passed on an in-memory saved-account backup: only its eight removals
+and one revision changed, all balances and other items were retained, retries
+made zero writes, and a new attempt to resell missing rows rejected. The
+diagnostic source connection made zero writes and a coherent backup passed
+integrity checking before deployment. After backend reload, the user confirmed
+multi-item sales with zero gold and persistence after reopening the APK. The
+verification snapshot recorded eight sales of 145 inventory rows, including
+25-item batches; the full profile equals the backup with only those debits and
+eight user revisions applied. All assets and the allocation counter remain
+unchanged, and pending proposals match only the removed targets' cleanup.
+No new sale-route errors appeared and SQLite integrity passed. See
+[status](status.md).
+
+The native success notice can still show its locally predicted gold amount;
+this policy does not change client content. Verify the real balance and its
+persistence, not that cosmetic notice. Merchandise's separate sale route and
+equipment extraction remain unfinished.
 
 ## Observed sources
 

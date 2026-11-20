@@ -114,6 +114,7 @@ class SnapshotTests(unittest.TestCase):
                 "/item/enhance-weapon",
                 "/item/limitbreak-weapon/v2",
                 "/item/lock",
+                "/item/sell",
                 "/item/unlock",
                 "/item/upgrade-jewel",
                 "/item/upgrade-jewel-from-relic",
