@@ -62,6 +62,8 @@ reference directory. Set `preset_id` to the ID of a saved, populated Colosseum
 attack team. The server builds a separate opponent with the preset's name, heroes
 and equipped items, using grid positions 12, 3, 19 and 9 in team order. The client
 requires three cards, so each card uses the same team with a distinct local ID.
+Each card also receives the player's current hero and item collection, Guardian
+level and mastery, Heavenhold, and account buff options.
 Without the file, the opponent list is empty. Fully reopen the game or use Refresh
 to load the configured list.
 

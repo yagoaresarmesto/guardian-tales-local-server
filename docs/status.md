@@ -18,6 +18,10 @@ three opponent cards. Native inspection found that the lobby expects at least
 three opponents and three challenge counts before updating those cards. A
 query-only copy of the imported save returned the three cards with all equipped
 items and acknowledged two practice starts and results without writes.
+The user confirmed the cards appeared. The live backend completed a practice
+start and result. Each opponent receives the player's account-wide stat options,
+including the assigned Guardian Mastery skills. The user confirmed that the
+displayed DPS and Toughness matched with the same preset on both sides.
 
 Before the Colosseum changes, **993 tests passed on Windows Python 3.11**.
 Tests are cataloged into 14 logical groups. `validate --list-groups` reports

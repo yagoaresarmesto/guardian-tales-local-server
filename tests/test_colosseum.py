@@ -40,6 +40,11 @@ class ColosseumEntryTests(unittest.TestCase):
         self.session = BootstrapSession(GuestStore(db, refs))
         saved = synthetic_snapshot()
         user = saved["profile"]["User"]
+        user["Options"].update(
+            ItemCollection=[{"OptionId": 20001, "Level": 2}],
+            HeroCollection=[{"OptionId": 20002, "Level": 3}],
+            UserMigrationVersion=1,
+        )
         saved["profile"]["UserRecord"]["ColosseumRank"] = 7
         user["SelectedPresetId"]["ColosseumAttack"] = 601
         self.preset = {
@@ -136,6 +141,10 @@ class ColosseumEntryTests(unittest.TestCase):
         user = expected_opponent["User"]
         self.assertNotEqual(user["Id"], owner["Id"])
         self.assertEqual(user["Name"], "Practice")
+        expected_options = dict(owner["Options"])
+        expected_options.pop("UserMigrationVersion")
+        for entry in opponents:
+            self.assertEqual(entry["User"]["Options"], expected_options)
         self.assertEqual(user["Party"]["Characters"], [self.preset["Characters"][0]["Id"]])
         self.assertEqual(len(user["ItemWeapons"]), 1)
         self.assertEqual(user["Characters"][0]["Weapon1"], user["ItemWeapons"][0]["Id"])

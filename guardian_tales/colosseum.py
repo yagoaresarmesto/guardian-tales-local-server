@@ -21,6 +21,14 @@ ROUTES = (*READ_ROUTES, *BATTLE_ROUTES)
 PRACTICE_CONFIG = "colosseum_practice.json"
 DEFAULT_POSITIONS = (12, 3, 19, 9)
 OPPONENT_SLOTS = 3
+ACCOUNT_OPTION_FIELDS = (
+    "AccountBuffs",
+    "GuardianLevel",
+    "GuardianMastery",
+    "HeavenHold",
+    "HeroCollection",
+    "ItemCollection",
+)
 
 
 @lru_cache(maxsize=1)
@@ -76,9 +84,11 @@ def practice_opponents(account, profile):
         if key in owner
     }
     party_ids = [row["Id"] for row in characters]
+    owner_options = owner.get("Options", {})
     opponent_user.update(
         Cas=0,
         Name=preset["Name"] or f"Practice {preset_id}",
+        Options={key: owner_options[key] for key in ACCOUNT_OPTION_FIELDS if key in owner_options},
         Party={"Id": 0, "Characters": party_ids},
         Characters=characters,
         ItemWeapons=[row for row in owner["ItemWeapons"] if row["Id"] in equipment_ids],
