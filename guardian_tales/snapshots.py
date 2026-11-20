@@ -60,6 +60,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/reset-guardian-mastery-level",
         "/user/save-party-member/v2",
         "/user/select-representative-character",
+        "/user/set-portrait-frame",
         "/user/mark-tutorial",
     )
 )

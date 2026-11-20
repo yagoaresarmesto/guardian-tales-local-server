@@ -519,8 +519,22 @@ hero passed on an in-memory account copy with a read-only/query-only source and
 zero source writes. After backend reload, the user confirmed changing the picture
 between owned heroes and preserving the last choice across a full client restart.
 Five actual calls completed without rejections; the saved selection matched the
-latest receipt and SQLite integrity passed in a read-only check. Frames, badges,
-boards, stickers and other-user lookups remain outside this operation.
+latest receipt and SQLite integrity passed in a read-only check. Frame selection
+is a separate operation below; badges, boards, stickers and other-user lookups
+remain outside this operation.
+Twelve frame-selection regressions cover `/user/set-portrait-frame`: a positive-
+amount owned misc inventory ID resolves to its `portraitframe` design in the
+matching external items table, while null removes the selection. No fixed frame
+list or extra catalog is needed. Only `User.FrameId`, `User.Cas` and an atomic
+receipt change; compact replies and delayed retries retain later selections and
+all other progress. Invalid ownership/types, corrupt definitions, rollback,
+no-op revisions, fresh/imported accounts and reopening are covered. The actual
+pending request and all 37 owned frames passed against an in-memory account copy
+with zero source writes. After backend reload, the owner reported successful
+changes/removal and persistence across a full client restart. One APK frame call
+completed without rejections; a read-only check matched the saved selection to
+the latest receipt and confirmed SQLite integrity. The earlier unsupported call
+remains historical. Badge selection is the next reported customization error.
 Five Orbital non-clear
 exit regressions cover read-only exits, native schema/damage bounds, floor/catalog/
 prologue/authentication guards and reconnection. Ten no-reward completion

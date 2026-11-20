@@ -27,6 +27,7 @@ from .packet_reader import lz4_block
 from .party_members import ROUTE as PARTY_MEMBER_ROUTE
 from .play_menu import PLAY_MENU_ROUTES
 from .play_menu import read as play_menu_read
+from .portrait_frame import ROUTE as PORTRAIT_FRAME_ROUTE
 from .protocol import Packet, PacketError
 from .punchking import END as PUNCHKING_END
 from .punchking import ROUTES as PUNCHKING_ROUTES
@@ -332,6 +333,15 @@ class BootstrapSession:
                     return json_response(
                         request,
                         self.store.account.select_representative_character(body, operation_id),
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == PORTRAIT_FRAME_ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.select_portrait_frame(body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

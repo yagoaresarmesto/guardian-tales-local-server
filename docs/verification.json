@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 763,
+    "tests_run": 775,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3676,6 +3676,45 @@
     "historical_unsupported_selection_calls": 1,
     "saved_selection_matches_latest_request_receipt": true,
     "working_sqlite_integrity_after_apk_check": "PASS",
-    "unimplemented_customization": ["Portrait frames", "Badges", "Boards", "Stickers", "Other-player profiles"]
+    "unimplemented_customization": ["Badges", "Boards", "Stickers", "Other-player profiles"]
+  },
+  "portrait_frame_selection": {
+    "date": "2026-11-20",
+    "route": "/user/set-portrait-frame",
+    "actual_pending_request": {
+      "FrameId": "Positive Int32 owned misc inventory ID; native no-frame entry sends null"
+    },
+    "runtime_request_builder_matches_inspected_native_code": true,
+    "native_callback": "ProfileCardPopUp.SelectedFrame success callback redraws; PortraitBox resolves the saved design through ItemData.GetSpec",
+    "request_inventory_id_resolves_to_saved_item_spec_id": true,
+    "eligibility": "Type=portraitframe in the matching external static_data_get.bin items table, and positive amount in current User.ItemMiscs",
+    "dynamic_catalog_without_extra_import_or_fixed_frame_list": true,
+    "response_user_fields": [
+      "Id",
+      "Cas",
+      "FrameId"
+    ],
+    "changed_profile_fields": [
+      "User.FrameId",
+      "User.Cas"
+    ],
+    "atomic_request_receipt": true,
+    "null_removes_selection_without_removing_owned_items": true,
+    "unchanged_design_does_not_rewrite_profile_or_increment_revision": true,
+    "delayed_retry_returns_current_selection_without_reverting_later_progress": true,
+    "fresh_and_imported_accounts_supported": true,
+    "existing_saves_initialize_receipts_without_reimport": true,
+    "synthetic_regressions": 12,
+    "actual_pending_request_and_all_37_owned_frames_on_memory_clone": "PASS",
+    "unrelated_profile_fields_and_startup_reads_preserved": true,
+    "source_connection_read_only_and_query_only": true,
+    "source_connection_writes": 0,
+    "apk_user_report": "PASS: changing/removing the frame works and the last choice persists after reopening the client",
+    "apk_completed_frame_calls": 1,
+    "apk_rejected_frame_calls": 0,
+    "historical_unsupported_frame_calls": 1,
+    "saved_selection_matches_latest_request_receipt": true,
+    "working_sqlite_integrity_after_apk_check": "PASS",
+    "next_reported_error": "/user/set-profile-badge; separate fix pending"
   }
 }

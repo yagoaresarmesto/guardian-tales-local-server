@@ -110,6 +110,9 @@ from .passes import (
     FIRST_PASS_SEASON,
     FIRST_PASS_STAMINA,
 )
+from .portrait_frame import ROUTE as PORTRAIT_FRAME_ROUTE
+from .portrait_frame import create_tables as create_portrait_frame_tables
+from .portrait_frame import select as select_portrait_frame
 from .presets import create_tables as create_preset_tables
 from .presets import delete_existing as delete_existing_preset
 from .presets import save_party as save_party_preset
@@ -153,6 +156,7 @@ ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
     REPRESENTATIVE_CHARACTER_ROUTE,
+    PORTRAIT_FRAME_ROUTE,
     "/user/save-party-member/v2",
     "/guild/list-item-request",
     "/guild/get-my-guild",
@@ -278,6 +282,7 @@ class AccountStore:
         create_preset_tables(db)
         create_party_member_tables(db)
         create_representative_character_tables(db)
+        create_portrait_frame_tables(db)
         create_village_tables(db)
         create_basecamp_tables(db)
         create_mastery_tables(db)
@@ -1182,6 +1187,9 @@ class AccountStore:
 
     def select_representative_character(self, request, operation_id):
         return select_representative_character(self, request, operation_id)
+
+    def select_portrait_frame(self, request, operation_id):
+        return select_portrait_frame(self, request, operation_id)
 
     def decompose_jewels(self, request, operation_id):
         return decompose_jewels(self, request, operation_id)

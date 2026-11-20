@@ -1217,8 +1217,8 @@ replaces its user/avatar/badge and locally available records with current client
 resources before rendering. Uncaptured sticker ownership, attached stickers,
 selected board and social records are explicitly empty/unknown in this view;
 they are not recovered official state. No account field or ownership collection
-is overwritten. Other-player lookups, portrait frames, badges, boards and stickers
-remain unsupported. Owned representative-hero selection is described below.
+is overwritten. Other-player lookups, badges, boards and stickers remain
+unsupported. Owned representative-hero and frame selection are described below.
 
 Eight regressions cover authentication/request/identity bounds, full current
 user and record preservation, later edits, signed floors, reconnect/reopening,
@@ -1254,8 +1254,8 @@ Replies contain only `User.Id`, `User.Cas` and `User.RepresentativeCharacterId`.
 Inventory, hero state, equipment, presets, currencies, other profile sections and
 captured startup reads are retained. Existing saves get the receipt table during
 normal backend initialization; updating requires no account reimport or resource
-pack change. This does not implement portrait frames, badges, boards, stickers or
-another player's profile.
+pack change. Frame selection is a separate operation below; badges, boards,
+stickers and another player's profile remain unsupported.
 
 Twelve regressions cover arbitrary/large rosters, compact replies, fresh/imported
 accounts, authentication/prologue guards, malformed and unowned IDs, null/default
@@ -1270,6 +1270,46 @@ completed selection calls and no rejected calls. The old unsupported-call count
 remained historical. A read-only check confirmed the saved choice matches the
 latest receipt and SQLite integrity passes. This verifies the local profile
 portrait path in the prepared APK; other customization remains separate.
+
+## Selecting or removing an owned portrait frame
+
+The next profile customization error reached `/user/set-portrait-frame`. The
+actual pending request contained exactly `FrameId`, an owned **inventory misc
+item ID**. Read-only inspection matched the running request builder to the
+inspected 3.57.0 native code. `SelectPortraitFrameTab.OnSelectItem` sends the
+inventory ID for a frame, or null for the no-frame entry. The profile's saved
+`User.FrameId` instead contains the **item-spec design ID**: `PortraitBox` looks
+it up through `ItemData.GetSpec`. The success callback only redraws the portrait.
+
+The authenticated operation now resolves that inventory ID to its owned design.
+Frame eligibility comes from `Type=portraitframe` in the matching external
+`static_data_get.bin` items table, with no fixed frame list or additional catalog
+to import. Only positive-amount items in `User.ItemMiscs` qualify; costumes,
+unknown items, unowned designs and design IDs submitted as inventory IDs reject.
+Null removes the selected frame without removing any owned item. The existing
+saved zero/default value is also accepted before selecting a frame.
+
+A changed selection atomically saves `User.FrameId`, `User.Cas` and a retry
+receipt. Selecting the same design does not rewrite the profile or increment its
+revision. Replies contain only `User.Id`, `User.Cas` and `User.FrameId`. A delayed
+retry returns the current selection and cannot restore an older frame or undo
+later progress. Inventory, representative hero, equipment, currencies, presets,
+guild captures and other profile sections remain intact. Existing saves add the
+receipt table at normal backend initialization; no save reimport or resource
+re-extraction is required. Badges, boards and stickers remain separate operations.
+
+Twelve regressions cover inventory/design resolution, dynamic catalog changes,
+null removal, ownership/type/amount validation, malformed requests and saved
+state, invalid external definitions, atomic rollback, no-op revisions,
+authentication/prologue guards, fresh/imported accounts, reconnect/reopening and
+delayed retries. The captured request, all 37 owned frames and removal passed on
+an in-memory copy of the actual account; all unrelated profile fields were
+preserved and the read-only/query-only source connection recorded zero writes.
+After reloading only the backend, the owner reported that changing/removing the
+frame works and the last choice persists after reopening the game. A separate
+read-only check found one completed frame request, no rejected frame calls, a
+saved selection matching the latest receipt and passing SQLite integrity. One
+unsupported-frame call remains in the historical counter.
 
 ## Empty friend refresh required by the profile popup
 
