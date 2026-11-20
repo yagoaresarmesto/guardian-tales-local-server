@@ -1,10 +1,13 @@
 # SPDX-License-Identifier: Apache-2.0
 """Build a local Raid boss set from the pinned client's encounters."""
 
+import base64
 import json
+import struct
 from itertools import count
 
 from .assets import ResourceLibrary
+from .raid_static import compress
 
 BOSS_STAGES = {
     "altered mad panda mk-3": 810010021,
@@ -87,6 +90,64 @@ def available_locales(encoded, library):
         return None
     fallback = available.get("enUS") or next(iter(available.values()))
     return {locale: available.get(locale, fallback) for locale in dict.fromkeys(("enUS", *urls))}
+
+
+def binary_name_hash(name):
+    try:
+        from xxhash import xxh3_64_intdigest
+    except ImportError as error:
+        raise ValueError(
+            'Custom monster elements need xxhash. Install it with python -m pip install ".[raid-custom]"'
+        ) from error
+    return xxh3_64_intdigest(name.encode())
+
+
+def append_binary_monsters(encoded, monsters):
+    """Append one native LZ4 block without repacking the stock monster records."""
+    data = base64.b64decode(encoded, validate=True)
+    header = struct.Struct("<4sIII")
+    entry = struct.Struct("<IQHH")
+    if len(data) < header.size:
+        raise ValueError("Invalid binary monster table")
+    magic, version, count, blocks = header.unpack_from(data)
+    index_end = header.size + count * entry.size
+    sizes_end = index_end + blocks * 2
+    chunks_start = (sizes_end + 3) & ~3
+    if magic != b"k1ng" or version != 1 or not 0 < blocks < 65536 or chunks_start > len(data):
+        raise ValueError("Invalid binary monster table layout")
+    index = data[header.size : index_end]
+    sizes = data[index_end:sizes_end]
+    if sum(value for (value,) in struct.iter_unpack("<H", sizes)) != len(data) - chunks_start:
+        raise ValueError("Invalid binary monster block lengths")
+    existing = list(entry.iter_unpack(index))
+    ids = {row[0] for row in existing}
+    hashes = {row[1] for row in existing}
+    records = []
+    entries = []
+    for monster in monsters:
+        record = json.dumps(monster, separators=(",", ":"), ensure_ascii=False).encode()
+        name_hash = binary_name_hash(monster["Name"])
+        if monster["Id"] in ids or name_hash in hashes or len(record) >= 65536:
+            raise ValueError("Custom monster collides with the binary monster table")
+        ids.add(monster["Id"])
+        hashes.add(name_hash)
+        entries.append(entry.pack(monster["Id"], name_hash, blocks, len(record)))
+        records.append(record)
+    if sum(map(len, records)) > 65536:
+        raise ValueError("Custom monster block exceeds the native size limit")
+    block = compress(b"".join(records))
+    if len(block) >= 65536:
+        raise ValueError("Compressed monster block exceeds the native size limit")
+    prefix = (
+        header.pack(magic, version, count + len(entries), blocks + 1)
+        + index
+        + b"".join(entries)
+        + sizes
+        + struct.pack("<H", len(block))
+    )
+    return base64.b64encode(
+        prefix + b"\0" * (-len(prefix) % 4) + data[chunks_start:] + block
+    ).decode()
 
 
 def build_season(raid, monsters, season, season_row, lineup):

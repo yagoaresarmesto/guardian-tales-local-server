@@ -1631,6 +1631,10 @@ exists, it copies the original Raid monster with the requested element. That
 changes the main boss's element. Existing attack scripts and linked monsters
 still follow the source encounter.
 
+For generated elements, install the optional dependency with
+`python -m pip install ".[raid-custom]"`. Preparation registers the extra
+monsters in both JSON and binary tables when the pack includes both.
+
 With the paired local resource pack, custom selection uses a banner and
 background available from the local CDN. If the selected season's art is
 missing, it uses another season's art and button positions.
@@ -1645,9 +1649,9 @@ require verification in the APK.
 
 Preparation accepts at most 64 MiB of decompressed local static text and uses
 bounded LZ4 encoding to remain within the existing packet limit. The network
-reader's default 16 MiB limit is unchanged. Binary static records retain their
-original bytes and use checksums of their decoded binary content. Both the
-original and prepared bodies remain private external data, excluded from the
+reader's default 16 MiB limit is unchanged. Binary static records use checksums
+of their decoded content. Custom monsters are appended in their own block.
+The original and prepared bodies remain private external data, excluded from the
 content-pack allowlist. Unpublished artifacts left by an interrupted selection
 do not become active; the atomic setting selects the complete body.
 

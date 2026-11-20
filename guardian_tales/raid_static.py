@@ -34,6 +34,10 @@ def digest(data):
     return base64.b64encode(hashlib.sha256(data).digest()).decode("ascii")
 
 
+def record_bytes(name, content):
+    return base64.b64decode(content, validate=True) if name.endswith("-bin") else content.encode()
+
+
 def compress(data):
     """Encode a bounded raw LZ4 block with a fixed-size match table."""
     if not 0 < len(data) <= MAX_STATIC:
@@ -107,10 +111,7 @@ def records(raw):
         if at + 3 >= len(lines):
             raise ValueError("Incomplete static table record")
         name, content, version, checksum = (s.rstrip("\r\n") for s in lines[at : at + 4])
-        hashed = (
-            base64.b64decode(content, validate=True) if name.endswith("-bin") else content.encode()
-        )
-        if not name or name in result or digest(hashed) != checksum:
+        if not name or name in result or digest(record_bytes(name, content)) != checksum:
             raise ValueError("Invalid static table name or content checksum")
         revision = int(version)
         if not 0 <= revision <= 0x7FFFFFFF:
@@ -160,10 +161,14 @@ def prepare(references, season, previous_revision=0, *, lineup=None, rotation_ta
     if lineup is not None or rotation_tables:
         if "monsters" not in items:
             raise ValueError("Custom Raid rotations require the matching monster table")
-        updates = {name: items[name][1] for name in ("guildraid2", "monsters")}
+        updates = {
+            name: items[name][1]
+            for name in ("guildraid2", "monsters", "monsters-bin")
+            if name in items
+        }
     if lineup is not None:
         from .guild_raid import validate_season
-        from .raid_custom import build_season, use_local_presentation
+        from .raid_custom import append_binary_monsters, build_season, use_local_presentation
 
         monsters = json.loads(updates["monsters"])
         monster_count = len(monsters)
@@ -173,6 +178,10 @@ def prepare(references, season, previous_revision=0, *, lineup=None, rotation_ta
         updates["guildraid2"] = json.dumps(raid, ensure_ascii=False, separators=(",", ":"))
         if len(monsters) != monster_count:
             updates["monsters"] = json.dumps(monsters, ensure_ascii=False, separators=(",", ":"))
+            if "monsters-bin" in updates:
+                updates["monsters-bin"] = append_binary_monsters(
+                    updates["monsters-bin"], monsters[monster_count:]
+                )
     calendar = json.loads(items["seasondate"][1])
     if (
         not isinstance(calendar, dict)
@@ -199,7 +208,9 @@ def prepare(references, season, previous_revision=0, *, lineup=None, rotation_ta
     checksum_input = b"local-raid-calendar-v1\n" + base + b"\n" + content.encode()
     if "guildraid2" in updates:
         checksum_input += b"\n" + b"\n".join(
-            digest(updates[name].encode()).encode() for name in ("guildraid2", "monsters")
+            digest(record_bytes(name, value)).encode()
+            for name, value in updates.items()
+            if name != "seasondate"
         )
     checksum = digest(checksum_input)
     updates["__checksum__"] = checksum
@@ -209,7 +220,7 @@ def prepare(references, season, previous_revision=0, *, lineup=None, rotation_ta
             name + "\n",
             value + "\n",
             str(revision) + "\n",
-            digest(value.encode()) + "\n",
+            digest(record_bytes(name, value)) + "\n",
         ]
     prepared = "".join(lines).encode()
     body = compress(prepared)

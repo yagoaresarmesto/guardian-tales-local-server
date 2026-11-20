@@ -19,6 +19,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = ["black==26.10.1", "ruff==0.17.5"]
+raid-custom = ["xxhash>=3.5,<5"]
 
 [project.scripts]
 gt-local = "guardian_tales.__main__:main"

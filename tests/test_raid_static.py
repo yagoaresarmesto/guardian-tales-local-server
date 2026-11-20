@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Historical raid selection changes only its calendar in client static data."""
 
+import base64
 import copy
 import json
 import os
@@ -22,7 +23,7 @@ from guardian_tales.guild_raid import (
     selected_season,
 )
 from guardian_tales.packet_reader import MAX_PACKET, PacketError, lz4_block
-from guardian_tales.raid_custom import parse_lineup, use_local_presentation
+from guardian_tales.raid_custom import append_binary_monsters, parse_lineup, use_local_presentation
 from guardian_tales.raid_static import (
     LOCAL_FROM,
     LOCAL_TO,
@@ -258,6 +259,25 @@ class RaidStaticTests(unittest.TestCase):
         self.assertEqual(selected["ButtonPosition1"], recent["ButtonPosition1"])
         self.assertEqual((selected["Id"], selected["BossSet"]), (1, 4))
         self.assertEqual(json.loads(recent["Banner"])["enUS"], "missing")
+
+    def test_binary_monster_rows_extend_the_index_and_keep_stock_blocks_intact(self):
+        original = b'{"Id":100627,"Name":"boss_sandmonster_guild","ElementalType":"Earth"}'
+        stock_block = compress(original)
+        header = struct.pack("<4sIII", b"k1ng", 1, 1, 1)
+        first = struct.pack("<IQHH", 100627, 15360224650640053314, 0, len(original))
+        source = header + first + struct.pack("<H", len(stock_block)) + b"\0\0" + stock_block
+        variant = {"Id": 799999, "Name": "boss_sandmonster_guild_0", "ElementalType": "Light"}
+        with patch("guardian_tales.raid_custom.binary_name_hash", return_value=42) as hash_name:
+            updated = base64.b64decode(append_binary_monsters(base64.b64encode(source), [variant]))
+        hash_name.assert_called_once_with(variant["Name"])
+        self.assertEqual(struct.unpack_from("<4sIII", updated), (b"k1ng", 1, 2, 2))
+        self.assertEqual(updated[16:32], first)
+        expected_size = len(json.dumps(variant, separators=(",", ":")).encode())
+        self.assertEqual(struct.unpack_from("<IQHH", updated, 32), (799999, 42, 1, expected_size))
+        first_size, second_size = struct.unpack_from("<HH", updated, 48)
+        self.assertEqual(updated[52 : 52 + first_size], stock_block)
+        self.assertEqual(len(updated), 52 + first_size + second_size)
+        self.assertEqual(json.loads(decode(updated[-second_size:])), variant)
 
     def test_bootstrap_serves_consistent_cache_hashes_and_new_selection_revisions_without_writes(
         self,
