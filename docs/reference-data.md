@@ -1649,6 +1649,12 @@ set and assigns that local set to the selected season. The new HP applies to
 all four bosses. The selected season's catalog entry reports the same first
 round HP.
 
+For a dedicated local client with the Sandy carryover scripts installed, the
+reference directory marker `raid_sandy_carryover.enabled` enables the
+companion event on the custom Sandy stage. The event waits for her AI to
+install the original handler, then applies the Raid carryover handler to the
+main boss. Stock selection restores the original stage event list.
+
 The derived body and matching custom season are published together through
 the selection file. `raid-season set ID` returns to the stock rotation. It
 publishes fresh table revisions so the client can replace cached custom data.

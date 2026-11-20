@@ -165,12 +165,14 @@ def prepare(
             raise ValueError("Custom Raid rotations require the matching monster table")
         updates = {
             name: items[name][1]
-            for name in ("guildraid2", "monsters", "monsters-bin")
+            for name in ("guildraid2", "monsters", "monsters-bin", "stages")
             if name in items
         }
     if lineup is not None:
         from .guild_raid import validate_season
         from .raid_custom import (
+            SANDY_CARRYOVER_MARKER,
+            add_sandy_carryover_event,
             append_binary_monsters,
             build_season,
             set_hp_per_bar,
@@ -182,6 +184,15 @@ def prepare(
         season = build_season(raid, monsters, season, selected, lineup)
         if hp_per_bar is not None:
             season = set_hp_per_bar(raid, season, selected, hp_per_bar)
+        if (
+            any(boss == "sandmonster" for boss, _ in lineup)
+            and (references.directory / SANDY_CARRYOVER_MARKER).is_file()
+        ):
+            if "stages" not in updates:
+                raise ValueError("Sandy carryover requires the matching stage table")
+            stages = json.loads(updates["stages"])
+            add_sandy_carryover_event(stages)
+            updates["stages"] = json.dumps(stages, ensure_ascii=False, separators=(",", ":"))
         validate_season(season)
         use_local_presentation(raid, selected, references.directory)
         updates["guildraid2"] = json.dumps(raid, ensure_ascii=False, separators=(",", ":"))

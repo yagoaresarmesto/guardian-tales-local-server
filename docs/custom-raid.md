@@ -129,10 +129,16 @@ in the name.
 
 Sandy's original AI replaces the usual Raid damage handler. The usual handler
 carries excess damage into the next HP bar. Sandy's handler applies the hit
-once, so a large hit can lose damage at the end of a 500,000-HP bar.
-`--hp-per-bar 100000000` gives large hits more room before the next boundary.
-This setting affects all four fights in that custom season. An in-game test
-with Fire Sandy confirmed that she took the expected damage with the 100M bars.
+once, so a large hit can lose damage at the end of a 500,000-HP bar. With the
+local Sandy stage add-on installed, custom rotations restore the standard
+damage handler after her AI starts. The Android 3.57.0 client log confirmed
+that the switch ran during the Fire Sandy fight. An in-game Orca hit then
+dealt the expected damage with 500,000-HP bars.
+
+For an installation without the add-on, `--hp-per-bar 100000000` gives large
+hits more room before the next boundary. This setting affects all four fights
+in that custom season. An in-game test with Fire Sandy confirmed that she
+took the expected damage with the 100M bars.
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales raid-season custom $raidLineup --reference-dir $raidRefs --hp-per-bar 100000000

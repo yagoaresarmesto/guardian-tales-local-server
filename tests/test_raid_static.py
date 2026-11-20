@@ -23,7 +23,13 @@ from guardian_tales.guild_raid import (
     selected_season,
 )
 from guardian_tales.packet_reader import MAX_PACKET, PacketError, lz4_block
-from guardian_tales.raid_custom import append_binary_monsters, parse_lineup, use_local_presentation
+from guardian_tales.raid_custom import (
+    SANDY_CARRYOVER_EVENT,
+    SANDY_CARRYOVER_MARKER,
+    append_binary_monsters,
+    parse_lineup,
+    use_local_presentation,
+)
 from guardian_tales.raid_static import (
     LOCAL_FROM,
     LOCAL_TO,
@@ -182,6 +188,12 @@ class RaidStaticTests(unittest.TestCase):
             "1\n",
             digest(monster_json.encode()) + "\n",
         ]
+        stage_rows = [
+            {"Id": 810010002, "Tilemap": {"Default": "raid_guild_2"}, "Event": ["GuildRaid.lua"]},
+            {"Id": 810010007, "Tilemap": {"Default": "raid_guild_7"}, "Event": ["GuildRaid.lua"]},
+        ]
+        stage_json = json.dumps(stage_rows)
+        lines[at:at] = ["stages\n", stage_json + "\n", "1\n", digest(stage_json.encode()) + "\n"]
         original = compress("".join(lines).encode())
         self.source.write_bytes(original)
         catalog_file = self.root / CATALOG
@@ -196,6 +208,7 @@ class RaidStaticTests(unittest.TestCase):
         stages = [boss["stage_id"] for boss in custom["bosses"]]
         self.assertEqual(stages, [810010002, 810010007, 810010004, 810010002])
         prepared = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
+        self.assertEqual(json.loads(prepared["stages"][1]), stage_rows)
         overlay = json.loads(prepared["guildraid2"][1])
         details = {row["Id"]: row for row in overlay["BossDetails"]}
         spec = {row["Id"]: row for row in json.loads(prepared["monsters"][1])}
@@ -229,10 +242,14 @@ class RaidStaticTests(unittest.TestCase):
             with self.subTest(hp_per_bar=invalid), self.assertRaises(ValueError):
                 select_season(self.ref, lineup=lineup, hp_per_bar=invalid)
         self.assertEqual(selected_season(self.ref), custom)
+        (self.root / SANDY_CARRYOVER_MARKER).touch()
         custom = select_season(self.ref, lineup=lineup, hp_per_bar=100_000_000)
         self.assertEqual(selected_season(self.ref), custom)
         updated = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
         overlay = json.loads(updated["guildraid2"][1])
+        actual_stages = json.loads(updated["stages"][1])
+        self.assertEqual(actual_stages[0]["Event"], ["GuildRaid.lua", SANDY_CARRYOVER_EVENT])
+        self.assertEqual(actual_stages[1], stage_rows[1])
         self.assertEqual(overlay["BossDetails"][-1]["MonsterId"], 790012)
         self.assertEqual(custom["first_round"]["boss_hp_bar"], 100_000_000)
         self.assertEqual(overlay["Seasons"][0]["RoundSet"], custom["round_set"])
@@ -259,7 +276,11 @@ class RaidStaticTests(unittest.TestCase):
         self.assertEqual(select_season(self.ref, 1), self.catalog["seasons"][0])
         self.assertEqual(selected_season(self.ref), self.catalog["seasons"][0])
         restored = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
-        for table, original_json in (("guildraid2", raid_json), ("monsters", monster_json)):
+        for table, original_json in (
+            ("guildraid2", raid_json),
+            ("monsters", monster_json),
+            ("stages", stage_json),
+        ):
             self.assertEqual(restored[table][1], original_json)
             self.assertGreater(restored[table][2], updated[table][2])
         self.assertEqual(self.source.read_bytes(), original)

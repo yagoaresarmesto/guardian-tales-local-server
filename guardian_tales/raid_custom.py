@@ -37,6 +37,8 @@ BOSS_STAGES = {
 }
 BOSS_ALIASES = {"sand monster": "sandmonster", "sandy": "sandmonster"}
 SANDMONSTER_NAME = "Sandy (jailed for your crimes)"
+SANDY_CARRYOVER_MARKER = "raid_sandy_carryover.enabled"
+SANDY_CARRYOVER_EVENT = "LocalRaidSandyCarryover.lua"
 # UI label, character enum, and suffix in the stock Raid v2 monster names.
 ELEMENTS = {
     "basic": ("None", "none"),
@@ -196,6 +198,17 @@ def set_hp_per_bar(raid, season, season_row, hp_per_bar):
     season_row["RoundSet"] = round_set
     first_round = dict(season["first_round"], boss_hp_bar=hp_per_bar)
     return dict(season, round_set=round_set, first_round=first_round)
+
+
+def add_sandy_carryover_event(stages):
+    matches = [row for row in stages if row.get("Id") == BOSS_STAGES["sandmonster"]]
+    if (
+        len(matches) != 1
+        or matches[0].get("Tilemap", {}).get("Default") != "raid_guild_2"
+        or matches[0].get("Event") != ["GuildRaid.lua"]
+    ):
+        raise ValueError("Sandy carryover requires the matching stock Raid stage")
+    matches[0]["Event"].append(SANDY_CARRYOVER_EVENT)
 
 
 def build_season(raid, monsters, season, season_row, lineup):
