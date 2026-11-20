@@ -6,8 +6,15 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **993 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 87 modules. `validate --list-groups` reports
+Five Colosseum lobby tests cover the native `IsPartial` entry hint, opponent list,
+personal ranking, parameterless manual refresh, and sign-in enforcement. The
+menu requests also passed against a query-only copy of the imported save.
+The user confirmed that the lobby opened and Refresh completed in the APK.
+The running server recorded two successful refresh requests with the game still
+connected. The opponent list is empty.
+
+Before the Colosseum changes, **993 tests passed on Windows Python 3.11**.
+Tests are cataloged into 14 logical groups. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit

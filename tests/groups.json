@@ -5,7 +5,7 @@
   },
   "account": {
     "description": "Account import, profile customization and local administration",
-    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_account_name", "test_my_room", "test_admin", "test_admin_festival", "test_admin_imported", "test_admin_test_items"]
+    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_account_name", "test_my_room", "test_colosseum", "test_admin", "test_admin_festival", "test_admin_imported", "test_admin_test_items"]
   },
   "content": {
     "description": "Reference data, content packs, archives and catalog contracts",

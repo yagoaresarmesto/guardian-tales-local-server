@@ -11,6 +11,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
+from . import colosseum
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .account_name import change as change_account_name
 from .account_name import create_tables as create_account_name_tables
@@ -181,6 +182,7 @@ from .weapon_summon import draw as draw_weapons
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
+    *colosseum.READ_ROUTES,
     MY_ROOM_ENTRY,
     TRAINING_ROOM_ENTRY,
     REPRESENTATIVE_CHARACTER_ROUTE,
@@ -1284,6 +1286,8 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route in colosseum.READ_ROUTES:
+            return colosseum.read(self, route, request)
         if route == TRAINING_ROOM_ENTRY:
             return enter_training_room(self, request)
         if route == MY_ROOM_ENTRY:

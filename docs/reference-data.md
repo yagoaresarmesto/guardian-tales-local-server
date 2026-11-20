@@ -35,6 +35,24 @@ original content. Preserved files, manifests and their ETags are never overwritt
 No APK patch or Android data reset is needed. **After updating, fully close the
 game, restart both backend and CDN, and reopen it; the bridge can remain running.**
 
+## Colosseum lobby
+
+The 3.57.0 client sends a Boolean `IsPartial` to `/colosseum/enter`. The server
+returns the full lobby resource for both values. The client also reads the season
+end time, new-season flag and defense battle records. When the imported profile
+lacks a Colosseum resource, the local lobby uses the latest map-backed Global
+season in the supplied `colosseum` table and shows the selected Colosseum attack
+preset as its initial defense preview.
+
+On opening the lobby the client can also call `/colosseum/get-opponents` and
+`/colosseum/get-my-ranking` without parameters. The local responses contain an
+empty `Opponents` list and the player's saved `Ranking`. The Refresh button calls
+the parameterless `/colosseum/refresh-opponents` and returns the same empty list
+for free. Entry, list reads and manual refresh use the next local weekly reset
+as the refresh time so the client can cache the list. These routes require
+sign-in and a completed prologue and make no SQLite writes. Opponent selection,
+battles and ticket spending are outside this lobby implementation.
+
 ## Backroom entry
 
 `/my-room/enter` accepts exactly Boolean `IsPartial` after sign-in and prologue
