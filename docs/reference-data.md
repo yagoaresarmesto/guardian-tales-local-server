@@ -185,6 +185,19 @@ gear references. Current definitions are kept in SQLite separately from the
 captured startup seed and are used by subsequent preserved reads and entry.
 It requires no additional public catalog and does not modify owned inventory.
 
+`/preset/delete-preset` accepts exactly integer `PresetId` for an existing,
+unambiguous Orbital `[400,500)` or shared Raid/Conquest `[700,800)` definition.
+No additional catalog or save import is required. It removes only that definition,
+retains the order and data of every other team and increments `UserPartyPreset2.Cas`.
+Deleting the selected team resets only its mode's pointer to zero and increments
+`User.Cas`; choosing another team remains an explicit client action. Other mode
+pointers, owned heroes, equipment, currencies and progress remain unchanged.
+The current group, optional selection change and epoch/sequence receipt commit
+together. Replays return current state, preserving later edits, selections and
+explicitly recreated slots. Other preset modes remain outside deletion support.
+After updating this backend behavior, close the game, restart the backend and
+reopen the game; CDN and bridge can remain running.
+
 Creating a missing definition through `/preset/set-presets` additionally requires
 `orbital_preset_catalog.json` with the same pinned `client` object and integer
 `count` in `[1,100]`. The file is limited to 4 KiB. The inspected `PresetCount`

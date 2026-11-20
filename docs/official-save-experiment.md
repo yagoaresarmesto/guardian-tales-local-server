@@ -211,7 +211,8 @@ controllers. Preset selection changes only the saved Orbital or shared
 Raid/Conquest pointer and account revision, with atomic retry receipts. Editing an existing
 Orbital preset saves its definition separately from the captured seed; a matching
 slot-count catalog also permits creating a missing definition. Deletion
-removes one existing Orbital definition and clears its selection if necessary. Natural stamina
+removes one existing Orbital or Raid/Conquest definition and clears only its
+mode's selection if necessary. Natural stamina
 recharge advances the saved timer and charged balance up to its configured cap.
 Village harvesting collects configured inn/facility gold and soul points with
 balances, clocks and retry receipts stored together.
@@ -699,6 +700,24 @@ succeeded. Remaining definitions and their order matched the pre-delete hashes;
 group revision, optional selection/account revision and the receipt matched the
 removal. Unrelated profile data, captured seed and earlier selection/edit/summon
 receipts were unchanged. The next error came while applying an unsaved slot.
+
+The later Raid deletion report used the same native endpoint and request shape
+for the currently selected shared Raid/Conquest team. Its former Orbital-only
+guard rejected that valid mode. Deletion now also supports existing definitions
+in `[700,800)`, resetting only `GuildRaidAndConquest` when needed. Other teams,
+orders, selected modes, inventory, currencies and saved progress remain intact.
+Seven regressions cover Raid removal, retries after slot recreation and later
+selection, reopening, last-team removal, invalid state, overflow and rollback.
+All 53 focused preset tests pass. The exact pending request passed on an in-memory
+backup of the real account with zero writes to the read-only/query-only source.
+After backend reload, the owner confirmed deletion succeeds, the other teams
+remain and the removed team stays absent after reopening. The coherent read-only
+save audit found two removals around one explicit recreation/selection of that
+slot; its final definition was absent. All surviving definitions/orders, other
+mode pointers, owned inventory, assets, progress and imported startup seed matched
+the backup. Group/user revisions advanced three times, matching those operations;
+SQLite integrity passed. Only the backend needs a restart; the existing save and
+CDN/bridge configuration are retained.
 
 ## Applying or creating an unused Orbital slot
 

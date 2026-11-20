@@ -308,12 +308,14 @@ def delete_existing(account, body, operation_id):
         not isinstance(body, dict)
         or set(body) != {"PresetId"}
         or not integer(body["PresetId"])
-        or not 400 <= body["PresetId"] < 500
+        or body["PresetId"] // 100 * 100 not in (400, 700)
         or not isinstance(operation_id, str)
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError("Delete one existing Orbital preset after completing the prologue")
+        raise ValueError("Delete one existing Orbital or Raid/Conquest preset after the prologue")
+    base = body["PresetId"] // 100 * 100
+    field = SELECTION_FIELDS[base]
     encoded = json.dumps(body, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_delete_requests WHERE operation_id=?", (operation_id,)
@@ -332,16 +334,20 @@ def delete_existing(account, body, operation_id):
         if isinstance(preset, dict) and preset.get("Id") == body["PresetId"]
     ]
     if len(matches) != 1:
-        raise ValueError("Deletion requires one existing unambiguous Orbital preset")
+        raise ValueError(
+            "Deletion requires one existing unambiguous Orbital or Raid/Conquest preset"
+        )
     revision = group.get("Cas")
     if type(revision) is not int or not 0 <= revision < MAX_REVISION:
         raise ValueError("Invalid preset group revision")
     user = profile["User"]
     selected = user.get("SelectedPresetId")
-    current = selected.get("InfiniteTower") if isinstance(selected, dict) else None
+    current = selected.get(field) if isinstance(selected, dict) else None
     # Zero means no saved selection. Choosing a replacement remains an explicit
     # client action; deleting a definition never selects an unrelated team.
-    selected_changed = choose_orbital(user, 0 if current == body["PresetId"] else current)
+    selected_changed = choose_preset(
+        user, 0 if current == body["PresetId"] else current, field, base
+    )
     del group["Presets"][matches[0]]
     group["Cas"] += 1
     with account.db:

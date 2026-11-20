@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Deleting saved Orbital definitions is atomic and survives imported reads."""
+"""Deleting saved Orbital/Raid definitions is atomic and survives imported reads."""
 
 import copy
 import json
@@ -78,6 +78,158 @@ class PresetDeleteTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.call(body, route)
         self.assertEqual(list(self.db.iterdump()), before)
+
+    def add_raid_presets(self, selected=705):
+        profile = self.store.account.profile()
+        profile["User"]["SelectedPresetId"].update(
+            GuildRaidAndConquest=selected, GuildPunchKing=1302, SingleRaid=802
+        )
+        group = current_group(self.db)
+        group["Presets"].extend(
+            {
+                "Id": ident,
+                "Name": "Synthetic Raid team",
+                "Order": order,
+                "Characters": [{"Id": 1, **dict.fromkeys(GEAR_FIELDS)}],
+            }
+            for order, ident in enumerate((700, 705, 729, 802, 1302))
+        )
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            self.db.execute("INSERT INTO party_preset_state VALUES(1,?)", (json.dumps(group),))
+        return profile, group
+
+    def test_selected_raid_delete_changes_only_raid_choice_and_group(self):
+        profile, group = self.add_raid_presets()
+        seed = self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0]
+        source = self.source.read_bytes()
+        expected_profile = copy.deepcopy(profile)
+        expected_profile["User"]["SelectedPresetId"]["GuildRaidAndConquest"] = 0
+        expected_profile["User"]["Cas"] += 1
+        expected_group = copy.deepcopy(group)
+        expected_group["Presets"] = [p for p in group["Presets"] if p["Id"] != 705]
+        expected_group["Cas"] += 1
+        reply = self.call({"PresetId": 705})
+        self.assertEqual(self.store.account.profile(), expected_profile)
+        self.assertEqual(current_group(self.db), expected_group)
+        self.assertEqual(reply["UserPartyPreset2"], expected_group)
+        self.assertEqual(
+            reply["User"],
+            {key: expected_profile["User"][key] for key in ("Id", "Cas", "SelectedPresetId")},
+        )
+        self.assertEqual(
+            self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0], seed
+        )
+        self.assertEqual(self.source.read_bytes(), source)
+        self.assertEqual(
+            preserved_read(self.db, "/preset/get-presets")["UserPartyPreset2"], expected_group
+        )
+
+    def test_nonselected_raid_deletion_preserves_raw_profile_and_other_mode_pointers(self):
+        profile, group = self.add_raid_presets()
+        raw = self.db.execute("SELECT profile FROM local_account").fetchone()[0]
+        self.call({"PresetId": 729})
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertEqual(self.db.execute("SELECT profile FROM local_account").fetchone()[0], raw)
+        self.assertEqual(
+            current_group(self.db)["Presets"], [p for p in group["Presets"] if p["Id"] != 729]
+        )
+
+    def test_last_raid_preset_can_be_deleted_while_other_modes_remain(self):
+        profile, group = self.add_raid_presets()
+        for sequence, ident in enumerate((700, 729, 705), 41):
+            self.call({"PresetId": ident}, sequence=sequence)
+        expected = [p for p in group["Presets"] if not 700 <= p["Id"] < 800]
+        self.open_session(True)
+        response = self.call(None, "/preset/get-presets")
+        self.assertEqual(response["UserPartyPreset2"]["Presets"], expected)
+        selected = self.store.account.profile()["User"]["SelectedPresetId"]
+        self.assertEqual(
+            selected, dict(profile["User"]["SelectedPresetId"], GuildRaidAndConquest=0)
+        )
+
+    def test_raid_deletion_retry_preserves_recreated_preset_and_newer_selection_after_reopen(self):
+        self.add_raid_presets()
+        self.call({"PresetId": 705})
+        self.call(
+            {
+                "PartyPreset": {
+                    "Id": 705,
+                    "Name": "Recreated",
+                    "Order": 999,
+                    "Characters": [{"Id": 1}],
+                },
+                "SetSelected": True,
+            },
+            "/preset/set-presets",
+            42,
+        )
+        self.call({"PresetId": 700}, "/preset/set-selected-preset", 43)
+        self.db.close()
+        self.db = sqlite3.connect(self.state / "server.sqlite3")
+        self.open_session(True)
+        group = current_group(self.db)
+        profile = self.store.account.profile()
+        before, changes = list(self.db.iterdump()), self.db.total_changes
+        reply = self.call({"PresetId": 705})
+        self.assertEqual(reply["UserPartyPreset2"], group)
+        self.assertEqual(self.store.account.profile(), profile)
+        self.assertIn(705, [p["Id"] for p in group["Presets"]])
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        self.reject_without_writes({"PresetId": 700})
+
+    def test_raid_deletion_rejects_missing_duplicate_other_mode_or_invalid_selection(self):
+        profile, group = self.add_raid_presets()
+        for ident in (699, 730, 799, 800, 802, 1302, True, 705.0, "705"):
+            self.reject_without_writes({"PresetId": ident})
+        duplicated = copy.deepcopy(group)
+        duplicated["Presets"].append(
+            copy.deepcopy(next(p for p in group["Presets"] if p["Id"] == 705))
+        )
+        with self.db:
+            self.db.execute("UPDATE party_preset_state SET value=?", (json.dumps(duplicated),))
+        self.reject_without_writes({"PresetId": 705})
+        with self.db:
+            self.db.execute("UPDATE party_preset_state SET value=?", (json.dumps(group),))
+        for value in (None, True, -1, 401, 800, "705"):
+            profile["User"]["SelectedPresetId"]["GuildRaidAndConquest"] = value
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            self.reject_without_writes({"PresetId": 705})
+
+    def test_raid_revision_overflow_or_failed_receipt_rolls_back_every_change(self):
+        profile, group = self.add_raid_presets()
+        for target in ("profile", "group"):
+            if target == "profile":
+                value = copy.deepcopy(profile)
+                value["User"]["Cas"] = MAX_REVISION
+                with self.db:
+                    self.db.execute("UPDATE local_account SET profile=?", (json.dumps(value),))
+            else:
+                value = copy.deepcopy(group)
+                value["Cas"] = MAX_REVISION
+                with self.db:
+                    self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+                    self.db.execute("UPDATE party_preset_state SET value=?", (json.dumps(value),))
+            self.reject_without_writes({"PresetId": 705})
+        with self.db:
+            self.db.execute("UPDATE party_preset_state SET value=?", (json.dumps(group),))
+        self.db.execute(
+            "CREATE TEMP TRIGGER refuse_raid_delete BEFORE INSERT ON preset_delete_requests BEGIN SELECT RAISE(ABORT,'synthetic refusal'); END"
+        )
+        before = list(self.db.iterdump())
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.call({"PresetId": 705})
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_raid_nonselected_delete_at_user_revision_ceiling_needs_no_selection_write(self):
+        profile, _ = self.add_raid_presets()
+        profile["User"]["Cas"] = MAX_REVISION
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        self.call({"PresetId": 729})
+        self.assertEqual(self.store.account.profile(), profile)
 
     def test_nonselected_delete_preserves_profile_other_presets_and_captured_seed(self):
         profile = self.store.account.profile()

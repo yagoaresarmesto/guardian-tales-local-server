@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **857 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **864 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 79 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -714,6 +714,21 @@ Ten Orbital preset-delete regressions cover
 selected/nonselected and last-team removal, preserved data/seeds, dependent
 operation rejection, retries/reopening, strict schema/authentication/scope,
 ambiguous IDs, empty teams, revisions and atomic rollback.
+Seven additional Raid/Conquest deletion regressions extend the same endpoint to
+the native 700-ID block. Selected removal clears only `GuildRaidAndConquest`;
+nonselected removal retains the complete raw account profile. Other team
+definitions/orders and other mode pointers remain unchanged. Last-team removal,
+strict mode/state guards, revision overflow, atomic rollback and replay after
+recreation/new selection/reopening are covered. All 53 focused preset tests pass.
+The actual selected-team request passed through the packet codec on an in-memory
+copy of the current account, changing only its definition/group revision and
+Raid pointer/account revision, with zero diagnostic source writes. No migration,
+new catalog or reimport is needed. After backend reload, the user confirmed
+deletion, retained other teams and persistence after reopening. The read-only
+save audit found two deletions around an explicit recreation/selection of the
+same slot, with the final definition absent. Every surviving team/order and
+other mode pointer, inventory, assets, progress and captured seed stayed intact.
+The group/user revision deltas matched those changes; SQLite integrity passed.
 Ten Orbital preset-edit regressions cover
 exact mutation bounds, optional selection, omitted gear fields, no-ops, retries,
 reopening, schema/scope/ownership checks, empty teams and rollback/revision limits.
