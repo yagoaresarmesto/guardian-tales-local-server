@@ -11,6 +11,8 @@ from pathlib import Path
 from .protocol import Packet
 from .reference import compressed_empty_list
 from .summon_selection import load_selection_catalog
+from .weapon_selection import load_selection_catalog as load_weapon_selection_catalog
+from .weapon_selection import selection_checksum
 
 ROOT = Path(__file__).resolve().parent / "templates"
 READ_RESPONSES = json.loads((ROOT / "empty_lobby.json").read_text())
@@ -22,10 +24,15 @@ def respond(request, references=None):
     value = template["value"]
     if request["api"] in ("/summon/enter", "/summon/on-event"):
         catalog = load_selection_catalog(references)
+        weapons = load_weapon_selection_catalog(references)
         if catalog is not None:
             value = dict(value, Checksum=catalog[1])
             if request["api"] == "/summon/on-event":
                 value["SelectableCharacter"] = catalog[0]
+        if weapons is not None:
+            value = dict(value, Checksum=selection_checksum(catalog[0] if catalog else [], weapons))
+            if request["api"] == "/summon/on-event":
+                value["SelectableWeapon"] = weapons
     if template["body_type"] == 2:
         assert template["value"] == []
         body = compressed_empty_list()

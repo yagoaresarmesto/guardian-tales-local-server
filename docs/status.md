@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **822 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 76 modules. `validate --list-groups` reports
+The suite has **836 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 77 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -743,7 +743,7 @@ observed nine completed requests/18 new weapons, 2,700 gems and eight selectable
 controllers spent, 180 metal/18 mileage credited, unchanged old weapons/heroes/
 shop/hero crystals and passing SQLite integrity. No calls were rejected; the old
 unsupported request is historical. Regular paid-gem banners are described below;
-promotion/pity behavior and weapon wishlist editing remain separate.
+promotion/pity behavior remains separate; weapon wishlist editing follows below.
 Twenty paid-summon regressions cover `/summon/character` and `/summon/weapon`
 regular banners (`IsPickUp=false`, `PickUpKey=0`). A shared payment handler debits
 only paid-gem asset 70002 for daily type 1 (100) and full-price type 4 (300/2,700).
@@ -818,6 +818,21 @@ profile preservation, idempotent IDs, retries after spending, audit history,
 invalid input/overflow, transactional rollback, real CLI use, cross-process
 state locks and cleanup after backend startup failures. These eight also pass
 on Windows with its native file-lock implementation.
+Fourteen weapon-wishlist regressions cover `/summon/set-select-weapon`, dynamic
+rank-4 candidates and native category/media-field contracts. The prepared external
+definitions expose 133 choices, with a combined hero/weapon checksum refreshing
+the old empty weapon cache. Native weapon rows require ItemSummonCategory.Exclusive;
+using the hero enum can prevent startup media initialization. Saving preserves
+order and supports zero to five choices, returning UserShop and changing only
+its weapon selection/revision. No currencies, inventory or draws change; no
+migration is needed. Cache refresh, invalid requests/state, no-op revisions,
+rollback, reopening and subsequent draw-pool use are covered. All candidates and
+replacement/reordering/clearing passed on an in-memory account copy with zero
+source writes. After correcting the enum and reloading the backend, the owner
+confirmed lobby recovery and saved choices after reopening. Six registration calls
+completed without rejection. A read-only backup comparison confirmed five eligible
+saved choices, only six shop revisions/the wishlist changed, unchanged user
+resources/inventory/heroes/records/startup reads and passing SQLite integrity.
 Five hero-wishlist regressions cover catalog checksum refresh, selection,
 replacement/clearing, persistence/retries, authentication, invalid placeholders,
 catalog validation and failed-write rollback with the remaining profile retained.

@@ -180,7 +180,7 @@ Twenty-three mutations are now enabled: `/item/change-options`, `/item/apply-opt
 `/item/enhance-weapon`,
 `/item/limitbreak-weapon/v2`, `/summon/set-select-character`,
 `/summon/select-character`, `/summon/select-weapon`, `/summon/character`,
-`/summon/weapon`, `/preset/set-selected-preset`,
+`/summon/weapon`, `/summon/set-select-weapon`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp`,
@@ -299,7 +299,7 @@ An exact retry returns those results with current state and cannot pay/grant twi
 or undo a later weapon edit. Existing gear, hero progression, shop/wishlists and
 captured startup data remain intact. Existing saves add receipt storage at normal
 backend initialization; no new external catalog or save reimport is required.
-Changing the weapon wishlist remains a separate unsupported operation.
+Weapon wishlist registration is described below.
 
 Eighteen regressions cover fresh/imported accounts, all supported payments,
 single/batch draws, distinct inventory allocation for repeated designs, saved
@@ -362,6 +362,45 @@ shop changes were limited to the expected daily timestamps/revisions. Both
 regular API calls completed without rejections, SQLite integrity passed and
 diagnostic connections wrote nothing. The older unsupported weapon call remains
 historical.
+
+## Weapon wishlist candidates and registration
+
+The weapon wishlist initially offered no choices because `/summon/on-event`
+returned an empty `SelectableWeapon` list; the matching registration operation
+was also absent. The native `SummonSelectableWeaponSpec` model and
+`SendSummonSetSelectWeapon` builder establish candidate item-spec IDs and exactly
+`RequestItemIds` for registration. The wishlist coroutine applies the shared
+UserShop resource after success.
+
+The catalog now derives 133 eligible epic weapon choices from the same external
+definitions used by local weapon draws, with no fixed candidate list or extra
+catalog. Rows use the native **ItemSummonCategory.Exclusive**, not the hero
+category enum. That distinction matters during JSON model population: an invalid
+weapon category can leave later collections null and stop `GetMediaList` before
+the lobby loads. A dedicated regression bounds weapon category labels and keeps
+the remaining native media collections present.
+
+Entry and event replies share a combined hero/weapon checksum, so existing
+installations refresh the former empty weapon catalog. Hero rows remain unchanged.
+The authenticated setter accepts zero to five distinct eligible design IDs in
+order, supports partial lists and clearing, and returns the current UserShop.
+Only its selected-weapon list and revision change; identical current selections
+do not write. No resources or inventory are spent/granted, and all hero/draw/daily
+state is retained. Existing account files require no migration or reimport.
+
+Fourteen regressions cover native categories and cache shapes, combined cache
+refresh, ordered/partial/empty choices, no-op revisions, invalid inputs and saved
+state, rollback, persistence/reopening, fresh authentication/prologue guards,
+hero-only/weapon-only catalog behavior and use of the new wishlist by subsequent
+draws. A private read-only-source/in-memory check exposed all 133 candidates,
+retained hero rows, changed only the expected shop fields and recorded zero
+source writes. After backend reload with the corrected enum, the owner confirmed
+the lobby loads and the wishlist saves across reopening. Six actual registration
+calls completed without rejections. A read-only comparison with the private
+pre-fix backup found five eligible saved choices and exactly six shop revisions;
+only the wishlist/revision changed. User resources, inventory, heroes, records and
+captured startup reads were identical, and SQLite integrity passed. No save or
+client-data reset was needed.
 
 ## Imported client compatibility checks
 

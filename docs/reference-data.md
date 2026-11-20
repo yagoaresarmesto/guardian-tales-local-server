@@ -783,9 +783,36 @@ signed-in account with the prologue complete and saves only
 `UserShop.SelectedSummonCharacters`/`UserShop.Cas`, returning `UserShop`. Identical
 retries do not write another revision. Negative placeholders and unknown or
 duplicate IDs are rejected before saving. No currency, inventory or hero is
-granted or spent. Changing the weapon wishlist remains pending; draws from an
-existing valid weapon wishlist are described below. Hero draws use the separate
-optional draw catalog described below.
+granted or spent. Weapon wishlist candidates and registration follow below.
+Hero draws use the separate optional draw catalog described below.
+
+Weapon candidates for `/summon/on-event` are derived from the matching external
+`static_data_get.bin`, using the same eligible non-limited base rank-4 definitions
+as local weapon draws. No additional selection catalog or fixed ID list is
+required. Local native rows contain stable design IDs in both `Id` and `ItemId`,
+`SummonEventType=Weapon`, `IsNew=false` and **`SummonCategory=Exclusive`**. Weapons
+use the native `ItemSummonCategory` enum, which differs from the hero category
+enum. A hero category label in this field can abort catalog population and block
+startup media preparation. Contract regressions verify the weapon enum and retain
+the remaining media/event list fields.
+
+When weapon data is available, `/summon/enter` and `/summon/on-event` share a
+checksum covering both hero and weapon candidates. Changes to either list refresh
+the client cache. Hero-only installations retain their existing checksum behavior;
+valid weapon candidates can also be served without the optional hero selection
+file. Catalog reads do not write account state or enable events.
+
+`/summon/set-select-weapon` accepts exactly `RequestItemIds`: zero to five distinct
+positive Int32 **design IDs** from those candidates, preserving their order. Owned
+inventory row IDs and hero origins do not identify wishlist weapons. Selection
+does not require owning the requested weapon. Partial lists and an empty clear
+are supported; a subsequent wishlist draw still requires five valid entries.
+Only `UserShop.SelectedSummonWeapons` and its `Cas` change, returning `UserShop` as
+for hero selection. An unchanged list writes nothing, including at the maximum
+revision. Invalid requests, shop ownership/revision, duplicate choices or failed
+storage retain the previous state. Existing positive stale choices may be replaced
+with eligible designs. No currency, inventory, hero, event counter or draw receipt
+is granted, spent or reset; existing saves need no migration or reimport.
 
 The draw catalog's exact shape is shown by the [synthetic fixture](../tests/fixtures/summon_draw_catalog.json).
 `heroes` maps origin IDs to native `rank` and `category` (`Normal`, `Story`,
@@ -861,8 +888,8 @@ again. A conflicting body under one identity rejects. Existing saves initialize
 the receipt table without reimport. Existing gear/options/engraving, heroes,
 wishlists, other progress and captured startup reads are preserved.
 
-Wishlist paid-gem modes, free-event draws, official pity/promotions, weapon wishlist
-editing and official option-generation probabilities remain outside this route.
+Wishlist paid-gem modes, free-event draws, official pity/promotions and official
+option-generation probabilities remain outside this draw route.
 Regular paid-gem banners are described below.
 The prepared APK has verified a ten-gem draw and single selectable-controller
 draws, with weapons retained after reopening; ordinary-controller payment has

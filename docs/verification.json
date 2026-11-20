@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 822,
+    "tests_run": 836,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3807,7 +3807,7 @@
     "apk_rejected_draw_calls": 0,
     "historical_unsupported_draw_calls": 1,
     "working_sqlite_integrity_after_apk_check": "PASS",
-    "unimplemented": "Weapon wishlist editing, paid wishlist/free-event draws, official pity/promotions and official option-generation probabilities; regular paid modes described below"
+    "unimplemented": "Paid wishlist/free-event draws, official pity/promotions and official option-generation probabilities; wishlist editing and regular paid modes described below"
   },
   "regular_paid_summons": {
     "date": "2026-11-20",
@@ -3867,5 +3867,55 @@
     "working_sqlite_integrity": "PASS",
     "full_price_type4_apk_verification": "Pending; automated coverage passes",
     "unimplemented": "Pickup/event banners, active discount packages, paid wishlist variants and promotional guarantees"
+  },
+  "weapon_wishlist_selection": {
+    "date": "2026-11-20",
+    "route": "/summon/set-select-weapon",
+    "native_builder": "Oak.ApiConnection.SendSummonSetSelectWeapon",
+    "native_request_field": "RequestItemIds: ordered weapon design/spec IDs",
+    "native_candidate_model": "Oak.SummonSelectableWeaponSpec",
+    "native_weapon_category": "ItemSummonCategory.Exclusive (2), separate from CharacterSummonCategory.Unique (3)",
+    "candidate_source": "Same eligible non-limited base rank-4 weapons as the local draw catalog",
+    "prepared_candidates": 133,
+    "fixed_candidate_list_or_additional_catalog_required": false,
+    "native_row_fields": [
+      "Id",
+      "ItemId",
+      "SummonCategory",
+      "SummonEventType",
+      "IsNew"
+    ],
+    "stable_local_row_id_equals_item_spec_id": true,
+    "checksum_covers_hero_and_weapon_candidates": true,
+    "hero_rows_and_hero_only_fallback_preserved": true,
+    "weapon_only_catalog_supported": true,
+    "selection_count_bounds": [
+      0,
+      5
+    ],
+    "ordered_replacement_partial_lists_and_clear": true,
+    "changed_profile_fields": [
+      "UserShop.SelectedSummonWeapons",
+      "UserShop.Cas"
+    ],
+    "response_resource": "UserShop",
+    "unchanged_selection_sqlite_writes": 0,
+    "currencies_inventory_and_draw_receipts_changed": false,
+    "migration_or_save_reimport_required": false,
+    "synthetic_regressions": 14,
+    "focused_tests_passed": 60,
+    "all_133_candidates_and_selection_operations_on_memory_clone": "PASS",
+    "diagnostic_source_read_only_and_query_only": true,
+    "diagnostic_source_writes": 0,
+    "native_enum_and_media_collection_regression": true,
+    "initial_apk_check": "Client GetMediaList failed after the incorrect hero category was used; corrected to native weapon Exclusive before final verification",
+    "final_apk_retest": "PASS: after the enum correction, user confirms lobby loads and wishlist saves across reopening",
+    "apk_completed_registration_calls": 6,
+    "apk_rejected_registration_calls": 0,
+    "saved_eligible_choices": 5,
+    "actual_shop_revision_increment": 6,
+    "actual_changed_profile_fields": ["UserShop.SelectedSummonWeapons", "UserShop.Cas"],
+    "actual_user_resources_inventory_heroes_records_and_startup_reads_preserved": true,
+    "working_sqlite_integrity": "PASS"
   }
 }

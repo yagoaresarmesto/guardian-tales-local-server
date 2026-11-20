@@ -41,6 +41,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/item/apply-options",
         "/item/limitbreak-weapon/v2",
         "/summon/set-select-character",
+        "/summon/set-select-weapon",
         "/summon/select-character",
         "/summon/select-weapon",
         "/summon/character",

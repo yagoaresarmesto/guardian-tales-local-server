@@ -154,6 +154,8 @@ from .weapon_option_lock import change_locks as change_weapon_option_locks
 from .weapon_option_lock import create_tables as create_weapon_option_lock_tables
 from .weapon_options import change_or_apply as change_or_apply_weapon_options
 from .weapon_options import create_tables as create_weapon_option_tables
+from .weapon_selection import ROUTE as WEAPON_SELECTION_ROUTE
+from .weapon_selection import select as select_summon_weapons
 from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
 from .weapon_summon import create_tables as create_weapon_summon_tables
 from .weapon_summon import draw as draw_weapons
@@ -215,6 +217,7 @@ ACCOUNT_ROUTES = (
     "/user/charge-stamina-by-gem",
     "/user/charge-stamina",
     "/summon/set-select-character",
+    WEAPON_SELECTION_ROUTE,
     "/summon/select-character",
     CHARACTER_ROUTE,
     WEAPON_ROUTE,
@@ -1295,6 +1298,8 @@ class AccountStore:
             return check_not_redeemable(self, request)
         if route == "/summon/set-select-character":
             return select_characters(self, request)
+        if route == WEAPON_SELECTION_ROUTE:
+            return select_summon_weapons(self, request)
         if route == "/auth/fetch-account":
             return self.profile()
         if route == "/mission/get-user-mission":

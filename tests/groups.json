@@ -33,7 +33,7 @@
   },
   "summons": {
     "description": "Wishlists, hero/weapon draws and imported summon state",
-    "modules": ["test_summon_selection", "test_summon_draw", "test_imported_summons", "test_weapon_summon", "test_paid_summons"]
+    "modules": ["test_summon_selection", "test_summon_draw", "test_imported_summons", "test_weapon_summon", "test_paid_summons", "test_weapon_selection"]
   },
   "village": {
     "description": "Harvest, gifts, obstacles, basecamp and guardian mastery",
