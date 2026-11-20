@@ -179,7 +179,7 @@ Twenty-three mutations are now enabled: `/item/change-options`, `/item/apply-opt
 `/item/engrave-weapon`,
 `/item/enhance-weapon`,
 `/item/limitbreak-weapon/v2`, `/summon/set-select-character`,
-`/summon/select-character`, `/preset/set-selected-preset`,
+`/summon/select-character`, `/summon/select-weapon`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp`,
@@ -235,8 +235,8 @@ remain rejected until validated for imported state. Health's
 
 The draw rules remain the explicitly local rules in the
 [reference-data guide](reference-data.md), including their local category weights.
-Importing an official profile does not recover official rates, promotions, pity,
-weapon draws or special payment variants. An imported hero whose origin cannot
+Importing an official profile does not recover official rates, promotions, pity
+or special payment variants. Local weapon draws are described below. An imported hero whose origin cannot
 be resolved from the configured catalog prevents a new draw without payment.
 Owned evolved heroes retain their progression and equipment on duplicate draws.
 Only ticket stacks depleted by the current payment are removed; untouched empty
@@ -272,6 +272,54 @@ eleven controllers spent, unchanged free gems and ordinary controllers, and the
 matching mileage, duplicate-crystal and historical summon-counter increments.
 Existing heroes, equipment, party and unrelated profile sections were unchanged.
 Client restart recovery after these draws remains unverified.
+
+## Local weapon draws using the hero-draw flow
+
+The next summons error was `/summon/select-weapon`. The actual pending request
+contained `Count=10` and `SummonCostType=0`. Read-only process inspection matched
+its builder to the inspected 3.57.0 native code. `Gacha.GetDoGachaPacket` selects
+this weapon route, while the same `DoGacha` coroutine parses `Summons` through
+`SummonResultData.Parse`. Weapon results use native `Type=0` and the same seven
+result fields as hero results.
+
+The local handler follows the existing hero draw's cost/weight configuration,
+signed-in epoch/sequence identity and current-resource/frozen-result response
+pattern. Weapon pools and initialization come from the matching external client
+tables, with the local category mapping documented in
+[reference data](reference-data.md#local-weapon-draws). Five saved eligible epic
+weapon designs form the Unique pool; repeated designs grant separate weapons.
+One/ten draws support free gems and ordinary/selectable controllers. Each result
+grants the configured client metal amount and one local mileage. No hero crystal
+conversion, pity, promotion reset or paid/discount/free-event behavior is inferred.
+
+One transaction saves payment, new inventory IDs/weapon rows, metal/mileage,
+historical weapon-draw count, user/record revisions and the frozen result receipt.
+An exact retry returns those results with current state and cannot pay/grant twice
+or undo a later weapon edit. Existing gear, hero progression, shop/wishlists and
+captured startup data remain intact. Existing saves add receipt storage at normal
+backend initialization; no new external catalog or save reimport is required.
+Changing the weapon wishlist remains a separate unsupported operation.
+
+Eighteen regressions cover fresh/imported accounts, all supported payments,
+single/batch draws, distinct inventory allocation for repeated designs, saved
+wishlist/pool guards, malformed requests, invalid definitions, insufficient funds,
+numeric limits, rollback/RNG failure, reconnect/reopening and current-state retries
+after later edits or catalog removal. The real pending ten-gem draw passed on an
+in-memory account copy with every unrelated profile field retained, exact expected
+costs/rewards and zero writes through the read-only/query-only source connection.
+
+After reloading only the backend, the owner confirmed weapon draws work and
+remain in inventory after reopening the game. A consistent read-only comparison
+with the private pre-fix backup observed nine completed requests: one ten-gem draw
+and eight single selectable-controller draws. All 18 recorded weapons were
+present, with exactly 2,700 gems/eight controllers spent, 180 metal and 18 mileage
+credited, and the historical weapon counter increased by 18. All previous weapon
+rows, heroes, shop state and hero crystals were retained. SQLite integrity passed;
+no weapon-draw requests were rejected and one older unsupported call remains
+historical. These totals describe that verification snapshot; further user draws
+are independent operations.
+
+## Imported client compatibility checks
 
 Other hero and equipment actions can be enabled in coherent groups with their
 own validation, transaction and retry tests. A private protocol-level check already

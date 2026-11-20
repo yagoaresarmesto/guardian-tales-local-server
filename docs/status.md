@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **784 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 74 modules. `validate --list-groups` reports
+The suite has **802 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 75 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -729,6 +729,21 @@ Seven imported-summon regressions cover existing evolved heroes, equipment and
 historical-state preservation, wishlist changes, one/ten draws, unused zero
 stacks, current-state retries, restart/reconnect, new request epochs, unknown
 hero origins and atomic rejection/receipt failure.
+Eighteen weapon-draw regressions now cover `/summon/select-weapon`, using the
+hero draw's local costs/weights, transaction and frozen retry pattern. Matching
+external definitions supply 459 eligible non-limited base weapons and the initial
+level/experience/metal reward. Rank-4 results use five saved weapon wishlist
+designs; every result receives its own inventory ID. Fresh/imported accounts,
+one/ten draws, free gems and ordinary/selectable controllers, invalid inputs and
+funds, allocator/reward limits, rollback and current-state retries after later
+edits/catalog removal are covered. The actual ten-gem request passed on a detached
+account copy with only expected fields changed and zero source writes. The owner
+then confirmed draws and weapon persistence after reopening. A read-only snapshot
+observed nine completed requests/18 new weapons, 2,700 gems and eight selectable
+controllers spent, 180 metal/18 mileage credited, unchanged old weapons/heroes/
+shop/hero crystals and passing SQLite integrity. No calls were rejected; the old
+unsupported request is historical. Paid/promotion/pity behavior and weapon
+wishlist editing remain separate.
 The existing 241 tests include eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge

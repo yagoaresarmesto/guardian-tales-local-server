@@ -32,8 +32,8 @@
     "modules": ["test_missions", "test_beginner_batches", "test_challenges", "test_challenge_batches", "test_imported_challenges", "test_hero_knowledge", "test_imported_hero_knowledge", "test_guardian_pass", "test_festival_pass", "test_festival_shop", "test_festival_redemption", "test_stamina_regen", "test_stamina_purchase", "test_imported_stamina_purchase", "test_attendance_mock", "test_live_events"]
   },
   "summons": {
-    "description": "Wishlist, hero draws and imported summon state",
-    "modules": ["test_summon_selection", "test_summon_draw", "test_imported_summons"]
+    "description": "Wishlists, hero/weapon draws and imported summon state",
+    "modules": ["test_summon_selection", "test_summon_draw", "test_imported_summons", "test_weapon_summon"]
   },
   "village": {
     "description": "Harvest, gifts, obstacles, basecamp and guardian mastery",

@@ -153,6 +153,9 @@ from .weapon_option_lock import change_locks as change_weapon_option_locks
 from .weapon_option_lock import create_tables as create_weapon_option_lock_tables
 from .weapon_options import change_or_apply as change_or_apply_weapon_options
 from .weapon_options import create_tables as create_weapon_option_tables
+from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
+from .weapon_summon import create_tables as create_weapon_summon_tables
+from .weapon_summon import draw as draw_weapons
 
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
@@ -212,6 +215,7 @@ ACCOUNT_ROUTES = (
     "/user/charge-stamina",
     "/summon/set-select-character",
     "/summon/select-character",
+    WEAPON_SUMMON_ROUTE,
     "/preset/set-selected-preset",
     "/preset/set-presets",
     "/preset/delete-preset",
@@ -285,6 +289,7 @@ class AccountStore:
         create_preset_tables(db)
         create_party_member_tables(db)
         create_representative_character_tables(db)
+        create_weapon_summon_tables(db)
         create_portrait_frame_tables(db)
         create_village_tables(db)
         create_basecamp_tables(db)
@@ -1160,6 +1165,9 @@ class AccountStore:
 
     def draw_summon_characters(self, request, operation_id):
         return draw_characters(self, request, operation_id)
+
+    def draw_summon_weapons(self, request, operation_id):
+        return draw_weapons(self, request, operation_id)
 
     def select_party_preset(self, request, operation_id):
         return set_selected_preset(self, request, operation_id)

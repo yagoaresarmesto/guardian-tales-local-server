@@ -30,7 +30,7 @@ Execution stays sequential; this change does not introduce parallel workers.
 | `inventory` | Weapons, relic options and jewel operations |
 | `teams` | Normal parties, presets and compact response payloads |
 | `rewards` | Missions, challenges, knowledge, passes, temporal events, stamina and attendance |
-| `summons` | Wishlist, draws and imported summon state |
+| `summons` | Saved wishlists, hero/weapon draws and imported summon state |
 | `village` | Harvest, gifts, obstacles, basecamp and guardian mastery |
 | `guild` | Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War |
 | `orbital` | Orbital entry, progress and completion |

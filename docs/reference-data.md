@@ -41,7 +41,7 @@ not fetch missing bootstrap files from an official service.
 | `monster_catalog.json` | Defeated-monster reports in additional stages | Stable public handle indices and explicit local experience/gold rules |
 | `completion_catalog.json` | Configured clear exits after Inn | Verified exit name and local required defeated-monster indices |
 | `summon_selection_catalog.json` | Hero candidates and wishlist registration | Public hero origins and native selection-row fields for a local pool |
-| `summon_draw_catalog.json` | Local hero draw costs, pools and duplicate rewards | Explicit local category weights, matching hero definitions and currency identifiers |
+| `summon_draw_catalog.json` | Local draw costs/weights, hero pools and duplicate rewards | Shared local draw policy, matching hero definitions and currency identifiers |
 | `beginner_mission_catalog.json` | Hero-draw beginner milestones | Public mission IDs, required draw counts and supported asset/stackable rewards |
 | `stamina_purchase_catalog.json` | Free-gem purchases of stored stamina | Matching public amount, price tiers, storage ceiling and type-9 daily limit |
 | `challenge_mission_catalog.json` | Hero collection/draw and gold collection challenge steps | Public group IDs, supported conditions, increasing thresholds and asset rewards |
@@ -783,7 +783,8 @@ signed-in account with the prologue complete and saves only
 `UserShop.SelectedSummonCharacters`/`UserShop.Cas`, returning `UserShop`. Identical
 retries do not write another revision. Negative placeholders and unknown or
 duplicate IDs are rejected before saving. No currency, inventory or hero is
-granted or spent. Weapon selection remains pending. Hero draws use the separate
+granted or spent. Changing the weapon wishlist remains pending; draws from an
+existing valid weapon wishlist are described below. Hero draws use the separate
 optional draw catalog described below.
 
 The draw catalog's exact shape is shown by the [synthetic fixture](../tests/fixtures/summon_draw_catalog.json).
@@ -810,8 +811,8 @@ in the same client epoch returns those results with the current player state;
 it does not charge again or recreate heroes. Reconnect keeps the epoch; a fresh
 login starts a new one. Identical stale deltas across a fresh login remain
 ambiguous without an independent client operation ID. Pity, official promotions,
-paid/discount/free-event currencies, weapon draws and general hero training remain
-unfinished. The local draw route is `/summon/select-character`.
+paid/discount/free-event currencies and general hero training remain unfinished.
+The local hero draw route is `/summon/select-character`; weapon draws follow below.
 
 Imported accounts can use these same local hero draws and wishlist operations.
 Each owned imported hero spec must have a known origin mapping before a new draw
@@ -820,6 +821,50 @@ copy of an evolved hero. Existing hero progression/equipment and historical draw
 counts are retained. Ticket payment removes only stacks depleted by that draw,
 preserving other zero-amount stacks. Imported-account regressions also cover
 reopening, reconnect receipts, legitimate new-session draws and rollback.
+
+## Local weapon draws
+
+`/summon/select-weapon` accepts exactly `Count` (1 or 10) and `SummonCostType`
+(0 free gems, 3 ordinary controllers or 5 selectable controllers), matching the
+hero draw's authenticated request/epoch/sequence flow. It reuses costs, ticket
+identifiers, mileage and explicit local `category_weights` from
+`summon_draw_catalog.json`; no additional draw catalog is required.
+
+Weapon definitions, initial level/experience and magic-metal rewards come from
+`items`, `constants` and `weaponenhance` in the matching external
+`static_data_get.bin`. Eligible base weapons have `Summonable=true`,
+`Limited=false` and equal `Rarity`/`OriginRarity`; evolved forms, limited items
+and mythic rank 5 are excluded. The local Normal pool contains ranks 0/1, Story
+contains ranks 2/3 and Unique uses exactly the five distinct eligible rank-4
+designs saved in `UserShop.SelectedSummonWeapons`. Those category names and the
+prepared 75/20/5 weights are reused local testing rules; they do not establish
+official weapon probabilities. Members of each pool are uniform.
+
+Each result grants a separate inventory weapon, including repeated designs;
+weapons are not converted into hero crystals. New rows use the shared inventory
+defaults. The prepared constants give native level index 19 (displayed level 20),
+17,350 initial experience and ten magic metal per weapon. The existing local
+mileage rule grants one per result. One/ten gem costs are 300/2,700; supported
+controllers cost one per weapon and only stacks depleted by payment are removed.
+Insufficient balances, ambiguous inventory IDs, exhausted allocators/revisions,
+missing/invalid definitions or an invalid five-weapon wishlist reject before
+rolling or saving.
+
+Payment, appended weapons, allocator, metal/mileage, historical weapon-draw count,
+user/record revisions and a frozen result receipt commit atomically. Replies use
+the same current User/UserShop/UserRecord plus `Summons` envelope as hero draws,
+with native result `Type=0`. Reconnect retains the request epoch. Exact retries
+return the frozen results with current state, including after catalog removal or
+later weapon edits; they do not pay again, recreate consumed weapons or roll
+again. A conflicting body under one identity rejects. Existing saves initialize
+the receipt table without reimport. Existing gear/options/engraving, heroes,
+wishlists, other progress and captured startup reads are preserved.
+
+Paid/discount/free-event draws, official pity/promotions, weapon wishlist editing
+and official option-generation probabilities remain outside this local route.
+The prepared APK has verified a ten-gem draw and single selectable-controller
+draws, with weapons retained after reopening; ordinary-controller payment has
+automated coverage.
 
 ## Normal party members
 

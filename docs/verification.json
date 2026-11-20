@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 784,
+    "tests_run": 802,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3744,5 +3744,69 @@
     "apk_rejected_badge_calls": 0,
     "historical_unsupported_badge_calls": 1,
     "working_sqlite_integrity_after_apk_check": "PASS"
+  },
+  "weapon_summon_draws": {
+    "date": "2026-11-20",
+    "route": "/summon/select-weapon",
+    "actual_pending_request": {
+      "Count": 10,
+      "SummonCostType": 0
+    },
+    "runtime_request_builder_matches_inspected_native_code": true,
+    "native_result_consumer": "Shared Gacha.DoGacha coroutine and SummonResultData.Parse; weapon result Type=0",
+    "reference_implementation": "Existing local hero draw costs/weights, result envelope, request epochs and atomic frozen receipts",
+    "additional_external_catalog_required": false,
+    "policy_source": "Existing summon_draw_catalog.json costs, ticket identifiers, mileage and local category weights",
+    "weapon_source": "Matching static_data_get.bin items, constants and weaponenhance tables",
+    "eligible_base_non_limited_weapons": 459,
+    "eligible_rank4_candidates": 133,
+    "local_category_mapping": {
+      "Normal": "Summonable base ranks 0/1",
+      "Story": "Summonable base ranks 2/3",
+      "Unique": "Five saved eligible rank-4 weapon designs"
+    },
+    "prepared_local_weights": {
+      "Normal": 75,
+      "Story": 20,
+      "Unique": 5
+    },
+    "official_rates_pity_and_promotions_reconstructed": false,
+    "initial_native_level_index": 19,
+    "initial_experience": 17350,
+    "magic_metal_per_weapon": 10,
+    "local_mileage_per_weapon": 1,
+    "supported_counts": [
+      1,
+      10
+    ],
+    "supported_cost_types": [
+      0,
+      3,
+      5
+    ],
+    "repeated_designs_grant_distinct_inventory_weapons": true,
+    "hero_crystal_conversion": false,
+    "atomic_profile_and_frozen_result_receipt": true,
+    "retries_return_frozen_results_and_current_state_without_payment_or_reroll": true,
+    "existing_saves_add_receipts_without_reimport": true,
+    "synthetic_regressions": 18,
+    "focused_draw_import_regressions_passed": 49,
+    "actual_pending_ten_gem_draw_on_memory_clone": "PASS",
+    "unrelated_profile_fields_preserved_on_clone": true,
+    "source_connection_read_only_and_query_only": true,
+    "diagnostic_source_writes": 0,
+    "apk_user_report": "PASS: draws complete and weapons remain after reopening the game",
+    "apk_observation_timestamp_utc": "2026-11-20T11:04:19.552245+00:00",
+    "apk_snapshot_completed_calls": 9,
+    "apk_snapshot_results_and_new_weapon_rows": 18,
+    "apk_snapshot_gems_spent": 2700,
+    "apk_snapshot_selectable_controllers_spent": 8,
+    "apk_snapshot_magic_metal_gained": 180,
+    "apk_snapshot_mileage_gained": 18,
+    "apk_old_gear_heroes_shop_and_hero_crystals_preserved": true,
+    "apk_rejected_draw_calls": 0,
+    "historical_unsupported_draw_calls": 1,
+    "working_sqlite_integrity_after_apk_check": "PASS",
+    "unimplemented": "Weapon wishlist editing, paid/discount/free-event draws, official pity/promotions and official option-generation probabilities"
   }
 }

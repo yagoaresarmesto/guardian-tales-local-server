@@ -125,6 +125,7 @@ class SnapshotTests(unittest.TestCase):
                 "/preset/set-presets",
                 "/preset/set-selected-preset",
                 "/summon/select-character",
+                "/summon/select-weapon",
                 "/summon/set-select-character",
                 "/tower-infinity/end-stage",
                 "/user/add-character-experience",

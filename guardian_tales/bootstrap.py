@@ -44,6 +44,7 @@ from .snapshots import (
     preserved_read,
     validate_preserved_request,
 )
+from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
 
 BOOTSTRAP_ROUTES = (
     "/auth/get-server-info",
@@ -511,13 +512,16 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == "/summon/select-character":
+            if route in ("/summon/select-character", WEAPON_SUMMON_ROUTE):
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
-                    return json_response(
-                        request, self.store.account.draw_summon_characters(body, operation_id)
+                    draw = (
+                        self.store.account.draw_summon_weapons
+                        if route == WEAPON_SUMMON_ROUTE
+                        else self.store.account.draw_summon_characters
                     )
+                    return json_response(request, draw(body, operation_id))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/user/claim-daily-attendance":
