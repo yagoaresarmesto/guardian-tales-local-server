@@ -62,6 +62,11 @@ Refresh in the Colosseum lobby to load the updated team and positions in all
 three opponent cards. Refresh reads the current defense, so later changes take
 effect without restarting the backend.
 
+Apply the team before arranging the defenders. The client's team Apply action
+can copy the chosen preset's attack positions into the defense. Confirm the
+manual positions in the defense formation popup after applying the team, then
+refresh the opponent cards.
+
 Position Settings saves the attacking layout separately for each Colosseum
 preset using `/colosseum/save-formation`. During practice, the client uses the
 attack preset's saved positions on the player's side and the refreshed defense
