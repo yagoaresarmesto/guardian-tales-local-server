@@ -43,6 +43,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/summon/set-select-character",
         "/summon/select-character",
         "/summon/select-weapon",
+        "/summon/character",
+        "/summon/weapon",
         "/tower-infinity/end-stage",
         "/preset/set-selected-preset",
         "/preset/set-presets",

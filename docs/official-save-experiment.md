@@ -179,7 +179,8 @@ Twenty-three mutations are now enabled: `/item/change-options`, `/item/apply-opt
 `/item/engrave-weapon`,
 `/item/enhance-weapon`,
 `/item/limitbreak-weapon/v2`, `/summon/set-select-character`,
-`/summon/select-character`, `/summon/select-weapon`, `/preset/set-selected-preset`,
+`/summon/select-character`, `/summon/select-weapon`, `/summon/character`,
+`/summon/weapon`, `/preset/set-selected-preset`,
 `/preset/set-presets`, `/preset/delete-preset`, `/user/charge-stamina`,
 `/user/charge-stamina-by-gem`, `/user/claim-daily-attendance`,
 `/lobby-village/harvest-all`, `/lobby-village/harvest-basecamp`,
@@ -318,6 +319,49 @@ rows, heroes, shop state and hero crystals were retained. SQLite integrity passe
 no weapon-draw requests were rejected and one older unsupported call remains
 historical. These totals describe that verification snapshot; further user draws
 are independent operations.
+
+## Regular paid-gem banners and daily discounts
+
+The paid-gem error used a different route from wishlist draws: `/summon/weapon`
+with `IsPickUp=false`, `PickUpKey=0`, `Count=1` and `SummonCostType=1`. Its native
+builder matched the running 3.57.0 code in read-only inspection. The equivalent
+hero builder sends the same fields to `/summon/character`. The native enum
+distinguishes Normal=0, Discount=1, FreeEvent=2, Ticket=3, PaidGem=4 and
+SelectableSummonTicket=5. The captured request was the daily paid discount.
+
+Both regular routes now reuse the existing draw handlers with a shared payment
+validator. They use the full local eligible pools, retaining wishlists, rather
+than applying wishlist selections to ordinary banners. The daily charges only
+paid-gem asset 70002, at the client constant price of 100. Its independent hero or
+weapon timestamp under banner key `"0"` and shop revision commit in the same
+transaction as payment, grants, counters and the frozen result receipt. Other
+timestamps/event fields remain intact. The local UTC clock/StartOfDay contract
+sets a UTC-midnight reset. New identities cannot bypass the limit; exact retries
+return current state and frozen results without another charge.
+
+Regular full-price paid type 4 supports one/ten draws at the matching 300/2,700
+prices without consuming the daily limit. Free gems and controllers remain
+separate balances. Pickup/event banners, discount packages and paid wishlist
+variants remain guarded, as detailed in
+[the regular-banner contract](reference-data.md#regular-banners-and-paid-gems).
+No receipt migration or extra external catalog is required.
+
+Twenty regressions and a read-only-source/in-memory protocol check cover both
+families, currency isolation, independent/UTC daily limits, full-price payments,
+request/state validation, rollback, imported/fresh accounts, duplicate evolved
+heroes and current-state retries after reopening or catalog removal. The actual
+pending weapon request and equivalent hero request each paid 100 on the detached
+copy, with all unrelated fields preserved and zero source writes.
+
+After backend reload, the owner confirmed both daily operations and persistence
+after reopening. A consistent read-only verification snapshot found one daily
+receipt for each route, exactly 200 paid gems spent and both daily timestamps
+saved. Two separate wishlist test pulls spent 600 free gems, matching their own
+receipts. Previous heroes/weapon rows and controller inventory were preserved;
+shop changes were limited to the expected daily timestamps/revisions. Both
+regular API calls completed without rejections, SQLite integrity passed and
+diagnostic connections wrote nothing. The older unsupported weapon call remains
+historical.
 
 ## Imported client compatibility checks
 

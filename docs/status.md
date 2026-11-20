@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **802 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 75 modules. `validate --list-groups` reports
+The suite has **822 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 76 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -742,8 +742,23 @@ then confirmed draws and weapon persistence after reopening. A read-only snapsho
 observed nine completed requests/18 new weapons, 2,700 gems and eight selectable
 controllers spent, 180 metal/18 mileage credited, unchanged old weapons/heroes/
 shop/hero crystals and passing SQLite integrity. No calls were rejected; the old
-unsupported request is historical. Paid/promotion/pity behavior and weapon
-wishlist editing remain separate.
+unsupported request is historical. Regular paid-gem banners are described below;
+promotion/pity behavior and weapon wishlist editing remain separate.
+Twenty paid-summon regressions cover `/summon/character` and `/summon/weapon`
+regular banners (`IsPickUp=false`, `PickUpKey=0`). A shared payment handler debits
+only paid-gem asset 70002 for daily type 1 (100) and full-price type 4 (300/2,700).
+Daily hero/weapon timestamps and shop revision commit with grants and receipts;
+UTC-midnight limits survive new logins, and exact retries cannot charge again.
+Full eligible local pools retain the saved wishlists. Currency isolation, UTC
+offsets, independent limits, rollback, fresh/imported accounts and persistent
+current-state retries are covered. Both daily operations passed on a detached
+account copy with zero source writes. The owner confirmed both in the APK and
+persistence after reopening. A read-only snapshot matched two daily receipts to
+200 paid gems and both saved timestamps; separate wishlist tests accounted for
+600 free gems. Old heroes/gear/controllers remained intact, shop changes matched
+the daily fields/revisions and SQLite integrity passed. Full-price type 4 has
+automated coverage; pickup/events, paid wishlist variants and packages remain
+outside the bounded contract.
 The existing 241 tests include eighteen first-chapter entry/progress
 regressions, four initial knight training regressions, a mission-help tutorial
 regression, eight beginner-reward regressions and four first-hero challenge

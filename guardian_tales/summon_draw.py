@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 
 from .characters import new_character
 from .snapshots import is_imported
+from .summon_payment import pay, validate_request
+from .village import INT_MAX, MAX_REVISION, integer
 
 CATEGORIES = {"Normal", "Story", "Unique"}
 
@@ -99,21 +101,14 @@ def result_response(profile, results):
     }
 
 
-def draw_characters(account, request, operation_id):
+def draw_characters(account, request, operation_id, regular=False):
+    validate_request(request, regular)
     if (
-        not isinstance(request, dict)
-        or set(request) != {"Count", "SummonCostType"}
-        or type(request["Count"]) is not int
-        or request["Count"] not in (1, 10)
-        or type(request["SummonCostType"]) is not int
-        or request["SummonCostType"] not in (0, 3, 5)
-        or not isinstance(operation_id, str)
+        not isinstance(operation_id, str)
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError(
-            "Only configured one/ten hero draws using free gems or supported tickets are supported"
-        )
+        raise ValueError("Hero draws require a valid request identity and completed prologue")
     encoded = json.dumps(request, sort_keys=True, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request,results FROM character_summon_requests WHERE operation_id=?",
@@ -127,9 +122,9 @@ def draw_characters(account, request, operation_id):
     profile = account.profile()
     user = profile["User"]
     shop = profile["UserShop"]
-    selected = shop["SelectedSummonCharacters"]
+    selected = shop.get("SelectedSummonCharacters")
     heroes = catalog["heroes"]
-    if (
+    if not regular and (
         not isinstance(selected, list)
         or len(selected) != 5
         or any(
@@ -139,38 +134,34 @@ def draw_characters(account, request, operation_id):
         or len(set(selected)) != 5
     ):
         raise ValueError("Save five distinct configured Unique hero origins before drawing")
-    assets = {a["Id"]: a for a in user["Assets"]}
+    count = request["Count"]
+    record = profile["UserRecord"]
+    if (
+        not integer(user.get("Id"), minimum=1)
+        or any(
+            not integer(row.get("UserId"), minimum=1) or row["UserId"] != user["Id"]
+            for row in (shop, record)
+        )
+        or not integer(user.get("Cas"), MAX_REVISION - 1)
+        or not integer(record.get("Cas"), MAX_REVISION - 1)
+        or not integer(record.get("SummonCharacterCount"), INT_MAX - count)
+    ):
+        raise ValueError("Invalid hero-summon owner, counters or exhausted revisions")
+    rows = user.get("Assets")
+    if (
+        not isinstance(rows, list)
+        or any(not isinstance(row, dict) or not integer(row.get("Id"), minimum=1) for row in rows)
+        or len({row["Id"] for row in rows}) != len(rows)
+    ):
+        raise ValueError("Invalid saved hero-summon asset IDs")
+    assets = {a["Id"]: a for a in rows}
     required = (70003, catalog["hero_crystal_asset_id"], catalog["mileage_asset_id"])
     if any(
         i not in assets or type(assets[i]["Amount"]) is not int or assets[i]["Amount"] < 0
         for i in required
     ):
         raise ValueError("Saved summon currency balances are invalid")
-    count = request["Count"]
-    cost_type = request["SummonCostType"]
-    if cost_type == 0:
-        cost = catalog["gem_costs"][str(count)]
-        if assets[70003]["Amount"] < cost:
-            raise ValueError("Not enough free gems for this draw")
-        assets[70003]["Amount"] -= cost
-        assets[70003]["Spent"] += cost
-    else:
-        ticket_id = catalog["ticket_item_id" if cost_type == 3 else "selectable_ticket_item_id"]
-        stacks = [i for i in user["ItemStackables"] if i["ItemId"] == ticket_id]
-        if (
-            any(type(i["Amount"]) is not int or i["Amount"] < 0 for i in stacks)
-            or sum(i["Amount"] for i in stacks) < count
-        ):
-            raise ValueError("Not enough summon tickets of the selected kind")
-        left = count
-        depleted = set()
-        for item in sorted(stacks, key=lambda i: i["Id"]):
-            spent = min(item["Amount"], left)
-            item["Amount"] -= spent
-            left -= spent
-            if spent and item["Amount"] == 0:
-                depleted.add(item["Id"])
-        user["ItemStackables"] = [i for i in user["ItemStackables"] if i["Id"] not in depleted]
+    pay(profile, catalog, request, account.references, "Character")
     owned = {}
     imported = is_imported(account.db)
     for character in user["Characters"]:
@@ -193,7 +184,8 @@ def draw_characters(account, request, operation_id):
         category: [int(i) for i, r in heroes.items() if r["category"] == category]
         for category in CATEGORIES
     }
-    pools["Unique"] = list(selected)
+    if not regular:
+        pools["Unique"] = list(selected)
     categories = sorted(CATEGORIES)
     weights = catalog["category_weights"]
     total = sum(weights.values())

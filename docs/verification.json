@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 802,
+    "tests_run": 822,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3807,6 +3807,65 @@
     "apk_rejected_draw_calls": 0,
     "historical_unsupported_draw_calls": 1,
     "working_sqlite_integrity_after_apk_check": "PASS",
-    "unimplemented": "Weapon wishlist editing, paid/discount/free-event draws, official pity/promotions and official option-generation probabilities"
+    "unimplemented": "Weapon wishlist editing, paid wishlist/free-event draws, official pity/promotions and official option-generation probabilities; regular paid modes described below"
+  },
+  "regular_paid_summons": {
+    "date": "2026-11-20",
+    "routes": [
+      "/summon/character",
+      "/summon/weapon"
+    ],
+    "captured_weapon_request": {
+      "IsPickUp": false,
+      "PickUpKey": 0,
+      "Count": 1,
+      "SummonCostType": 1
+    },
+    "native_builder_and_cost_enum_verified": true,
+    "native_cost_types": {
+      "Normal": 0,
+      "Discount": 1,
+      "FreeEvent": 2,
+      "Ticket": 3,
+      "PaidGem": 4,
+      "SelectableSummonTicket": 5
+    },
+    "regular_banner_only": "IsPickUp=false and integer PickUpKey=0",
+    "shared_hero_weapon_payment_handler": true,
+    "daily_paid_price_from_client_constants": 100,
+    "paid_asset_id": 70002,
+    "daily_limits": "Independent character/weapon banner-0 timestamps; UTC midnight matches local API StartOfDay and clock",
+    "full_price_paid_type4_counts": [
+      1,
+      10
+    ],
+    "full_price_paid_prices": [
+      300,
+      2700
+    ],
+    "full_regular_pools_preserve_saved_wishlists": true,
+    "atomic_shop_timestamp_payment_grant_and_receipt": true,
+    "exact_retry_returns_current_state_and_frozen_results_without_new_charge": true,
+    "existing_receipts_reused_without_migration_or_reimport": true,
+    "synthetic_regressions": 20,
+    "focused_summon_import_tests_passed": 69,
+    "actual_weapon_and_equivalent_hero_request_on_memory_clone": "PASS: 100 paid gems each, other fields retained",
+    "source_connection_read_only_and_query_only": true,
+    "diagnostic_source_writes": 0,
+    "apk_user_report": "PASS: both daily operations work and persist after reopening",
+    "apk_snapshot_timestamp_utc": "2026-11-20T11:28:14.876713+00:00",
+    "apk_daily_completions": {
+      "Character": 1,
+      "Weapon": 1
+    },
+    "apk_paid_spent": 200,
+    "apk_separate_wishlist_free_gem_spending": 600,
+    "apk_debits_match_each_request_payment_kind": true,
+    "apk_daily_shop_fields_only_and_old_gear_heroes_controllers_preserved": true,
+    "apk_rejected_regular_calls": 0,
+    "historical_unsupported_regular_weapon_calls": 1,
+    "working_sqlite_integrity": "PASS",
+    "full_price_type4_apk_verification": "Pending; automated coverage passes",
+    "unimplemented": "Pickup/event banners, active discount packages, paid wishlist variants and promotional guarantees"
   }
 }

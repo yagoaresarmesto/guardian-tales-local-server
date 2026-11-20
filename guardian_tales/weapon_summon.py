@@ -9,6 +9,7 @@ from functools import lru_cache
 from .items import inventory_item
 from .raid_static import decode, records
 from .summon_draw import load_draw_catalog, result_response
+from .summon_payment import pay, validate_request
 from .village import INT_MAX, MAX_REVISION, integer
 
 ROUTE = "/summon/select-weapon"
@@ -82,43 +83,14 @@ def category(rank):
     return "Normal" if rank < 2 else "Story" if rank < 4 else "Unique"
 
 
-def pay(user, catalog, count, cost_type):
-    assets = {row["Id"]: row for row in user["Assets"]}
-    if cost_type == 0:
-        cost = catalog["gem_costs"][str(count)]
-        gems = assets[70003]
-        if gems["Amount"] < cost or gems["Spent"] > MAX_REVISION - cost:
-            raise ValueError("Not enough free gems or spent-counter capacity for this draw")
-        gems["Amount"] -= cost
-        gems["Spent"] += cost
-        return
-    ticket = catalog["ticket_item_id" if cost_type == 3 else "selectable_ticket_item_id"]
-    stacks = [row for row in user["ItemStackables"] if row["ItemId"] == ticket]
-    if sum(row["Amount"] for row in stacks) < count:
-        raise ValueError("Not enough summon tickets of the selected kind")
-    left, depleted = count, set()
-    for row in sorted(stacks, key=lambda row: row["Id"]):
-        spent = min(left, row["Amount"])
-        left -= spent
-        row["Amount"] -= spent
-        if spent and row["Amount"] == 0:
-            depleted.add(row["Id"])
-    user["ItemStackables"] = [r for r in user["ItemStackables"] if r["Id"] not in depleted]
-
-
-def draw(account, body, operation_id):
+def draw(account, body, operation_id, regular=False):
+    validate_request(body, regular)
     if (
-        not isinstance(body, dict)
-        or set(body) != {"Count", "SummonCostType"}
-        or type(body["Count"]) is not int
-        or body["Count"] not in (1, 10)
-        or type(body["SummonCostType"]) is not int
-        or body["SummonCostType"] not in (0, 3, 5)
-        or not isinstance(operation_id, str)
+        not isinstance(operation_id, str)
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError("Only one/ten local weapon draws with free gems or supported tickets")
+        raise ValueError("Weapon draws require a valid request identity and completed prologue")
     encoded = json.dumps(body, sort_keys=True, separators=(",", ":"))
     profile = account.profile()
     previous = account.db.execute(
@@ -134,7 +106,7 @@ def draw(account, body, operation_id):
     )
     user, shop, record = (profile[k] for k in ("User", "UserShop", "UserRecord"))
     selected = shop.get("SelectedSummonWeapons")
-    if (
+    if not regular and (
         not isinstance(selected, list)
         or len(selected) != 5
         or any(not integer(i, minimum=1) or weapons.get(i) != 4 for i in selected)
@@ -188,12 +160,13 @@ def draw(account, body, operation_id):
         or assets[mileage]["Amount"] > INT_MAX - count
     ):
         raise ValueError("Invalid summon currencies or reward balance overflow")
-    pay(user, policy, count, body["SummonCostType"])
+    pay(profile, policy, body, account.references, "Weapon")
     pools = {
         name: [spec for spec, rank in sorted(weapons.items()) if category(rank) == name]
-        for name in ("Normal", "Story")
+        for name in ("Normal", "Story", "Unique")
     }
-    pools["Unique"] = selected
+    if not regular:
+        pools["Unique"] = selected
     weights = policy["category_weights"]
     results = []
     for _ in range(count):

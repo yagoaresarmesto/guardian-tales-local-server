@@ -44,6 +44,7 @@ from .snapshots import (
     preserved_read,
     validate_preserved_request,
 )
+from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
 from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
 
 BOOTSTRAP_ROUTES = (
@@ -512,16 +513,24 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route in ("/summon/select-character", WEAPON_SUMMON_ROUTE):
+            if route in (
+                "/summon/select-character",
+                WEAPON_SUMMON_ROUTE,
+                CHARACTER_ROUTE,
+                WEAPON_ROUTE,
+            ):
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     draw = (
                         self.store.account.draw_summon_weapons
-                        if route == WEAPON_SUMMON_ROUTE
+                        if route in (WEAPON_SUMMON_ROUTE, WEAPON_ROUTE)
                         else self.store.account.draw_summon_characters
                     )
-                    return json_response(request, draw(body, operation_id))
+                    return json_response(
+                        request,
+                        draw(body, operation_id, regular=route in (CHARACTER_ROUTE, WEAPON_ROUTE)),
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/user/claim-daily-attendance":

@@ -133,6 +133,7 @@ from .stamina_purchase import purchase_stamina
 from .stamina_regen import charge_stamina
 from .story import enter_story_stage, load_story_catalog, open_eligible_stages
 from .summon_draw import draw_characters
+from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
 from .summon_pickup import check_pickup_exchange
 from .summon_selection import select_characters
 from .training import train_characters
@@ -215,6 +216,8 @@ ACCOUNT_ROUTES = (
     "/user/charge-stamina",
     "/summon/set-select-character",
     "/summon/select-character",
+    CHARACTER_ROUTE,
+    WEAPON_ROUTE,
     WEAPON_SUMMON_ROUTE,
     "/preset/set-selected-preset",
     "/preset/set-presets",
@@ -1163,11 +1166,11 @@ class AccountStore:
                 )
         return {"OpenedStages": []}
 
-    def draw_summon_characters(self, request, operation_id):
-        return draw_characters(self, request, operation_id)
+    def draw_summon_characters(self, request, operation_id, regular=False):
+        return draw_characters(self, request, operation_id, regular=regular)
 
-    def draw_summon_weapons(self, request, operation_id):
-        return draw_weapons(self, request, operation_id)
+    def draw_summon_weapons(self, request, operation_id, regular=False):
+        return draw_weapons(self, request, operation_id, regular=regular)
 
     def select_party_preset(self, request, operation_id):
         return set_selected_preset(self, request, operation_id)

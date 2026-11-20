@@ -811,8 +811,9 @@ in the same client epoch returns those results with the current player state;
 it does not charge again or recreate heroes. Reconnect keeps the epoch; a fresh
 login starts a new one. Identical stale deltas across a fresh login remain
 ambiguous without an independent client operation ID. Pity, official promotions,
-paid/discount/free-event currencies and general hero training remain unfinished.
-The local hero draw route is `/summon/select-character`; weapon draws follow below.
+event currencies and general hero training remain unfinished. Regular paid-gem
+banners are described below. The local wishlist hero route is
+`/summon/select-character`; weapon draws follow below.
 
 Imported accounts can use these same local hero draws and wishlist operations.
 Each owned imported hero spec must have a known origin mapping before a new draw
@@ -860,11 +861,51 @@ again. A conflicting body under one identity rejects. Existing saves initialize
 the receipt table without reimport. Existing gear/options/engraving, heroes,
 wishlists, other progress and captured startup reads are preserved.
 
-Paid/discount/free-event draws, official pity/promotions, weapon wishlist editing
-and official option-generation probabilities remain outside this local route.
+Wishlist paid-gem modes, free-event draws, official pity/promotions, weapon wishlist
+editing and official option-generation probabilities remain outside this route.
+Regular paid-gem banners are described below.
 The prepared APK has verified a ten-gem draw and single selectable-controller
 draws, with weapons retained after reopening; ordinary-controller payment has
 automated coverage.
+
+## Regular banners and paid gems
+
+`/summon/character` and `/summon/weapon` accept exactly `IsPickUp`, `PickUpKey`,
+`Count` and `SummonCostType`. The bounded local regular-banner contract requires
+`IsPickUp=false` and integer `PickUpKey=0`. These routes use all eligible local
+Unique candidates instead of the five wishlist entries; empty wishlists remain
+unchanged. They reuse the existing hero/weapon generation, rewards and atomic
+receipt flow. Pickup/event banners remain unsupported.
+
+Both draw families share the payment handler. Native cost type 1 is the daily
+discount: one result, paid exclusively from asset 70002 at the matching
+`GemsForSummonDiscount` price (100). The character and weapon limits are separate.
+The operation updates only its `UserShop.LastDiscountSummonCharacter["0"]` or
+`LastDiscountSummonWeapon["0"]` timestamp and increments `UserShop.Cas`, atomically
+with payment, inventory/rewards and the frozen receipt. Other banner timestamps,
+wishlists, event counters and the unrelated currency remain intact.
+
+The local API advertises UTC server time and `StartOfDay=00:00:00`; the native
+`ContentToday` predicate therefore resets the limit at UTC midnight. Saved offset
+timestamps are converted to UTC before comparison. A second new request or fresh
+login cannot bypass the persisted daily limit. An exact retry returns its saved
+results/current state without another debit or timestamp/revision change.
+
+Native cost type 4 pays full price from asset 70002, using `GemsForSummon` for one
+result and `PaidGemforSummonTen` for ten (300/2,700 in the prepared data), without
+using the daily discount. Insufficient paid gems never fall back to free gems or
+controllers. Ordinary free-gem type 0 and ordinary-controller type 3 also work on
+regular banners with the existing local rules. Selectable controllers and paid
+modes on wishlist routes, free-event type 2, active discount packages, pickup
+keys and promotional guarantees remain outside this bounded contract.
+
+Existing receipt tables are reused; no save migration, reimport or extra external
+catalog is needed. Twenty additional regressions cover both families, paid and
+free currency isolation, independent limits, UTC boundaries/offsets, new-login
+limits, full-price one/ten draws, malformed state and requests, rollback,
+fresh/imported accounts and persistent retries after price-data removal. Both
+100-paid-gem daily operations have now passed in the prepared APK, with the owner
+confirming persistence after reopening. Full-price type 4 has automated coverage.
 
 ## Normal party members
 
