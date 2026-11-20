@@ -59,6 +59,25 @@ Room edits, media purchases, favorites and friendship/visitor rewards remain
 separate unsupported operations. After updating, close the game and restart only
 the backend; CDN and bridge can remain running.
 
+## Training Room entry
+
+`/training-room/enter` accepts no parameters after sign-in and prologue
+completion. The native builder sends no body; null and an empty object are
+accepted read aliases. The callback opens the scene, which uses the saved
+`User.TrainingSlots` map. The response is a compact User resource containing
+only `Id`, `Cas` and the complete current `TrainingSlots`.
+
+Entry preserves slot IDs, character/item assignments, all native boost flags,
+unknown saved fields and cooldown strings. Past cooldowns are not cleared,
+future cooldowns are not advanced and empty slot maps remain empty. No slot is
+created/unlocked or reactivated, no item/hero statistics are persisted and no
+gems, inventory, profile revision or other account data change. No new catalog
+is required for this read. Slot identity, assignment/flag types, saved revision
+and explicit timestamp timezones are checked without repairing malformed state.
+Placing/removing items or heroes, unlocking slots and paying to reactivate them
+remain separate unsupported operations. After updating, close the game and restart
+only the backend; CDN and bridge can remain running.
+
 ## What the source contains
 
 `guardian_tales/templates/` holds a reconstructed empty local-account template,

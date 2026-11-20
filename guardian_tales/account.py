@@ -145,6 +145,8 @@ from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
 from .summon_pickup import check_pickup_exchange
 from .summon_selection import select_characters
 from .training import train_characters
+from .training_room import ROUTE as TRAINING_ROOM_ENTRY
+from .training_room import enter as enter_training_room
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
 from .village import create_tables as create_village_tables
 from .village import harvest as harvest_village
@@ -172,6 +174,7 @@ ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
     MY_ROOM_ENTRY,
+    TRAINING_ROOM_ENTRY,
     REPRESENTATIVE_CHARACTER_ROUTE,
     ACCOUNT_NAME_ROUTE,
     PORTRAIT_FRAME_ROUTE,
@@ -1259,6 +1262,8 @@ class AccountStore:
         return redeem_points(self, request, operation_id)
 
     def read(self, route, request=None):
+        if route == TRAINING_ROOM_ENTRY:
+            return enter_training_room(self, request)
         if route == MY_ROOM_ENTRY:
             return enter_my_room(self, request)
         if route == GUILD_WAR_COIN_RANKING:

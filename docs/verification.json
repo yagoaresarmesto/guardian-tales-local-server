@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 894,
+    "tests_run": 906,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -4094,5 +4094,33 @@
     "room_storage_table_created": false,
     "working_sqlite_integrity": "PASS",
     "separate_unimplemented_operations": ["Room edits", "Purchases", "Favorites", "Friendship and visitor rewards"]
+  },
+  "training_room_read_only_entry": {
+    "date": "2026-11-20",
+    "route": "/training-room/enter",
+    "native_builder": "Oak.ApiConnection.SendTrainingRoomEnter",
+    "request": "No body; null and empty-object read aliases supported",
+    "native_success_callback": "Opens the scene without reading response fields",
+    "response": "Compact User Id/Cas/TrainingSlots",
+    "current_saved_slot_map_returned_verbatim": true,
+    "assignments_benefits_unknown_fields_and_cooldown_strings_preserved": true,
+    "empty_slot_maps_are_not_initialized_or_unlocked": true,
+    "slot_reactivation_statistics_updates_currency_costs_or_rewards": false,
+    "profile_revision_inventory_and_other_profile_data_written": false,
+    "new_catalog_required_for_entry": false,
+    "new_regressions": 12,
+    "actual_six_slot_account_no_body_null_empty_object_and_repeat_on_memory_clone": "PASS",
+    "full_windows_tests": 906,
+    "sqlite_query_only_enforced_for_entry": true,
+    "entire_database_dump_unchanged": true,
+    "diagnostic_source_writes": 0,
+    "apk_retest": "PASS: user confirms Training Room loads correctly and retains the saved slots",
+    "apk_completed_entries": 2,
+    "apk_rejected_entries": 0,
+    "historical_unsupported_entry": 1,
+    "entire_raw_account_row_training_slots_and_imported_startup_data_identical": true,
+    "current_presets_and_42_receipt_claim_tables_unchanged": true,
+    "working_sqlite_integrity": "PASS",
+    "separate_unimplemented_mutations": ["join/v2", "leave", "unlock", "reactivate", "reactivate/v2"]
   }
 }

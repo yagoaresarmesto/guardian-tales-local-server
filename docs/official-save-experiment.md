@@ -38,6 +38,30 @@ row, imported startup data, current presets and 42 existing receipt/claim tables
 matched the pre-fix backup. No room table was created. SQLite integrity passed,
 with zero diagnostic source writes. Only the backend needs a restart.
 
+## Training Room entry with saved assignments
+
+The next entry error was unsupported `/training-room/enter`. Its native builder
+passes a null body, and the success callback only opens the scene. Training data
+was already captured in `User.TrainingSlots`: the real account contains six
+records, including occupied weapon/merch slots, empty character slots, all nine
+native benefit flags and retained reactivation timestamps.
+
+The new read returns only current User Id/Cas/TrainingSlots. It preserves the
+full slot map and does not initialize/unlock slots, place/remove assignments,
+reactivate cooldowns, alter benefits, write item statistics or spend gems.
+Expired/future timestamps and unknown saved metadata remain verbatim. No new
+catalog is required. Placement, removal, unlock and reactivation keep their own
+unimplemented mutation contracts.
+
+Twelve regressions pass. Native no-body framing, null/empty-object aliases and
+repetition passed against a memory backup of the actual six-slot account with
+SQLite query-only enabled. The entire database dump stayed identical, with zero
+diagnostic source writes. The user confirmed the APK loads Training Room with
+the saved slots intact. Two entry calls completed with no rejections. The entire
+raw account row, imported startup data, current presets and 42 receipt/claim
+tables matched the pre-fix backup. SQLite integrity passed with zero diagnostic
+source writes. Only the backend needs to restart after updating.
+
 ## Observed sources
 
 A private, read-only observation of the matching Android client captured:

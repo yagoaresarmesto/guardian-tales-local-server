@@ -16,8 +16,8 @@
     "modules": ["test_campaign", "test_completion", "test_discovery", "test_monsters", "test_story", "test_play_menu"]
   },
   "heroes": {
-    "description": "Fresh and imported hero experience and training caps",
-    "modules": ["test_training", "test_training_catalog", "test_imported_training"]
+    "description": "Hero experience, training caps and saved Training Room slots",
+    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room"]
   },
   "inventory": {
     "description": "Weapons, relic options, jewel decomposition and jewel upgrades",

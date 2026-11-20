@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **894 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 81 modules. `validate --list-groups` reports
+The suite has **906 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 82 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -547,6 +547,22 @@ raw account row, imported startup data, current presets and all 42 existing
 receipt/claim tables identical to the backup. No room storage was created and
 SQLite integrity passed, with zero diagnostic source writes. See
 [the entry contract](reference-data.md#backroom-entry).
+
+Twelve Training Room regressions cover parameterless `/training-room/enter`.
+The native scene callback reads no response fields; the shared compact User
+resource refreshes Id/Cas/TrainingSlots from current saved data. No assignments,
+benefits, cooldowns, slot availability, profile revisions, inventory or balances
+change. Empty maps and unknown saved slot metadata are retained. Tests cover
+fresh/imported state, native no-body/null/empty-object framing, strict guards,
+query-only SQLite, reopening, timestamp preservation and bounded response size.
+The actual six saved slots passed through native packet framing on a write-disabled
+memory backup with an identical full database dump and zero diagnostic source
+writes. The user then confirmed Training Room loads and retains its slots. Two
+entry calls completed without rejections. Read-only verification found the
+entire raw account row, imported startup data, current presets and 42 existing
+receipt/claim tables unchanged from the backup. SQLite integrity passed with
+zero diagnostic source writes. See
+[the entry contract](reference-data.md#training-room-entry).
 
 Twelve representative-portrait regressions now cover
 `/user/select-representative-character`: any owned inventory hero can be selected
