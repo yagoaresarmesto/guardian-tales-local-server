@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **877 passing tests on Windows Python 3.11**. Tests are cataloged
+The suite has **882 passing tests on Windows Python 3.11**. Tests are cataloged
 into 14 logical groups across 80 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
@@ -748,6 +748,21 @@ profile unchanged; the other operations explain the selection/revision changes.
 Final IDs, names, members, equipment and definition-array order were preserved,
 as were assets, other profile sections and the captured seed. SQLite integrity
 passed, with zero diagnostic source writes.
+Five later regressions cover Guild War's native type-18 alias. Its
+`GetBasePresetId` maps to 700, while `PresetCount` reads the Raid's 30 slots
+instead of the zero in its direct static-table entry. The same order handler
+therefore updates the existing Raid/Conquest definitions, preserving account
+bytes and other modes; both menus share that order. Tests cover the shared state,
+no duplicate revision for an identical Raid order, retry/reopening, strict slot
+validation and selection/deletion by original Raid IDs. All 47 focused preset
+checks pass. The exact type-18 request passed on a memory account backup, followed
+by an equivalent type-7 no-op, with zero source writes. The user then confirmed
+Guild War ordering and reopening persistence. One type-18 reorder, two explicit
+selection calls and one subsequent deletion across two sessions replayed from
+the backup to exactly match the live account/group. The reorder retained profile
+bytes; the selections/delete account for later pointer/revision changes. Surviving
+team definitions and their relative array order, assets, other profile sections
+and startup data were retained. SQLite integrity passed with zero source writes.
 Ten Orbital preset-edit regressions cover
 exact mutation bounds, optional selection, omitted gear fields, no-ops, retries,
 reopening, schema/scope/ownership checks, empty teams and rollback/revision limits.

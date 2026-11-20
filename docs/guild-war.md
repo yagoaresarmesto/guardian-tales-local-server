@@ -65,6 +65,23 @@ This combination passes host validation, and the user confirmed it loads and
 plays in practice after full restart. Individual defense practice outcomes for
 every castle were not separately enumerated.
 
+## Shared Raid and Guild War preset order
+
+Guild War uses the same saved party definitions and ordering as Raid/Conquest.
+Its reorder popup sends `/preset/reorder-preset` with native `PresetType=18` and
+30 slot-indexed positions. The client maps that type to base ID 700 and the Raid
+slot count; it does not use a separate 1800-ID group. Reordering in either menu
+therefore appears in both. Existing team IDs, members, equipment and selection
+pointers remain unchanged; Orbital and other modes retain their own order.
+
+The backend accepts this alias through the existing atomic order/retry handler.
+No new catalog, data import or guild-season change is required. After updating,
+close the game, restart only the backend and reopen the game. Keep CDN and bridge
+running. See [the shared ordering contract](reference-data.md).
+The user verified reordering and persistence after reopening in the matching APK;
+read-only save checks retained all surviving team definitions, equipment and
+account progress.
+
 ## Guild War commands
 
 Use the same reference directory as the backend:

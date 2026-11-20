@@ -752,6 +752,23 @@ from the explicit Apply/delete calls. Final saved IDs, names, characters, gear a
 physical array order matched the backup, as did assets, other profile sections
 and imported startup data. SQLite integrity passed with zero source writes.
 
+The later Guild War reorder failure sent type 18 and 30 positions. Native
+`GetBasePresetId` explicitly maps type 18 to 700, and `PresetCount` uses the Raid
+entry at index 6. Its own static-table entry is zero, and no 1800-ID definitions
+were present. The backend now resolves this alias to the existing Raid/Conquest
+group, so both menus intentionally share ordering. Five regressions cover alias
+resolution, shared/no-op behavior, retry/reopening and original-ID selection and
+deletion. All 47 focused preset tests pass. The exact pending request passed on
+an in-memory copy of the actual account, preserving raw profile and imported
+seed; an equivalent type-7 request retained the same revision. The source stayed
+read-only/query-only with zero writes. The user confirmed Guild War reordering
+works and remains after reopening. Live read-only verification found one type-18
+reorder, two explicit selections and a later deletion across two sessions. Replay
+from the backup on a memory clone exactly matched the live profile and group;
+the reorder itself retained raw profile bytes. Remaining team definitions and
+relative array order, assets, other profile sections and captured startup data
+were preserved. SQLite integrity passed with zero source writes.
+
 ## Applying or creating an unused Orbital slot
 
 The rejected request was `/preset/set-presets`, rather than a separate Apply

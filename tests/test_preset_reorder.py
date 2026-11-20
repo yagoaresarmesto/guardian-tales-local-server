@@ -93,8 +93,9 @@ class PresetReorderTests(unittest.TestCase):
 
     def orders(self, mode, ids):
         values = [0] * SLOT_COUNTS[mode]
+        base = 700 if mode == 18 else mode * 100
         for position, ident in enumerate(ids):
-            values[ident - mode * 100] = position
+            values[ident - base] = position
         return {"PresetType": mode, "Order": values}
 
     def save_group(self, group):
@@ -112,7 +113,7 @@ class PresetReorderTests(unittest.TestCase):
         self.assertEqual(self.db.total_changes, changes)
 
     def test_both_native_modes_change_only_target_order_and_group_revision(self):
-        self.assertEqual(SLOT_COUNTS, {4: 5, 7: 30})
+        self.assertEqual(SLOT_COUNTS, {4: 5, 7: 30, 18: 30})
         raw = self.db.execute("SELECT profile FROM local_account").fetchone()[0]
         seed = self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0]
         original_read = preserved_read(self.db, "/preset/get-presets")
@@ -321,3 +322,63 @@ class PresetReorderTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 account.reorder_party_presets(body, "unfinished")
             self.assertEqual(list(db.iterdump()), before)
+
+    def test_guild_war_alias_updates_raid_orders_and_keeps_1800_block_untouched(self):
+        group = current_group(self.db)
+        group["Presets"].append({"Id": 1800, "Order": 17, "Characters": [], "Name": "Unrelated"})
+        self.save_group(group)
+        expected = copy.deepcopy(group)
+        ordered = [729, 705, 700]
+        for row in expected["Presets"]:
+            if row["Id"] in ordered:
+                row["Order"] = ordered.index(row["Id"])
+        expected["Cas"] += 1
+        raw = self.db.execute("SELECT profile FROM local_account").fetchone()[0]
+        reply = self.call(self.orders(18, ordered))
+        self.assertEqual(reply, {"UserPartyPreset2": expected})
+        self.assertEqual(current_group(self.db), expected)
+        self.assertEqual(self.db.execute("SELECT profile FROM local_account").fetchone()[0], raw)
+
+    def test_guild_war_and_raid_share_current_order_with_no_duplicate_revision(self):
+        ordered = [729, 705, 700]
+        first = self.call(self.orders(7, ordered))
+        revision = current_group(self.db)["Cas"]
+        changes = self.db.total_changes
+        self.assertEqual(self.call(self.orders(18, ordered), sequence=71), first)
+        self.assertEqual(current_group(self.db)["Cas"], revision)
+        self.assertEqual(self.db.total_changes, changes + 1)
+        self.reject(self.orders(18, ordered))
+
+    def test_guild_war_retry_after_raid_and_orbital_moves_survives_reopening(self):
+        first = self.orders(18, [729, 705, 700])
+        self.call(first)
+        self.call(self.orders(7, [700, 729, 705]), sequence=71)
+        self.call(self.orders(4, [404, 400, 403, 401]), sequence=72)
+        self.db.close()
+        self.db = sqlite3.connect(self.state / "server.sqlite3")
+        self.open_session(True)
+        group = current_group(self.db)
+        before, changes = list(self.db.iterdump()), self.db.total_changes
+        self.assertEqual(self.call(first), {"UserPartyPreset2": group})
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+
+    def test_guild_war_requires_30_raid_slots_instead_of_zero_or_1800_definitions(self):
+        body = self.orders(18, [729, 705, 700])
+        for values in ([], [0] * 5, [0] * 29, [0] * 31):
+            self.reject(dict(body, Order=values))
+        group = current_group(self.db)
+        group["Presets"] = [row for row in group["Presets"] if not 700 <= row["Id"] < 800]
+        group["Presets"].append({"Id": 1800, "Order": 0, "Characters": []})
+        self.save_group(group)
+        self.reject({"PresetType": 18, "Order": [0] * 30})
+
+    def test_guild_war_move_keeps_selection_and_deletion_using_original_raid_ids(self):
+        self.call(self.orders(18, [729, 705, 700]))
+        self.call({"PresetId": 700}, "/preset/set-selected-preset", 71)
+        self.call({"PresetId": 705}, "/preset/delete-preset", 72)
+        group = current_group(self.db)
+        self.assertEqual([p["Id"] for p in group["Presets"] if 700 <= p["Id"] < 800], [700, 729])
+        selected = self.store.account.profile()["User"]["SelectedPresetId"]
+        self.assertEqual(selected["GuildRaidAndConquest"], 700)
+        self.assertEqual(selected["InfiniteTower"], 404)

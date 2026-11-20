@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Reorder existing Orbital/Raid slots without changing team identities or selections."""
+"""Reorder Orbital/Raid slots, including Guild War's shared Raid alias."""
 
 import json
 
 from .presets import MAX_REVISION, RAID_PRESET_COUNT, current_group, integer
 
 ROUTE = "/preset/reorder-preset"
-# Matching 3.57.0 EU PresetCountS3 indexed by native PresetType minus one.
-SLOT_COUNTS = {4: 5, 7: RAID_PRESET_COUNT}
+# Native PresetCount/GetBasePresetId map Guild War (18) to Raid (7),
+# including its slot count; the direct PresetCountS3[17] entry is zero.
+SLOT_COUNTS = {4: 5, 7: RAID_PRESET_COUNT, 18: RAID_PRESET_COUNT}
 
 
 def reorder(account, body, operation_id):
@@ -23,7 +24,7 @@ def reorder(account, body, operation_id):
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError("Reorder existing Orbital or Raid/Conquest slots using native positions")
+        raise ValueError("Reorder existing Orbital, Raid/Conquest or Guild War slots")
     encoded = json.dumps(body, sort_keys=True, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_reorder_requests WHERE operation_id=?", (operation_id,)
@@ -34,7 +35,7 @@ def reorder(account, body, operation_id):
             raise ValueError("Preset reorder request identity was reused with different data")
         # A delayed retry never changes later ordering, deletes or recreated slots.
         return {"UserPartyPreset2": group}
-    base = body["PresetType"] * 100
+    base = 700 if body["PresetType"] == 18 else body["PresetType"] * 100
     count = SLOT_COUNTS[body["PresetType"]]
     if any(not isinstance(row, dict) or not integer(row.get("Id")) for row in group["Presets"]):
         raise ValueError("Invalid saved party preset identities")

@@ -198,10 +198,14 @@ explicitly recreated slots. Other preset modes remain outside deletion support.
 After updating this backend behavior, close the game, restart the backend and
 reopen the game; CDN and bridge can remain running.
 
-`/preset/reorder-preset` uses the same handler for Orbital Lift (`PresetType=4`)
-and Raid/Conquest (`PresetType=7`). The native request contains exactly
-`PresetType` and `Order`: integer arrays of 5 or 30 entries, matching the pinned
-3.57.0 EU `PresetCountS3`. **The array contains positions, not preset IDs**:
+`/preset/reorder-preset` uses the same handler for Orbital Lift (`PresetType=4`),
+Raid/Conquest (`PresetType=7`) and Guild War (`PresetType=18`). Guild War shares
+the existing `[700,730)` Raid slots and their order; it has no separate 1800-ID
+definitions. Native `GetBasePresetId` returns 700 for type 18, and `PresetCount`
+reads the Raid count, 30, instead of the zero at `PresetCountS3[17]`.
+The native request contains exactly `PresetType` and `Order`: integer arrays of
+5 entries for Orbital or 30 for Raid/Guild War. **The array contains positions,
+not preset IDs**:
 `Order[PresetId % 100]` gives the saved team's new zero-based position. Saved
 teams must occupy distinct positions `0..N-1`; unsaved slots remain zero.
 Unknown modes, invalid lengths/positions, ambiguous saved IDs and stale slot
