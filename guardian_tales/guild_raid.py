@@ -10,6 +10,7 @@ from datetime import datetime, timedelta, timezone
 from .guild_menu import own_guild
 from .reference import ReferenceData
 from .snapshots import CLIENT
+from .state_lock import StateLock
 
 ENTRY_ROUTE = "/guild-raid2/enter"
 START_STAGE = "/guild-raid2/start-stage"
@@ -98,7 +99,6 @@ def validate_season(value):
         )
         or sorted(b["slot"] for b in bosses) != [1, 2, 3, 4]
         or len({b["id"] for b in bosses}) != 4
-        or len({b["stage_id"] for b in bosses}) != 4
         or not isinstance(first, dict)
         or set(first) != {"number", "score", "buff_level", "boss_hp_bar"}
         or type(first["number"]) is not int
@@ -115,7 +115,7 @@ def selected_season(references, catalog=None):
     selection = load_selection(references)
     if selection is not None:
         season_id = selection["season_id"]
-    return find_season(catalog, season_id)
+    return find_season(catalog, season_id, selection)
 
 
 def load_selection(references):
@@ -128,7 +128,7 @@ def load_selection(references):
         selection = references.json(SELECTION)
         if (
             not isinstance(selection, dict)
-            or set(selection)
+            or set(selection) - {"rotation_tables", "custom_season"}
             not in ({"client", "season_id"}, {"client", "season_id"} | MANIFEST_KEYS)
             or selection["client"] != CLIENT
             or not integer(selection["season_id"])
@@ -136,24 +136,53 @@ def load_selection(references):
             raise ValueError("Invalid local raid selection")
         if MANIFEST_KEYS <= selection.keys():
             validate_manifest(selection)
+        if "rotation_tables" in selection and (
+            selection["rotation_tables"] is not True or not MANIFEST_KEYS <= selection.keys()
+        ):
+            raise ValueError("Invalid local Raid rotation flag")
+        if "custom_season" in selection:
+            custom = selection["custom_season"]
+            validate_season(custom)
+            if (
+                not selection.get("rotation_tables")
+                or custom["season_id"] != selection["season_id"]
+            ):
+                raise ValueError("Invalid local Raid rotation selection")
         return selection
     return None
 
 
-def find_season(catalog, season_id):
+def find_season(catalog, season_id, selection=None):
     if integer(season_id):
         for season in catalog["seasons"]:
             if season["season_id"] == season_id:
+                if selection is not None and selection["season_id"] == season_id:
+                    return selection.get("custom_season", season)
                 return season
     raise ValueError("Unknown local raid season; use raid-season list")
 
 
-def select_season(references, season_id):
+def select_season(references, season_id=None, *, lineup=None):
+    catalog = load_catalog(references)
+    if lineup is None:
+        season = find_season(catalog, season_id)
+    else:
+        season = min(catalog["seasons"], key=lambda s: s["season_id"])
+    with StateLock(references.directory, filename=".raid_season.lock"):
+        return publish_selection(references, season, lineup)
+
+
+def publish_selection(references, season, lineup):
     from .raid_static import atomic_replace, prepare
 
-    season = find_season(load_catalog(references), season_id)
-    previous = load_selection(references)
-    manifest = prepare(references, season, (previous or {}).get("static_data_revision", 0))
+    previous = load_selection(references) or {}
+    manifest = prepare(
+        references,
+        season,
+        previous.get("static_data_revision", 0),
+        lineup=lineup,
+        rotation_tables=previous.get("rotation_tables", False),
+    )
     # Publish the immutable static body before atomically switching selection.
     # The client must reload its tables; SQLite and global time are untouched.
     temporary = None
@@ -162,7 +191,7 @@ def select_season(references, season_id):
             mode="w", encoding="utf-8", dir=references.directory, prefix=".raid-", delete=False
         ) as stream:
             temporary = stream.name
-            json.dump({"client": CLIENT, "season_id": season_id, **manifest}, stream)
+            json.dump({"client": CLIENT, "season_id": season["season_id"], **manifest}, stream)
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
@@ -171,7 +200,7 @@ def select_season(references, season_id):
     finally:
         if temporary is not None:
             os.unlink(temporary)
-    return season
+    return manifest.get("custom_season", season)
 
 
 def utc_now():
@@ -257,7 +286,9 @@ def menu_read(account, route, request):
         )
     ):
         raise ValueError("Local raid history requires exact native integer fields")
-    season = find_season(local_context(account), request["SeasonId"])
+    season = find_season(
+        local_context(account), request["SeasonId"], load_selection(account.references)
+    )
     if route == BOSS_RECORDS and request["BossId"] not in {b["id"] for b in season["bosses"]}:
         raise ValueError("Requested raid boss must belong to the requested season")
     if route == MEMBER_RECORDS and request["UserId"] != account.profile()["User"]["Id"]:
@@ -332,38 +363,58 @@ def enter(account, request):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Select fresh local raid content without rewards")
     commands = parser.add_subparsers(dest="action", required=True)
-    for action in ("list", "set"):
+    for action in ("list", "set", "custom"):
         command = commands.add_parser(action)
         command.add_argument("--reference-dir", help="Same reference directory as the backend")
         if action == "set":
             command.add_argument("season_id", type=int)
+        elif action == "custom":
+            command.add_argument("lineup", help="Four comma-separated boss and element pairs")
     args = parser.parse_args(argv)
     references = ReferenceData(args.reference_dir)
     try:
-        if args.action == "set":
-            season = select_season(references, args.season_id)
+        if args.action in ("set", "custom"):
+            if args.action == "custom":
+                from .raid_custom import parse_lineup
+
+                lineup = parse_lineup(args.lineup)
+                season = select_season(references, lineup=lineup)
+            else:
+                season = select_season(references, args.season_id)
             result = {
                 "selected_season_id": season["season_id"],
                 "apply": "Fully close and reopen the game so its static tables reload; reconnect is insufficient",
                 "scope": "Selected raid's global calendar is locally active; other modes and global time are preserved; combat is experimental",
             }
+            if args.action == "custom":
+                from .guild_war_static import SELECTION as WAR_SELECTION
+
+                result["lineup"] = [
+                    f"{boss.title()} ({element.title()})" for boss, element in lineup
+                ]
+                if (references.directory / WAR_SELECTION).exists():
+                    result["visibility"] = "Run guild-war disable to show Raid in the game"
         else:
             catalog = load_catalog(references)
-            selected = selected_season(references, catalog)["season_id"]
+            selection = load_selection(references)
+            selected = selection["season_id"] if selection else catalog["default_season_id"]
+            find_season(catalog, selected)
             print("Selected  Season  Boss set  Original global period (UTC)")
             for season in sorted(catalog["seasons"], key=lambda s: s["season_id"]):
                 marker = "*" if season["season_id"] == selected else " "
+                if marker == "*" and selection and "custom_season" in selection:
+                    season = selection["custom_season"]
+                    marker = "* custom"
                 period = season["period"]
                 print(
                     f"{marker:>8}  {season['season_id']:>6}  {season['boss_set']:>8}  "
                     f"{period['from']} - {period['to']}"
                 )
-            selection = load_selection(references)
             if selection is not None and "static_data_sha256" in selection:
                 print("Local calendar prepared. Fully restart the game after each selection.")
             else:
                 print("Calendar not prepared. Run raid-season set ID, then fully restart the game.")
             return
-    except (ValueError, OSError, TypeError, KeyError) as error:
+    except (ValueError, OSError, TypeError, KeyError, RuntimeError) as error:
         parser.error(str(error))
     print(json.dumps(result, indent=2))

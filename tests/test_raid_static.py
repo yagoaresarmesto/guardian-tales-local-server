@@ -14,8 +14,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.guild_raid import CATALOG, SELECTION, load_selection, select_season
+from guardian_tales.guild_raid import (
+    CATALOG,
+    SELECTION,
+    load_selection,
+    select_season,
+    selected_season,
+)
 from guardian_tales.packet_reader import MAX_PACKET, PacketError, lz4_block
+from guardian_tales.raid_custom import parse_lineup
 from guardian_tales.raid_static import (
     LOCAL_FROM,
     LOCAL_TO,
@@ -125,6 +132,102 @@ class RaidStaticTests(unittest.TestCase):
         self.assertLessEqual(datetime.fromisoformat(actual_dates[0]["From"]["KakaoGlobal"]), now)
         self.assertLess(now, datetime.fromisoformat(actual_dates[0]["To"]["KakaoGlobal"]))
         self.assertEqual(self.source.read_bytes(), self.original)
+
+    def test_custom_rotation_shares_stages_and_restores_stock_with_new_revisions(self):
+        lines, before = records(decode(self.original))
+        raid = json.loads(before["guildraid2"][1])
+        raid["BossDetails"].extend(
+            [
+                {"Id": 1100627, "StageId": 810010002, "MonsterId": 100627, "MonsterRelation": 1},
+                {"Id": 1790013, "StageId": 810010007, "MonsterId": 790013},
+                {"Id": 1790102, "StageId": 810010004, "MonsterId": 790102},
+            ]
+        )
+        monsters = [
+            {
+                "Id": 100627,
+                "Name": "boss_sandmonster_guild",
+                "Class": "sandmonster",
+                "ElementalType": "Earth",
+            },
+            {
+                "Id": 790013,
+                "Name": "boss_demon_guild_v2_fire",
+                "Class": "demon",
+                "ElementalType": "Fire",
+            },
+            {
+                "Id": 790012,
+                "Name": "boss_demon_guild_v2_dark",
+                "Class": "demon",
+                "ElementalType": "Darkness",
+            },
+            {"Id": 790102, "Name": "boss_sapa_guild_v2_dark", "ElementalType": "Darkness"},
+        ]
+        raid_json = json.dumps(raid)
+        at = before["guildraid2"][0]
+        lines[at + 1] = raid_json + "\n"
+        lines[at + 3] = digest(raid_json.encode()) + "\n"
+        monster_json = json.dumps(monsters)
+        lines[at:at] = [
+            "monsters\n",
+            monster_json + "\n",
+            "1\n",
+            digest(monster_json.encode()) + "\n",
+        ]
+        original = compress("".join(lines).encode())
+        self.source.write_bytes(original)
+        catalog_file = self.root / CATALOG
+        original_catalog = catalog_file.read_bytes()
+
+        lineup = parse_lineup(
+            "Sandmonster LIGHT, ancient demon fire, viper clan leader dark, sandmonster water"
+        )
+        custom = select_season(self.ref, lineup=lineup)
+        self.assertEqual(custom["season_id"], 1)
+        self.assertEqual(selected_season(self.ref), custom)
+        stages = [boss["stage_id"] for boss in custom["bosses"]]
+        self.assertEqual(stages, [810010002, 810010007, 810010004, 810010002])
+        prepared = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
+        overlay = json.loads(prepared["guildraid2"][1])
+        details = {row["Id"]: row for row in overlay["BossDetails"]}
+        spec = {row["Id"]: row for row in json.loads(prepared["monsters"][1])}
+        selected_details = [details[boss["id"]] for boss in custom["bosses"]]
+        self.assertEqual(
+            [spec[row["MonsterId"]]["ElementalType"] for row in selected_details],
+            ["Light", "Fire", "Darkness", "Ice"],
+        )
+        self.assertEqual([selected_details[i]["MonsterRelation"] for i in (0, 3)], [1, 1])
+        self.assertEqual(overlay["Seasons"][1], raid["Seasons"][1])
+        self.assertEqual(overlay["Boss"][: len(raid["Boss"])], raid["Boss"])
+
+        # Replace a generated element with the game’s existing unregistered monster.
+        lineup[-1] = ("ancient demon", "dark")
+        custom = select_season(self.ref, lineup=lineup)
+        self.assertEqual(selected_season(self.ref), custom)
+        updated = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
+        overlay = json.loads(updated["guildraid2"][1])
+        self.assertEqual(overlay["BossDetails"][-1]["MonsterId"], 790012)
+        self.assertGreater(updated["guildraid2"][2], prepared["guildraid2"][2])
+
+        self.assertEqual(select_season(self.ref, 1), self.catalog["seasons"][0])
+        self.assertEqual(selected_season(self.ref), self.catalog["seasons"][0])
+        restored = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
+        for table, original_json in (("guildraid2", raid_json), ("monsters", monster_json)):
+            self.assertEqual(restored[table][1], original_json)
+            self.assertGreater(restored[table][2], updated[table][2])
+        self.assertEqual(self.source.read_bytes(), original)
+        self.assertEqual(catalog_file.read_bytes(), original_catalog)
+
+    def test_custom_lineup_rejects_duplicates_and_unknown_choices(self):
+        for text in (
+            "sandmonster light",
+            "sandmonster light, ancient demon fire, viper clan leader dark, Sandmonster Light",
+            "sandmonster light, ancient demon fire, viper clan leader dark, sandmonster wind",
+            "sandmonster light, ancient demon fire, viper clan leader dark, sand monster water",
+        ):
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                parse_lineup(text)
 
     def test_bootstrap_serves_consistent_cache_hashes_and_new_selection_revisions_without_writes(
         self,

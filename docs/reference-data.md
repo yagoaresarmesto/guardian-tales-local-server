@@ -1597,8 +1597,8 @@ Keep it in the backend's reference directory. The exact top-level fields are:
   `period`, `bosses` and `first_round`.
 
 Each period has aware ISO timestamps `from` and `to`, in increasing order.
-Each season has four distinct boss and stage IDs, with slots 1–4; each boss has
-only `slot`, `id`, `stage_id`. Its first-round object contains `number` (1),
+Each season has four distinct boss IDs with slots 1–4. Bosses can share a stage
+ID. Each boss has only `slot`, `id`, `stage_id`. Its first-round object contains `number` (1),
 positive `score`, nonnegative `buff_level` and positive `boss_hp_bar`. IDs and
 numeric fields use bounded native integers. See the account-free synthetic
 [catalog example](../tests/test_guild_raid.py) and the
@@ -1615,11 +1615,29 @@ default. Invalid/unknown selection rejects instead of silently choosing another.
 season's boss/stage identities and unique global raid calendar ID. It creates
 an immutable `guild_raid_static_<sha256>.bin` before atomically publishing the
 selection. Source files, the catalog's original dates and SQLite remain unchanged.
-The prepared body changes only the selected raid's `KakaoGlobal` period and any
-existing reward-until timestamp, plus static revision/checksum records. Other
-calendar rows, service variants, bosses and tables retain their values. No reward
-route is enabled. Bootstrap checks the artifact hash before serving it; update
-checks compare the client's checksum with the generated one.
+For a stock season, the prepared content changes the selected raid's
+`KakaoGlobal` period and any existing reward-until timestamp. No reward route
+is enabled. Bootstrap checks the artifact hash before serving it. Update checks
+compare the client's checksum with the generated one.
+
+`raid-season custom "sandmonster light, ancient demon fire, viper clan leader dark, sandmonster water"`
+uses the lowest catalogued season ID, which is the first row of `raid-season list`.
+Use four comma-separated pairs in the desired slot order, with each boss's
+English name followed by Basic, Dark, Earth, Fire, Light or Water. A boss can
+appear in several slots with different elements. Preparation adds a local boss
+set and reuses the source stage and monster relations. It prefers the existing
+Raid entry for that element, then a matching Raid monster spec. If neither
+exists, it copies the original Raid monster with the requested element. That
+changes the main boss's element. Existing attack scripts and linked monsters
+still follow the source encounter.
+
+The derived body and matching custom season are published together through
+the selection file. `raid-season set ID` returns to the stock rotation. It
+publishes fresh table revisions so the client can replace cached custom data.
+Guild War takes precedence while enabled. Use `guild-war disable` to show Raid
+in the guild lobby. Static preparation and rotation changes are covered by
+server tests. Each custom variant's appearance and behavior in battle still
+require verification in the APK.
 
 Preparation accepts at most 64 MiB of decompressed local static text and uses
 bounded LZ4 encoding to remain within the existing packet limit. The network

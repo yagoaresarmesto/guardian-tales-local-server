@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 class StateLock:
-    def __init__(self, data_dir):
-        self.path = Path(data_dir).resolve() / ".state.lock"
+    def __init__(self, data_dir, *, filename=".state.lock"):
+        self.path = Path(data_dir).resolve() / filename
         self.file = None
 
     def acquire(self):

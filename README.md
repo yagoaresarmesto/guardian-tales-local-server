@@ -228,12 +228,15 @@ parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales raid-season list --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales raid-season set 46 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales raid-season custom "sandmonster light, ancient demon fire, viper clan leader dark, sandmonster water" --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales dka-season list --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales dka-season set 1 --day 1 --reference-dir local/client-data/reference
 ```
 
-Raid seasons available depend on the supplied catalog. DKA accepts variants
-1–3 and days 1–7. See the [Raid season selector](docs/reference-data.md#experimental-local-raid-catalog)
+Raid seasons available depend on the supplied catalog. `custom` selects the
+first listed season and applies the four choices in slot order. `set ID`
+selects a stock season again. DKA accepts variants 1–3 and days 1–7.
+See the [Raid season selector](docs/reference-data.md#experimental-local-raid-catalog)
 and [DKA selector](docs/reference-data.md#dungeon-kingdom-arena-practice-selector)
 for catalog requirements, composition and limits.
 

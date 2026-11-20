@@ -8,7 +8,7 @@ import sys
 COMMANDS = {
     "serve": ("server", "Run the local game and platform server"),
     "admin": ("admin", "Manage audited local currency grants and optional test pins"),
-    "raid-season": ("guild_raid", "List/select experimental local raid seasons"),
+    "raid-season": ("guild_raid", "List, select or customize local Raid seasons"),
     "dka-season": ("punchking", "List/select Dungeon Kingdom Arena variants and days"),
     "guild-war": ("guild_war", "Enable/disable an experimental local Guild War season"),
     "assets": ("assets", "Serve manifest-listed local resources"),

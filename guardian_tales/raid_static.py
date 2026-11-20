@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Prepare a raid-only calendar override from immutable external static tables."""
+"""Prepare local Raid calendar and boss data from immutable external tables."""
 
 import base64
 import hashlib
@@ -119,7 +119,7 @@ def records(raw):
     return lines, result
 
 
-def prepare(references, season, previous_revision=0):
+def prepare(references, season, previous_revision=0, *, lineup=None, rotation_tables=False):
     source = references.directory / "static_data_get.bin"
     if not source.is_file() or not 5 <= source.stat().st_size <= MAX_PACKET:
         raise ValueError("Raid activation requires the matching external static_data_get.bin")
@@ -156,6 +156,22 @@ def prepare(references, season, previous_revision=0):
     )
     if actual != sorted(season["bosses"], key=lambda b: b["slot"]):
         raise ValueError("Raid boss/stage catalog does not match preserved static tables")
+    updates = {}
+    if lineup is not None or rotation_tables:
+        if "monsters" not in items:
+            raise ValueError("Custom Raid rotations require the matching monster table")
+        updates = {name: items[name][1] for name in ("guildraid2", "monsters")}
+    if lineup is not None:
+        from .guild_raid import validate_season
+        from .raid_custom import build_season
+
+        monsters = json.loads(updates["monsters"])
+        monster_count = len(monsters)
+        season = build_season(raid, monsters, season, selected, lineup)
+        validate_season(season)
+        updates["guildraid2"] = json.dumps(raid, ensure_ascii=False, separators=(",", ":"))
+        if len(monsters) != monster_count:
+            updates["monsters"] = json.dumps(monsters, ensure_ascii=False, separators=(",", ":"))
     calendar = json.loads(items["seasondate"][1])
     if (
         not isinstance(calendar, dict)
@@ -174,13 +190,19 @@ def prepare(references, season, previous_revision=0):
             raise ValueError("Selected raid date must contain explicit global service timestamps")
         date[key]["KakaoGlobal"] = value
     content = json.dumps(calendar, ensure_ascii=False, separators=(",", ":"))
-    revision = max(int(time.time()), items["seasondate"][2] + 1, previous_revision + 1)
+    updates["seasondate"] = content
+    revision = max(int(time.time()), previous_revision + 1, 1 + max(items[k][2] for k in updates))
     if revision > 0x7FFFFFFF:
         raise ValueError("Local static revision exceeds the native integer range")
-    checksum = digest(
-        b"local-raid-calendar-v1\n" + items["__checksum__"][1].encode() + b"\n" + content.encode()
-    )
-    for name, value in (("seasondate", content), ("__checksum__", checksum)):
+    base = items["__checksum__"][1].encode()
+    checksum_input = b"local-raid-calendar-v1\n" + base + b"\n" + content.encode()
+    if "guildraid2" in updates:
+        checksum_input += b"\n" + b"\n".join(
+            digest(updates[name].encode()).encode() for name in ("guildraid2", "monsters")
+        )
+    checksum = digest(checksum_input)
+    updates["__checksum__"] = checksum
+    for name, value in updates.items():
         at = items[name][0]
         lines[at : at + 4] = [
             name + "\n",
@@ -208,11 +230,16 @@ def prepare(references, season, previous_revision=0):
     finally:
         if temporary is not None:
             os.unlink(temporary)
-    return {
+    manifest = {
         "static_data_sha256": sha256,
         "static_data_checksum": checksum,
         "static_data_revision": revision,
     }
+    if "guildraid2" in updates:
+        manifest["rotation_tables"] = True
+    if lineup is not None:
+        manifest["custom_season"] = season
+    return manifest
 
 
 def validate_manifest(selection):
