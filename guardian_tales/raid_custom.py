@@ -36,6 +36,7 @@ BOSS_STAGES = {
     "viper clan leader": 810010004,
 }
 BOSS_ALIASES = {"sand monster": "sandmonster", "sandy": "sandmonster"}
+SANDMONSTER_NAME = "Sandy (jailed for your crimes)"
 # UI label, character enum, and suffix in the stock Raid v2 monster names.
 ELEMENTS = {
     "basic": ("None", "none"),
@@ -152,10 +153,9 @@ def append_binary_monsters(encoded, monsters):
     ).decode()
 
 
-def clone_monster(original, elemental_type, monster_ids, by_name):
+def clone_monster(original, elemental_type, monster_ids, by_name, *, display_name=None):
     monster_id = next(monster_ids, None)
-    # The native name parser strips this suffix when forming the localized name key.
-    name = next(
+    name = display_name or next(
         (
             f"{original['Name']}_{digit}"
             for digit in "0123456789"
@@ -163,7 +163,7 @@ def clone_monster(original, elemental_type, monster_ids, by_name):
         ),
         None,
     )
-    if monster_id is None or name is None:
+    if monster_id is None or name is None or name in by_name:
         raise ValueError(f"Could not allocate a local monster entry for {original['Name']}")
     return dict(original, Id=monster_id, Name=name, ElementalType=elemental_type)
 
@@ -229,7 +229,20 @@ def build_season(raid, monsters, season, season_row, lineup):
             ):
                 sibling = None
             if sibling is None or normalize_sandmonster:
-                sibling = clone_monster(original, elemental_type, available_monster_ids, by_name)
+                display_name = None
+                if normalize_sandmonster:
+                    # The Raid lobby uses Name as the fallback label. The binary
+                    # table also indexes it, so repeated bosses need unique names.
+                    display_name = SANDMONSTER_NAME
+                    if display_name in by_name:
+                        display_name = f"{display_name} - {element.title()}"
+                sibling = clone_monster(
+                    original,
+                    elemental_type,
+                    available_monster_ids,
+                    by_name,
+                    display_name=display_name,
+                )
                 if normalize_sandmonster:
                     apply_sandmonster_scaling(sibling)
                 monsters.append(sibling)

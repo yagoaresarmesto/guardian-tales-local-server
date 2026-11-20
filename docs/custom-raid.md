@@ -120,6 +120,10 @@ Raid v2 equipment and protection, with fixed Attack **2,000** and fixed
 Defense **900**. Invader Director already has that setup in all six native
 variants.
 
+The first Sandmonster in a custom lineup appears as **Sandy (jailed for your
+crimes)**. With multiple Sandmonsters, the later slots also show their element
+in the name.
+
 Custom Raid runs as repeatable local practice. The game displays fight
 results, and the server returns an empty reward list. The project has checked
 preparation for all 144 boss-and-element pairs. Combat on every pair still

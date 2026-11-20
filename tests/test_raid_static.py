@@ -202,6 +202,10 @@ class RaidStaticTests(unittest.TestCase):
             ["Light", "Fire", "Darkness", "Ice"],
         )
         self.assertEqual([selected_details[i]["MonsterRelation"] for i in (0, 3)], [1, 1])
+        self.assertEqual(
+            [spec[selected_details[i]["MonsterId"]]["Name"] for i in (0, 3)],
+            ["Sandy (jailed for your crimes)", "Sandy (jailed for your crimes) - Water"],
+        )
         for slot in (0, 3):
             monster = spec[selected_details[slot]["MonsterId"]]
             self.assertEqual((monster["StaticAtk"], monster["StaticDef"]), (2000, 900))
