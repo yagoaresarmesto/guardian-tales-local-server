@@ -135,6 +135,7 @@ class SnapshotTests(unittest.TestCase):
                 "/user/mark-tutorial",
                 "/user/reset-guardian-mastery-level",
                 "/user/save-party-member/v2",
+                "/user/select-representative-character",
             ],
         )
         self.assertEqual(result["source_sha256"], hashlib.sha256(original_source).hexdigest())

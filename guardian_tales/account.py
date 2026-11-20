@@ -119,6 +119,9 @@ from .punchking import create_tables as create_punchking_tables
 from .reference import ReferenceData
 from .relic_options import change_or_apply as change_or_apply_relic_options
 from .relic_options import create_tables as create_relic_option_tables
+from .representative_character import ROUTE as REPRESENTATIVE_CHARACTER_ROUTE
+from .representative_character import create_tables as create_representative_character_tables
+from .representative_character import select as select_representative_character
 from .snapshots import create_tables as create_snapshot_tables
 from .snapshots import is_imported
 from .stamina_purchase import purchase_stamina
@@ -149,6 +152,7 @@ from .weapon_options import create_tables as create_weapon_option_tables
 ACCOUNT_ROUTES = (
     "/auth/fetch-account",
     "/user/get-user-profile-card",
+    REPRESENTATIVE_CHARACTER_ROUTE,
     "/user/save-party-member/v2",
     "/guild/list-item-request",
     "/guild/get-my-guild",
@@ -273,6 +277,7 @@ class AccountStore:
         create_snapshot_tables(db)
         create_preset_tables(db)
         create_party_member_tables(db)
+        create_representative_character_tables(db)
         create_village_tables(db)
         create_basecamp_tables(db)
         create_mastery_tables(db)
@@ -1174,6 +1179,9 @@ class AccountStore:
 
     def save_party_members(self, request, operation_id):
         return save_party_members(self, request, operation_id)
+
+    def select_representative_character(self, request, operation_id):
+        return select_representative_character(self, request, operation_id)
 
     def decompose_jewels(self, request, operation_id):
         return decompose_jewels(self, request, operation_id)

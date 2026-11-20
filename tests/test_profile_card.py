@@ -209,7 +209,7 @@ class ProfileCardTests(unittest.TestCase):
                 self.save(profile)
                 self.assert_rejected_without_writes({"UserId": 9400})
 
-    def test_profile_customization_and_other_player_routes_remain_unsupported(self):
+    def test_other_profile_customization_and_other_player_routes_remain_unsupported(self):
         self.install_import()
         self.login()
         before = list(self.db.iterdump())

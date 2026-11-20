@@ -493,8 +493,9 @@ one profile-card request, then stopped at the unsupported `/friend2/enter`
 prerequisite before rendering. That follow-up now returns an empty `FriendInfos`
 dictionary and `IsMigrated=false` without replacing the saved `UserFriend` record.
 The actual-account read-only protocol check passed twice with no writes. After
-reload, one actual APK friend-entry request completed. Visible profile rendering
-remains unconfirmed; the later guild-notice failure is tracked separately.
+reload, one actual APK friend-entry request completed. The later representative-
+portrait test confirmed visible own-profile portrait updates and persistence
+after reopening; uncaptured social/decorative fields remain unverified.
 Eight own-profile-card
 regressions cover sign-in, exact own-user requests, current saved user/records,
 signed tower floors, reconnect/reopening, absent or invalid optional records,
@@ -507,6 +508,19 @@ are explicitly empty/unknown in this local view. The own-user native callback
 uses the current representative avatar and device-local badge. No original
 profile-card response was captured; completing the card request alone does not
 establish a rendered popup.
+Twelve representative-portrait regressions now cover
+`/user/select-representative-character`: any owned inventory hero can be selected
+with no fixed character list or extra catalog. Only the chosen ID and user
+revision change, together with an atomic retry receipt; later choices, inventory,
+equipment, presets and other progress are retained on delayed retries. Responses
+use a compact three-field User resource. Fresh/imported accounts and reopening
+an existing database are covered. The actual pending CharacterId and every owned
+hero passed on an in-memory account copy with a read-only/query-only source and
+zero source writes. After backend reload, the user confirmed changing the picture
+between owned heroes and preserving the last choice across a full client restart.
+Five actual calls completed without rejections; the saved selection matched the
+latest receipt and SQLite integrity passed in a read-only check. Frames, badges,
+boards, stickers and other-user lookups remain outside this operation.
 Five Orbital non-clear
 exit regressions cover read-only exits, native schema/damage bounds, floor/catalog/
 prologue/authentication guards and reconnection. Ten no-reward completion

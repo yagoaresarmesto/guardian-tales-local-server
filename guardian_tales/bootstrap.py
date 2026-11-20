@@ -35,6 +35,7 @@ from .punchking import handle as handle_punchking
 from .punchking_static import bootstrap_override as punchking_bootstrap_override
 from .raid_static import bootstrap_override as raid_bootstrap_override
 from .reference import compressed_empty_list
+from .representative_character import ROUTE as REPRESENTATIVE_CHARACTER_ROUTE
 from .snapshots import (
     ACCOUNT_READS,
     IMPORTED_MUTATIONS,
@@ -321,6 +322,16 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.save_party_members(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == REPRESENTATIVE_CHARACTER_ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request,
+                        self.store.account.select_representative_character(body, operation_id),
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

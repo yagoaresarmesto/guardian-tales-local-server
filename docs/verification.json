@@ -1,9 +1,9 @@
 {
-  "date": "2026-11-19",
+  "date": "2026-11-20",
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 747,
+    "tests_run": 763,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3649,5 +3649,33 @@
     "imported_passive_help_acknowledgment": {"route": "/user/mark-tutorial", "actual_pending_ids": [1037], "allowed_imported_ids": "Built-in passive help and four explicitly phase-scoped Multi lobby guides; gameplay and other configured IDs remain blocked", "memory_clone_result": "PASS", "only_seen_help_and_user_progress_revision_change_once": true, "retry_writes": 0, "real_source_database_writes": 0, "real_source_profile_unchanged": true},
     "atomic_selector_publication": {"synthetic_regressions": 2, "observed_windows_transient_errors": [32], "retryable_windows_errors": [32, 33], "maximum_attempts": 6, "total_retry_delay_seconds": 0.75, "other_permission_errors_propagate_immediately": true, "prior_complete_file_retained_on_failure": true},
     "persistent_damage_progression_rewards_rankings_castle_writes_purchases_single_combat_and_multi_attack": "Not implemented"
+  },
+  "representative_character_selection": {
+    "date": "2026-11-20",
+    "route": "/user/select-representative-character",
+    "native_builder": "Oak.ApiConnection.SendSelectRepresentativeCharacter",
+    "native_callback": "ProfileCardPopUp.LoadRepresentativeCharacter reads no response fields; shared User resource updates the portrait",
+    "actual_pending_request": {"CharacterId": "Positive Int32 owned inventory hero ID, not a spec ID"},
+    "runtime_request_builder_matches_inspected_native_code": true,
+    "dynamic_owned_roster_without_fixed_hero_list_or_extra_catalog": true,
+    "response_user_fields": ["Id", "Cas", "RepresentativeCharacterId"],
+    "changed_profile_fields": ["User.RepresentativeCharacterId", "User.Cas"],
+    "atomic_request_receipt": true,
+    "unchanged_choice_does_not_rewrite_profile_or_increment_revision": true,
+    "delayed_retry_returns_current_selection_without_reverting_later_progress": true,
+    "fresh_and_imported_accounts_supported": true,
+    "existing_saves_initialize_receipts_without_reimport": true,
+    "synthetic_regressions": 12,
+    "real_pending_request_and_all_owned_heroes_on_memory_clone": "PASS",
+    "unrelated_profile_fields_and_captured_startup_reads_preserved": true,
+    "source_connection_read_only_and_query_only": true,
+    "source_connection_writes": 0,
+    "apk_selection_and_reconnect_persistence": "PASS: after backend reload, user confirmed picture changes between owned heroes and preserves the last choice after fully closing/reopening the client",
+    "apk_completed_selection_calls": 5,
+    "apk_rejected_selection_calls": 0,
+    "historical_unsupported_selection_calls": 1,
+    "saved_selection_matches_latest_request_receipt": true,
+    "working_sqlite_integrity_after_apk_check": "PASS",
+    "unimplemented_customization": ["Portrait frames", "Badges", "Boards", "Stickers", "Other-player profiles"]
   }
 }

@@ -23,7 +23,7 @@ Execution stays sequential; this change does not introduce parallel workers.
 | Group | Area |
 |---|---|
 | `core` | Bootstrap packets, LZ4 and validation-runner checks |
-| `account` | Snapshot import, profile reads and local administration |
+| `account` | Snapshot import, profile reads/portrait selection and local administration |
 | `content` | Content packs, references, archives and catalog contracts |
 | `campaign` | Story entry, stage progress/completion and play menus |
 | `heroes` | Hero experience and training caps |

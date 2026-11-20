@@ -1217,7 +1217,8 @@ replaces its user/avatar/badge and locally available records with current client
 resources before rendering. Uncaptured sticker ownership, attached stickers,
 selected board and social records are explicitly empty/unknown in this view;
 they are not recovered official state. No account field or ownership collection
-is overwritten. Other-player lookups and profile customization remain unsupported.
+is overwritten. Other-player lookups, portrait frames, badges, boards and stickers
+remain unsupported. Owned representative-hero selection is described below.
 
 Eight regressions cover authentication/request/identity bounds, full current
 user and record preservation, later edits, signed floors, reconnect/reopening,
@@ -1228,6 +1229,47 @@ writes and unchanged profile. After reload, one APK card request completed, then
 the popup's friend refresh failed at `/friend2/enter` before rendering. Opening
 the card does not spend resources, change revisions, save a
 receipt, grant rewards or migrate the account.
+
+## Selecting an owned profile portrait
+
+Changing the profile picture reached the previously unsupported
+`/user/select-representative-character` route. The actual pending request contained
+exactly `CharacterId`, a positive signed-32-bit owned **inventory character ID**.
+It is not a character-spec ID. Read-only process inspection matched the native
+`SendSelectRepresentativeCharacter` builder to the inspected 3.57.0 code. The
+profile popup's `LoadRepresentativeCharacter` coroutine reads no response fields;
+the shared resource handler applies `User.RepresentativeCharacterId` and refreshes
+the portrait from the client's existing owned-character registry.
+
+The authenticated operation now accepts any unambiguous owned character from the
+saved roster after the prologue, including imported accounts. It needs no fixed
+hero list or extra external catalog. A real change atomically saves only
+`User.RepresentativeCharacterId`, `User.Cas` and a request receipt. Selecting the
+current character does not rewrite the profile or increment its revision. Invalid
+or unknown IDs, spec IDs, Boolean values, unexpected fields, duplicate saved IDs
+and exhausted revisions reject without writes. A matching delayed retry returns
+the current selection rather than undoing a later choice or other local progress.
+
+Replies contain only `User.Id`, `User.Cas` and `User.RepresentativeCharacterId`.
+Inventory, hero state, equipment, presets, currencies, other profile sections and
+captured startup reads are retained. Existing saves get the receipt table during
+normal backend initialization; updating requires no account reimport or resource
+pack change. This does not implement portrait frames, badges, boards, stickers or
+another player's profile.
+
+Twelve regressions cover arbitrary/large rosters, compact replies, fresh/imported
+accounts, authentication/prologue guards, malformed and unowned IDs, null/default
+saved portraits, atomic rollback, no-op revisions, reconnect/reopening, delayed
+retries and existing-database initialization. The real pending request and every
+owned character passed against an in-memory copy of the current account, with all
+other profile fields retained and zero writes through the read-only source
+connection. After reloading only the backend, the owner confirmed that selecting
+different owned characters changes the picture and that the last choice persists
+after fully closing and reopening the game. The running backend recorded five
+completed selection calls and no rejected calls. The old unsupported-call count
+remained historical. A read-only check confirmed the saved choice matches the
+latest receipt and SQLite integrity passes. This verifies the local profile
+portrait path in the prepared APK; other customization remains separate.
 
 ## Empty friend refresh required by the profile popup
 
