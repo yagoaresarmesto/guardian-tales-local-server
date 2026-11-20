@@ -68,6 +68,8 @@ ACCOUNT_READS = frozenset(
     (
         "/auth/fetch-account",
         "/user/get-user-profile-card",
+        # The client persists its own badge preference; the server only validates it.
+        "/user/set-profile-badge",
         "/guild/list-item-request",
         "/guild/get-my-guild",
         "/guild/red-dot",

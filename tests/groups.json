@@ -4,8 +4,8 @@
     "modules": ["test_bootstrap", "test_validation"]
   },
   "account": {
-    "description": "Account import, profile reads/portraits and local administration",
-    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_admin", "test_admin_festival", "test_admin_imported"]
+    "description": "Account import, profile customization and local administration",
+    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_admin", "test_admin_festival", "test_admin_imported"]
   },
   "content": {
     "description": "Reference data, content packs, archives and catalog contracts",

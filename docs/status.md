@@ -1,13 +1,13 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-19**. The public source tree reorganizes the working
+Status recorded on **2026-11-20**. The public source tree reorganizes the working
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
 ## Automated checks
 
-The suite has **747 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 71 modules. `validate --list-groups` reports
+The suite has **784 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 74 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -534,7 +534,22 @@ with zero source writes. After backend reload, the owner reported successful
 changes/removal and persistence across a full client restart. One APK frame call
 completed without rejections; a read-only check matched the saved selection to
 the latest receipt and confirmed SQLite integrity. The earlier unsupported call
-remains historical. Badge selection is the next reported customization error.
+remains historical.
+Nine badge regressions cover `/user/set-profile-badge`. The native popup sends an
+owned misc inventory ID or null and ignores the reply body; its close callback
+saves the design in account-specific persistent client preferences. The local
+route validates positive-amount owned `profilebadge` items using the matching
+external items table, then returns an empty acknowledgment. Frames and other
+misc items cannot be submitted as badges. No account fields, revisions, inventory,
+receipts or schema change. Dynamic definitions, null removal, invalid inputs,
+fresh/imported accounts, reopening, retries and query-only operation are covered.
+The actual pending request and all 13 owned badges passed through the protocol
+on a detached account copy with zero writes and every database row preserved.
+Own-profile badge persistence is client-local; server-side cross-device/social
+badge synchronization is not implemented. After backend reload, the owner
+confirmed changes/removal and persistence after reopening. Four actual badge
+calls completed without rejections; the older unsupported call is historical.
+SQLite integrity passed in a read-only check.
 Five Orbital non-clear
 exit regressions cover read-only exits, native schema/damage bounds, floor/catalog/
 prologue/authentication guards and reconnection. Ten no-reward completion

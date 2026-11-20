@@ -117,6 +117,8 @@ from .presets import create_tables as create_preset_tables
 from .presets import delete_existing as delete_existing_preset
 from .presets import save_party as save_party_preset
 from .presets import set_selected as set_selected_preset
+from .profile_badge import ROUTE as PROFILE_BADGE_ROUTE
+from .profile_badge import select as select_profile_badge
 from .profile_card import read as read_profile_card
 from .punchking import create_tables as create_punchking_tables
 from .reference import ReferenceData
@@ -157,6 +159,7 @@ ACCOUNT_ROUTES = (
     "/user/get-user-profile-card",
     REPRESENTATIVE_CHARACTER_ROUTE,
     PORTRAIT_FRAME_ROUTE,
+    PROFILE_BADGE_ROUTE,
     "/user/save-party-member/v2",
     "/guild/list-item-request",
     "/guild/get-my-guild",
@@ -1275,6 +1278,8 @@ class AccountStore:
             return read_guild_menu(self, route, request)
         if route == "/user/get-user-profile-card":
             return read_profile_card(self, request)
+        if route == PROFILE_BADGE_ROUTE:
+            return select_profile_badge(self, request)
         if route == "/festival-pass/check-not-redeemable":
             return check_not_redeemable(self, request)
         if route == "/summon/set-select-character":

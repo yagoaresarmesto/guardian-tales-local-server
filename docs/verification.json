@@ -3,7 +3,7 @@
   "license": "Apache-2.0",
   "automated_tests": {
     "result": "PASS",
-    "tests_run": 775,
+    "tests_run": 784,
     "failures": 0,
     "errors": 0,
     "external_network_disabled": false,
@@ -3676,7 +3676,7 @@
     "historical_unsupported_selection_calls": 1,
     "saved_selection_matches_latest_request_receipt": true,
     "working_sqlite_integrity_after_apk_check": "PASS",
-    "unimplemented_customization": ["Badges", "Boards", "Stickers", "Other-player profiles"]
+    "unimplemented_customization": ["Boards", "Stickers", "Other-player profiles"]
   },
   "portrait_frame_selection": {
     "date": "2026-11-20",
@@ -3715,6 +3715,34 @@
     "historical_unsupported_frame_calls": 1,
     "saved_selection_matches_latest_request_receipt": true,
     "working_sqlite_integrity_after_apk_check": "PASS",
-    "next_reported_error": "/user/set-profile-badge; separate fix pending"
+    "next_reported_error": "/user/set-profile-badge; client-managed acknowledgment described below"
+  },
+  "profile_badge_selection": {
+    "date": "2026-11-20",
+    "route": "/user/set-profile-badge",
+    "actual_pending_request": {
+      "BadgeId": "Positive Int32 owned misc inventory ID; null removes badge"
+    },
+    "runtime_request_builder_matches_inspected_native_code": true,
+    "native_consumer": "BadgeSelectPopup.Finish ignores response body; ProfileCardPopUp close callback saves the design in account-specific PersistentPlayerPrefs",
+    "response": {},
+    "eligibility": "Positive-amount owned profilebadge inventory items, using the matching external items table",
+    "dynamic_catalog_without_extra_import_or_fixed_badge_list": true,
+    "shares_validated_item_reader_with_frames_but_keeps_types_separate": true,
+    "account_writes_revisions_receipts_and_schema_changes": false,
+    "client_manages_own_profile_badge_persistence": true,
+    "server_side_cross_device_badge_sync_and_other_player_badge_views": "Not implemented",
+    "synthetic_regressions": 9,
+    "focused_profile_import_regressions_passed": 61,
+    "actual_pending_request_and_all_13_owned_badges_on_query_only_clone": "PASS",
+    "entire_clone_database_preserved": true,
+    "protocol_account_writes": 0,
+    "source_connection_read_only_and_query_only": true,
+    "source_connection_writes": 0,
+    "apk_retest": "PASS: user confirms badge changes/removal and client preference persistence after reopening",
+    "apk_completed_badge_calls": 4,
+    "apk_rejected_badge_calls": 0,
+    "historical_unsupported_badge_calls": 1,
+    "working_sqlite_integrity_after_apk_check": "PASS"
   }
 }

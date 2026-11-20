@@ -2,9 +2,8 @@
 """Select an owned frame using the client's inventory-to-design ID contract."""
 
 import json
-from functools import lru_cache
 
-from .raid_static import decode, records
+from .cosmetic_items import cosmetic_specs
 from .village import MAX_REVISION, integer
 
 ROUTE = "/user/set-portrait-frame"
@@ -17,25 +16,8 @@ def create_tables(db):
     )
 
 
-@lru_cache(maxsize=2)
 def frame_specs(body):
-    _, tables = records(decode(body))
-    if "items" not in tables:
-        raise ValueError("Portrait frames require the matching external items table")
-    items = json.loads(tables["items"][1])
-    if (
-        not isinstance(items, list)
-        or not 1 <= len(items) <= 100000
-        or any(
-            not isinstance(item, dict)
-            or not integer(item.get("Id"), minimum=1)
-            or not isinstance(item.get("Type"), str)
-            for item in items
-        )
-        or len({item["Id"] for item in items}) != len(items)
-    ):
-        raise ValueError("Invalid portrait-frame item definitions")
-    return frozenset(item["Id"] for item in items if item["Type"] == "portraitframe")
+    return cosmetic_specs(body, "portraitframe")
 
 
 def resource(user):

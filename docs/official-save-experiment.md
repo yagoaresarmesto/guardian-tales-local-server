@@ -1217,8 +1217,9 @@ replaces its user/avatar/badge and locally available records with current client
 resources before rendering. Uncaptured sticker ownership, attached stickers,
 selected board and social records are explicitly empty/unknown in this view;
 they are not recovered official state. No account field or ownership collection
-is overwritten. Other-player lookups, badges, boards and stickers remain
-unsupported. Owned representative-hero and frame selection are described below.
+is overwritten. Other-player lookups, boards and stickers remain unsupported.
+Owned representative-hero/frame and client-managed badge selection are described
+below.
 
 Eight regressions cover authentication/request/identity bounds, full current
 user and record preservation, later edits, signed floors, reconnect/reopening,
@@ -1254,7 +1255,7 @@ Replies contain only `User.Id`, `User.Cas` and `User.RepresentativeCharacterId`.
 Inventory, hero state, equipment, presets, currencies, other profile sections and
 captured startup reads are retained. Existing saves get the receipt table during
 normal backend initialization; updating requires no account reimport or resource
-pack change. Frame selection is a separate operation below; badges, boards,
+pack change. Frame and badge selection are separate operations below; boards,
 stickers and another player's profile remain unsupported.
 
 Twelve regressions cover arbitrary/large rosters, compact replies, fresh/imported
@@ -1296,7 +1297,7 @@ retry returns the current selection and cannot restore an older frame or undo
 later progress. Inventory, representative hero, equipment, currencies, presets,
 guild captures and other profile sections remain intact. Existing saves add the
 receipt table at normal backend initialization; no save reimport or resource
-re-extraction is required. Badges, boards and stickers remain separate operations.
+re-extraction is required. Badges, boards and stickers are separate operations.
 
 Twelve regressions cover inventory/design resolution, dynamic catalog changes,
 null removal, ownership/type/amount validation, malformed requests and saved
@@ -1310,6 +1311,48 @@ frame works and the last choice persists after reopening the game. A separate
 read-only check found one completed frame request, no rejected frame calls, a
 saved selection matching the latest receipt and passing SQLite integrity. One
 unsupported-frame call remains in the historical counter.
+
+## Acknowledging client-managed profile badges
+
+The next error reached `/user/set-profile-badge`. The actual pending request
+contained exactly `BadgeId`, a positive signed-32-bit owned **misc inventory ID**,
+not an item-spec design ID. Read-only process inspection matched the running
+`SendSetProfileBadge` builder to the inspected native code. Closing
+`BadgeSelectPopup` resolves the selected design through the owned inventory and
+sends its inventory ID, or null when removing the badge. It ignores the response
+body. The close callback separately stores the design in `PersistentPlayerPrefs`
+under the account-specific `MyBadge_` key, saves preferences and redraws the
+profile. No badge selection field was present in the imported account profile.
+The original server response/social storage was not captured; the local
+acknowledgment follows this observed own-profile client path.
+
+The authenticated local route now validates the request against positive-amount
+`User.ItemMiscs` and `Type=profilebadge` in the matching external items table. It
+returns an empty JSON acknowledgment, allowing the client's existing preference
+flow to finish. Costumes, frames, unowned items, empty stacks, design IDs used as
+inventory IDs, malformed requests and invalid item definitions reject. The
+shared item-definition reader keeps frame and badge eligibility separate and
+refreshes when the external body changes; no fixed badge list or new catalog
+import is needed.
+
+The operation writes no account fields, revisions, inventory, receipts or schema.
+Repeating an acknowledgment cannot overwrite a later badge choice or other
+progress. Persistence of the own-profile badge remains a preference of that
+client installation; server-side cross-device badge synchronization and other
+players' badge views are not reconstructed. Updating an existing backend needs no
+save reimport or resource re-extraction.
+
+Nine regressions cover exact authenticated requests, dynamic ownership/type/amount
+validation, null removal, malformed/corrupt inputs, distinct frame/badge caches,
+fresh/imported accounts, prologue guards, reopening, retries, maximum user
+revision and successful acknowledgments with SQLite writes disabled. The real
+pending request and all 13 owned badges passed through the protocol on a detached
+account copy with query-only enabled. All profile/database rows were retained;
+the source connection was read-only/query-only and recorded zero writes. After
+reloading only the backend, the owner confirmed badge changes/removal and
+preference persistence after reopening the game. Four actual badge calls
+completed without rejections; one older unsupported call remains historical. A
+read-only check confirmed SQLite integrity passes.
 
 ## Empty friend refresh required by the profile popup
 
