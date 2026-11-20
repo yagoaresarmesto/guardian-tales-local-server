@@ -63,15 +63,14 @@ personal trophy count and rank. Shop uses the shared empty local shop catalog.
 Rewards displays the tier reward schedule supplied by the client data.
 
 Open the Colosseum shield button to edit the practice defense. Saving the team
-or its positions stores the defense in the local database. After saving, use
-Refresh in the Colosseum lobby to load the updated team and positions in all
-three opponent cards. Refresh reads the current defense, so later changes take
-effect without restarting the backend.
+or its positions stores the defense in the local database and expires the lobby's
+opponent list. The client then requests the current defense for all three cards
+on its next lobby update. If Battle Start is tapped while the old card is still
+displayed, practice can start against the card last sent to that connection.
 
 Apply the team before arranging the defenders. The client's team Apply action
 can copy the chosen preset's attack positions into the defense. Confirm the
-manual positions in the defense formation popup after applying the team, then
-refresh the opponent cards.
+manual positions in the defense formation popup after applying the team.
 
 Position Settings saves the attacking layout separately for each Colosseum
 preset using `/colosseum/save-formation`. During practice, the client uses the

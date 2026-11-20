@@ -28,10 +28,10 @@ SET_DEFENSE_FORMATION = "/colosseum/set-defense-party-formation"
 SAVE_ATTACK_FORMATION = "/colosseum/save-formation"
 START = "/colosseum/start-stage/v2"
 END = "/colosseum/end-stage/v3"
+OPPONENT_LIST_ROUTES = (OPPONENTS, REFRESH)
 READ_ROUTES = (
     ENTRY,
-    OPPONENTS,
-    REFRESH,
+    *OPPONENT_LIST_ROUTES,
     RANKING,
     RANKINGS,
     BATTLE_RECORDS,
@@ -186,19 +186,22 @@ def save(account, route, body, operation_id):
         f"SELECT route, request FROM {table} WHERE operation_id=?",
         (operation_id,),
     ).fetchone()
-    if previous:
-        if previous != (route, encoded):
-            raise ValueError("Colosseum save request identity was reused with different data")
-        return read(account, DEFENSE_PARTY, None)
+    if previous and previous != (route, encoded):
+        raise ValueError("Colosseum save request identity was reused with different data")
 
-    profile = account.profile()
     with account.db:
-        if route == SAVE_ATTACK_FORMATION:
-            save_attack_formation(account, profile, body)
-        else:
-            save_defense(account, profile, route, body)
-        account.db.execute(f"INSERT INTO {table} VALUES(?,?,?)", (operation_id, route, encoded))
-        return read(account, DEFENSE_PARTY, None)
+        if not previous:
+            profile = account.profile()
+            if route == SAVE_ATTACK_FORMATION:
+                save_attack_formation(account, profile, body)
+            else:
+                save_defense(account, profile, route, body)
+            account.db.execute(f"INSERT INTO {table} VALUES(?,?,?)", (operation_id, route, encoded))
+        response = read(account, DEFENSE_PARTY, None)
+        if route in DEFENSE_MUTATIONS:
+            # The lobby polls NextRefresh and fetches new cards when it expires.
+            response["UserColosseum"]["NextRefresh"] = "2000-01-01T00:00:00+00:00"
+        return response
 
 
 def save_attack_formation(account, profile, body):
@@ -304,22 +307,25 @@ def practice_opponents(profile, defense):
     return [dict(opponent, User=dict(opponent_user, Id=user_id)) for user_id in opponent_ids]
 
 
-def practice_battle(route, request, opponents):
+def practice_battle(route, request, opponents, last_served_opponents):
     if not isinstance(request, dict) or not integer(request.get("OpponentId"), minimum=1):
         raise ValueError("Select the configured local Colosseum opponent")
     opponent = next((row for row in opponents if row["User"]["Id"] == request["OpponentId"]), None)
     if opponent is None:
         raise ValueError("Select the configured local Colosseum opponent")
     if route == START:
-        # PartyInfo.ToIntList serializes hero spec IDs in formation order.
-        party = [row["CharacterId"] for row in opponent["User"]["Characters"]]
-        if (
-            set(request) != {"OpponentId", "OpponentParty", "OpponentPositions"}
-            or request["OpponentParty"] != party
-            or request["OpponentPositions"] != opponent["Formation"]["Positions"]
-        ):
-            raise ValueError("Refresh the local opponent after changing its lineup")
-        return {}
+        if set(request) != {"OpponentId", "OpponentParty", "OpponentPositions"}:
+            raise ValueError("Invalid Colosseum practice start")
+        # The client starts with its cached card. A tap can precede its automatic list refresh.
+        for candidate in (opponent, *last_served_opponents):
+            user = candidate["User"]
+            if (
+                user["Id"] == request["OpponentId"]
+                and [row["CharacterId"] for row in user["Characters"]] == request["OpponentParty"]
+                and candidate["Formation"]["Positions"] == request["OpponentPositions"]
+            ):
+                return {}
+        raise ValueError("Select a served local Colosseum opponent lineup")
     if (
         set(request) != {"OpponentId", "Result", "Damages", "OpponentLevels"}
         or type(request["Result"]) is not int
@@ -330,7 +336,7 @@ def practice_battle(route, request, opponents):
     return {"AddedTrophy": 0, "AddedItems": []}
 
 
-def read(account, route, request):
+def read(account, route, request, *, last_served_opponents=()):
     if account.needs_prologue():
         raise ValueError("Complete the prologue before entering Colosseum")
     if route not in (*READ_ROUTES, *BATTLE_ROUTES):
@@ -368,7 +374,7 @@ def read(account, route, request):
     defense, practice_enabled = defense_state(account, profile)
     opponents = practice_opponents(profile, defense) if practice_enabled else []
     if route in BATTLE_ROUTES:
-        return practice_battle(route, request, opponents)
+        return practice_battle(route, request, opponents, last_served_opponents)
     opponent_ids = [opponent["User"]["Id"] for opponent in opponents]
     challenges = [0] * len(opponent_ids)
     formations = attack_formations(account, profile)
@@ -379,7 +385,7 @@ def read(account, route, request):
     # Renew the deadline on list reads as well, including a session crossing a reset.
     lobby = (
         {"Opponents": opponents}
-        if route in (OPPONENTS, REFRESH)
+        if route in OPPONENT_LIST_ROUTES
         else {"SeasonUntil": reset, "DefenseBattleRecords": [], "NewSeason": False}
     )
     if route == DEFENSE_PARTY:

@@ -217,6 +217,59 @@ class ColosseumEntryTests(unittest.TestCase):
                 self.call(route, body)
         self.assertEqual(self.db.total_changes, before)
 
+    def test_apply_refreshes_opponent_cards_and_allows_a_start_before_the_refresh(self):
+        self.config.write_text('{"preset_id": 601}')
+        self.db.execute("PRAGMA query_only=OFF")
+        profile = self.session.store.account.profile()
+        defenders = profile["User"]["Characters"]
+        defenders.append(dict(defenders[0], Id=2, CharacterId=3))
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        first = self.call(OPPONENTS, None)["Opponents"][0]
+        old_start = {
+            "OpponentId": first["User"]["Id"],
+            "OpponentParty": [defenders[0]["CharacterId"]],
+            "OpponentPositions": first["Formation"]["Positions"],
+        }
+        defense = dict(self.preset, Name="New defense", Characters=[{"Id": defenders[1]["Id"]}])
+        positions = [20, 0, 0, 0]
+        for sequence, route, body in (
+            (20, SET_DEFENSE_PRESET, {"Preset": defense}),
+            (21, SET_DEFENSE_FORMATION, {"Positions": positions}),
+            (21, SET_DEFENSE_FORMATION, {"Positions": positions}),
+        ):
+            saved = self.call(route, body, sequence_id=sequence)["UserColosseum"]
+            self.assertLessEqual(
+                datetime.fromisoformat(saved["NextRefresh"]), datetime.now(timezone.utc)
+            )
+
+        self.db.execute("PRAGMA query_only=ON")
+        self.assertEqual(self.call(START, old_start), {})
+        with self.assertRaises(PacketError):
+            self.call(START, dict(old_start, OpponentPositions=[1, 2, 3, 4]))
+        # The lobby polls get-opponents when the cache expires, without a manual refresh.
+        refreshed = self.call(OPPONENTS, None)
+        self.assertGreater(
+            datetime.fromisoformat(refreshed["UserColosseum"]["NextRefresh"]),
+            datetime.now(timezone.utc),
+        )
+        for opponent in refreshed["Opponents"]:
+            self.assertEqual(opponent["User"]["Name"], defense["Name"])
+            self.assertEqual(opponent["Formation"]["Positions"], positions)
+        self.assertEqual(
+            self.call(
+                START,
+                dict(
+                    old_start,
+                    OpponentParty=[defenders[1]["CharacterId"]],
+                    OpponentPositions=positions,
+                ),
+            ),
+            {},
+        )
+        with self.assertRaises(PacketError):
+            self.call(START, old_start)
+
     def test_attack_positions_are_independent_even_when_both_sides_use_the_same_team(self):
         self.config.write_text('{"preset_id": 601}')
         self.db.execute("PRAGMA query_only=OFF")
@@ -224,9 +277,10 @@ class ColosseumEntryTests(unittest.TestCase):
         attack = [1, 0, 0, 0]
         self.call(SET_DEFENSE_FORMATION, {"Positions": defense}, sequence_id=21)
         body = {"PresetId": 601, "Positions": attack}
-        self.call(SAVE_ATTACK_FORMATION, body, sequence_id=22)
+        saved = self.call(SAVE_ATTACK_FORMATION, body, sequence_id=22)
         response = self.call(REFRESH, None)
         lobby = response["UserColosseum"]
+        self.assertEqual(saved["UserColosseum"]["NextRefresh"], lobby["NextRefresh"])
         self.assertEqual(lobby["Formations"], {"601": {"Id": 601, "Positions": attack}})
         self.assertEqual(lobby["DefensePartyInfo"]["Formation"]["Positions"], defense)
         for opponent in response["Opponents"]:

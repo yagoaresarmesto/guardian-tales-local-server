@@ -223,6 +223,7 @@ class BootstrapSession:
         self.store = store
         self.signed_in = False
         self.request_epoch = None
+        self.colosseum_opponents = ()
 
     def handle(self, request):
         if (
@@ -729,9 +730,19 @@ class BootstrapSession:
                     raise PacketError(str(exc)) from exc
                 return json_response(request, value)
             try:
-                value = self.store.account.read(route, body)
+                if route == colosseum.START:
+                    value = colosseum.read(
+                        self.store.account,
+                        route,
+                        body,
+                        last_served_opponents=self.colosseum_opponents,
+                    )
+                else:
+                    value = self.store.account.read(route, body)
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
+            if route in colosseum.OPPONENT_LIST_ROUTES:
+                self.colosseum_opponents = value["Opponents"]
             return json_response(request, value)
         if route == "/static-data/device-specific-settings":
             if body not in (None, {}):
@@ -797,5 +808,6 @@ class BootstrapSession:
             # local development instance use the same isolated guest identity.
             value = self.store.sign_in()
             self.request_epoch = self.store.request_epoch(body["Reconnect"])
+            self.colosseum_opponents = ()
             self.signed_in = True
         return json_response(request, value)

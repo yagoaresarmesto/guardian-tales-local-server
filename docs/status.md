@@ -31,6 +31,14 @@ returned the new team and positions for each practice opponent.
 Attack position saves use a separate per-preset table. The live client saved
 different attack and defense layouts while using the same team on both sides.
 
+Defense Apply now expires the opponent cache. Native inspection found the lobby
+checks this deadline once a second and requests a new list when it expires.
+Replay on a read-only source save copy covered a start against the old card
+before the automatic fetch and a start against the updated defense afterward.
+The live backend recorded a defense save, a new opponent list request and a
+completed battle with the manual Refresh count unchanged. The user confirmed
+the newly applied team appeared in the fight.
+
 Colosseum Ranking, Battle Record and Season Stats now have read-only empty
 responses. Query-only packet checks passed against a copy of the imported save
 for all three menus and the existing shop routes. The installed Colosseum table
