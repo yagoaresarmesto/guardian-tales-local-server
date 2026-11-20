@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Guarded Orbital entry/exit and opt-in victory progress without rewards."""
+"""Guarded Orbital deployment, entry/exit and progress-only victories."""
 
 import json
 
@@ -8,6 +8,10 @@ from .snapshots import CLIENT
 
 ORBITAL_ENTRY_ROUTE = "/tower-infinity/start-stage"
 ORBITAL_EXIT_ROUTE = "/tower-infinity/end-stage"
+ORBITAL_FORMATION_ROUTE = "/tower-infinity/save-formation"
+# The pinned client keeps four party-slot positions on a 20-cell deployment grid.
+FORMATION_SIZE = 4
+FORMATION_CELLS = 20
 
 
 def create_tables(db):
@@ -16,6 +20,73 @@ def create_tables(db):
         "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, "
         "floor_before INTEGER NOT NULL, floor_after INTEGER NOT NULL)"
     )
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS orbital_formation_requests "
+        "(operation_id TEXT PRIMARY KEY, request TEXT NOT NULL)"
+    )
+
+
+def save_formation(store, body, operation_id):
+    if (
+        not isinstance(body, dict)
+        or set(body) != {"Positions"}
+        or not isinstance(body["Positions"], list)
+        or len(body["Positions"]) != FORMATION_SIZE
+        or any(
+            not integer(position, 1) or position > FORMATION_CELLS for position in body["Positions"]
+        )
+        or len(set(body["Positions"])) != FORMATION_SIZE
+        or not isinstance(operation_id, str)
+        or not 1 <= len(operation_id) <= 200
+        or store.account.needs_prologue()
+    ):
+        raise ValueError("Save four distinct Orbital deployment positions between 1 and 20")
+    encoded = json.dumps(body, separators=(",", ":"))
+    profile = store.account.profile()
+    progress = profile["UserProgress"]
+    previous = store.db.execute(
+        "SELECT request FROM orbital_formation_requests WHERE operation_id=?", (operation_id,)
+    ).fetchone()
+    if previous:
+        if previous[0] != encoded:
+            raise ValueError("Orbital formation identity was reused for a different deployment")
+        return {"UserProgress": progress}
+    tower, revision = progress.get("TowerInfinity"), progress.get("Cas")
+    if (
+        not isinstance(tower, dict)
+        or type(tower.get("Floor")) is not int
+        or not -0x7FFFFFFF <= tower["Floor"] <= 0x7FFFFFFF
+        or type(revision) is not int
+        or not 0 <= revision <= MAX_REVISION
+    ):
+        raise ValueError("Invalid saved Orbital progress or revision")
+    formation = tower.get("Formation")
+    if formation is not None and (
+        not isinstance(formation, dict) or not integer(formation.get("Id"))
+    ):
+        raise ValueError("Invalid saved Orbital formation")
+    changed = formation is None or formation.get("Positions") != body["Positions"]
+    if changed:
+        if revision == MAX_REVISION:
+            raise ValueError("Orbital formation revision overflow")
+        if formation is None:
+            # TowerInfinityDataExtension.GetFormation creates this same legacy
+            # object when it is absent. Its separate Formations map is untouched.
+            formation = tower["Formation"] = {"Id": 0}
+        formation["Positions"] = list(body["Positions"])
+        progress["Cas"] += 1
+    with store.db:
+        if changed:
+            store.db.execute(
+                "UPDATE local_account SET profile=? WHERE id=1",
+                (json.dumps(profile, separators=(",", ":")),),
+            )
+        store.db.execute(
+            "INSERT INTO orbital_formation_requests VALUES(?,?)", (operation_id, encoded)
+        )
+    # The native confirmation callback also copies its submitted positions into
+    # the current legacy formation. Supply the current progress resource/Cas.
+    return {"UserProgress": progress}
 
 
 def require_no_reward_policy(references):

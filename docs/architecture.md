@@ -263,12 +263,22 @@ sign-in, completed prologue, a matching external floor catalog, the local
 saved-floor limit and a preserved party preset with owned characters/equipment
 before returning `{}`. It writes no attempt or profile state and grants no
 rewards. Repeating or reconnecting the request therefore spends nothing and
-does not advance progress. Stage results and formation changes remain rejected.
-This enables a loading trial, not saved Orbital combat progression. The original
+does not advance progress. Formation saves and opt-in progress-only results use
+separate handlers. The original
 start response was not captured. The APK subsequently loaded the phase, and the
 owner confirmed defeat followed by return to the menu. No end-stage request was
 observed in that trial; the full profile and draw receipts remained unchanged.
-Victory, saved progression and rewards are still unverified and unimplemented.
+That loading trial did not establish victory progression or rewards. The later
+opt-in no-reward completion contract is documented in the
+[reference guide](reference-data.md).
+
+`/tower-infinity/save-formation` is a separate authenticated deployment mutation.
+The 3.57.0 client sends four ordered `Positions` on a 20-cell grid. Only the
+legacy `UserProgress.TowerInfinity.Formation.Positions` and progress revision
+change, with an atomic retry receipt. The native success callback copies those
+positions locally. Current `UserProgress` is also returned; delayed retries
+cannot overwrite later saved deployments or floor progression. Other formation
+maps, party/preset definitions, heroes/equipment and rewards are untouched.
 
 `/preset/set-selected-preset` accepts exactly integer `PresetId`. The native enum
 uses width-100 ID ranges: `InfiniteTower` is `[400,500)`, and the shared

@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **979 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 86 modules. `validate --list-groups` reports
+The suite has **993 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 87 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -15,6 +15,26 @@ retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 246 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
+
+Fourteen Orbital deployment regressions cover `/tower-infinity/save-formation`,
+exact four-slot/20-cell validation, original-account preservation, current-state
+retry replies, unchanged layouts, signed-64 revision limits, null/missing legacy
+formation, rollback, restart/reconnect and entry/exit/victory coexistence. The
+actual request passed on an in-memory coherent account backup: only the legacy
+positions and progress revision changed, all 66 other tables stayed intact,
+retries made no writes, and current/next-floor entry remained authorized.
+Native inspection confirmed the request and success callback, and read-only
+inspection of the prepared UI found 20 deployment cells. The source account had
+zero diagnostic writes and the retained backup passed SQLite integrity. After
+backend restart, the owner confirmed repositioning, phase entry and formation
+persistence after reopening. A read-only verification snapshot matched the full
+profile to only the recorded deployment changes and progress revisions. Assets,
+heroes and equipment remained intact. Three formation receipts, four new stage
+starts and three exits were observed. One independent preset edit was replayed
+on the backup and matched the current preset group exactly; other gameplay
+tables stayed intact. Normal login/epoch/counter metadata also changed. No new
+formation rejections or unsupported calls appeared, and integrity passed. See the
+[formation contract](reference-data.md).
 
 Twenty additional administration regressions cover the opt-in test-pin CLI,
 coherent backups, idempotent grants/removal, original-account preservation,

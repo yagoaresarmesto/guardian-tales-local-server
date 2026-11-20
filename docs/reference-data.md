@@ -318,6 +318,29 @@ completion receipt. The explicit policy file is additional to the content pack.
 Actual APK victory behavior remains unverified; its constructed native request
 and state boundaries are covered by automated/detached checks.
 
+`/tower-infinity/save-formation` accepts exactly `Positions`, an ordered array of
+four distinct integer deployment cells in `[1,20]`. These are party-slot grid
+positions, not character inventory IDs or preset ordering. The pinned native
+deployment UI keeps four positions even for a shorter party and numbers its
+20 cells from one. No extra reference catalog or reward policy is needed.
+
+After sign-in and a completed/imported account, one transaction changes only
+`UserProgress.TowerInfinity.Formation.Positions`, one `UserProgress.Cas` when the
+layout changes, and an `orbital_formation_requests` receipt. If the legacy
+formation is absent/null, it creates `{Id:0,Positions:[...]}` as the native
+fallback does. Existing formation IDs/metadata, signed floor, the separate
+`Formations`/`SelectedParty`, presets, normal party, heroes, equipment, currencies
+and every unrelated resource stay intact. New changes reject at the signed-64
+revision ceiling; unchanged layouts can still record a receipt there.
+
+Retries with the same session epoch/sequence and positions return current
+`UserProgress` without writes, preserving later deployments and floor changes.
+Conflicting payloads under the same identity reject. The native confirmation
+callback copies its submitted positions locally after success; the response
+also supplies the current progress resource/revision. Restarting the game reads
+the saved layout normally. Changing positions spends nothing and authorizes no
+clear/reward. Floor entry/exit and preset edits retain their separate guards.
+
 The separate `/preset/set-selected-preset` mutation can select an existing saved
 Orbital party without editing its definition. It requires no additional public
 catalog: the native mode ID range and preserved private preset data provide its

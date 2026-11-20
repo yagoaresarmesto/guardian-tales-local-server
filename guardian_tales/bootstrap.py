@@ -25,9 +25,10 @@ from .jewel_upgrade import ROUTES as JEWEL_UPGRADE_ROUTES
 from .lobby import LOBBY_ROUTES
 from .lobby import respond as lobby_response
 from .nickname_static import bootstrap_seed as nickname_bootstrap_seed
-from .orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE
+from .orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE, ORBITAL_FORMATION_ROUTE
 from .orbital import end as end_orbital
 from .orbital import enter as enter_orbital
+from .orbital import save_formation as save_orbital_formation
 from .packet_reader import lz4_block
 from .party_members import ROUTE as PARTY_MEMBER_ROUTE
 from .play_menu import PLAY_MENU_ROUTES
@@ -68,6 +69,7 @@ BOOTSTRAP_ROUTES = (
     *PLAY_MENU_ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
+    ORBITAL_FORMATION_ROUTE,
     *PUNCHKING_ROUTES,
 )
 STATIC_SEEDS = {
@@ -266,13 +268,14 @@ class BootstrapSession:
                 return json_response(request, enter_orbital(self.store, body))
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
-        if route == ORBITAL_EXIT_ROUTE:
+        if route in (ORBITAL_EXIT_ROUTE, ORBITAL_FORMATION_ROUTE):
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
             try:
                 epoch = self.request_epoch or self.store.request_epoch(True)
                 operation_id = epoch + ":" + str(request["sequence_id"])
-                return json_response(request, end_orbital(self.store, body, operation_id))
+                operation = end_orbital if route == ORBITAL_EXIT_ROUTE else save_orbital_formation
+                return json_response(request, operation(self.store, body, operation_id))
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
         if route in PLAY_MENU_ROUTES:

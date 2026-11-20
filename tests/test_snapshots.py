@@ -136,6 +136,7 @@ class SnapshotTests(unittest.TestCase):
                 "/summon/set-select-weapon",
                 "/summon/weapon",
                 "/tower-infinity/end-stage",
+                "/tower-infinity/save-formation",
                 "/user/add-character-experience",
                 "/user/change-name",
                 "/user/charge-stamina",

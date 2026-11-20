@@ -11,6 +11,38 @@ and one- and ten-hero draws using selectable controllers in the APK. Wishlist
 changes and the other supported payment types have synthetic coverage only.
 Unlocked systems are not automatically implemented by import.
 
+## Orbital formation saving before stage entry
+
+Moving heroes on the Orbital deployment grid reached unsupported
+`/tower-infinity/save-formation` before the stage-start request. Read-only
+inspection captured exactly an ordered four-element `Positions` array. Native
+`SendTowerInfinitySaveFormation`, the deployment UI and its confirmation callback
+confirm that these are grid cells for the four party slots. The prepared
+deployment has 20 cells numbered from one. The callback assigns the submitted
+positions to the current legacy formation after success.
+
+The handler persists only that legacy layout and one progress revision when it
+changes, with an atomic receipt. Current progress is returned on retries without
+restoring older positions or floors. The separate formation map, selected party,
+presets, inventory, heroes, currencies and imported seeds are preserved. Fourteen
+regressions cover validation, revisions, initialization, no-ops, stale retries,
+rollback, reopening and coexistence with phase entry/exit and victories.
+
+The actual request passed against an in-memory copy of a coherent working-account
+backup. All 66 other tables and unrelated profile fields remained unchanged;
+retries made no writes and both current- and next-floor entry still authorized
+the saved preset. The retained backup passed integrity checking, with zero
+diagnostic source writes. After backend restart, the owner confirmed that the
+formation saves, a floor starts and the layout persists across reopening. A
+read-only audit matched the full profile to only recorded formation changes and
+progress revisions. The verification snapshot had three formation receipts,
+four new stage starts and three exits. Assets, heroes and equipment stayed
+intact. One independent preset edit was replayed on the backup and matched the
+current preset group exactly; unrelated gameplay tables were unchanged.
+Expected login/epoch/counter metadata changed. There were no new formation
+rejections or unsupported requests, and integrity passed.
+Only a backend restart is required; no content or account reimport is needed.
+
 ## Backroom entry with an imported account
 
 The lobby-to-Backroom transition stopped at unsupported `/my-room/enter`.
