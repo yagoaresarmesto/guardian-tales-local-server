@@ -3950,6 +3950,14 @@
     "actual_resource_empty_name_list_http_check": "PASS: English list, cache refresh and preserved source hash",
     "source_connection_read_only_and_query_only": true,
     "diagnostic_source_writes": 0,
-    "apk_retest": "Pending: requested cost, rename persistence and word-filter verification"
+    "apk_retest": "PASS: user confirms cost 0, nickname persistence after reopening and no gem spending",
+    "apk_completed_name_receipts": 1,
+    "actual_changed_fields_match_declared_name_and_revision_fields": true,
+    "actual_free_paid_assets_and_spent_counters_identical": true,
+    "actual_other_profile_sections_and_startup_reads_preserved": true,
+    "actual_name_list_http_statuses": [200, 304],
+    "previously_blocked_name_apk_test": "Not separately reported; native empty-list policy and HTTP checks pass",
+    "working_sqlite_integrity": "PASS",
+    "implementation_commit": "4dc99a0"
   }
 }

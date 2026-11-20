@@ -180,7 +180,12 @@ or free gems, spending counters, inventory, progress, imported source or preserv
 startup reads are modified. The exact pending request passed on an in-memory
 backup of the real account with a read-only/query-only source. The static overlay
 also passed against the effective real mode tables, retaining other constants
-and all other table records. These are clone checks; the APK retest is pending.
+and all other table records. The user then confirmed the APK displays cost zero
+and retains the changed nickname after reopening without spending gems. A
+read-only live audit confirmed one completed change, only account/guild-member
+names and revisions updated, unchanged assets/spending and other profile/startup
+data, and valid SQLite integrity. The name list refreshed with HTTP 200 and was
+subsequently reused with 304; a previously blocked name was not separately tested.
 Restart both backend and CDN, then fully reopen the client to reload the zero
 cost and empty localized name list. The existing bridge can remain open. See
 [the nickname contract](reference-data.md#free-local-nickname-changes).

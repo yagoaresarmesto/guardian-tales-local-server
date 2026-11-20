@@ -520,8 +520,13 @@ zero over the effective mode tables, with consistent revisions/checksums. The CD
 returns an empty name list under a new ETag, retaining chat lists and preserved
 resource bytes. Its name list also serves guild-name validation. The actual
 pending request passed on an in-memory account backup with zero source writes;
-the actual composed static data retained every other constant and table. APK
-verification of the updated cost, rename persistence and filter is pending.
+the actual composed static data retained every other constant and table. After
+backend/CDN reload, the user confirmed cost zero and name persistence after
+reopening without spending gems. A read-only audit found one completed rename,
+matching account/guild-member names, unchanged assets/spending and unchanged
+other profile sections/startup reads. SQLite integrity passed. The CDN refreshed
+the English name list with HTTP 200, then reused it with 304; a previously blocked
+name was not separately reported as tested.
 See [usage and restart requirements](reference-data.md#free-local-nickname-changes).
 
 Twelve representative-portrait regressions now cover
