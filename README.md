@@ -236,7 +236,7 @@ parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
 Raid seasons available depend on the supplied catalog. `custom` selects the
 first listed season and applies the four choices in slot order. `set ID`
 selects a stock season again. DKA accepts variants 1–3 and days 1–7.
-See the [Raid season selector](docs/reference-data.md#experimental-local-raid-catalog)
+See the [Custom Raid user guide](docs/custom-raid.md)
 and [DKA selector](docs/reference-data.md#dungeon-kingdom-arena-practice-selector)
 for catalog requirements, composition and limits.
 

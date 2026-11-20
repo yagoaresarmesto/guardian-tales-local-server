@@ -150,6 +150,9 @@ class RaidStaticTests(unittest.TestCase):
                 "Name": "boss_sandmonster_guild",
                 "Class": "sandmonster",
                 "ElementalType": "Earth",
+                "Hp": 20562.5,
+                "DefaultWeapon1": 9090284,
+                "DefaultWeapon2": 9091624,
             },
             {
                 "Id": 790013,
@@ -182,7 +185,7 @@ class RaidStaticTests(unittest.TestCase):
         original_catalog = catalog_file.read_bytes()
 
         lineup = parse_lineup(
-            "Sandmonster LIGHT, ancient demon fire, viper clan leader dark, sandmonster water"
+            "Sandy LIGHT, ancient demon fire, viper clan leader dark, sand monster water"
         )
         custom = select_season(self.ref, lineup=lineup)
         self.assertEqual(custom["season_id"], 1)
@@ -199,16 +202,39 @@ class RaidStaticTests(unittest.TestCase):
             ["Light", "Fire", "Darkness", "Ice"],
         )
         self.assertEqual([selected_details[i]["MonsterRelation"] for i in (0, 3)], [1, 1])
+        for slot in (0, 3):
+            monster = spec[selected_details[slot]["MonsterId"]]
+            self.assertEqual((monster["StaticAtk"], monster["StaticDef"]), (2000, 900))
+            self.assertEqual(
+                (monster["DefaultWeapon1"], monster["DefaultWeapon2"]), (9093544, 9092574)
+            )
+            self.assertEqual(monster["Options"], [{"OptionId": 400005, "Level": 750}])
+            self.assertEqual(monster["Hp"], 20562.5)
+        self.assertEqual(spec[100627], monsters[0])
+        self.assertEqual(spec[selected_details[1]["MonsterId"]], monsters[1])
         self.assertEqual(overlay["Seasons"][1], raid["Seasons"][1])
         self.assertEqual(overlay["Boss"][: len(raid["Boss"])], raid["Boss"])
 
         # Replace a generated element with the game’s existing unregistered monster.
+        lineup[0] = ("sandmonster", "earth")
         lineup[-1] = ("ancient demon", "dark")
         custom = select_season(self.ref, lineup=lineup)
         self.assertEqual(selected_season(self.ref), custom)
         updated = records(decode(bootstrap_override(self.ref, "static_data_get.bin", {})))[1]
         overlay = json.loads(updated["guildraid2"][1])
         self.assertEqual(overlay["BossDetails"][-1]["MonsterId"], 790012)
+        earth_detail = next(
+            row for row in overlay["BossDetails"] if row["Id"] == custom["bosses"][0]["id"]
+        )
+        self.assertNotEqual(earth_detail["MonsterId"], 100627)
+        earth = next(
+            row
+            for row in json.loads(updated["monsters"][1])
+            if row["Id"] == earth_detail["MonsterId"]
+        )
+        self.assertEqual(
+            (earth["ElementalType"], earth["StaticAtk"], earth["StaticDef"]), ("Earth", 2000, 900)
+        )
         self.assertGreater(updated["guildraid2"][2], prepared["guildraid2"][2])
 
         self.assertEqual(select_season(self.ref, 1), self.catalog["seasons"][0])
@@ -223,9 +249,9 @@ class RaidStaticTests(unittest.TestCase):
     def test_custom_lineup_rejects_duplicates_and_unknown_choices(self):
         for text in (
             "sandmonster light",
-            "sandmonster light, ancient demon fire, viper clan leader dark, Sandmonster Light",
+            "sandmonster light, ancient demon fire, viper clan leader dark, Sandy Light",
             "sandmonster light, ancient demon fire, viper clan leader dark, sandmonster wind",
-            "sandmonster light, ancient demon fire, viper clan leader dark, sand monster water",
+            "sandmonster light, ancient demon fire, viper clan leader dark, unknown boss water",
         ):
             with self.subTest(text=text), self.assertRaises(ValueError):
                 parse_lineup(text)

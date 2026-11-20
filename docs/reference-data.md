@@ -1639,6 +1639,11 @@ With the paired local resource pack, custom selection uses a banner and
 background available from the local CDN. If the selected season's art is
 missing, it uses another season's art and button positions.
 
+Custom Sandmonster uses the stock Raid v2 equipment and protection with
+fixed Attack 2,000 and fixed Defense 900. This also applies to custom Earth
+Sandmonster. Invader Director already uses this profile in all six elements.
+See the [Custom Raid user guide](custom-raid.md) for the full command and boss list.
+
 The derived body and matching custom season are published together through
 the selection file. `raid-season set ID` returns to the stock rotation. It
 publishes fresh table revisions so the client can replace cached custom data.

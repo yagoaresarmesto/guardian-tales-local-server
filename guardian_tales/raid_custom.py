@@ -35,6 +35,7 @@ BOSS_STAGES = {
     "snowman general gast": 810010014,
     "viper clan leader": 810010004,
 }
+BOSS_ALIASES = {"sand monster": "sandmonster", "sandy": "sandmonster"}
 # UI label, character enum, and suffix in the stock Raid v2 monster names.
 ELEMENTS = {
     "basic": ("None", "none"),
@@ -52,6 +53,7 @@ def parse_lineup(text):
         raise ValueError("Enter four comma-separated boss and element pairs")
     lineup = []
     for boss, _, element in entries:
+        boss = BOSS_ALIASES.get(boss, boss)
         if boss not in BOSS_STAGES:
             raise ValueError(f"Unknown Raid boss {boss or element!r}")
         if element not in ELEMENTS:
@@ -150,6 +152,35 @@ def append_binary_monsters(encoded, monsters):
     ).decode()
 
 
+def clone_monster(original, elemental_type, monster_ids, by_name):
+    monster_id = next(monster_ids, None)
+    # The native name parser strips this suffix when forming the localized name key.
+    name = next(
+        (
+            f"{original['Name']}_{digit}"
+            for digit in "0123456789"
+            if f"{original['Name']}_{digit}" not in by_name
+        ),
+        None,
+    )
+    if monster_id is None or name is None:
+        raise ValueError(f"Could not allocate a local monster entry for {original['Name']}")
+    return dict(original, Id=monster_id, Name=name, ElementalType=elemental_type)
+
+
+def apply_sandmonster_scaling(monster):
+    # Match the fixed stats, equipment and protection of stock Raid v2 bosses.
+    protection = {"OptionId": 400005, "Level": 730 if monster["ElementalType"] == "None" else 750}
+    options = [option for option in monster.get("Options", ()) if option["OptionId"] != 400005]
+    monster.update(
+        StaticAtk=2000,
+        StaticDef=900,
+        DefaultWeapon1=9093544,
+        DefaultWeapon2=9092574,
+        Options=[*options, protection],
+    )
+
+
 def build_season(raid, monsters, season, season_row, lineup):
     by_id = {monster["Id"]: monster for monster in monsters}
     by_name = {monster["Name"]: monster for monster in monsters}
@@ -186,8 +217,9 @@ def build_season(raid, monsters, season, season_row, lineup):
             ),
             None,
         )
-        if detail is None:
-            base = candidates[0]
+        normalize_sandmonster = boss == "sandmonster"
+        if detail is None or normalize_sandmonster:
+            base = detail or candidates[0]
             original = by_id[base["MonsterId"]]
             sibling_name = original["Name"].rsplit("_", 1)[0] + "_" + suffix
             sibling = by_name.get(sibling_name) if "_v2_" in original["Name"] else None
@@ -196,23 +228,12 @@ def build_season(raid, monsters, season, season_row, lineup):
                 or sibling.get("ElementalType") != elemental_type
             ):
                 sibling = None
-            if sibling is None:
-                monster_id = next(available_monster_ids, None)
-                # The native name parser strips a final one-character suffix
-                # when forming the localized name key.
-                name = next(
-                    (
-                        f"{original['Name']}_{letter}"
-                        for letter in "0123456789"
-                        if f"{original['Name']}_{letter}" not in by_name
-                    ),
-                    None,
-                )
-                if monster_id is None or name is None:
-                    raise ValueError(f"Could not allocate a local monster entry for {boss}")
-                sibling = dict(original, Id=monster_id, Name=name, ElementalType=elemental_type)
+            if sibling is None or normalize_sandmonster:
+                sibling = clone_monster(original, elemental_type, available_monster_ids, by_name)
+                if normalize_sandmonster:
+                    apply_sandmonster_scaling(sibling)
                 monsters.append(sibling)
-                by_name[name] = sibling
+                by_name[sibling["Name"]] = sibling
             detail = dict(base, Id=next(next_boss), MonsterId=sibling["Id"])
             raid["BossDetails"].append(detail)
         raid["Boss"].append({"Id": detail["Id"], "Slot": slot, "SetId": boss_set})
