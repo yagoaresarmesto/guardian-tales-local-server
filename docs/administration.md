@@ -1,4 +1,7 @@
-# Local currency administration
+# Local administration
+
+For optional fixed-stat equipment, see the [test-pin commands](test-items.md).
+The currency commands below retain their separate balance and receipt rules.
 
 The administrative CLI adds **free gems** or **active-season Festival points**
 to the existing single local account. Each command updates its saved balance,

@@ -265,6 +265,9 @@ phases, status/disable commands and other variants are documented in the
 For controlled gem/Festival-point grants, use the
 [administration guide](docs/administration.md) with the same account state
 directory. Writes require stopping the backend first.
+The opt-in [test-pin commands](docs/test-items.md) add new equipment with
+configurable base DEF and an optional ATK-percent suboption only when explicitly
+run against a stopped account.
 
 ## Starting a new account
 

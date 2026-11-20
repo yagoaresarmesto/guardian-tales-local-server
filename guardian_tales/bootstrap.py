@@ -51,6 +51,7 @@ from .snapshots import (
     validate_preserved_request,
 )
 from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
+from .test_item_static import bootstrap_seed as test_item_bootstrap_seed
 from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
 
 BOOTSTRAP_ROUTES = (
@@ -734,7 +735,13 @@ class BootstrapSession:
         if route in STATIC_SEEDS:
             filename, kind = STATIC_SEEDS[route]
             try:
-                seed = nickname_bootstrap_seed(self.store.references, filename, body, static_seed)
+
+                def parent(references, name, value):
+                    return nickname_bootstrap_seed(references, name, value, static_seed)
+
+                seed = test_item_bootstrap_seed(
+                    self.store.db, self.store.references, filename, body, parent
+                )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
             return Packet(

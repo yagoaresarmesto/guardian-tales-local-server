@@ -53,6 +53,7 @@ flowchart LR
 | `festival_shop.py` | Local shop exclusions, catalog point prices and atomic asset/stackable redemptions |
 | `live_events.py` | Authenticated read of preserved temporal-event progress without initialization, rewards or account writes |
 | `admin.py`, `admin_festival.py` | Exclusive audited grants of gems and active-season Festival points |
+| `admin_test_items.py`, `test_item_static.py` | Backed-up offline test-pin grants/retirement and account-specific static composition |
 | `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |
 | `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
 | `reference.py` | External reference input, built-in templates and local certificate defaults |

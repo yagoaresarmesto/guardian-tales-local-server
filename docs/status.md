@@ -6,8 +6,8 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **959 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 85 modules. `validate --list-groups` reports
+The suite has **979 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 86 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
@@ -15,6 +15,16 @@ retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
 teams selects 246 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
+
+Twenty additional administration regressions cover the opt-in test-pin CLI,
+coherent backups, idempotent grants/removal, original-account preservation,
+ordinary sale, rollback, locking and static get/check composition with existing
+mode/nickname overlays. A separate isolated copy of the current account passed
+grant and targeted retirement, preserving all 65 other tables and the original
+inventory with zero source writes. Native inspection supports the fixed base
+DEF and optional ATK suboption. Actual APK appearance, equipping, combat effect
+and persistence remain pending; no pin was added to the working account during
+implementation. See the [test-pin guide](test-items.md).
 
 Fifteen inventory-protection regressions cover `/item/lock` and `/item/unlock`,
 whose native request uses `itemIndexes` inventory IDs. Only selected top-level

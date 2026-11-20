@@ -175,12 +175,47 @@ def main(argv=None):
     )
     festival_history.add_argument("--data-dir", type=Path, required=True)
     festival_history.add_argument("--limit", type=int, default=20)
+    pin = commands.add_parser(
+        "grant-test-pin", help="Add a fixed-stat test pin to a stopped account"
+    )
+    pin.add_argument("--data-dir", type=Path, required=True)
+    pin.add_argument("--reference-dir", type=Path, required=True)
+    pin.add_argument("--operation-id", required=True)
+    pin.add_argument("--reason", required=True)
+    pin.add_argument("--defense", type=int, default=10000)
+    pin.add_argument("--attack-percent", type=int, default=0)
+    remove_pin = commands.add_parser(
+        "remove-test-pin", help="Retire only a previously generated test pin"
+    )
+    remove_pin.add_argument("--data-dir", type=Path, required=True)
+    remove_pin.add_argument("--operation-id", required=True)
+    pin_history = commands.add_parser(
+        "test-pin-history", help="Read private test-pin grant receipts"
+    )
+    pin_history.add_argument("--data-dir", type=Path, required=True)
+    pin_history.add_argument("--limit", type=int, default=20)
     args = parser.parse_args(argv)
     try:
         if args.action == "grant-gems":
             result = grant_gems(args.data_dir, args.amount, args.operation_id, args.reason)
         elif args.action == "gem-history":
             result = gem_history(args.data_dir, args.limit)
+        elif args.action in ("grant-test-pin", "remove-test-pin", "test-pin-history"):
+            from .admin_test_items import grant_test_pin, remove_test_pin, test_pin_history
+
+            if args.action == "grant-test-pin":
+                result = grant_test_pin(
+                    args.data_dir,
+                    args.reference_dir,
+                    args.operation_id,
+                    args.reason,
+                    args.defense,
+                    args.attack_percent,
+                )
+            elif args.action == "remove-test-pin":
+                result = remove_test_pin(args.data_dir, args.operation_id)
+            else:
+                result = test_pin_history(args.data_dir, args.limit)
         else:
             from .admin_festival import festival_point_history, grant_festival_points
 
