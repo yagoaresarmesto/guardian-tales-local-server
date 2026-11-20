@@ -311,6 +311,7 @@ class AccountStore:
         self.references = ReferenceData(reference_dir)
         create_snapshot_tables(db)
         create_preset_tables(db)
+        colosseum.create_tables(db)
         create_party_member_tables(db)
         create_representative_character_tables(db)
         create_account_name_tables(db)

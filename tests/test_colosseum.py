@@ -10,6 +10,7 @@ from pathlib import Path
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
 from guardian_tales.colosseum import (
+    DEFENSE_PARTY,
     END,
     ENTRY,
     OPPONENTS,
@@ -17,6 +18,9 @@ from guardian_tales.colosseum import (
     RANKING,
     REFRESH,
     ROUTES,
+    SAVE_ATTACK_FORMATION,
+    SET_DEFENSE_FORMATION,
+    SET_DEFENSE_PRESET,
     START,
 )
 from guardian_tales.packet_reader import parse_packet
@@ -36,6 +40,7 @@ class ColosseumEntryTests(unittest.TestCase):
             compress(b"colosseum\n" + table + b"\n1\n" + digest(table).encode() + b"\n")
         )
         db = sqlite3.connect(":memory:")
+        self.db = db
         self.addCleanup(db.close)
         self.session = BootstrapSession(GuestStore(db, refs))
         saved = synthetic_snapshot()
@@ -68,12 +73,12 @@ class ColosseumEntryTests(unittest.TestCase):
         self.call("/auth/sign-in", {"AuthKind": 0, "AccessToken": "synthetic", "Reconnect": True})
         db.execute("PRAGMA query_only=ON")
 
-    def call(self, route, body):
+    def call(self, route, body, sequence_id=12):
         packet = Packet(
             0,
             b"" if body is None else json.dumps(body).encode(),
             body_type=int(body is not None),
-            sequence_id=12,
+            sequence_id=sequence_id,
             api=route,
         )
         response = self.session.handle(parse_packet(encode_packet(packet)))
@@ -129,6 +134,90 @@ class ColosseumEntryTests(unittest.TestCase):
         for route in ROUTES:
             with self.subTest(route=route), self.assertRaises(PacketError):
                 self.call(route, None)
+
+    def test_saved_defense_overrides_the_seed_and_refreshes_without_restarting(self):
+        self.config.write_text('{"preset_id": 601}')
+        self.db.execute("PRAGMA query_only=OFF")
+        original = self.session.store.account.profile()
+        seed = self.call(DEFENSE_PARTY, None)
+        self.assertFalse(seed["Changed"])
+        self.assertEqual(seed["UserColosseum"]["DefensePartyInfo"]["Preset"], self.preset)
+
+        defense = dict(self.preset, Id=0, Name="Defense team", Order=0)
+        member = dict(defense["Characters"][0], CharacterSpecOriginId=1)
+        editor_preset = dict(
+            defense,
+            Characters=[member, None],
+            Count=1,
+            DPSWithCriticalTotal=120.0,
+            ToughnessTotal=270.0,
+            ExorcismTotal=8,
+            IsEmpty=False,
+        )
+        del editor_preset["Order"]
+        saved = self.call(SET_DEFENSE_PRESET, {"Preset": editor_preset}, sequence_id=20)
+        self.assertEqual(saved["UserColosseum"]["DefensePartyInfo"]["Preset"], defense)
+        first = {"Positions": [4, 0, 0, 0]}
+        latest = {"Positions": [20, 0, 0, 0]}
+        self.call(SET_DEFENSE_FORMATION, first, sequence_id=21)
+        self.call(SET_DEFENSE_FORMATION, latest, sequence_id=22)
+        # The old request must return current state after a newer save.
+        response = self.call(SET_DEFENSE_FORMATION, first, sequence_id=21)
+        self.assertEqual(
+            response["UserColosseum"]["DefensePartyInfo"]["Formation"]["Positions"],
+            latest["Positions"],
+        )
+        self.config.unlink()
+        refreshed = self.call(REFRESH, None)
+        for opponent in refreshed["Opponents"]:
+            self.assertEqual(opponent["User"]["Name"], defense["Name"])
+            self.assertEqual(opponent["Formation"]["Positions"], latest["Positions"])
+        first_opponent = refreshed["Opponents"][0]["User"]
+        self.assertEqual(
+            self.call(
+                START,
+                {
+                    "OpponentId": first_opponent["Id"],
+                    "OpponentParty": [first_opponent["Characters"][0]["CharacterId"]],
+                    "OpponentPositions": latest["Positions"],
+                },
+            ),
+            {},
+        )
+        self.assertEqual(self.session.store.account.profile(), original)
+
+    def test_defense_rejects_invalid_grid_cells_and_unowned_members_without_writes(self):
+        self.db.execute("PRAGMA query_only=OFF")
+        before = self.db.total_changes
+        for route, body in (
+            (SET_DEFENSE_FORMATION, {"Positions": [0, 0, 0, 0]}),
+            (SET_DEFENSE_FORMATION, {"Positions": [1, 1, 0, 0]}),
+            (SET_DEFENSE_FORMATION, {"Positions": [21, 0, 0, 0]}),
+            (SET_DEFENSE_PRESET, {"Preset": {"Id": 0, "Order": 0, "Characters": [{"Id": 999}]}}),
+        ):
+            with self.subTest(body=body), self.assertRaises(PacketError):
+                self.call(route, body)
+        self.assertEqual(self.db.total_changes, before)
+
+    def test_attack_positions_are_independent_even_when_both_sides_use_the_same_team(self):
+        self.config.write_text('{"preset_id": 601}')
+        self.db.execute("PRAGMA query_only=OFF")
+        defense = [20, 0, 0, 0]
+        attack = [1, 0, 0, 0]
+        self.call(SET_DEFENSE_FORMATION, {"Positions": defense}, sequence_id=21)
+        body = {"PresetId": 601, "Positions": attack}
+        self.call(SAVE_ATTACK_FORMATION, body, sequence_id=22)
+        response = self.call(REFRESH, None)
+        lobby = response["UserColosseum"]
+        self.assertEqual(lobby["Formations"], {"601": {"Id": 601, "Positions": attack}})
+        self.assertEqual(lobby["DefensePartyInfo"]["Formation"]["Positions"], defense)
+        for opponent in response["Opponents"]:
+            self.assertEqual(opponent["Formation"]["Positions"], defense)
+        before = self.db.total_changes
+        self.call(SAVE_ATTACK_FORMATION, body, sequence_id=22)
+        with self.assertRaises(PacketError):
+            self.call(SAVE_ATTACK_FORMATION, dict(body, PresetId=701), sequence_id=23)
+        self.assertEqual(self.db.total_changes, before)
 
     def test_practice_opponent_uses_the_saved_preset_and_resolves_its_equipment(self):
         self.config.write_text('{"preset_id": 601}')

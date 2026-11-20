@@ -15,6 +15,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
+from . import colosseum
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
@@ -564,6 +565,14 @@ class BootstrapSession:
                     return json_response(
                         request, self.store.account.save_party_preset(body, operation_id)
                     )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route in colosseum.MUTATIONS:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    value = colosseum.save(self.store.account, route, body, operation_id)
+                    return json_response(request, value)
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/preset/set-selected-preset":

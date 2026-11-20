@@ -41,8 +41,7 @@ The 3.57.0 client sends a Boolean `IsPartial` to `/colosseum/enter`. The server
 returns the full lobby resource for both values. The client also reads the season
 end time, new-season flag and defense battle records. When the imported profile
 lacks a Colosseum resource, the local lobby uses the latest map-backed Global
-season in the supplied `colosseum` table and shows the selected Colosseum attack
-preset as its initial defense preview.
+season in the supplied `colosseum` table.
 
 On opening the lobby the client can also call `/colosseum/get-opponents` and
 `/colosseum/get-my-ranking` without parameters. The local responses contain the
@@ -57,20 +56,34 @@ Colosseum attack teams use the shared `/preset/set-presets` and
 and is placed after the highest saved Colosseum order. Applying or selecting
 the team stores its ID in `User.SelectedPresetId.ColosseumAttack`.
 
-To list one local practice opponent, add `colosseum_practice.json` to the external
-reference directory. Set `preset_id` to the ID of a saved, populated Colosseum
-attack team. The server builds a separate opponent with the preset's name, heroes
-and equipped items, using grid positions 12, 3, 19 and 9 in team order. The client
-requires three cards, so each card uses the same team with a distinct local ID.
-Each card also receives the player's current hero and item collection, Guardian
-level and mastery, Heavenhold, and account buff options.
-Without the file, the opponent list is empty. Fully reopen the game or use Refresh
-to load the configured list.
+Open the Colosseum shield button to edit the practice defense. Saving the team
+or its positions stores the defense in the local database. After saving, use
+Refresh in the Colosseum lobby to load the updated team and positions in all
+three opponent cards. Refresh reads the current defense, so later changes take
+effect without restarting the backend.
+
+Position Settings saves the attacking layout separately for each Colosseum
+preset using `/colosseum/save-formation`. During practice, the client uses the
+attack preset's saved positions on the player's side and the refreshed defense
+positions on the opponent's side.
+
+The defense team takes precedence over the optional `colosseum_practice.json`
+seed in the external reference directory. Its `preset_id` identifies a saved,
+populated Colosseum attack team to use before the first defense save. The seed
+starts at grid positions 12, 3, 19 and 9 in team order. With neither a seed nor
+a saved defense, the selected attack team appears in the defense editor and
+the opponent list is empty.
+
+The client requires three cards, so each card uses the same defense with a
+distinct local ID. The opponent receives the defense heroes and equipped
+items, plus the player's current collection, Guardian level and mastery,
+Heavenhold, and account buff options.
 
 The practice start and result handlers accept the configured opponent and use
 the client's native start and end request fields. The result grants zero trophies
-and an empty reward list. The lobby and practice requests require sign-in and
-a completed prologue. They make no SQLite writes, including ticket consumption.
+and an empty reward list. The Colosseum requests require sign-in and a
+completed prologue. Defense saves update the defense and its retry receipt
+together. Practice battles leave the ticket balance intact.
 
 ## Backroom entry
 

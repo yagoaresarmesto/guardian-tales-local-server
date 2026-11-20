@@ -23,6 +23,14 @@ start and result. Each opponent receives the player's account-wide stat options,
 including the assigned Guardian Mastery skills. The user confirmed that the
 displayed DPS and Toughness matched with the same preset on both sides.
 
+The defense editor uses separate requests for the team and grid positions.
+The live client sent a full preset with calculated stats and saved both team
+and formation. The handler retains the owned roster and gear references.
+A detached account test verified that a refresh in the same backend session
+returned the new team and positions for each practice opponent.
+Attack position saves use a separate per-preset table. The live client saved
+different attack and defense layouts while using the same team on both sides.
+
 Before the Colosseum changes, **993 tests passed on Windows Python 3.11**.
 Tests are cataloged into 14 logical groups. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original

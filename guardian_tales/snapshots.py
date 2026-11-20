@@ -29,6 +29,9 @@ STARTUP_READS = frozenset(
 IMPORTED_MUTATIONS = frozenset(
     (
         "/collection/claim-hero-knowledge-all",
+        "/colosseum/save-formation",
+        "/colosseum/set-defense-party-formation",
+        "/colosseum/set-defense-party-preset",
         "/item/enhance-weapon",
         "/item/decompose-jewel",
         "/item/upgrade-jewel",
@@ -83,6 +86,7 @@ ACCOUNT_READS = frozenset(
         "/colosseum/get-opponents",
         "/colosseum/refresh-opponents",
         "/colosseum/get-my-ranking",
+        "/colosseum/get-defense-party",
         "/colosseum/start-stage/v2",
         "/colosseum/end-stage/v3",
         "/my-room/enter",

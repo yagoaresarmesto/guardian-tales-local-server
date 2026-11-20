@@ -104,6 +104,9 @@ class SnapshotTests(unittest.TestCase):
             result["enabled_mutation_routes"],
             [
                 "/collection/claim-hero-knowledge-all",
+                "/colosseum/save-formation",
+                "/colosseum/set-defense-party-formation",
+                "/colosseum/set-defense-party-preset",
                 "/item/apply-options",
                 "/item/apply-relic-options",
                 "/item/change-lock-options",
