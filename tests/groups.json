@@ -20,8 +20,8 @@
     "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room"]
   },
   "inventory": {
-    "description": "Weapons, relic options, jewel decomposition and jewel upgrades",
-    "modules": ["test_weapon_enhance", "test_weapon_limit_break", "test_weapon_engrave", "test_weapon_options", "test_weapon_option_lock", "test_relic_options", "test_jewel_decompose", "test_jewel_upgrade"]
+    "description": "Item protection, weapons, relic options, jewel decomposition and jewel upgrades",
+    "modules": ["test_item_lock", "test_weapon_enhance", "test_weapon_limit_break", "test_weapon_engrave", "test_weapon_options", "test_weapon_option_lock", "test_relic_options", "test_jewel_decompose", "test_jewel_upgrade"]
   },
   "teams": {
     "description": "Normal parties, preset selection/editing and compact resources",

@@ -62,6 +62,36 @@ raw account row, imported startup data, current presets and 42 receipt/claim
 tables matched the pre-fix backup. SQLite integrity passed with zero diagnostic
 source writes. Only the backend needs to restart after updating.
 
+## Inventory protection locks
+
+The prepared Android 3.57.0 client stopped at `/item/unlock` with an
+`itemIndexes` array containing one owned equipment inventory ID. Native
+`SendLockItems` and `SendUnlockItems` confirm `/item/lock`, `/item/unlock` and
+the exact lowercase key; their success callbacks read no response fields.
+These observations identify the request contract, not an official captured
+response.
+
+The local implementation resolves bounded batches dynamically across the three
+saved item inventories and persists only selected protection flags plus one
+account revision. It returns current `User` through the existing resource
+application path. Receipts commit atomically with the profile; old retries
+return current state without restoring an old lock or inventory snapshot.
+No balance, item quantity, equipment assignment, option value/lock, engraving,
+pending reroll proposal or imported startup seed changes. No catalog additions,
+save reimport or CDN/bridge restart are required. Equipment selling/extraction
+remain outside this change.
+
+Fifteen synthetic regressions cover single unlock, mixed inventory batches,
+preservation, canonical and stale retries, reconnect/new login, receipt and
+profile rollback, revision limits, fresh-account/prologue guards, malformed or
+ambiguous ownership and the 256-item local bound. The captured request and all
+2,080 owned inventory IDs passed on an in-memory saved-account backup, with zero
+diagnostic source writes. The user then confirmed both protection controls and
+persistence after reopening the APK. Four receipts match the final flags, and
+the full saved profile matches the pre-fix backup with only the recorded flags
+and four user revisions applied. No new lock-route errors appeared; SQLite
+integrity passed. See [verification status](status.md).
+
 ## Observed sources
 
 A private, read-only observation of the matching Android client captured:

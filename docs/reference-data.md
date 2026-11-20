@@ -78,6 +78,31 @@ Placing/removing items or heroes, unlocking slots and paying to reactivate them
 remain separate unsupported operations. After updating, close the game and restart
 only the backend; CDN and bridge can remain running.
 
+## Inventory item protection
+
+`/item/lock` and `/item/unlock` accept exactly `itemIndexes`: a nonempty array
+of 1..256 distinct positive Int32 **inventory IDs**, not item specification IDs.
+The native 3.57.0 methods use these routes and this key; the prepared APK's
+pending unlock request confirmed the single-item shape. The bounded batch size
+and duplicate rejection are local validation policies.
+
+Targets must be unambiguous owned rows in `User.ItemWeapons`, `ItemMiscs` or
+`ItemStackables`, with a positive amount and an existing Boolean `Locked` flag.
+All targets validate before writing. Only their top-level `Locked` flags and
+one `User.Cas` increment change; currencies, quantities, equipment assignments,
+levels, stats, engraving and nested option locks remain untouched. No extra
+catalog is required. Protection is independent of option rerolls and retains
+their pending proposals.
+
+The current `User` response, saved profile and route/epoch/sequence receipt form
+one transaction. An already matching batch records only a receipt; a replay
+makes no writes and returns current state, preserving later locks, stat changes
+or removals. Reordering the same batch retains its identity; changing its IDs
+or switching lock/unlock under that identity rejects. Both fresh accounts after
+the prologue and imported accounts use this path. Restart only the backend and
+fully reopen the game after updating. Selling and equipment extraction remain
+separate unsupported operations.
+
 ## What the source contains
 
 `guardian_tales/templates/` holds a reconstructed empty local-account template,

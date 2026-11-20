@@ -44,6 +44,7 @@ flowchart LR
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `imported_hero_knowledge.py` | Eight native hero-book progress rules, nonpaying official flags, awakening bit decoding and atomic per-objective/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
+| `item_lock.py` | Owned inventory protection batches with atomic profile/retry receipts, independent of option locks |
 | `jewel_decompose.py` | Explicit source-preserving jewel batches, public per-grade powder yields and atomic reward/request receipts |
 | `jewel_upgrade.py` | Guaranteed free one-grade upgrades for owned loose/socket jewels, stack allocation/merging and atomic result receipts |
 | `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |

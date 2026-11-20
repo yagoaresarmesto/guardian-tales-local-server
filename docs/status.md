@@ -6,15 +6,30 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The suite has **906 passing tests on Windows Python 3.11**. Tests are cataloged
-into 14 logical groups across 82 modules. `validate --list-groups` reports
+The suite has **921 passing tests on Windows Python 3.11**. Tests are cataloged
+into 14 logical groups across 83 modules. `validate --list-groups` reports
 discovered counts; repeated `--group` arguments select a union in original
 discovery order. Existing files, shared fixture imports, direct unittest paths
 and the default full CI run remain unchanged. An independent discovery audit
 retained all 658 previous case IDs and their relative order, with six new runner
 regressions. Group membership partitions every case exactly once; inventory plus
-teams selects 168 unique cases. Catalog omissions, duplicates and undiscovered
+teams selects 208 unique cases. Catalog omissions, duplicates and undiscovered
 modules fail explicitly. See [group usage and maintenance](../tests/README.md).
+
+Fifteen inventory-protection regressions cover `/item/lock` and `/item/unlock`,
+whose native request uses `itemIndexes` inventory IDs. Only selected top-level
+protection flags and one user revision change, with atomic receipts and current
+state on delayed retries. Single/mixed/full batches, ownership guards, fresh and
+imported accounts, restart persistence, independent option locks/proposals and
+transaction rollback are covered. The actual captured unlock/reverse-lock and
+all 2,080 owned item IDs passed on an in-memory source-account backup with zero
+diagnostic source writes. After backend restart, the user confirmed locking,
+unlocking and persistence across reopening the APK. Four saved receipts match
+the final flags; the full current profile equals the pre-fix backup with only
+those recorded protection changes and four user revisions. No new lock-route
+rejections appeared and SQLite integrity passed. Selling and equipment
+extraction are not enabled by these protection routes. See the
+[request and persistence contract](reference-data.md#inventory-item-protection).
 
 Four guild meteor and sixty-seven Guild War regressions cover native entry schemas,
 fresh/imported account preservation, membership/progress guards, season rollover,
