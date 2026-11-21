@@ -15,7 +15,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from . import colosseum, expedition
+from . import classic_coop, colosseum, expedition
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
@@ -69,6 +69,7 @@ BOOTSTRAP_ROUTES = (
     *LOBBY_ROUTES,
     *PLAY_MENU_ROUTES,
     *expedition.ROUTES,
+    *classic_coop.ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
@@ -225,6 +226,7 @@ class BootstrapSession:
         self.signed_in = False
         self.request_epoch = None
         self.colosseum_opponents = ()
+        self.classic_coop = classic_coop.Practice()
 
     def handle(self, request):
         if (
@@ -293,6 +295,15 @@ class BootstrapSession:
                 raise PacketError("Local guest sign-in required")
             try:
                 return json_response(request, expedition.read(self.store, route, body))
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
+        if route in classic_coop.ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                return json_response(
+                    request, self.classic_coop.respond(self.store.references, route, body)
+                )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
         if route in LOBBY_ROUTES:

@@ -118,6 +118,37 @@ leaderboard. Selecting a saved Expedition preset updates the selected slot.
 The trial covers replay and selection of existing presets. New unlocks, preset
 creation or editing, and Expedition reward claims are outside that scope.
 
+## Classic Co-op Defense trial
+
+This Android 3.57.0 trial targets the original Fire Defense stage on Easy
+(`303050001`). It adds **Classic Co-op** beside Expedition on page 2 of the
+**Book of Contents → Challenge** tab, using the existing Hero Tower artwork.
+The client creates a one-player Defense room with the current local player and
+uses the existing stage loader.
+
+The backend accepts practice creation, start, and end requests after local
+sign-in if `classic_coop_trial.enabled` is present in the external reference
+directory. The responses carry no item grants and do not write the account.
+The new card requires a separate local CDN overlay. Add the overlay's
+`resources/files` root after the preserved resource root in the CDN command.
+Its `manifest.json` lists the files below.
+
+| Client file under `files/` | Build input |
+| --- | --- |
+| `AssetBundles/Android/ui/lobby` | Run `python -m guardian_tales.classic_coop_bundle SOURCE OUTPUT` with UnityPy installed and the preserved 3.57.0 lobby bundle as the source. |
+| `AssetBundles/Android/ui/stage/coop` | Run the same module with the preserved Co-op stage bundle as `SOURCE` and the preserved `ui/stage/base` bundle as `--result-from`. The archived Defense stage requests a missing results prefab. This registers the preserved common Co-op results panel under that name. |
+| `GameScript/Frontend/LocalClassicCoop.encrypted` | Pack `guardian_tales/templates/LocalClassicCoop.lua` with the matching external 3.57.0 script codec. |
+| `Android.index` | Replace both bundle rows and add the script row with their sizes and SHA-1 hashes. Pack the index using the matching external 3.57.0 index codec. |
+
+Unity validates the lobby bundle against the index at startup. Use a separate
+overlay so the preserved pack stays available for rollback. To roll back,
+remove the reference marker, start the CDN with the original resource root
+alone, and fully reopen the app to fetch the stock index and bundle.
+Automated tests cover the backend request contracts and account preservation.
+The Android client has displayed the card and sent both creation and start
+requests successfully. The stage load, combat, and result flow remain under
+client testing.
+
 ## Backroom entry
 
 `/my-room/enter` accepts exactly Boolean `IsPartial` after sign-in and prologue
