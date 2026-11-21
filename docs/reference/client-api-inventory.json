@@ -760,7 +760,7 @@
         "SendAuthUnpause"
       ],
       "literal_key_candidates": [],
-      "server_dispatch": "absent"
+      "server_dispatch": "bootstrap"
     },
     {
       "route": "/builder/command",

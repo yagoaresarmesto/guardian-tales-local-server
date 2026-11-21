@@ -60,6 +60,7 @@ BOOTSTRAP_ROUTES = (
     "/auth/get-server-info",
     "/announcement/all",
     "/auth/sign-in",
+    "/auth/unpause",
     "/static-data/resource-url",
     "/static-data/device-specific-settings",
     "/static-data/in-app-product-ids",
@@ -242,6 +243,24 @@ class BootstrapSession:
         if route not in BOOTSTRAP_ROUTES:
             raise PacketError("API operation not implemented")
         body = read_json_body(request)
+        if route == "/auth/unpause":
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            if body not in (None, {}):
+                raise PacketError("Unpause accepts no parameters")
+            return json_response(request, {"ServerTime": utc_now(), "StartOfDay": "00:00:00"})
+        if (
+            route == classic_coop.LEAVE
+            and isinstance(body, dict)
+            and type(body.get("StageId")) is int
+            and body["StageId"] == classic_coop.STAGE_ID
+        ):
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                return json_response(request, classic_coop.leave(self.store.account))
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
         if route in PUNCHKING_ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
@@ -676,7 +695,7 @@ class BootstrapSession:
                     return json_response(request, self.store.account.interact_substage_item(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == "/stage/end-stage":
+            if route == classic_coop.LEAVE:
                 try:
                     return json_response(request, self.store.account.end_stage(body))
                 except ValueError as exc:

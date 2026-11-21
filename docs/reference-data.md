@@ -123,8 +123,10 @@ creation or editing, and Expedition reward claims are outside that scope.
 This Android 3.57.0 trial targets the original Fire Defense stage on Easy
 (`303050001`). It adds **Classic Co-op** beside Expedition on page 2 of the
 **Book of Contents → Challenge** tab, using the existing Hero Tower artwork.
-The client creates a one-player Defense room with the current local player and
-uses the existing stage loader.
+The client creates a one-player Defense room and uses the leader of the normal
+party for the solo run. It sets the legacy Co-op hero slot in memory during
+the run and uses the stage's fixed Easy tier without the online season's
+unified matchmaking adjustments. The saved hero selection is preserved.
 
 The backend accepts practice creation, start, and end requests after local
 sign-in if `classic_coop_trial.enabled` is present in the external reference
@@ -139,15 +141,20 @@ Its `manifest.json` lists the files below.
 | `AssetBundles/Android/ui/stage/coop` | Run the same module with the preserved Co-op stage bundle as `SOURCE` and the preserved `ui/stage/base` bundle as `--result-from`. The archived Defense stage requests a missing results prefab. This registers the preserved common Co-op results panel under that name. |
 | `GameScript/Frontend/LocalClassicCoop.encrypted` | Pack `guardian_tales/templates/LocalClassicCoop.lua` with the matching external 3.57.0 script codec. |
 | `Android.index` | Replace both bundle rows and add the script row with their sizes and SHA-1 hashes. Pack the index using the matching external 3.57.0 index codec. |
+| `media/immediates/Conditions-v2.encrypted` | Use the preserved 3.57.0 network-monitor settings. The client fetches this file separately from the bundle index. |
 
 Unity validates the lobby bundle against the index at startup. Use a separate
 overlay so the preserved pack stays available for rollback. To roll back,
 remove the reference marker, start the CDN with the original resource root
 alone, and fully reopen the app to fetch the stock index and bundle.
 Automated tests cover the backend request contracts and account preservation.
-The Android client has displayed the card and sent both creation and start
-requests successfully. The stage load, combat, and result flow remain under
-client testing.
+The Android client has completed a run through defeat and returned to the lobby.
+The trial's
+results Exit button uses the normal stage-to-lobby routine, which can request
+`/auth/unpause` to resync the clock on the signed-in connection. For this trial,
+the final `/stage/end-stage` request returns the saved state of the practice
+stage and an empty reward list. It can be retried after reconnecting. A victory
+and its results screen have yet to be verified in the client.
 
 ## Backroom entry
 

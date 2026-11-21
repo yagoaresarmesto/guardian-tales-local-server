@@ -4,9 +4,23 @@
 CREATE = "/escape/request-create"
 START = "/escape/start-stage"
 END = "/escape/end-stage/v2"
+LEAVE = "/stage/end-stage"
 ROUTES = (CREATE, START, END)
 STAGE_ID = 303050001
 MARKER = "classic_coop_trial.enabled"
+
+
+def leave(account):
+    if not (account.references.directory / MARKER).is_file():
+        raise ValueError("Classic Co-op practice is disabled")
+    # The generic lobby transition can send this on a fresh connection.
+    # Acknowledge either result without treating it as a campaign clear.
+    states = account.profile()["UserProgress"]["StageStates"]
+    return {
+        "AddedItems": [],
+        "StageState": states.get(str(STAGE_ID), 0),
+        "StageProgress": account.stage_progress(STAGE_ID),
+    }
 
 
 class Practice:

@@ -70,6 +70,26 @@ class BootstrapTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.session.handle(request({}, "/battle/unimplemented"))
 
+    def test_unpause_syncs_server_time_without_changes(self):
+        route = "/auth/unpause"
+        packet = parse_packet(encode_packet(Packet(0, b"", api=route, sequence_id=17)))
+        with self.assertRaisesRegex(PacketError, "sign-in"):
+            self.session.handle(packet)
+        self.session.handle(
+            request({"AuthKind": 0, "AccessToken": "test-only", "Reconnect": False})
+        )
+        before = self.db.total_changes
+        for request_packet in (packet, request({}, route), packet):
+            response = self.session.handle(request_packet)
+            value = json.loads(response.body)
+            self.assertEqual(set(value), {"ServerTime", "StartOfDay"})
+            self.assertEqual(value["StartOfDay"], "00:00:00")
+            self.assertEqual(datetime.fromisoformat(value["ServerTime"]).utcoffset(), timedelta(0))
+            self.assertEqual(response.sequence_id, 17)
+        with self.assertRaises(PacketError):
+            self.session.handle(request({"Pause": False}, route))
+        self.assertEqual(self.db.total_changes, before)
+
     def test_device_settings_before_sign_in_returns_static_text_without_account_writes(self):
         route = "/static-data/device-specific-settings"
         profile = self.session.store.account.profile()
