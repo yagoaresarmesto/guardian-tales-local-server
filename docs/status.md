@@ -6,6 +6,17 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
+The Solo Expedition trial opens feature rules 31 and 110 for the Android 3.57.0
+Global client. The archived data includes four areas, ten districts, the wave
+tables, and the on-demand assets. A read-only copy of the imported save
+passed map entry, stage start, kill reporting, scoring, ranking, and exit
+requests using existing district progression.
+
+After restarting the local backend, the user confirmed that the map, a stage,
+and the timeout or defeat result opened in the APK. The live backend recorded
+Expedition entry, district score, stage start, and stage exit. The separate
+clear-result and leaderboard paths were exercised by packet tests.
+
 Five Colosseum lobby tests cover the native `IsPartial` entry hint, opponent list,
 personal ranking, parameterless manual refresh, and sign-in enforcement. The
 menu requests also passed against a query-only copy of the imported save.

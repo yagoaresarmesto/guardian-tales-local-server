@@ -3,6 +3,7 @@
 
 import json
 
+from .expedition import enabled as expedition_enabled
 from .snapshots import CLIENT, preserved_read
 
 GEAR_FIELDS = ("Weapon1", "Weapon2", "Accessory", "Orb1", "Orb2", "Merch", "Relic")
@@ -16,6 +17,7 @@ SELECTION_FIELDS = {
 # Pinned 3.57.0 EU constants: PresetCountS3[mode - 1].
 COLOSSEUM_PRESET_COUNT = 30
 RAID_PRESET_COUNT = 30
+EXPEDITION_PRESET_COUNT = 20
 FIXED_CREATION_COUNTS = {600: COLOSSEUM_PRESET_COUNT, 700: RAID_PRESET_COUNT}
 
 
@@ -86,11 +88,29 @@ def owned_party_preset(db, profile, preset_id):
     return matches[0]
 
 
+def validate_expedition_preset(db, profile, preset_id):
+    captured = preserved_read(db, "/preset/get-presets") or {}
+    group = captured.get("UserMultiPartyPreset")
+    rows = group.get("Presets") if isinstance(group, dict) else None
+    if not isinstance(rows, list):
+        raise ValueError("Captured Expedition presets are required")
+    presets = [row for row in rows if isinstance(row, dict) and row.get("Id") == preset_id]
+    parties = presets[0].get("Parties") if len(presets) == 1 else None
+    if (
+        not isinstance(parties, list)
+        or len(parties) != 3
+        or not all(isinstance(party, dict) for party in parties)
+    ):
+        raise ValueError("Select a saved three-party Expedition preset")
+    for index, party in enumerate(parties):
+        validate_members(profile, party.get("Characters"), allow_empty=index > 0)
+
+
 def choose_preset(user, preset_id, field, base):
     selected, revision = user.get("SelectedPresetId"), user.get("Cas")
     if not isinstance(selected, dict):
         raise ValueError("Invalid saved party selection")
-    current = selected.get(field, 0 if base == 600 else None)
+    current = selected.get(field, 0 if base in (600, 900) else None)
     if (
         not integer(current)
         or current != 0
@@ -130,6 +150,12 @@ def set_selected(account, body, operation_id):
         raise ValueError("Select an existing supported party preset after completing the prologue")
     base = body["PresetId"] // 100 * 100
     field = SELECTION_FIELDS.get(base)
+    if (
+        base == 900
+        and body["PresetId"] < base + EXPEDITION_PRESET_COUNT
+        and expedition_enabled(account.references)
+    ):
+        field = "Expedition"
     if field is None or base == 600 and body["PresetId"] >= base + COLOSSEUM_PRESET_COUNT:
         raise ValueError("Select an existing supported preset within its mode's slots")
     encoded = json.dumps(body, separators=(",", ":"))
@@ -142,7 +168,10 @@ def set_selected(account, body, operation_id):
             raise ValueError("Preset selection request identity was reused with different data")
         # A delayed retry must not undo a later choice or restore an old profile.
         return {"User": selection_resource(profile["User"])}
-    owned_party_preset(account.db, profile, body["PresetId"])
+    if base == 900:
+        validate_expedition_preset(account.db, profile, body["PresetId"])
+    else:
+        owned_party_preset(account.db, profile, body["PresetId"])
     user = profile["User"]
     changed = choose_preset(user, body["PresetId"], field, base)
     with account.db:

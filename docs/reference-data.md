@@ -95,6 +95,29 @@ and an empty reward list. The Colosseum requests require sign-in and a
 completed prologue. Defense saves update the defense and its retry receipt
 together. Practice battles leave the ticket balance intact.
 
+## Solo Expedition practice
+
+On the Android 3.57.0 Global client, the local Expedition trial replaces the
+`v9.99` minimum version of feature rules 31 and 110 with `v3.57`. The overlay
+preserves the original quest and story requirements. It composes with the
+active Raid and other static overlays and leaves the imported content files
+intact.
+
+Create the empty file `expedition_trial.enabled` in the backend's external
+reference directory, then restart the backend and fully reopen the game.
+Open **Book of Contents → Challenge → Expedition**. Entry uses the account's
+saved Expedition map and stage progress. The map also reads the Heavenhold
+Farm resource, which uses an empty local view when the save has no farm data.
+
+Practice is available for district stages already opened and unlocked in the
+save. Starting, fighting, clearing, and exiting a practice run use the client's
+native requests. The result uses the run's kill score and the preserved time,
+survivor, and party-switching bonus settings. Practice runs preserve stamina,
+collectibles, rewards, and saved records. Stage Rankings displays an empty local
+leaderboard. Selecting a saved Expedition preset updates the selected slot.
+The trial covers replay and selection of existing presets. New unlocks, preset
+creation or editing, and Expedition reward claims are outside that scope.
+
 ## Backroom entry
 
 `/my-room/enter` accepts exactly Boolean `IsPartial` after sign-in and prologue

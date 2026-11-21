@@ -15,7 +15,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from . import colosseum
+from . import colosseum, expedition
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
@@ -68,6 +68,7 @@ BOOTSTRAP_ROUTES = (
     *ACCOUNT_ROUTES,
     *LOBBY_ROUTES,
     *PLAY_MENU_ROUTES,
+    *expedition.ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
@@ -285,6 +286,13 @@ class BootstrapSession:
                 raise PacketError("Local guest sign-in required")
             try:
                 return json_response(request, play_menu_read(self.store, route, body))
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
+        if route in expedition.ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                return json_response(request, expedition.read(self.store, route, body))
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
         if route in LOBBY_ROUTES:
@@ -762,8 +770,11 @@ class BootstrapSession:
                 def parent(references, name, value):
                     return nickname_bootstrap_seed(references, name, value, static_seed)
 
+                def effective(references, name, value):
+                    return expedition.bootstrap_seed(references, name, value, parent)
+
                 seed = test_item_bootstrap_seed(
-                    self.store.db, self.store.references, filename, body, parent
+                    self.store.db, self.store.references, filename, body, effective
                 )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
