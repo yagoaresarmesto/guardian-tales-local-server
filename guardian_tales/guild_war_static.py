@@ -10,6 +10,8 @@ from functools import lru_cache
 from .punchking_static import atomic_write
 from .punchking_static import bootstrap_override as arena_override
 from .raid_static import (
+    LOCAL_FROM,
+    LOCAL_TO,
     MANIFEST_KEYS,
     MAX_PACKET,
     compress,
@@ -23,7 +25,7 @@ from .snapshots import CLIENT
 
 SELECTION = "guild_war_selection.json"
 FEATURE_ID = 126
-OVERLAY_POLICY = 6
+OVERLAY_POLICY = 7
 PHASES = {"coop-offense": 1, "coop-defense": 2, "multi-offense": 3, "multi-defense": 4}
 ROUND_MODES = {"auto": None, "prep": 24, "combat": 0}
 START_INACTIVE = "2000-01-01T00:00:00+00:00"
@@ -56,7 +58,7 @@ def load_selection(references):
         or "overlay_policy" in value
         and (
             type(value["overlay_policy"]) is not int
-            or value["overlay_policy"] not in (3, 4, 5, OVERLAY_POLICY)
+            or value["overlay_policy"] not in (3, 4, 5, 6, OVERLAY_POLICY)
         )
         or type(value.get("skip_basic", False)) is not bool
         or type(value.get("phase", 1)) is not int
@@ -260,6 +262,8 @@ def enable(
         )
         if old_start <= now < old_end:
             period = previous["period"]
+    practice_end = datetime.fromisoformat(period["from"]) - timedelta(seconds=1)
+    practice_start = practice_end - timedelta(days=7)
     affected = raid_ids | {war_id}
     found = set()
     for row in dates:
@@ -268,14 +272,22 @@ def enable(
         if row["Id"] in found:
             raise ValueError("Ambiguous Guild War/Raid calendar")
         found.add(row["Id"])
-        stamps = (
-            (period["from"], period["to"])
-            if row["Id"] == war_id
-            else (START_INACTIVE, END_INACTIVE)
-        )
-        for key, stamp in zip(("From", "To"), stamps):
+        stamps = {}
+        for key in ("From", "To"):
             if not isinstance(row.get(key), dict) or "KakaoGlobal" not in row[key]:
                 raise ValueError("Guild War activation needs explicit Global calendar dates")
+            stamps[key] = row[key]["KakaoGlobal"]
+        if row["Id"] == war_id:
+            stamps = {"From": period["from"], "To": period["to"]}
+        elif stamps == {"From": LOCAL_FROM, "To": LOCAL_TO}:
+            # Raid preparation marks the selected season in this parent body.
+            # The client sorts by start date and uses its last ended season for practice.
+            stamps = {"From": practice_start.isoformat(), "To": practice_end.isoformat()}
+            if isinstance(row.get("RewardUntil"), dict) and "KakaoGlobal" in row["RewardUntil"]:
+                stamps["RewardUntil"] = stamps["To"]
+        else:
+            stamps = {"From": START_INACTIVE, "To": END_INACTIVE}
+        for key, stamp in stamps.items():
             row[key]["KakaoGlobal"] = stamp
     if found != affected:
         raise ValueError("Guild War/Raid calendar rows are missing")

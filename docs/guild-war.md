@@ -173,6 +173,9 @@ initial lab activation covers 2026-11-18 through 2026-11-25, with an exclusive e
 Native GuildWarSeason.IsValid checks that window. The source Global season was
 dated in 2099. Native LobbyMain.SetGuildContentButton tries active Raid first;
 the overlay makes all Global Raid periods inactive while Guild War is enabled.
+It dates the season selected by `raid-season custom` or `raid-season set` just
+before the Guild War window. The client uses that most recently ended Raid for
+practice from **Guild → Guild Raid**.
 It preserves their selection files and composes above the existing Raid and
 Dungeon Kingdom Arena calendar preparation. The overlay changes Global calendars,
 adds one local unlock rule, suppresses cooperative and Multi participation rewards,
@@ -183,7 +186,7 @@ retain their parent content. Disabling removes only the War selection file, so
 the parent Raid/arena bootstrap resumes. The original static source is immutable.
 
 The selection stores checksums, revision, parent digest, selected period and
-`overlay_policy: 6`. Existing selections without a policy or at policy 3/4/5 remain
+`overlay_policy: 7`. Existing selections without a policy or at policy 3–6 remain
 readable and are re-prepared at bootstrap, retaining their valid window, phase
 and skip-basic/castle choices. Older selections default to automatic round timing.
 Bootstrap also re-prepares the overlay if the parent changes or the period expires;

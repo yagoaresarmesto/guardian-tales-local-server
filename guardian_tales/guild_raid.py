@@ -380,6 +380,8 @@ def main(argv=None):
     references = ReferenceData(args.reference_dir)
     try:
         if args.action in ("set", "custom"):
+            from .guild_war_static import SELECTION as WAR_SELECTION
+
             if args.action == "custom":
                 from .raid_custom import parse_lineup
 
@@ -392,15 +394,16 @@ def main(argv=None):
                 "apply": "Fully close and reopen the game so its static tables reload; reconnect is insufficient",
                 "scope": "Selected raid's global calendar is locally active; other modes and global time are preserved; combat is experimental",
             }
+            if (references.directory / WAR_SELECTION).exists():
+                result["scope"] = "Selected lineup is available for off-season Raid practice"
+                result["visibility"] = (
+                    "Open Guild Raid from the Guild menu while Guild War is active"
+                )
             if args.action == "custom":
-                from .guild_war_static import SELECTION as WAR_SELECTION
-
                 result["lineup"] = [
                     f"{boss.title()} ({element.title()})" for boss, element in lineup
                 ]
                 result["hp_per_bar"] = season["first_round"]["boss_hp_bar"]
-                if (references.directory / WAR_SELECTION).exists():
-                    result["visibility"] = "Run guild-war disable to show Raid in the game"
         else:
             catalog = load_catalog(references)
             selection = load_selection(references)

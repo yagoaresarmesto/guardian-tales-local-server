@@ -242,6 +242,16 @@ class GuildWarTests(unittest.TestCase):
         old = json.loads(before["seasondate"][1])["EventPeriod"]
         new = json.loads(after["seasondate"][1])["EventPeriod"]
         raid_ids = {row["SeasonDateId"] for row in json.loads(before["guildraid2"][1])["Seasons"]}
+        practice = max(
+            (row for row in new if row["Id"] in raid_ids),
+            key=lambda row: datetime.fromisoformat(row["From"]["KakaoGlobal"]),
+        )
+        self.assertEqual(practice["Id"], 5400001)
+        self.assertEqual(practice["RewardUntil"]["KakaoGlobal"], practice["To"]["KakaoGlobal"])
+        self.assertLess(
+            datetime.fromisoformat(practice["To"]["KakaoGlobal"]),
+            datetime.fromisoformat(selection["period"]["from"]),
+        )
         for was, row in zip(old, new):
             if row["Id"] not in raid_ids | {5500001}:
                 self.assertEqual(was, row)
@@ -535,16 +545,32 @@ class GuildWarTests(unittest.TestCase):
 
     def test_later_raid_selection_and_arena_parent_are_composed_without_resetting_war_period(self):
         select_season(self.ref, 1)
-        first = enable(self.ref)
+        first = enable(self.ref, skip_basic=True, phase=4, defend_castle=2, round_mode="prep")
+        (self.root / SELECTION).write_text(json.dumps(dict(first, overlay_policy=6)))
+        refreshed = bootstrap_override(self.ref, "static_data_get.bin", None)
+        upgraded = load_selection(self.ref)
+        self.assertEqual(upgraded["overlay_policy"], OVERLAY_POLICY)
+        self.assertGreater(upgraded["static_data_revision"], first["static_data_revision"])
+        self.assertEqual(
+            records(decode(refreshed))[1]["__checksum__"][1], upgraded["static_data_checksum"]
+        )
         select_season(self.ref, 2)
         parent = base_body(self.ref)
         with patch("guardian_tales.guild_war_static.arena_override", return_value=parent) as arena:
-            bootstrap_override(self.ref, "static_data_get.bin", None)
+            body = bootstrap_override(self.ref, "static_data_get.bin", None)
             self.assertTrue(arena.called)
         second = load_selection(self.ref)
         self.assertNotEqual(first["base_sha256"], second["base_sha256"])
-        self.assertGreater(second["static_data_revision"], first["static_data_revision"])
+        self.assertGreater(second["static_data_revision"], upgraded["static_data_revision"])
         self.assertEqual(first["period"], second["period"])
+        for key in ("skip_basic", "phase", "defend_castle", "round_mode"):
+            self.assertEqual(first[key], second[key])
+        new = json.loads(records(decode(body))[1]["seasondate"][1])["EventPeriod"]
+        by_id = {row["Id"]: row for row in new}
+        self.assertLess(
+            datetime.fromisoformat(by_id[5400001]["To"]["KakaoGlobal"]),
+            datetime.fromisoformat(by_id[5400002]["From"]["KakaoGlobal"]),
+        )
         (self.root / SELECTION).unlink()
         self.assertEqual(base_body(self.ref), parent)
 

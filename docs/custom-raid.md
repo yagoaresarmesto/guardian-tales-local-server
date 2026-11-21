@@ -26,11 +26,9 @@ reopen Guardian Tales, then open Guild Raid from the lobby. To change the
 rotation, edit the four lines, run the command again, and reopen the game.
 You can leave the backend running between selections.
 
-If Guild War is enabled, disable it to show Raid in the lobby.
-
-```powershell
-.\.venv\Scripts\python.exe -m guardian_tales guild-war disable --reference-dir $raidRefs
-```
+If Guild War is enabled, open **Guild → Guild Raid** and use **Practice**.
+The selected lineup appears as the most recently ended Raid season, while
+Guild War stays active. This also works for a stock season selected with `set`.
 
 On a fresh checkout, install the optional dependency before using generated
 boss variants, including Sandmonster.
