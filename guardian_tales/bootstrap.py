@@ -15,7 +15,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from . import classic_coop, colosseum, expedition, multi_presets
+from . import andras_trial, classic_coop, colosseum, expedition, multi_presets
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
@@ -229,8 +229,22 @@ class BootstrapSession:
         self.request_epoch = None
         self.colosseum_opponents = ()
         self.classic_coop = classic_coop.Practice()
+        self.andras_trial_selection = None
 
     def handle(self, request):
+        try:
+            selection = andras_trial.load(self.store.references)
+            if selection is None or not selection["active"]:
+                return self._handle(request)
+            if selection != self.andras_trial_selection:
+                andras_trial.validate_active(self.store, selection)
+                self.andras_trial_selection = selection
+            andras_trial.guard_request(request, selection, read_json_body)
+            return andras_trial.project_response(self._handle(request), selection)
+        except ValueError as error:
+            raise PacketError(str(error)) from error
+
+    def _handle(self, request):
         if (
             request["version"] != 1
             or request["packet_type"] != 0
@@ -812,8 +826,11 @@ class BootstrapSession:
                 def parent(references, name, value):
                     return nickname_bootstrap_seed(references, name, value, static_seed)
 
-                def effective(references, name, value):
+                def expedition_seed(references, name, value):
                     return expedition.bootstrap_seed(references, name, value, parent)
+
+                def effective(references, name, value):
+                    return andras_trial.bootstrap_seed(references, name, value, expedition_seed)
 
                 seed = test_item_bootstrap_seed(
                     self.store.db, self.store.references, filename, body, effective

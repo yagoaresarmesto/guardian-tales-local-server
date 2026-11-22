@@ -277,6 +277,11 @@ list stages, set one or all stages to a visible level from 1 to 220 for the
 matching pack, and restore original levels. They configure
 external static overlays without editing the saved account.
 
+The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
+projects one owned Andras as an experimental Myth variant using her existing
+appearance, skills and stats. Enable/disable changes the server's view only;
+the stored hero, preserved resources and APK remain unchanged.
+
 ## Starting a new account
 
 Creating a fresh local guest remains an **experimental secondary path**. Its

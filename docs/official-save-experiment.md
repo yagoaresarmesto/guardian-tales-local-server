@@ -11,6 +11,41 @@ and one- and ten-hero draws using selectable controllers in the APK. Wishlist
 changes and the other supported payment types have synthetic coverage only.
 Unlocked systems are not automatically implemented by import.
 
+## Response-only Andras Myth prototype
+
+The original five-star Andras uses hero spec 490 and origin 488, without a Myth
+link in the matching pack. The opt-in trial clones her spec as 20488, reusing
+her class, options, base stats, portrait, voice, spine references and origin's
+awakening tree. Source linkage and one data-only stone definition use unused
+IDs. No stone is granted and no official conversion/payment route is added.
+Hero JSON and native indexed LZ4 records are composed together, preserving
+other hero records. Region date strings in the original JSON/binary tables can
+use equivalent timezone representations; their equivalence is checked before
+preparation, while unchanged binary record bytes are retained.
+
+The account remains normal in SQLite. An owner-bound response projection
+replaces only the selected hero's outgoing spec, including later compact and
+nested own-user replies. It never feeds projected resources into persistence.
+Target training is guarded during the trial; ordinary saved changes remain
+when it is disabled. The existing Myth UI is reused; literal new star cells,
+new abilities and custom stat bonuses are outside this prototype.
+
+Sixteen synthetic regressions and a coherent account-copy trial pass. The full
+projected profile matched only the intended spec substitution. All 74 database
+tables, original hero progression and 49 reference files stayed intact, with
+zero diagnostic source writes and valid integrity. Other hero JSON/binary
+records retained their definitions, all existing visual/combat references were
+preserved, and disable recovered the original profile and all static contents
+with matching get/check checksums. After activation and backend restart, the
+owner confirmed lobby loading and Andras's Myth state with original appearance,
+portrait, equipment and skills. A read-only audit found the hero still stored
+normally, the entire profile and all 71 gameplay tables unchanged, expected
+login metadata changes and valid integrity. Two experience requests were rejected
+during the trial, whose target training is intentionally guarded; no growth
+was persisted. The full Windows suite passes all 1,080 tests, with formatting,
+lint and repository checks passing too. Combat/reopening checks remain pending.
+See the [commands and trial scope](reference-data.md#experimental-andras-myth-view).
+
 ## Reversible Expedition enemy levels
 
 The first per-stage CLI trial wrote raw `StandardLevel=130`; the owner saw

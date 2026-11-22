@@ -12,6 +12,7 @@ COMMANDS = {
     "dka-season": ("punchking", "List/select Dungeon Kingdom Arena variants and days"),
     "guild-war": ("guild_war", "Enable/disable an experimental local Guild War season"),
     "expedition": ("expedition_levels", "List, set or restore per-stage Expedition enemy levels"),
+    "andras-trial": ("andras_trial", "Toggle the response-only experimental Andras Myth variant"),
     "assets": ("assets", "Serve manifest-listed local resources"),
     "content": (
         "content_pack",

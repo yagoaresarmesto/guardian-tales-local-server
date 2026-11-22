@@ -6,6 +6,26 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
+The latest full Windows regression run passes **1,080 tests**, including sixteen
+regressions for the response-only Andras Myth prototype, disabled
+compatibility, owner/content binding, full and partial replies, other-owner
+isolation, source/binary agreement, native block boundaries, target training
+guard, no-op choices, restoration and failed atomic publication. A coherent
+account copy passed enable/project/disable with all 74 database tables unchanged.
+Only the target hero's outgoing spec changed; all saved fields, original combat
+and visual definitions, other hero records and 49 original reference files
+stayed intact. Disabling restored the full original profile and static contents,
+with matching get/check checksums and advancing revisions. Integrity passed with
+zero diagnostic source writes. After activation and backend restart, the owner
+confirmed that the lobby loads and Andras appears as Myth with her original
+appearance, portrait, equipment and skills. A read-only audit found the stored
+hero and all 71 gameplay tables unchanged; only login/epoch/counter metadata
+changed and integrity passed. Two experience requests were rejected during the
+trial; target training is deliberately guarded and no growth was persisted.
+Combat/reopening checks are pending. Black (197 files), Ruff and the indexed
+repository/link checks pass.
+See the [Andras trial](reference-data.md#experimental-andras-myth-view).
+
 The enemy-level CLI now supports `set-level --all`, covering all 44 solo
 Expedition stage definitions in the matching pack, including hidden, boss,
 unexplored and archived event variants. It accepts visible levels 1 through 220
@@ -41,7 +61,7 @@ source writes and valid SQLite integrity. The owner's original single-stage
 APK trial and restoration are recorded above. See the
 [enemy-level commands](reference-data.md#per-stage-enemy-levels).
 
-The latest full Windows regression run passed **1,040 tests**, including 22 new
+The Expedition preset full Windows regression run passed **1,040 tests**, including 22 new
 Expedition preset cases. The teams/Orbital union passes 137 cases. The actual
 delete request and create/copy, rename, party edits, ordering and selection also
 passed on a coherent copy of the current imported account. Deletion preserved

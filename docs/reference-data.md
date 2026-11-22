@@ -6,6 +6,49 @@ versioned Release pack and creates `local/client-data/reference` plus a CDN
 resource root. This document describes individual input contracts and other
 preservation layouts.
 
+## Experimental Andras Myth view
+
+The opt-in `andras-trial` command temporarily presents one owned five-star
+Andras as a local Myth variant. It retains her original class, skill options,
+base stats, portrait, voice, animation references, equipment, experience and
+awakening data. This first prototype adds no custom stat bonuses or skills.
+It uses the client's existing Myth presentation, not a new six-gold-star UI.
+
+Run from the project root with the same state/reference directories as the
+backend (defaults below):
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[hero-trials]"
+.\.venv\Scripts\python.exe -m guardian_tales andras-trial status
+.\.venv\Scripts\python.exe -m guardian_tales andras-trial enable
+.\.venv\Scripts\python.exe -m guardian_tales andras-trial disable
+```
+
+Close Guardian Tales before enabling/disabling, restart the backend and fully
+reopen the game afterward. CDN and bridge can remain running. Append
+`--data-dir PATH --reference-dir PATH` for a different installation; defaults
+are `local/state` and `local/client-data/reference`. Activation requires exactly
+one owned five-star Andras in an existing account and matching original content.
+The configuration is private and bound to that owner, inventory ID and content
+hash. Do not copy it between accounts. Repeating a choice is a no-op.
+
+The CLI opens SQLite read-only. A reply projection changes only the selected
+hero's outgoing `CharacterId`; the saved hero retains its original spec. No
+currency or item is granted/consumed. Training the trial hero is blocked until
+the trial is disabled. Other development operations are outside this prototype.
+Normal supported gameplay can still persist its ordinary changes; disabling the
+trial does not restore an older save or discard progress made afterward.
+
+The effective static response supplies a cloned hero, its source link and one
+data-only Myth-stone definition using an existing icon. The stone is not added
+to inventory and the official Myth-conversion operation is not implemented.
+Both JSON and native binary hero tables are kept consistent. Other hero records
+and resource references remain intact; get/check checksums and advancing
+revisions compose with existing overlays. Disabling restores the original
+definitions and reply values. Preserved content files, APK and asset bundles
+are never patched. Missing dependencies, conflicting IDs, wrong ownership or
+changed content reject the active trial before handling account mutations.
+
 ## Free local nickname changes
 
 `/user/change-name` accepts exactly `{"Name":"NewName"}` after sign-in and
