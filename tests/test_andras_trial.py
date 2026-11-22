@@ -549,14 +549,15 @@ class AndrasTrialTests(unittest.TestCase):
     def test_native_string_overlay_adds_only_requested_title_and_retains_every_original_record(
         self,
     ):
-        from guardian_tales.andras_trial_labels import KEY, TITLE, string_table
+        from guardian_tales.andras_trial_labels import KEY, TITLE, WEAPON_KEY, string_table
 
         source = self.string_source()
         result = string_table(source, True)
         rows = binary_rows(base64.b64encode(result).decode(), require_id=False)
-        self.assertEqual(rows[:-1], self.string_rows)
-        expected_hash = int.from_bytes(hashlib.sha256(KEY.encode()).digest()[:8], "little")
-        self.assertEqual(rows[-1], (4, expected_hash, TITLE.encode()))
+        self.assertEqual(rows[:-2], self.string_rows)
+        for offset, key in enumerate((KEY, WEAPON_KEY)):
+            expected_hash = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "little")
+            self.assertEqual(rows[4 + offset], (4 + offset, expected_hash, TITLE.encode()))
         self.assertEqual(string_table(source, False), source)
         self.assertEqual(string_table(source, True), result)
 

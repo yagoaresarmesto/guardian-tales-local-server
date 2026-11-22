@@ -4,6 +4,7 @@
 import json
 from functools import lru_cache
 
+from .head_hunter_static import active_spec as head_hunter_spec
 from .raid_static import decode, records
 from .test_item_static import active_specs
 from .village import MAX_REVISION, integer
@@ -157,6 +158,12 @@ def change(account, body, operation_id, route):
         spec = json.loads(encoded_spec)
         if spec["Id"] in items:
             raise ValueError("Test equipment collides with the original catalog")
+        items[spec["Id"]] = spec
+    head_hunter = head_hunter_spec(account.db, account.references)
+    if head_hunter is not None:
+        spec = json.loads(head_hunter)
+        if spec["Id"] in items:
+            raise ValueError("Head Hunter trial collides with the original catalog")
         items[spec["Id"]] = spec
     hero = (
         heroes.get(target.get("CharacterId"))

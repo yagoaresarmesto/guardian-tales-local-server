@@ -272,6 +272,10 @@ The opt-in [test-pin commands](docs/test-items.md) add new equipment with
 configurable base DEF and an optional ATK-percent suboption only when explicitly
 run against a stopped account.
 
+The optional [Head Hunter command](docs/head-hunter.md) clones one owned original
+into a separate level-150 Myth weapon, with a 25% four-crystal bonus selected only
+by that copy. It includes private receipts, backups and targeted removal.
+
 The optional [Expedition enemy-level commands](docs/reference-data.md#per-stage-enemy-levels)
 list stages, set one or all stages to a visible level from 1 to 220 for the
 matching pack, and restore original levels. They configure

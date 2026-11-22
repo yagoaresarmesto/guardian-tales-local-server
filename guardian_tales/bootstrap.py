@@ -19,6 +19,7 @@ from . import andras_trial, classic_coop, colosseum, expedition, multi_presets
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
+from .head_hunter_static import bootstrap_seed as head_hunter_bootstrap_seed
 from .hero_equipment import ROUTES as HERO_EQUIPMENT_ROUTES
 from .item_extract import ROUTE as ITEM_EXTRACT_ROUTE
 from .item_lock import ROUTES as ITEM_LOCK_ROUTES
@@ -850,8 +851,13 @@ class BootstrapSession:
                 def effective(references, name, value):
                     return andras_trial.bootstrap_seed(references, name, value, expedition_seed)
 
-                seed = test_item_bootstrap_seed(
-                    self.store.db, self.store.references, filename, body, effective
+                def pinned(references, name, value):
+                    return test_item_bootstrap_seed(
+                        self.store.db, references, name, value, effective
+                    )
+
+                seed = head_hunter_bootstrap_seed(
+                    self.store.db, self.store.references, filename, body, pinned
                 )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc

@@ -142,8 +142,10 @@ matching input retains ordinary trial behavior with the unresolved title key.
 
 The server verifies the static-pack binding, original resource SHA-256 against
 its preservation manifest, native envelope and known English labels. It retains
-every original string record/index entry and compressed block, adding one title
-record, then creates a native-compatible encrypted response with a different IV
+every original string record/index entry and compressed block, adding title
+records for the ordinary Andras class and the optional
+[Head Hunter trial](head-hunter.md) class, then creates a native-compatible
+encrypted response with a different IV
 prefix and the original version/key selector. No extra language table is sent
 through `/static-data/get`: the matching client's native item iterator explicitly
 discards all names beginning with `strings-`.

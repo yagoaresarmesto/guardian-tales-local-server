@@ -6,6 +6,24 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
+The optional [Head Hunter Myth command](head-hunter.md) adds a separate locked
+level-150 copy with its own four-crystal 25% option, backed-up receipts and
+targeted retirement. Original weapon, option, role and style definitions remain
+intact at 20%. Native inspection supports the alternate exclusive weapon/hero
+selection and existing role script's parameter lookup; an action alias selects
+the separate option without replacing scripts. The optional English title
+response also defines the alternate class's leader key in memory. Automated
+checks and a coherent account/XP copy cover grant, retries, equip/original/copy,
+removal and restoration of the exact parent static response. All 140 targeted
+Windows tests pass, including 16 new weapon cases and existing Andras, test-pin,
+equipment, asset, bootstrap, validation and import tests. Discovery lists 1,137
+tests; Black (205 files), Ruff and indexed repository/link checks (264 files)
+pass. All original
+inventory and 52 reference files remain intact; SQLite integrity passes with
+zero diagnostic writes to the source. Actual APK display, combat selection and
+damage measurement are pending. No generated item has been granted to the
+working account by these diagnostics.
+
 The Hero-screen equipment follow-up implements five native individual routes:
 weapons, accessories, cards, merch and relics. The captured failing request used
 `/user/change-weapons`; native send methods and the card UI confirm the other

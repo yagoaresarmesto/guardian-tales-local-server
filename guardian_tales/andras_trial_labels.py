@@ -13,6 +13,7 @@ from .raid_static import compress
 from .reference import ReferenceData
 
 KEY = "demon_slayer_leader_skill"
+WEAPON_KEY = "demon_slayer_hh_trial_leader_skill"
 TITLE = "Sovereign of Eternal Slaughter"
 MAX_SOURCE = 8 * 1024 * 1024
 
@@ -47,30 +48,31 @@ def string_table(source, active):
     ):
         raise ValueError("Andras title requires the matching original English string table")
     # The input is the original decoded matching table, never a patched copy.
-    hashed = binary_name_hash(KEY)
-    if any(name_hash == hashed for _, name_hash, _ in rows):
+    hashes = tuple(binary_name_hash(key) for key in (KEY, WEAPON_KEY))
+    if any(name_hash in hashes for _, name_hash, _ in rows):
         raise ValueError("The original English table already defines the trial leader title")
     if not active:
         return source
     ident = max(row[0] for row in rows) + 1
-    if ident > 0xFFFFFFFF:
+    if ident + 1 > 0xFFFFFFFF:
         raise ValueError("No native string identifier remains for the trial leader title")
     magic, version, count, blocks = HEADER.unpack_from(source)
-    if blocks >= 65535:
+    if blocks > 65533:
         raise ValueError("No native block remains for the trial leader title")
     end = HEADER.size + count * ENTRY.size
     start = (end + blocks * 2 + 3) & ~3
     payload = TITLE.encode()
     chunk = compress(payload)
     # Preserve every stock index entry and compressed block byte-for-byte.
-    result = bytearray(HEADER.pack(magic, version, count + 1, blocks + 1))
+    result = bytearray(HEADER.pack(magic, version, count + 2, blocks + 2))
     result.extend(source[HEADER.size : end])
-    result.extend(ENTRY.pack(ident, hashed, blocks, len(payload)))
+    for offset, hashed in enumerate(hashes):
+        result.extend(ENTRY.pack(ident + offset, hashed, blocks + offset, len(payload)))
     result.extend(source[end : end + blocks * 2])
-    result.extend(struct.pack("<H", len(chunk)))
+    result.extend(struct.pack("<HH", len(chunk), len(chunk)))
     result.extend(b"\0" * (-len(result) % 4))
     result.extend(source[start:])
-    result.extend(chunk)
+    result.extend(chunk * 2)
     return bytes(result)
 
 

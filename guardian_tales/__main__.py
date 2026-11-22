@@ -13,6 +13,10 @@ COMMANDS = {
     "guild-war": ("guild_war", "Enable/disable an experimental local Guild War season"),
     "expedition": ("expedition_levels", "List, set or restore per-stage Expedition enemy levels"),
     "andras-trial": ("andras_trial", "Toggle the response-only experimental Andras Myth variant"),
+    "head-hunter": (
+        "head_hunter",
+        "Grant, list or retire additional level-150 Head Hunter Myth copies",
+    ),
     "assets": ("assets", "Serve manifest-listed local resources"),
     "content": (
         "content_pack",
