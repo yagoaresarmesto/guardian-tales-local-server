@@ -231,7 +231,7 @@ def main(argv=None):
                     "trial_spec_id": VARIANT,
                     "appearance_and_skills": "original appearance and kit, experimental buffs",
                     "leader_skill": (
-                        "Eunha Myth effects with Bianca Myth cinematic and cast animation"
+                        "Eunha Myth damage/buffs with Bianca Myth cinematic, cast and impact visuals"
                         if value and value["active"]
                         else None
                     ),

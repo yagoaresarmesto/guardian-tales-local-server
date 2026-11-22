@@ -12,6 +12,8 @@ EUNHA_LEADER = 20500542
 LEADER = 20500488
 LEADER_ACTION = "MythDokkaebi:AndrasTrial"
 LEADER_CAST_ANIMATION = "weapon/twohand_role_cast"
+# Keep the stock graph/pool spelling, including "explpsion".
+LEADER_IMPACT_PRESET = "fx_m_succubusnoble_myth_explpsion_main"
 BASE_NODES = 248
 TOTAL_NODES = 300
 TREE = "layout_snowflake_01_myth_local_andras"
@@ -87,7 +89,7 @@ def overlay(tables):
 def _overlay(tables):
     from .andras_trial_static import binary_name_hash, binary_rows, pack_rows, same_definition
 
-    required = {*TABLES, "awakeningnodelayout", "awakeningnodelayout_client"}
+    required = {*TABLES, "awakeningnodelayout", "awakeningnodelayout_client", "objectpoolspec"}
     if not required <= tables.keys():
         raise ValueError("Andras growth requires the matching awakening and combat tables")
     values = {name: json.loads(tables[name][1]) for name in required - {"battleactions-bin"}}
@@ -192,6 +194,18 @@ def _overlay(tables):
     # weapon animation. Retain Eunha's controller, track and gameplay timings;
     # importing Bianca's entire graph would also change the damage execution.
     one(local_action.get("AnimationInfo", []), "Name", "cast")["Animation"] = LEADER_CAST_ANIMATION
+    impact = one(values["objectpoolspec"], "PresetName", LEADER_IMPACT_PRESET)
+    if (
+        impact.get("AssetBundleName") != "effects/manual/succubusnoble"
+        or impact.get("AssetName") != "fx_succubusmyth_myth_explpsion_main"
+    ):
+        raise ValueError("Andras leader requires Bianca's matching stock impact prefab")
+    # Bianca's graph spawns this separate animated hit effect after the movie.
+    # Redirect only the existing visual spawn; damage and buffs remain in the
+    # unchanged Eunha controller. Never replace its ATK-buff effect binding.
+    one(local_action.get("PresetInfo", []), "explosion", "fx_m_dokkaebimyth_myth_explosion")[
+        "explosion"
+    ] = LEADER_IMPACT_PRESET
     changed = {}
     for name in (
         "ManualDemonSlayer:First",
