@@ -3,7 +3,7 @@
 
 import json
 
-from .campaign import FIRST_STAGE_ID, STAGE_OPENED
+from .campaign import STAGE_OPENED
 
 
 def discover_substage(account, request):
@@ -11,19 +11,20 @@ def discover_substage(account, request):
         not isinstance(request, dict)
         or set(request) != {"StageId", "handleName"}
         or type(request["StageId"]) is not int
-        or request["StageId"] != FIRST_STAGE_ID
+        or not 0 < request["StageId"] <= 0x7FFFFFFF
         or not isinstance(request["handleName"], str)
         or not 1 <= len(request["handleName"]) <= 200
         or account.needs_prologue()
     ):
         raise ValueError("Invalid side-stage map interaction")
+    stage_id = request["StageId"]
     if account.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-        FIRST_STAGE_ID,
+        stage_id,
     ):
-        raise ValueError("Enter Inn before discovering its side-stage maps")
+        raise ValueError("Enter the stage before discovering its side-stage maps")
     catalog = account.references.json("substage_catalog.json")
     stages = catalog.get("stages") if isinstance(catalog, dict) else None
-    maps = stages.get(str(FIRST_STAGE_ID)) if isinstance(stages, dict) else None
+    maps = stages.get(str(stage_id)) if isinstance(stages, dict) else None
     if (
         not isinstance(maps, dict)
         or not 1 <= len(maps) <= 10000
@@ -32,7 +33,7 @@ def discover_substage(account, request):
             or not 1 <= len(name) <= 200
             or type(target) is not int
             or not 0 < target <= 0x7FFFFFFF
-            or target == FIRST_STAGE_ID
+            or target == stage_id
             for name, target in maps.items()
         )
     ):

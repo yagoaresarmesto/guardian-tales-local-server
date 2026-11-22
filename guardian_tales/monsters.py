@@ -5,6 +5,7 @@ import json
 import re
 
 from .campaign import FIRST_MONSTER_EXP, FIRST_MONSTER_GOLD, FIRST_MONSTERS, FIRST_STAGE_ID
+from .story_handles import stage_handles
 
 
 def stage_monsters(references, stage_id):
@@ -14,7 +15,7 @@ def stage_monsters(references, stage_id):
             for name, index in FIRST_MONSTERS.items()
         }
     if not (references.directory / "monster_catalog.json").is_file():
-        raise ValueError("No monster catalog for this stage")
+        return public_monsters(references, stage_id)
     value = references.json("monster_catalog.json")
     stages = value.get("stages") if isinstance(value, dict) else None
     if not isinstance(stages, dict) or not 1 <= len(stages) <= 1000:
@@ -46,8 +47,15 @@ def stage_monsters(references, stage_id):
                 raise ValueError("Invalid monster handle or local reward rule")
             indices.add(row["index"])
     if str(stage_id) not in stages:
-        raise ValueError("No monster catalog for this stage")
+        return public_monsters(references, stage_id)
     return stages[str(stage_id)]
+
+
+def public_monsters(references, stage_id):
+    return {
+        name: {"index": index, "experience": 0, "gold": 0}
+        for name, index in stage_handles(references, stage_id).get("10", {}).items()
+    }
 
 
 def record_defeated_monsters(account, request):

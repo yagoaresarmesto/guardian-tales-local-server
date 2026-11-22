@@ -1120,14 +1120,32 @@ Its entry requires finding the map; adding its definition does not reveal it.
 Adding a
 catalog materializes earned openings in an existing save when the account store
 opens, without resetting it. Clear events also refresh these openings.
-Chapter-progress reads include an initialized progress entry for every configured
-stage and every stage in the save's `StageStates`, including discovered side
-stages without an entry definition. They preserve each stage's own progress.
-With an entry catalog they also return the latest `UserProgress` to synchronize
-the map. The chapter-read endpoint currently supports Chapter 1 only; keep this
-catalog limited to that chapter.
-Without this catalog, only the original Inn entry remains available. These data
-do not implement the new stage's collectibles, battles, exits or rewards.
+With the original matching `static_data_get.bin`, chapter reads use the
+`chapterdata` and `stages` tables to initialize each requested chapter's
+progress entries, including its passages and side stages. The pinned data
+covers 39 chapter variants and 412 stages. Entry uses the configured override
+when present and otherwise checks the preserved clear and quest prerequisites
+or the stage's saved discovery. Without the full tables, the original World 1
+fallback and optional catalog still apply.
+
+On fresh local saves, the shared quest handlers record configured checkpoints,
+named quest variables, and ending grades. The clear response includes linked
+stage openings and known asset or hero rewards. Rewards in unverified item
+formats reject without advancing the quest. Imported saves retain their
+existing campaign mutation guard.
+
+An optional external `story_handles.json` maps `tilemaps` by their preserved
+names, then progress stores `1` (gimmicks), `2` (purple coins), `3` (star
+pieces) and `10` (monsters) to name/index pairs from each map's handle table.
+Use the original indices, including gaps. The catalog supports stage custom
+flags and integers for known gimmicks, collectible pickups, and defeat
+markers. Derived monster handles give zero experience and gold unless the
+explicit monster catalog supplies a reward rule.
+
+The host packet tests cover World 21 quest progress and completion, the
+resulting World 22 entry gate, and leaving a stage without clearing it. Later
+APK playthroughs, clear exits beyond the configured paths, and scripted chest,
+pickup, payment, puzzle, and reward contracts still need verification.
 
 The optional monster catalog contains `stages`, mapping string stage IDs to
 objects keyed by public monster handle. Each handle has exactly `index`,

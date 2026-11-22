@@ -8,10 +8,160 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import GuestStore
+from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.packet_reader import parse_packet
+from guardian_tales.protocol import PacketError, encode_packet
+from guardian_tales.raid_static import compress, digest
 from guardian_tales.story import load_story_catalog, open_eligible_stages
+from tests.test_snapshots import request
 
 FIXTURE = Path(__file__).parent / "fixtures/story_catalog.json"
+
+
+class NativeStoryTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name)
+        tables = {
+            "chapterdata": {
+                "Chapter": [
+                    {
+                        "ChapterId": i,
+                        "Chapters": f"chapter_{i % 100}",
+                        "FirstStageId": i * 10000 + 1,
+                    }
+                    for i in (10021, 10022)
+                ]
+            },
+            "stages": [
+                {
+                    "Id": 100210001,
+                    "Stamina": 15,
+                    "IsOpened": True,
+                    "Quests": [465],
+                    "Tilemap": {"Default": "water"},
+                },
+                {
+                    "Id": 100220001,
+                    "Stamina": 15,
+                    "ClearedQuests": [465],
+                    "Tilemap": {"Default": "fire"},
+                },
+                {"Id": 110220001, "Stamina": 10, "Tilemap": {"Default": "substage"}},
+                {"Id": 810220001, "Stamina": 0, "Tilemap": {"Default": "raid"}},
+            ],
+            "quests": [
+                {
+                    "Id": 465,
+                    "EndingGrades": [0],
+                    "CommonRewards": [
+                        {"ItemId": 70001, "Amount": 7},
+                        {"CharacterId": 19, "Level": 1},
+                    ],
+                }
+            ],
+        }
+        rows = []
+        for name, content in tables.items():
+            raw = json.dumps(content)
+            rows.append(f"{name}\n{raw}\n1\n{digest(raw.encode())}\n")
+        (root / "static_data_get.bin").write_bytes(compress(("".join(rows) + "\n\n\n").encode()))
+        (root / "story_handles.json").write_text(
+            json.dumps(
+                {
+                    "tilemaps": {
+                        "fire": {
+                            "1": {"door": 1},
+                            "2": {"coin": 1},
+                            "3": {"star": 2},
+                            "10": {"enemy": 3},
+                        }
+                    }
+                }
+            )
+        )
+        (root / "training_catalog.json").write_text(json.dumps({"experience_by_level": [0]}))
+        self.db = sqlite3.connect(":memory:")
+        self.addCleanup(self.db.close)
+        store = GuestStore(self.db, root)
+        self.account = store.account
+        self.account.complete_prologue(
+            "test",
+            {
+                "IsMale": True,
+                "VoiceType": 1,
+                "Weapon1ItemId": 9010010,
+                "Weapon2ItemId": 9080010,
+                "BobLindaQuestGrade": 0,
+            },
+        )
+        profile = self.account.profile()
+        next(a for a in profile["User"]["Assets"] if a["Id"] == 70032)["Amount"] = 40
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        self.session = BootstrapSession(store)
+        self.call("/auth/sign-in", {"AuthKind": 0, "AccessToken": "test", "Reconnect": False})
+
+    def call(self, route, body):
+        return read_json_body(
+            parse_packet(encode_packet(self.session.handle(request(route, body))))
+        )
+
+    def test_story_quest_unlocks_later_world_and_map_progress_is_scoped(self):
+        stages = self.call("/stage/get-stage-progresses", {"ChapterCode": 10022})["StageProgresses"]
+        self.assertEqual(stages, {"100220001": "", "110220001": ""})
+        with self.assertRaises(PacketError):
+            self.call("/stage/start-stage", {"StageId": 100220001})
+        self.call("/stage/start-stage", {"StageId": 100210001})
+        body = {"StageId": 100210001, "QuestId": 465}
+        self.call("/stage/start-quest", body)
+        self.call("/stage/progress-quest", body | {"InnerProgress": 3})
+        self.call(
+            "/stage/set-custom",
+            {
+                "StageId": 100210001,
+                "StageCustom": {"QuestId": 465, "QuestCustomState": {"stage": 1}},
+            },
+        )
+        self.call("/stage/set-quest-custom-state", {"QuestId": 465, "CustomState": {"map": -2}})
+        with self.assertRaises(PacketError):
+            self.call("/stage/clear-quest", body | {"Grade": 99})
+        result = self.call("/stage/clear-quest", body | {"Grade": 0})
+        self.assertEqual(result["OpenedStages"], [100220001])
+        self.assertEqual(result["AddedCharacters"], [{"characterId": 19}])
+        self.assertEqual(result["AddedItems"], [{"Id": 0, "ItemId": 70001, "Amount": 7}])
+        cleared = self.account.profile()
+        retry = self.call("/stage/clear-quest", body | {"Grade": 0})
+        self.assertEqual(retry["AddedItems"], [])
+        self.assertEqual(self.account.profile(), cleared)
+        quest = next(q for q in cleared["UserProgress"]["QuestProgresses"] if q["Id"] == 465)
+        self.assertEqual(
+            quest,
+            {"Id": 465, "Grade": 0, "InnerProgress": 3, "CustomStates": {"stage": 1, "map": -2}},
+        )
+
+        self.call("/stage/start-stage", {"StageId": 100220001})
+        stage = {"StageId": 100220001}
+        custom = {
+            "Category": 1,
+            "CustomValues": [{"KeyIndex": 1, "KeyName": "door", "BooleanValue": True}],
+        }
+        self.call("/stage/set-custom", stage | {"StageCustom": custom})
+        self.assertEqual(
+            self.db.execute(
+                "SELECT value FROM campaign_progress WHERE stage_id=100220001 AND category=1 AND key=1"
+            ).fetchone(),
+            ("true",),
+        )
+        self.call("/stage/beat-monsters", stage | {"MonsterHandleNames": ["enemy"]})
+        coins = stage | {"Items": [{"Id": 1, "ItemId": 71022}, {"Id": 2, "ItemId": 70005}]}
+        self.call("/stage/pick-stage-coins", coins)
+        result = self.call("/stage/pick-stage-coins", coins)
+        self.assertEqual(next(a["Amount"] for a in result["User"]["Assets"] if a["Id"] == 71022), 1)
+        left = self.call("/stage/end-stage", stage | {"ExitName": None, "IsClearExit": False})
+        self.assertEqual(left["StageState"], 3)
+        self.assertTrue(left["StageProgress"])
 
 
 class StoryEntryTests(unittest.TestCase):

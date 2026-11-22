@@ -52,6 +52,8 @@ from .snapshots import (
     preserved_read,
     validate_preserved_request,
 )
+from .story_quests import ROUTES as STORY_QUEST_ROUTES
+from .story_quests import handle as handle_story_quest
 from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
 from .test_item_static import bootstrap_seed as test_item_bootstrap_seed
 from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
@@ -668,6 +670,13 @@ class BootstrapSession:
             if route == "/stage/progress-quest":
                 try:
                     return json_response(request, self.store.account.progress_quest(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route in STORY_QUEST_ROUTES:
+                try:
+                    return json_response(
+                        request, handle_story_quest(self.store.account, route, body)
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == "/stage/pick-stage-coins":

@@ -148,7 +148,17 @@ from .snapshots import create_tables as create_snapshot_tables
 from .snapshots import is_imported
 from .stamina_purchase import purchase_stamina
 from .stamina_regen import charge_stamina
-from .story import enter_story_stage, load_story_catalog, open_eligible_stages
+from .story import (
+    enter_story_stage,
+    leave_story_stage,
+    load_story_catalog,
+    open_eligible_stages,
+    stage_catalog_for,
+)
+from .story_data import load as load_native_story
+from .story_handles import stage_handles
+from .story_quests import ROUTES as STORY_QUEST_ROUTES
+from .story_quests import handle as handle_story_quest
 from .summon_draw import draw_characters
 from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
 from .summon_pickup import check_pickup_exchange
@@ -273,6 +283,7 @@ ACCOUNT_ROUTES = (
     "/stage/start-stage",
     "/stage/start-quest",
     "/stage/progress-quest",
+    *STORY_QUEST_ROUTES,
     "/stage/pick-stage-coins",
     "/stage/beat-monsters",
     "/stage/pick-stage-item",
@@ -555,7 +566,7 @@ class AccountStore:
 
     def start_stage(self, request):
         """Enter a configured story stage, retaining the original first-phase fallback."""
-        catalog = load_story_catalog(self.references)
+        catalog = stage_catalog_for(self, request)
         if catalog is not None:
             return enter_story_stage(self, request, catalog)
         if (
@@ -611,14 +622,22 @@ class AccountStore:
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
-            or request["StageId"] != FIRST_STAGE_ID
             or request.get("StageCustom") is not None
             or not isinstance(request.get("Items"), list)
-            or not 1
-            <= len(request["Items"])
-            <= sum(len(keys) for _, keys in FIRST_STAGE_PICKUPS.values())
+            or not 1 <= len(request["Items"]) <= 508
         ):
-            raise ValueError("Malformed first-phase coin request")
+            raise ValueError("Malformed story-stage collectible request")
+        stage_id = request["StageId"]
+        specs = FIRST_STAGE_PICKUPS
+        purple_coin = 71000 + stage_id % 1000000 // 10000
+        if stage_id != FIRST_STAGE_ID:
+            handles = stage_handles(self.references, stage_id)
+            specs = {
+                purple_coin: (2, set(handles.get("2", {}).values())),
+                70005: (3, set(handles.get("3", {}).values())),
+            }
+        if len(request["Items"]) > sum(len(keys) for _, keys in specs.values()):
+            raise ValueError("Too many collectible records for this story stage")
         pickups = set()
         for item in request["Items"]:
             if (
@@ -627,13 +646,13 @@ class AccountStore:
                 or type(item["Id"]) is not int
                 or type(item["ItemId"]) is not int
             ):
-                raise ValueError("Malformed first-phase collectible")
-            spec = FIRST_STAGE_PICKUPS.get(item["ItemId"])
+                raise ValueError("Malformed story-stage collectible")
+            spec = specs.get(item["ItemId"])
             if spec is None or item["Id"] not in spec[1]:
-                raise ValueError("Unknown first-phase collectible")
+                raise ValueError("Unknown story-stage collectible")
             pickups.add((spec[0], item["Id"], item["ItemId"]))
         if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-            FIRST_STAGE_ID,
+            stage_id,
         ):
             raise ValueError("Start the phase before collecting its coins")
         profile = self.profile()
@@ -643,13 +662,22 @@ class AccountStore:
             for category, key, item_id in sorted(pickups):
                 inserted = self.db.execute(
                     "INSERT OR IGNORE INTO campaign_progress VALUES(?,?,?,?)",
-                    (FIRST_STAGE_ID, category, key, "true"),
+                    (stage_id, category, key, "true"),
                 ).rowcount
                 if inserted:
                     added[item_id] = added.get(item_id, 0) + 1
             if added:
                 assets = {asset["Id"]: asset for asset in user["Assets"]}
                 for item_id, amount in added.items():
+                    if item_id == purple_coin and item_id not in assets:
+                        assets[item_id] = {
+                            "Id": item_id,
+                            "Amount": 0,
+                            "Spent": 0,
+                            "MaxAdj": 0,
+                            "NextCharge": None,
+                        }
+                        user["Assets"].append(assets[item_id])
                     if item_id not in assets:
                         raise ValueError("The saved account is missing a collectible asset")
                     assets[item_id]["Amount"] += amount
@@ -730,6 +758,13 @@ class AccountStore:
 
     def end_stage(self, request):
         """Commit the first phase's clear exit and its first-grade gem reward once."""
+        if (
+            isinstance(request, dict)
+            and request.get("IsClearExit") is False
+            and str(request.get("StageId")) in load_native_story(self.references)[1]
+        ):
+            completion_custom(request.get("StageCustom"))
+            return leave_story_stage(self, request)
         if isinstance(request, dict) and request.get("StageId") != FIRST_STAGE_ID:
             return complete_catalog_stage(self, request)
         if (
@@ -1103,7 +1138,7 @@ class AccountStore:
     def start_quest(self, request):
         """Register a known quest in the active stage; progression and rewards are separate."""
         stage_id = request.get("StageId") if isinstance(request, dict) else None
-        story = load_story_catalog(self.references)
+        story = stage_catalog_for(self, request)
         story_spec = story.get(str(stage_id)) if story else None
         allowed = {27}
         if stage_id != FIRST_STAGE_ID and story_spec:
@@ -1154,9 +1189,16 @@ class AccountStore:
         return record_defeated_monsters(self, request)
 
     def progress_quest(self, request):
-        """Persist sequential main-quest checkpoints in the active configured stage."""
+        """Persist checkpoints in the active configured stage."""
         stage_id = request.get("StageId") if isinstance(request, dict) else None
-        story = load_story_catalog(self.references)
+        if type(stage_id) is int and (
+            request.get("QuestId") != 27
+            or request.get("StageCustom") is not None
+            or type(request.get("InnerProgress")) is int
+            and request["InnerProgress"] > 12
+        ):
+            return handle_story_quest(self, "/stage/progress-quest", request)
+        story = stage_catalog_for(self, request)
         story_spec = story.get(str(stage_id)) if story else None
         if (
             not isinstance(request, dict)
@@ -1369,8 +1411,19 @@ class AccountStore:
         if route == "/user/exchange-summon-pickup-ticket":
             return check_pickup_exchange(self, request)
         if route == "/stage/get-stage-progresses":
-            result = initial_stage_progresses(request)
+            if not isinstance(request, dict) or type(request.get("ChapterCode")) is not int:
+                raise ValueError("Malformed chapter progress request")
             progress = self.profile()["UserProgress"]
+            chapter = request["ChapterCode"]
+            chapters, _, _ = load_native_story(self.references)
+            if chapter in chapters:
+                return {
+                    "StageProgresses": {
+                        key: self.stage_progress(int(key)) for key in chapters[chapter]
+                    },
+                    "UserProgress": progress,
+                }
+            result = initial_stage_progresses(request)
             for key in progress["StageStates"]:
                 result["StageProgresses"].setdefault(key, "")
             catalog = load_story_catalog(self.references)

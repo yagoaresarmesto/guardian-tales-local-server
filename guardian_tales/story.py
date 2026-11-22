@@ -3,7 +3,15 @@
 
 import json
 
-from .campaign import CHARGED_STAMINA, RESERVE_STAMINA, STAGE_CLEARED, STAGE_OPENED, STAGE_UNLOCKED
+from .campaign import (
+    CHARGED_STAMINA,
+    FIRST_STAGE_ID,
+    RESERVE_STAMINA,
+    STAGE_CLEARED,
+    STAGE_OPENED,
+    STAGE_UNLOCKED,
+)
+from .story_data import load as load_native_story
 
 
 def load_story_catalog(references):
@@ -47,13 +55,16 @@ def open_eligible_stages(profile, catalog):
         return False
     progress = profile["UserProgress"]
     states = progress["StageStates"]
+    cleared_quests = {row["Id"] for row in progress["QuestProgresses"] if row["Grade"] >= 0}
     changed = False
     for key, row in catalog.items():
         required = row["requires_cleared"]
+        quests = row.get("requires_quests", [])
         if (
             not row.get("requires_discovery", False)
-            and required
+            and (required or quests)
             and all(states.get(str(i), 0) & STAGE_CLEARED for i in required)
+            and cleared_quests.issuperset(quests)
         ):
             state = states.get(key, 0)
             if not state & STAGE_OPENED:
@@ -83,6 +94,10 @@ def enter_story_stage(account, request, catalog):
     states = progress["StageStates"]
     if any(not states.get(str(i), 0) & STAGE_CLEARED for i in row["requires_cleared"]):
         raise ValueError("Complete the preceding story stage before entering this one")
+    if not {q["Id"] for q in progress["QuestProgresses"] if q["Grade"] >= 0}.issuperset(
+        row.get("requires_quests", [])
+    ):
+        raise ValueError("Complete the required story quests before entering this stage")
     state = states.get(key, 0)
     if row.get("requires_discovery", False) and not state & STAGE_OPENED:
         raise ValueError("Discover this stage's map before entering it")
@@ -119,4 +134,44 @@ def enter_story_stage(account, request, catalog):
         "User": user,
         "UserProgress": progress,
         "StageProgress": account.stage_progress(stage_id),
+    }
+
+
+def stage_catalog_for(account, request):
+    configured = load_story_catalog(account.references)
+    stage_id = request.get("StageId") if isinstance(request, dict) else None
+    key = str(stage_id)
+    if type(stage_id) is not int or stage_id == FIRST_STAGE_ID or configured and key in configured:
+        return configured
+    _, native, _ = load_native_story(account.references)
+    if key in native:
+        return native
+    return configured
+
+
+def leave_story_stage(account, request):
+    stage_id = request.get("StageId")
+    catalog = stage_catalog_for(account, request)
+    if (
+        type(stage_id) is not int
+        or request.keys() - {"StageId", "ExitName", "IsClearExit", "StageCustom"}
+        or request.get("ExitName") is not None
+        and not isinstance(request["ExitName"], str)
+        or account.needs_prologue()
+        or stage_id != FIRST_STAGE_ID
+        and str(stage_id) not in (catalog or {})
+    ):
+        raise ValueError("Invalid story stage exit")
+    profile = account.profile()
+    state = profile["UserProgress"]["StageStates"].get(str(stage_id), 0)
+    if not state & STAGE_UNLOCKED:
+        raise ValueError("Start the story stage before leaving it")
+    with account.db:
+        account.db.execute("DELETE FROM campaign_session WHERE id=1 AND stage_id=?", (stage_id,))
+    return {
+        "User": profile["User"],
+        "UserProgress": profile["UserProgress"],
+        "StageState": state,
+        "StageProgress": account.stage_progress(stage_id),
+        "AddedItems": [],
     }
