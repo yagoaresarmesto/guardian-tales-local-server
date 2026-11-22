@@ -11,7 +11,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
-from . import colosseum
+from . import colosseum, multi_presets
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .account_name import change as change_account_name
 from .account_name import create_tables as create_account_name_tables
@@ -83,6 +83,9 @@ from .guild_war import rankings as guild_war_rankings
 from .guild_war import start_coop as start_guild_war_coop
 from .guild_war import start_multi as start_guild_war_multi
 from .guild_war import unlock as unlock_guild_war
+from .hero_equipment import ROUTES as HERO_EQUIPMENT_ROUTES
+from .hero_equipment import change as change_hero_equipment
+from .hero_equipment import create_tables as create_hero_equipment_tables
 from .hero_knowledge import claim_hero_knowledge
 from .imported_hero_knowledge import claim as claim_imported_hero_knowledge
 from .imported_hero_knowledge import create_tables as create_imported_knowledge_tables
@@ -200,6 +203,7 @@ ACCOUNT_ROUTES = (
     PORTRAIT_FRAME_ROUTE,
     PROFILE_BADGE_ROUTE,
     "/user/save-party-member/v2",
+    *HERO_EQUIPMENT_ROUTES,
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/guild/red-dot",
@@ -322,8 +326,10 @@ class AccountStore:
         self.references = ReferenceData(reference_dir)
         create_snapshot_tables(db)
         create_preset_tables(db)
+        multi_presets.create_tables(db)
         colosseum.create_tables(db)
         create_party_member_tables(db)
+        create_hero_equipment_tables(db)
         create_representative_character_tables(db)
         create_account_name_tables(db)
         create_weapon_summon_tables(db)
@@ -1268,6 +1274,9 @@ class AccountStore:
 
     def save_party_members(self, request, operation_id):
         return save_party_members(self, request, operation_id)
+
+    def change_hero_equipment(self, request, operation_id, route):
+        return change_hero_equipment(self, request, operation_id, route)
 
     def select_representative_character(self, request, operation_id):
         return select_representative_character(self, request, operation_id)

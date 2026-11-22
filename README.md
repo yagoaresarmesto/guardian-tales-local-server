@@ -194,7 +194,7 @@ and an actual APK observation are different forms of verification.
 |---|---|
 | Account and clean-client restore | Preserved profile, owned heroes/equipment and startup reads load locally; only observed account data is preserved, and detailed campaign coverage varies. |
 | Summons | One- and ten-hero local draws worked in the APK. Rates, payment variants and catalogs are local rules; importing a profile does not recover official summon logic or history. |
-| Equipment and relics | Catalog-backed local enhancement, limit breaks, engraving, option changes and locks. Prepared free policies retain materials for supported operations; actual APK coverage varies by operation. |
+| Equipment and relics | Catalog-backed hero equipment changes, local enhancement, limit breaks, engraving, option changes and locks. Prepared free policies retain materials for supported operations; actual APK coverage varies by operation. |
 | Jewels, hero experience and collection systems | Additional local handlers and retry-safe persistence are implemented. Several result/claim paths have automated coverage but still need their documented APK checks. |
 | Teams and presets | Saved formations plus preset selection, editing, deletion and creation; several Orbital operations were verified in the APK. Other team/preset paths retain their individual limits. |
 | Village and mastery | Resource collection, mastery upgrades/reset and selected no-reward mocks; fixed base-camp mastery rewards require an explicit debug policy. |
@@ -271,6 +271,23 @@ directory. Writes require stopping the backend first.
 The opt-in [test-pin commands](docs/test-items.md) add new equipment with
 configurable base DEF and an optional ATK-percent suboption only when explicitly
 run against a stopped account.
+
+The optional [Head Hunter command](docs/head-hunter.md) clones one owned original
+into a separate level-150 Myth weapon, with a 25% four-crystal bonus selected only
+by that copy. It includes private receipts, backups and targeted removal.
+
+The optional [Expedition enemy-level commands](docs/reference-data.md#per-stage-enemy-levels)
+list stages, set one or all stages to a visible level from 1 to 220 for the
+matching pack, and restore original levels. They configure
+external static overlays without editing the saved account.
+
+The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
+projects one owned Andras as an experimental Myth variant using her existing
+appearance and combat kit, with Eunha's leader effects, Bianca's leader
+cinematic/cast animation and an activated extra
+awakening branch. Enable/disable changes the server's view only;
+experimental experience is saved separately, while the stored hero, preserved
+resources and APK remain unchanged. Disabling shows her original experience.
 
 ## Starting a new account
 

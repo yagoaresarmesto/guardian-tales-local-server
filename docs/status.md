@@ -1,10 +1,240 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-20**. The public source tree reorganizes the working
+Status recorded on **2026-11-22**. The public source tree reorganizes the working
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
 ## Automated checks
+
+The Andras presentation follow-up selects Bianca's existing leader movie and
+shared cast animation, retaining Eunha's gameplay controller, hit timing, damage,
+ATK buffs and cooldowns. An Andras-only option/action alias leaves original Eunha
+and Bianca actions intact. Its native index uses the alias and its payload keeps
+the original Lua dispatch name, avoiding a request for a nonexistent script.
+Three new regressions cover exact visual-only changes, native alias dispatch and
+conflicting/missing content. All 143 targeted Windows tests pass; Black (205
+files), Ruff and repository/link checks (264 files) pass. Discovery lists 1,140
+tests. A coherent account/XP copy passes the new leader definitions, original
+Eunha/Bianca record preservation, existing-script dispatch and Head Hunter/test-pin
+composition, with unchanged main account/trial XP during projection, 52 unchanged
+reference files, three unchanged checked resources and valid SQLite integrity.
+Diagnostics write nothing to the source account. The matching preserved Bianca graph was inspected
+read-only to identify its animation; no graph or original resource is edited.
+Actual APK presentation verification is pending. See the
+[presentation and native dispatch contract](reference-data.md#activated-experimental-growth).
+
+The optional [Head Hunter Myth command](head-hunter.md) adds a separate locked
+level-150 copy with its own four-crystal 25% option, backed-up receipts and
+targeted retirement. Original weapon, option, role and style definitions remain
+intact at 20%. Native inspection supports the alternate exclusive weapon/hero
+selection and existing role script's parameter lookup; an action alias selects
+the separate option without replacing scripts. The optional English title
+response also defines the alternate class's leader key in memory. Automated
+checks and a coherent account/XP copy cover grant, retries, equip/original/copy,
+removal and restoration of the exact parent static response. All 140 targeted
+Windows tests pass, including 16 new weapon cases and existing Andras, test-pin,
+equipment, asset, bootstrap, validation and import tests. Discovery lists 1,137
+tests; Black (205 files), Ruff and indexed repository/link checks (264 files)
+pass. All original
+inventory and 52 reference files remain intact; SQLite integrity passes with
+zero diagnostic writes to the source. Actual APK display, combat selection and
+damage measurement are pending. No generated item has been granted to the
+working account by these diagnostics.
+
+The Hero-screen equipment follow-up implements five native individual routes:
+weapons, accessories, cards, merch and relics. The captured failing request used
+`/user/change-weapons`; native send methods and the card UI confirm the other
+payloads and card slot numbering. Fourteen new equipment regressions cover
+holder transfers, both card slots, clearing, type/ownership checks, atomic
+rollback, no-ops, stale retries and registered test pins. An additional Andras
+case verifies that equipping retains the saved base hero while projecting the
+active Myth variant. These targeted cases pass. A coherent real account/XP copy
+passes the captured request, all five routes, both card slots and active Andras
+equipment projection. Only the profile and equipment receipt tables change;
+inventory, assets, presets and development remain intact. All 52 source reference
+files are unchanged, integrity passes and diagnostics write nothing to the source
+account. The broader 520-case core/account/heroes/inventory/teams run found one
+stale expected import-summary route list; the other 519 cases passed. Updating
+that explicit expected list for the five newly enabled routes is followed by all
+14 snapshot/import tests passing. Discovery lists 1,121 tests. Black (202 files),
+Ruff and indexed repository/link checks (260 files) pass.
+The owner confirms equipment changes and persistence after reopening. Read-only
+inspection finds 14 successful equipment receipts across all five routes,
+including six card changes, and 12 final slot differences from the backup. The
+inventories, currencies, hero development, other user/profile fields, presets and
+separate Andras trial XP remain intact. Integrity passes with no diagnostic
+source writes or new API errors. See the
+[request and persistence contract](reference-data.md#hero-equipment-changes).
+
+The preceding full Windows regression run passed **1,090 tests**, including 26
+regressions for the experimental Andras Myth view and isolated training, disabled
+compatibility, owner/content binding, full and partial replies, other-owner
+isolation, source/binary agreement, native block boundaries, no-op choices,
+restoration and failed atomic publication. A coherent
+account copy passed enable/project/disable with all 74 database tables unchanged.
+Only the target hero's outgoing spec changed; all saved fields, original combat
+and visual definitions, other hero records and 49 original reference files
+stayed intact. Disabling restored the full original profile and static contents,
+with matching get/check checksums and advancing revisions. Integrity passed with
+zero diagnostic source writes. After activation and backend restart, the owner
+confirmed that the lobby loads and Andras appears as Myth with her original
+appearance, portrait, equipment and skills. A read-only audit found the stored
+hero and all 71 gameplay tables unchanged; only login/epoch/counter metadata
+changed and integrity passed. Two experience requests exposed the initial
+deliberate training guard. The follow-up now permits free trial training in a
+separate SQLite sidecar, with atomic XP/retry receipts and consistent virtual
+user revisions. All 26 trial regressions pass, including cap enforcement,
+retries/replays, transaction rollback, malformed/unsigned packets, partial
+replies, restoration and isolation from later saved growth. Replaying the
+captured 6,600,000-XP request on a coherent account copy reaches visible level
+150 from 130, with all 74 main database tables and 50 reference files unchanged.
+Retry, restoration and SQLite integrity pass with zero diagnostic source writes.
+The owner confirms level 150 and persistence after reopening. Read-only inspection
+finds two trial training receipts totaling 6,600,000 XP in the sidecar; the original
+hero, XP, currencies and saved training counters remain intact. Ordinary preset
+selection/edit and login metadata changes were retained. No new API errors were
+observed and integrity passed. The owner reports a missing leader skill in the
+variant; that and combat checks remain open. Black (198 files), Ruff
+and indexed repository/link checks (256 source files) pass.
+See the [Andras trial](reference-data.md#experimental-andras-myth-view).
+
+A read-only [Myth compatibility review](reference-data.md#myth-compatibility-review)
+found a matching existing snowflake Myth layout with 300 nodes versus Andras's
+248: 46 extra statistical nodes and six special centers. Original circle
+coordinates match; the six original connection changes attach the extra branch.
+The layout/statistical pattern can be reused, but five special centers depend on
+their template hero's ability implementation. Leader actions also require
+compatible existing client scripts/graphs and localization, beyond Myth rank.
+Neither the extra tree nor a leader action has been implemented by the review.
+
+The follow-up activated-growth prototype now supplies Eunha's stock leader,
+the 300-node snowflake tree and 52 projected open nodes. Its party center follows
+Eunha's +50 per-mille (+5 percentage points) ranged-party increase. Normal/role
+and weapon coefficients gain 10%; the chain gains 20% (300 to 360% DPS), and
+Bitter Cold gains five percentage points of ATK/DEF and one second of duration.
+All 34 trial regressions pass, including exact tuning, original-bit retention,
+partial replies, all-table restoration, unchanged unrelated binary bytes, native
+resource reuse and malformed/colliding contracts. A coherent real account/XP
+copy passes complete projected-profile comparison, 248 original flags retained,
+52 new flags open, get/check consistency, disable and re-enable. All 74 main
+database tables, 50 original reference files and the XP sidecar remain unchanged;
+integrity passes with zero diagnostic source writes. The full Windows growth
+checkpoint passes **1,098 tests** in 614.945 seconds with no failures/errors.
+The final cost/label refinements additionally pass all 34 targeted cases. Black
+(199 files), Ruff and indexed repository/link checks (257 files) pass.
+The owner's screenshot confirms level 150, original appearance, Myth state and
+55% ranged-party bonus. Its `???` chain label led to a native-verified missing
+`MythOptionId` UI link, now supplied. A numeric-suffix variant name also reuses
+the original name localization. All 34 targeted cases pass after those changes
+and the addition of stock cost definitions for inspecting open special centers.
+The copy check still passes. The owner confirms the corrected chain label and
+launching Eunha's leader while continuing to play. A read-only audit finds the
+original hero development/mask, currencies, saved counters and XP sidecar intact;
+integrity passes and no new API errors were observed. The numeric hero-name
+correction is implemented without separate owner confirmation. The original
+class's leader-title key remains untranslated; no controlled numerical combat
+benchmark was recorded.
+See the [growth scope and limitations](reference-data.md#activated-experimental-growth).
+
+The custom English title follow-up initially passed static/copy tests but failed
+the owner's APK check: the raw leader key still appeared after reopening.
+Further native inspection located an explicit `strings-` exclusion in the API's
+static-item iterator. Read-only client inspection found the original English
+resource and decoded cache unchanged, explaining why the API-only table was
+ignored. That ineffective API layer and compression dependency were removed.
+
+The replacement generates an optional English CDN response in memory, retaining
+all 171,554 original strings and adding only **Sovereign of Eternal Slaughter**.
+It uses a private external content-bound key and the optional cryptography
+dependency; no game key, resource or account is included in source. Forty-eight
+Andras/CDN tests pass, covering native envelope round trips, original-record
+preservation, pack/language/opt-in gates, unchanged database/resource files,
+GET/HEAD, ETags, conditional requests, ranges, invalid-input 503s and exact
+disable/re-enable restoration. An isolated HTTP server over the real resource
+pack passes download/cache checks with a 5,877,216-byte response, while retaining
+the original resource exactly. All **232 core/content/account tests** pass,
+including 42 Andras cases; total discovery is 1,106. Black (200 files), Ruff and
+indexed repository/link checks (258 files) pass. After restarting backend and CDN
+with the explicit reference directory, the owner confirms the requested title
+appears and other texts remain correct. Read-only inspection finds the exact
+generated resource and decoded 171,555-entry table in the selected client's
+normal caches. The original server resource still matches its manifest; the
+original saved hero/awakening, currencies, counters and separate trial XP remain
+intact. SQLite integrity passes with zero diagnostic source writes and no new
+API errors. A fresh read-only client screenshot also confirms the corrected
+Andras name and Cold Death label.
+See the [private inputs and restoration scope](reference-data.md#optional-english-leader-title).
+
+The enemy-level CLI now supports `set-level --all`, covering all 44 solo
+Expedition stage definitions in the matching pack, including hidden, boss,
+unexplored and archived event variants. It accepts visible levels 1 through 220
+and translates them to zero-based standard levels. Six additional regressions
+cover all-stage isolation, all 220 native experience-lookup round trips,
+individual changes after a global setting, restoration to distinct originals,
+atomic failure and compatibility with previous raw version-1 files. All
+**138 campaign/core/content tests** pass; discovery lists 1,064 cases, without a
+new full-suite run. The owner's earlier raw-130 trial displayed 131 and completed
+the phase/map return; original-level restoration is now confirmed too.
+A coherent source-account copy passed all 44 stages at the visible maximum
+220 and full restoration. The entire original stage table and all other
+effective table contents were preserved, all 74 account tables stayed intact,
+and all 49 original reference files remained unchanged. Get/check checksums
+matched, stage revisions advanced and integrity passed with zero diagnostic
+source writes. Updated global/exact-visible-level APK checks are pending.
+
+The initial fourteen regressions covered the per-stage Expedition enemy-level CLI,
+level 130, source-table bounds, independent overrides, partial/full restoration,
+advancing cache revisions, current get/check checksums, composition with existing
+nickname/feature/test-pin overlays, malformed inputs and atomic-write failure.
+All **132 campaign/core/content cases** passed at that checkpoint, with 1,058
+discovered tests. No new full-suite run was performed. The native monster
+preparation reads the stage's standard level and corresponding experience; the
+preserved Global experience table has 220 rows, including level 130. On a
+coherent account copy with the actual reference pack, setting level 130 changed
+only the chosen stage's Global level. Restoration recovered the entire original
+stage table, get/check checksums matched, and revisions advanced. All other
+effective table contents stayed intact, including active test-pin definitions;
+their outer overlay only advanced its expected revision. All 74 account tables
+and all 48 source reference files remained unchanged, with zero diagnostic
+source writes and valid SQLite integrity. The owner's original single-stage
+APK trial and restoration are recorded above. See the
+[enemy-level commands](reference-data.md#per-stage-enemy-levels).
+
+The Expedition preset full Windows regression run passed **1,040 tests**, including 22 new
+Expedition preset cases. The teams/Orbital union passes 137 cases. The actual
+delete request and create/copy, rename, party edits, ordering and selection also
+passed on a coherent copy of the current imported account. Deletion preserved
+all 71 other preexisting tables, the imported seed, other preset resources and
+all owned inventory/heroes; only the multi-party group and selected slot's user
+revision changed. Delayed retries made no writes and did not delete a recreated
+slot. The retained backup passed integrity checks with zero diagnostic source
+writes. After restart, the owner confirmed deletion, saving, copying, naming,
+member/gear edits, ordering and persistence across reopening, including a
+separate two-slot copy/name/order check. The read-only snapshot recorded four
+deletions and two saves across two request epochs, with no new preset errors.
+Replaying those requests against the backup reproduced the full current profile
+and both preset resources exactly. All 68 other gameplay tables stayed intact;
+only normal login/epoch/counter metadata also changed. Old replay checks made
+no writes and integrity passed. A separate type-9 reorder packet was not present
+in that snapshot; its contract has automated/native/clone coverage alongside
+the owner's UI report. See the
+[multi-party preset contract](reference-data.md#expedition-multi-party-presets).
+
+The separate Expedition result failure was reproduced approximately 20 seconds
+before the countdown ended. Its native `/expedition/clear-stage/v2` request sent
+`PlayTime` as an invariant TimeSpan string, while the handler required integer
+ticks. The duration parser now accepts both forms with exact tick precision and
+native range checks. Four new regressions cover early results, fractional
+boundaries, malformed/overflowing inputs, existing result guards and zero writes.
+All **91 campaign/core tests** passed after that change; its discovery listed
+1,044 tests, without a new full-suite run. The actual result, equivalent ticks, repeated
+result, start and exit passed on a query-only account copy with all 74 tables
+intact, no source writes and valid SQLite integrity. After backend restart,
+the live APK completed two clear-result requests without new Expedition errors.
+A read-only audit found the full profile and all 71 gameplay tables unchanged;
+only login/epoch/counter metadata changed. The owner confirmed that results
+appear, returning to the map works and the account remains intact after
+reopening. New stage unlocks and reward claims remain outside practice scope.
 
 The Solo Expedition trial opens feature rules 31 and 110 for the Android 3.57.0
 Global client. The archived data includes four areas, ten districts, the wave

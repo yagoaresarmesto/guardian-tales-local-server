@@ -41,7 +41,7 @@ class ResourceLibrary:
         return self.files.get(path)
 
 
-def handler_for(library, journal=None):
+def handler_for(library, journal=None, reference_dir=None):
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
         timeout = 30
@@ -101,12 +101,24 @@ def handler_for(library, journal=None):
                 and re.fullmatch(r"kakao_[A-Za-z0-9-]+_name\.txt", path.name) is not None
             )
             override = b"\n" if local_name_list else None
+            if override is None and reference_dir is not None:
+                from .andras_trial_labels import cdn_override
+
+                try:
+                    override = cdn_override(reference_dir, path, sha)
+                except (OSError, ValueError):
+                    self.send_error(503, "Optional English title is not ready")
+                    return
             total = len(override) if override is not None else path.stat().st_size
             etag_file = Path(str(path) + ".etag")
             etag = (
-                '"local-nickname-words-v1"'
-                if local_name_list
-                else etag_file.read_text().strip() if etag_file.is_file() else None
+                '"' + hashlib.md5(override).hexdigest() + '"'
+                if override is not None and not local_name_list
+                else (
+                    '"local-nickname-words-v1"'
+                    if local_name_list
+                    else etag_file.read_text().strip() if etag_file.is_file() else None
+                )
             )
             if (
                 not etag
@@ -170,10 +182,13 @@ def main(argv=None):
     p.add_argument("--resource-root", action="append", type=Path, required=True)
     p.add_argument("--port", type=int, default=18080)
     p.add_argument("--journal", type=Path)
+    p.add_argument("--reference-dir", type=Path, help="Optional Andras title inputs and trial flag")
     p.add_argument("--run-seconds", type=int, default=0)
     args = p.parse_args(argv)
     library = ResourceLibrary(args.resource_root)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), handler_for(library, args.journal))
+    server = ThreadingHTTPServer(
+        ("127.0.0.1", args.port), handler_for(library, args.journal, args.reference_dir)
+    )
     server.daemon_threads = True
     if args.run_seconds:
         timer = threading.Timer(args.run_seconds, server.shutdown)

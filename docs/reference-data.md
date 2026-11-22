@@ -6,6 +6,240 @@ versioned Release pack and creates `local/client-data/reference` plus a CDN
 resource root. This document describes individual input contracts and other
 preservation layouts.
 
+## Experimental Andras Myth view
+
+The opt-in `andras-trial` command temporarily presents one owned five-star
+Andras as a local Myth variant. It retains her original class, base stats,
+portrait, voice, equipment, original attack/chain animations and original
+awakening flags, while applying experimental combat tuning and an extra branch.
+She starts with her original experience and can train to the existing Myth cap.
+It uses the client's existing Myth presentation, not a new six-gold-star UI.
+
+Run from the project root with the same state/reference directories as the
+backend (defaults below):
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -e ".[hero-trials]"
+.\.venv\Scripts\python.exe -m guardian_tales andras-trial status
+.\.venv\Scripts\python.exe -m guardian_tales andras-trial enable
+.\.venv\Scripts\python.exe -m guardian_tales andras-trial disable
+```
+
+Close Guardian Tales before enabling/disabling, restart the backend and fully
+reopen the game afterward. CDN and bridge can remain running. Append
+`--data-dir PATH --reference-dir PATH` for a different installation; defaults
+are `local/state` and `local/client-data/reference`. Activation requires exactly
+one owned five-star Andras in an existing account and matching original content.
+The configuration is private and bound to that owner, inventory ID and content
+hash. Do not copy it between accounts. Repeating a choice is a no-op.
+
+The CLI opens SQLite read-only. A reply projection changes the selected hero's
+outgoing `CharacterId`, experimental experience and extra awakening flags, plus the owning `User` revision
+when trial training exists; the saved hero retains her original spec and XP.
+Training uses the matching imported-account free-experience policy, respects
+story unlocks, saved limit breaks/blessing and the existing Myth level modifier,
+and requires only Andras in that request. No currency, item or saved training
+counter is granted/consumed/advanced. Other development operations are outside
+this prototype. The new branch is activated for the experiment; interactive
+awakening purchases/reset are not implemented and no stones or gold are spent.
+
+Trial XP and retry receipts commit together in the private
+`andras-myth-trial.sqlite3` file next to `server.sqlite3`. They are bound to the
+owner, inventory ID, content hash and original saved XP. Repeated requests cannot
+apply XP twice. Reopening retains trial growth; disabling shows the original XP,
+and re-enabling resumes the separate growth while that original binding matches.
+If normal training changes the original XP while the trial is off, its later
+growth becomes the new starting point; an older trial never overwrites it.
+Keep this sidecar with the private state directory when backing up the trial.
+Normal supported gameplay can still persist its ordinary changes; disabling the
+trial does not restore an older save or discard progress made afterward.
+
+The effective static response supplies a cloned hero, its source link and one
+data-only Myth-stone definition using an existing icon. The stone is not added
+to inventory and the official Myth-conversion operation is not implemented.
+Both JSON and native binary hero tables are kept consistent. Other hero records
+and resource references remain intact; get/check checksums and advancing
+revisions compose with existing overlays. Disabling restores the original
+definitions and reply values. Preserved content files, APK and asset bundles
+are never patched. Missing dependencies, conflicting IDs, wrong ownership or
+changed content reject the active trial before handling account mutations.
+
+### Activated experimental growth
+
+The added snowflake branch has **52 already-open nodes**: 46 standard-stat nodes
+from the compatible existing Myth layout and six special centers. The original
+248 encoded nodes, their saved bits and the serialized prefix remain intact.
+Extra bits are projected when the client receives the target hero; they are not
+written to the original account or the separate XP database.
+
+| Feature | Experimental setting |
+| --- | --- |
+| Leader | An Andras-only clone of Eunha's Myth effects, retaining its damage, content buffs and gameplay timings, with Bianca's existing leader movie and shared cast animation. Original Eunha/Bianca actions remain unchanged. |
+| Party center | The same ranged-party option and 50 additional per-mille levels as Eunha: **+5 percentage points**. |
+| Normal-attack center | Base coefficients +10%; the last-hit passive override scales equally, retaining its original doubling relationship. |
+| Role-action center | Base coefficient +10%. |
+| Weapon-skill center | Base/additive damage coefficients +10%. |
+| Chain center | The original five hits total **360% DPS instead of 300%**, a 20% increase. |
+| Special-ability center | Bitter Cold's ATK/DEF buffs rise from **30% to 35%** and from **5 to 6 seconds**; activation conditions remain unchanged. |
+
+These are local experimental balance choices. The 20% chain increase follows an
+existing AA72 example (3 to 3.6 DPS); other supplied Myth chains differ, including
+Kamael's approximately 13.6% increase and Eunha's area improvement rather than a
+damage increase. The node headers reuse existing localized generic enhancement
+titles; descriptions use existing stat/Andras templates and the tuned values.
+The original Andras class has no shipped leader-title localization. Without the
+optional English input below, that title remains unresolved even though the
+stock leader option/action is supplied.
+The owner verified launching the borrowed leader and continuing to play.
+
+The subsequent presentation change uses Bianca's `succubus_noble_myth` movie and
+the `weapon/twohand_role_cast` animation referenced by her matching preserved
+`MythSuccubusNoble` graph. Only those two visual references change on the private
+action. Eunha's script/controller, animation track, cast timing, hit sequence,
+damage, content-specific ATK buffs, cooldowns, sounds and effect presets remain
+in place. Bianca's graph and its DEF buffs are not imported. Consequently, this
+reuses her cast movement with the existing action timing rather than transplanting
+her complete graph sequence. How that animation plays on Andras still requires
+an APK check.
+
+The private leader option points to `MythDokkaebi:AndrasTrial`. The JSON catalog
+identifies that alias; the native binary index hashes the same alias, while its
+payload retains `Name: MythDokkaebi`. Native `LuaMythActionAddOn` builds its script
+path directly from that payload field, so this distinction reuses the existing
+script instead of requesting a nonexistent alias-named script. This dispatch
+targets the matching client's binary static-data path. All stock native action
+records remain byte-identical. The overlay changes no saved hero, trial XP,
+preserved graph, movie, character bundle or shipped script; a backend restart
+and game reopen load it without a CDN restart or re-enabling the trial.
+
+The captured hero screen confirms level 150, the Myth state and the ranged-party
+bonus at 55%, with the original appearance. It exposed an empty chain label:
+the native ability list skips a base chain on Myth heroes without a
+`MythOptionId` link. The effective base chain now links to its experimental
+awakening option while keeping the original localized `Cold Death` title.
+The variant uses a unique numeric-suffix name so native rank-name stripping can
+reuse Andras's existing name key, instead of looking up a new untranslated Myth
+name. The owner confirmed the corrected chain text. The numeric name correction
+is confirmed in a read-only client screenshot alongside Cold Death. The optional
+English CDN overlay below supplies the missing leader title. Numerical combat tuning has static/copy
+coverage; no controlled damage benchmark was recorded.
+
+Andras's original chain has no generic Myth-node parameter consumer. Since all
+new nodes are deliberately active, the backend applies the corresponding combat
+changes directly to the **effective shared Andras combat definitions**, with
+matching JSON/binary records; the node options describe those active changes.
+This is not per-node interactive unlocking or per-instance combat isolation:
+other Andras instances using those same effective definitions can share the
+tuning while the trial is active. Other heroes' combat definitions remain intact.
+Disabling restores the original tables and exact saved awakening mask. Shipped
+script/string resource files, APK, asset bundles and source reference files stay unchanged.
+
+### Optional English leader title
+
+The optional CDN title overlay supplies **Sovereign of Eternal Slaughter** for
+`demon_slayer_leader_skill` while the Andras trial is active. It generates the
+English download response in memory; it does not overwrite the original resource,
+manifest, ETag file, APK, scripts, source references, account or XP sidecar.
+The client stores the response through its normal language-download/cache path.
+Other languages keep their original responses.
+
+This path requires an explicit CDN `--reference-dir` pointing to the same
+reference directory used by the backend and trial commands:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales assets --resource-root .\local\client-data\resources\files --port 18081 --journal .\local\cdn-requests.jsonl --reference-dir .\local\client-data\reference
+```
+
+Install the optional dependencies with `python -m pip install ".[hero-trials]"`.
+The private compatibility input is
+`andras-trial-strings-<static-sha256>.key` in that reference directory. The hash is
+the configured trial's original `static_data_get.bin` SHA-256. The file contains
+the 64 hexadecimal characters of the AES-256 key for the matching original
+English resource envelope. Preparing that input requires separate inspection of
+the matching client/content; this feature does not extract or distribute game
+keys or content. Keep it private and outside Git. A fresh clone without the
+matching input retains ordinary trial behavior with the unresolved title key.
+
+The server verifies the static-pack binding, original resource SHA-256 against
+its preservation manifest, native envelope and known English labels. It retains
+every original string record/index entry and compressed block, adding title
+records for the ordinary Andras class and the optional
+[Head Hunter trial](head-hunter.md) class, then creates a native-compatible
+encrypted response with a different IV
+prefix and the original version/key selector. No extra language table is sent
+through `/static-data/get`: the matching client's native item iterator explicitly
+discards all names beginning with `strings-`.
+
+GET and HEAD share a content-derived ETag and length, with conditional downloads
+and byte ranges. `andras-trial disable` returns the exact original resource and
+its original ETag on the next request, even if the optional key is invalid.
+Re-enabling restores the same title response. Invalid active inputs return a
+generic 503 for that English resource without disclosing keys; unrelated
+resources remain available. After changing the trial, fully close and reopen
+the game so its normal language check refreshes the cached file. Introducing the
+CDN option requires restarting the CDN; the bridge can stay open.
+
+Native/copy/HTTP checks and actual APK outcomes are recorded separately in the
+[verification status](status.md). After restarting the backend and CDN with the
+explicit reference directory, the owner confirms the requested title appears
+and the other texts remain correct. Read-only cache inspection finds exactly the
+expected generated English table; the original server resource and saved hero
+development remain intact.
+
+### Myth compatibility review
+
+The matching pack contains 42 rank-six hero definitions, including definitions
+whose release dates/versions may not be active. Their mechanics are not a single
+uniform upgrade. The Andras trial currently has the following scope:
+
+| Area | Current experimental behavior | Remaining work |
+| --- | --- | --- |
+| Myth identity and level cap | Existing Myth presentation; isolated free XP uses story, limit-break, blessing and Myth modifiers. The owner reached 150 and retained it after reopening. | Other saved accounts/caps need their own APK checks. |
+| Appearance, equipment and base abilities | Original class, origin, animations, equipment and saved progression are retained; the active combat coefficients are tuned as above. The owner confirmed the original appearance. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
+| Base-stat changes | Original five-star base stats remain unchanged; levels still scale normally. | Official Myth variants can have different base stats. No common ratio or Andras-specific rebalancing has been selected. |
+| Leader skill | The owner confirmed the preceding stock Eunha presentation. The Bianca movie/cast-reference follow-up has automated/copy coverage; its APK check is pending. | The original class has no shipped title; the optional English CDN overlay supplies the requested name. Numerical combat benchmarking remains separate. |
+| Awakening | Original nodes/flags are retained; 52 extra nodes are projected already open. | Interactive open/reset requests are not implemented. |
+| Myth ability improvements | Original animations/mechanics remain, with the active experimental coefficients above. | Full hero-specific Myth reworks are not reconstructed by this trial. |
+| Other development | Original limit breaks and blessing affect the cap and retained options. | Blessing, limit-break, conversion and awakening mutations are not added by this trial. Training Room placement/removal is also outside its supported entry/read path. |
+| Collection and rewards | Original stored hero and knowledge/mission records remain normal. | Experimental Myth progression does not grant official conversion rewards or rewrite collection counters. |
+| Reversion | Disable restores original hero/XP/static views, retaining the separate trial XP and ordinary saved gameplay changes. | Any future extra awakening state must use the same separation and restoration rules. |
+
+**An extra awakening branch is feasible as server-supplied data.** Andras uses
+`layout_snowflake_01` with 248 nodes. An existing
+`layout_snowflake_01_myth` layout, used by Bianca's Myth definition, has 300 nodes:
+52 extra nodes, comprising 46 standard-stat nodes and six special centers. Its
+first 30 circle coordinates match the original layout, and six original node
+connections gain the branch links. The existing layout therefore offers a
+concrete template without replacing Andras's original node indices or artwork.
+This comparison supplied the activated experimental branch above; its APK checks
+are separate from the static-definition and copy-based checks.
+
+The statistical pattern can be reused while preserving the original 248 encoded
+nodes. The special pattern needs adaptation: one center improves the party buff,
+while the other five target that hero's particular abilities. For example,
+Bianca's party center supplies critical multiplier, whereas existing ranged Myth
+heroes can increase their ranged party buff. Copying Bianca's custom-action and
+battle-parameter options onto Andras would not prove those effects work. The
+original Andras combat code must actually consume each chosen parameter, or the
+trial must reuse compatible behavior already present in the client.
+
+The leader path has a similar requirement. The native ability screen checks Myth
+rank and `Class`, looks up the class's leader-skill text, and renders a
+`MythBattleActionOption`. That option resolves a battle action through the native
+factory. Lua Myth actions load a script named from the action definition; graph
+actions require their existing graph/resources. New static IDs or translated
+labels do not create missing client code. A server-only implementation must reuse
+compatible shipped behavior and resources; a fully original Andras Myth ability
+is not established by this audit.
+
+A future branch should retain the original encoded node prefix, validate all
+new graph references, adapt the party/special effects explicitly, and keep extra
+opened flags and retry receipts outside the saved account. Interactive awakening
+also needs its actual request/reply contract, costs policy, revision handling and
+disable/re-enable tests. The initial review did not change any tree or leader;
+the subsequent activated prototype is described above. Saved awakening flags,
+APK and preserved resource files remain unchanged.
+
 ## Free local nickname changes
 
 `/user/change-name` accepts exactly `{"Name":"NewName"}` after sign-in and
@@ -115,8 +349,116 @@ native requests. The result uses the run's kill score and the preserved time,
 survivor, and party-switching bonus settings. Practice runs preserve stamina,
 collectibles, rewards, and saved records. Stage Rankings displays an empty local
 leaderboard. Selecting a saved Expedition preset updates the selected slot.
-The trial covers replay and selection of existing presets. New unlocks, preset
-creation or editing, and Expedition reward claims are outside that scope.
+The trial covers stage replay and the preset operations below. New stage unlocks
+and Expedition reward claims remain outside that scope.
+
+The native `/expedition/clear-stage/v2` request serializes `PlayTime` as a
+nonnegative invariant TimeSpan string, `[d.]hh:mm:ss[.fffffff]`. The backend
+also accepts the previous integer tick representation. It parses fractional
+seconds into exact 100 ns ticks before applying the existing whole-millisecond
+scoring calculation; it rejects malformed, negative and overflowing durations.
+This includes results reported before the countdown reaches zero. Result
+requests remain read-only, including repeated reports; no records, rewards or
+progression are written. See the
+[standard TimeSpan format](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
+
+### Per-stage enemy levels
+
+The optional `expedition` CLI overrides the visible enemy level of one or all
+listed solo Expedition stages for KakaoGlobal. It requires the matching external
+static data and the existing `expedition_trial.enabled` marker. Run these
+PowerShell commands from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales expedition list
+.\.venv\Scripts\python.exe -m guardian_tales expedition list --stage 250014003
+.\.venv\Scripts\python.exe -m guardian_tales expedition set-level --stage 250014003 --level 130
+.\.venv\Scripts\python.exe -m guardian_tales expedition set-level --all --level 130
+.\.venv\Scripts\python.exe -m guardian_tales expedition set-level --all --level 220
+.\.venv\Scripts\python.exe -m guardian_tales expedition restore-level --stage 250014003
+.\.venv\Scripts\python.exe -m guardian_tales expedition restore-level --all
+```
+
+`list` shows stage IDs, internal names, original Global levels, configured levels
+and the maximum supported by the preserved experience table. `--all` applies
+one level to every listed phase in a single atomic configuration update,
+including hidden, boss, unexplored and archived event variants. An individual
+`--stage` command can subsequently override or restore one of those phases.
+Add
+`--reference-dir PATH` when the backend uses another directory; the default is
+`local/client-data/reference`. The preserved 3.57.0 pack supports visible levels
+**1 through 220**, including both boundaries; higher values are rejected.
+Native inspection shows monster preparation reading `StageStandardLevel`,
+looking up its level experience and resolving a zero-based experience row before
+the UI adds one. The command therefore writes the requested visible level minus
+one. All 220 choices have automated experience-lookup round-trip coverage;
+this does not establish APK verification of every level or enemy variant.
+
+The original command wrote the raw standard level directly: its `--level 130`
+trial appeared as 131 in the APK. The owner confirmed combat/map return and
+restoration to the original level. New commands use visible levels; `list` now
+reports visible original and configured levels too. Existing version-1 files
+retain their raw interpretation and are never silently rewritten on reads.
+Reissue `set-level` to choose an exact visible level for an older override.
+
+Close Guardian Tales before changing or restoring levels. Restart the backend
+and fully reopen the game afterward; CDN and bridge can remain running. For a
+first test, change one stage and verify entry, enemies, results and map return.
+This setting does not unlock stages or implement missing entry handlers;
+the existing saved-progression and practice-entry restrictions still apply.
+
+The command writes only `expedition_levels.json` in the external reference
+directory. It never opens the account database or overwrites preserved static
+files. At bootstrap, an overlay replaces only the selected stages'
+`StandardLevel.KakaoGlobal`; other regions, unselected stages, enemy definitions, waves,
+Exorcism requirements, scoring and the practice reward policy remain unchanged.
+Get/check responses share the effective checksum, composed with existing mode,
+nickname and test-pin overlays. Writes are atomic and repeated identical choices
+are no-ops. Restoration removes the selected override, revealing the preserved
+original value; it does not restore an older account or configuration wholesale.
+An empty configuration is retained after the last restoration so its advancing
+revision refreshes client caches too. The maximum is validated against the
+current Global experience rows; missing stages, malformed configuration,
+overflowing revisions and unsupported levels fail before publication.
+
+### Expedition multi-party presets
+
+Expedition uses `UserMultiPartyPreset`, separately from the single-team
+`UserPartyPreset2` resource used by Orbital/Raid. With `expedition_trial.enabled`,
+its 20 slots have IDs `[900,920)` and each definition holds three parties.
+
+- `/preset/set-multi-party-preset` accepts exactly `MultiPartyPreset` and Boolean
+  `SetSelected`. The definition contains `Id`, `Name`, `Order` and `Parties`.
+  Each of the three ordered parties has `Id` 1/2/3, `Name`, unchanged `Order`
+  and `Characters`; member fields use the existing owned hero/gear contract.
+  Characters can be moved within or between parties, with no duplicate hero
+  within the three teams. Missing nullable gear fields explicitly clear slots.
+- Creating/copying into an unused slot requires native `Order=999`; the backend
+  appends it after the highest existing Expedition order. Editing and renaming
+  keep slot identity/order and saved opaque metadata. Empty drafts may be saved
+  with `SetSelected=false`; selecting/saving a selected preset requires a leader
+  in its first party, as in the existing selection contract.
+- `/preset/delete-multi-party-preset` accepts exactly `PresetId` and removes one
+  existing definition. Deleting the selected slot clears only
+  `SelectedPresetId.Expedition` to zero. Other definitions and resources remain.
+- `/preset/reorder-preset` accepts `PresetType=9` with 20 position entries.
+  `Order[PresetId % 100]` assigns each saved preset a distinct position from
+  zero; unused slots remain zero. Whole party definitions and physical array
+  order are retained. Selecting existing or newly saved slots continues through
+  `/preset/set-selected-preset`.
+
+The mutable group is stored in `multi_party_preset_state`, while immutable
+imported startup reads remain intact. `multi_preset_requests` binds canonical
+payloads to route/session/sequence identity for saves, deletes and ordering.
+One transaction stores the group, selection changes and receipt. The group
+revision increases only for actual edits; `User.Cas` increases only when the
+selected slot changes. Revision overflow rejects before writes. Replies carry
+the current group and relevant selection resource; delayed retries preserve
+later edits, recreated slots and selections rather than replaying old state.
+Reopening `/preset/get-presets` composes both mutable preset groups. Equipment
+sale/extraction protection therefore sees current Expedition references too.
+No heroes, equipment, resources, stage progress, rewards or other-mode presets
+are changed by these operations.
 
 ## Classic Co-op Defense trial
 
@@ -240,6 +582,48 @@ and explicit timestamp timezones are checked without repairing malformed state.
 Placing/removing items or heroes, unlocking slots and paying to reactivate them
 remain separate unsupported operations. After updating, close the game and restart
 only the backend; CDN and bridge can remain running.
+
+## Hero equipment changes
+
+These individual Hero-screen routes use the matching external `heroes` and
+`items` tables from `static_data_get.bin`, without an additional debug catalog:
+
+| Route | Exact request fields |
+| --- | --- |
+| `/user/change-weapons` | `CharacterId`, `Weapon1`, `Weapon2` |
+| `/user/change-accessory` | `CharacterId`, `Accessory1` |
+| `/user/change-orb` | `CharacterId`, `Orb`, `Slot` (1 or 2) |
+| `/user/change-merch` | `CharacterId`, `Merch` |
+| `/user/change-relic` | `CharacterId`, `Relic` |
+
+The native send methods confirm these names; the card UI maps its two slots to
+1 and 2. An actual pending APK weapon request confirms nullable equipment values.
+`CharacterId` identifies an **owned hero inventory row**, and gear values identify
+owned item inventory rows, not static specification IDs. Null or zero clears the
+selected slot and is saved/returned as explicit null. Slot types and inventory
+categories must match. Main-hand weapons must be compatible attack weapon types;
+the second hand accepts a compatible shield. Locked equipment can be equipped.
+Explicitly registered test-pin definitions remain available as accessories.
+
+All validation completes before writing. Taking an item from another owned hero
+clears only that item's previous slot; moving a card between one hero's slots
+also clears its previous location. The old target item remains in inventory.
+Only affected character equipment fields and one `User.Cas` increment change.
+Inventory rows, quantities, options, locks, currencies, development, normal-party
+membership, stored presets and captured startup reads remain intact. The
+experimental Andras projection continues to apply to outgoing hero data without
+persisting its Myth spec, virtual XP or extra awakening nodes in the base hero.
+
+The profile and route/epoch/sequence receipt commit together. A no-op records the
+identity without rewriting the profile or advancing its revision. Replays return
+the current complete character roster without another write, preserving later
+equipment/development changes; reusing an identity for another body or route
+rejects. The response supplies owner ID, revision and the complete current roster,
+including explicit nulls for displaced holders. It does not replace inventories
+or unrelated resource fields. Restart only the backend and fully reopen the game
+after updating. This contract covers the five individual routes above; costume,
+weapon-costume and bulk `change-characters-equipments` requests remain separate
+unimplemented contracts.
 
 ## Inventory item protection
 

@@ -58,6 +58,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/preset/set-selected-preset",
         "/preset/set-presets",
         "/preset/delete-preset",
+        "/preset/delete-multi-party-preset",
+        "/preset/set-multi-party-preset",
         "/preset/reorder-preset",
         "/user/charge-stamina",
         "/user/add-character-experience",
@@ -72,6 +74,11 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/guardian-mastery-level-up",
         "/user/reset-guardian-mastery-level",
         "/user/save-party-member/v2",
+        "/user/change-weapons",
+        "/user/change-accessory",
+        "/user/change-orb",
+        "/user/change-merch",
+        "/user/change-relic",
         "/user/select-representative-character",
         "/user/change-name",
         "/user/set-portrait-frame",
@@ -170,19 +177,19 @@ def preserved_read(db, route):
         return None
     value = reads[route]["value"]
     overlays = {
-        "/preset/get-presets": ("party_preset_state", "UserPartyPreset2"),
-        "/lobby-village/enter": ("village_state", "UserLobbyVillage"),
+        "/preset/get-presets": (
+            ("party_preset_state", "UserPartyPreset2"),
+            ("multi_party_preset_state", "UserMultiPartyPreset"),
+        ),
+        "/lobby-village/enter": (("village_state", "UserLobbyVillage"),),
     }
-    overlay = overlays.get(route)
-    if (
-        overlay
-        and db.execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (overlay[0],)
-        ).fetchone()
-    ):
-        current = db.execute("SELECT value FROM " + overlay[0] + " WHERE id=1").fetchone()
-        if current:
-            value = dict(value, **{overlay[1]: json.loads(current[0])})
+    for table, resource in overlays.get(route, ()):
+        if db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone():
+            current = db.execute("SELECT value FROM " + table + " WHERE id=1").fetchone()
+            if current:
+                value = dict(value, **{resource: json.loads(current[0])})
     return value
 
 

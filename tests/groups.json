@@ -5,7 +5,7 @@
   },
   "account": {
     "description": "Account import, profile customization and local administration",
-    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_account_name", "test_my_room", "test_colosseum", "test_admin", "test_admin_festival", "test_admin_imported", "test_admin_test_items"]
+    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_account_name", "test_my_room", "test_colosseum", "test_admin", "test_admin_festival", "test_admin_imported", "test_admin_test_items", "test_andras_trial"]
   },
   "content": {
     "description": "Reference data, content packs, archives and catalog contracts",
@@ -13,19 +13,19 @@
   },
   "campaign": {
     "description": "Story entry, stage progress, completion and play menus",
-    "modules": ["test_campaign", "test_completion", "test_discovery", "test_monsters", "test_story", "test_play_menu", "test_expedition", "test_classic_coop"]
+    "modules": ["test_campaign", "test_completion", "test_discovery", "test_monsters", "test_story", "test_play_menu", "test_expedition", "test_expedition_levels", "test_classic_coop"]
   },
   "heroes": {
-    "description": "Hero experience, training caps and saved Training Room slots",
-    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room"]
+    "description": "Hero experience, equipment, training caps and saved Training Room slots",
+    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room", "test_hero_equipment"]
   },
   "inventory": {
     "description": "Item protection/sales/extraction, weapons, relic options and jewels",
-    "modules": ["test_item_lock", "test_item_sell", "test_item_extract", "test_weapon_enhance", "test_weapon_limit_break", "test_weapon_engrave", "test_weapon_options", "test_weapon_option_lock", "test_relic_options", "test_jewel_decompose", "test_jewel_upgrade"]
+    "modules": ["test_item_lock", "test_item_sell", "test_item_extract", "test_weapon_enhance", "test_weapon_limit_break", "test_weapon_engrave", "test_weapon_options", "test_weapon_option_lock", "test_relic_options", "test_jewel_decompose", "test_jewel_upgrade", "test_head_hunter"]
   },
   "teams": {
     "description": "Normal parties, preset selection/editing and compact resources",
-    "modules": ["test_party_members", "test_preset_selection", "test_preset_edit", "test_preset_delete", "test_preset_create", "test_preset_payloads", "test_preset_reorder"]
+    "modules": ["test_party_members", "test_preset_selection", "test_preset_edit", "test_preset_delete", "test_preset_create", "test_preset_payloads", "test_preset_reorder", "test_multi_presets"]
   },
   "rewards": {
     "description": "Missions, achievements, knowledge, passes, temporal events, stamina and attendance",

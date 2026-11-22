@@ -12,6 +12,10 @@ SLOT_COUNTS = {4: 5, 7: RAID_PRESET_COUNT, 18: RAID_PRESET_COUNT}
 
 
 def reorder(account, body, operation_id):
+    if isinstance(body, dict) and type(body.get("PresetType")) is int and body["PresetType"] == 9:
+        from .multi_presets import reorder as reorder_multi
+
+        return reorder_multi(account, body, operation_id)
     if (
         not isinstance(body, dict)
         or set(body) != {"PresetType", "Order"}

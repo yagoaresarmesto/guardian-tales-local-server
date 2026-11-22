@@ -15,10 +15,12 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from . import classic_coop, colosseum, expedition
+from . import andras_trial, classic_coop, colosseum, expedition, multi_presets
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
+from .head_hunter_static import bootstrap_seed as head_hunter_bootstrap_seed
+from .hero_equipment import ROUTES as HERO_EQUIPMENT_ROUTES
 from .item_extract import ROUTE as ITEM_EXTRACT_ROUTE
 from .item_lock import ROUTES as ITEM_LOCK_ROUTES
 from .item_sell import ROUTE as ITEM_SELL_ROUTE
@@ -72,6 +74,7 @@ BOOTSTRAP_ROUTES = (
     *LOBBY_ROUTES,
     *PLAY_MENU_ROUTES,
     *expedition.ROUTES,
+    *multi_presets.ROUTES,
     *classic_coop.ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
@@ -230,8 +233,22 @@ class BootstrapSession:
         self.request_epoch = None
         self.colosseum_opponents = ()
         self.classic_coop = classic_coop.Practice()
+        self.andras_trial_selection = None
 
     def handle(self, request):
+        try:
+            selection = andras_trial.load(self.store.references)
+            if selection is None or not selection["active"]:
+                self.andras_trial_selection = None
+                return self._handle(request)
+            if selection != self.andras_trial_selection:
+                andras_trial.validate_active(self.store, selection)
+                self.andras_trial_selection = selection
+            return andras_trial.project_response(self._handle(request), selection, self.store)
+        except ValueError as error:
+            raise PacketError(str(error)) from error
+
+    def _handle(self, request):
         if (
             request["version"] != 1
             or request["packet_type"] != 0
@@ -304,6 +321,17 @@ class BootstrapSession:
                 return json_response(request, operation(self.store, body, operation_id))
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
+        if route in multi_presets.ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                epoch = self.request_epoch or self.store.request_epoch(True)
+                operation_id = epoch + ":" + str(request["sequence_id"])
+                return json_response(
+                    request, multi_presets.handle(self.store.account, route, body, operation_id)
+                )
+            except ValueError as error:
+                raise PacketError(str(error)) from error
         if route in PLAY_MENU_ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
@@ -378,6 +406,15 @@ class BootstrapSession:
             if route == "/user/charge-stamina":
                 try:
                     return json_response(request, self.store.account.charge_stamina(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route in HERO_EQUIPMENT_ROUTES:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.change_hero_equipment(body, operation_id, route)
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == PARTY_MEMBER_ROUTE:
@@ -718,6 +755,14 @@ class BootstrapSession:
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
+                    if self.andras_trial_selection is not None:
+                        from .andras_trial_training import targets_trial, train
+
+                        if targets_trial(body, self.andras_trial_selection):
+                            return json_response(
+                                request,
+                                train(self.store, self.andras_trial_selection, body, operation_id),
+                            )
                     return json_response(
                         request, self.store.account.add_character_experience(body, operation_id)
                     )
@@ -809,11 +854,19 @@ class BootstrapSession:
                 def parent(references, name, value):
                     return nickname_bootstrap_seed(references, name, value, static_seed)
 
-                def effective(references, name, value):
+                def expedition_seed(references, name, value):
                     return expedition.bootstrap_seed(references, name, value, parent)
 
-                seed = test_item_bootstrap_seed(
-                    self.store.db, self.store.references, filename, body, effective
+                def effective(references, name, value):
+                    return andras_trial.bootstrap_seed(references, name, value, expedition_seed)
+
+                def pinned(references, name, value):
+                    return test_item_bootstrap_seed(
+                        self.store.db, references, name, value, effective
+                    )
+
+                seed = head_hunter_bootstrap_seed(
+                    self.store.db, self.store.references, filename, body, pinned
                 )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc

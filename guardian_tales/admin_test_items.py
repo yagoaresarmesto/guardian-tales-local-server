@@ -81,13 +81,13 @@ def response(value, profile, result):
     }
 
 
-def backup_and_begin(database, db, original, action):
+def backup_and_begin(database, db, original, action, *, label="test-pin"):
     if json.loads(original)["User"]["Cas"] == MAX_USER_REVISION:
         raise ValueError("User revision cannot be incremented")
     directory = database.parent / "backups"
     directory.mkdir(exist_ok=True)
     path = directory / (
-        f"before-test-pin-{action}-"
+        f"before-{label}-{action}-"
         + datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         + "-"
         + uuid.uuid4().hex[:8]

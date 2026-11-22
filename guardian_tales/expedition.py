@@ -2,6 +2,7 @@
 """Opt-in access and practice battles for preserved solo Expedition stages."""
 
 import json
+import re
 from functools import lru_cache
 
 from .raid_static import compress, decode, digest, records
@@ -35,6 +36,7 @@ TRIAL = "expedition_trial.enabled"
 FEATURE_IDS = (31, 110)
 REGION_ID = 1
 DOTNET_TICKS_PER_MILLISECOND = 10_000
+MAX_PLAY_TIME_TICKS = 0x7FFFFFFFFFFFFFFF
 
 
 def enabled(references):
@@ -78,6 +80,12 @@ def bootstrap_seed(references, filename, request, parent):
     if filename not in ("static_data_get.bin", "static_data_check.bin") or not enabled(references):
         return parent(references, filename, request)
     body, checksum = prepare(parent(references, "static_data_get.bin", request))
+    from .expedition_levels import load_levels
+    from .expedition_levels import prepare as prepare_levels
+
+    selection = load_levels(references)
+    if selection is not None:
+        body, checksum = prepare_levels(body, *selection)
     if filename == "static_data_get.bin":
         return body
     return json.dumps(
@@ -100,15 +108,35 @@ def stage_catalog(body):
     return stages, json.loads(tables["expeditionbattle"][1])["Constants"]
 
 
+def play_time_ticks(value):
+    # The native request boxes a TimeSpan; its JSON value uses the invariant
+    # constant format [d.]hh:mm:ss[.fffffff]. Keep legacy integer tick inputs.
+    if integer(value, maximum=MAX_PLAY_TIME_TICKS):
+        return value
+    if not isinstance(value, str) or len(value) > 25:
+        raise ValueError("Expedition PlayTime requires a nonnegative TimeSpan or tick count")
+    match = re.fullmatch(
+        r"(?:(\d{1,8})\.)?(\d{2}):([0-5]\d):([0-5]\d)(?:\.(\d{1,7}))?", value, re.ASCII
+    )
+    if match is None or int(match[2]) > 23:
+        raise ValueError("Invalid Expedition TimeSpan format")
+    days, hours, minutes, seconds, fraction = match.groups()
+    elapsed_seconds = ((int(days or 0) * 24 + int(hours)) * 60 + int(minutes)) * 60 + int(seconds)
+    ticks = elapsed_seconds * 10_000_000 + int((fraction or "0").ljust(7, "0"))
+    if ticks > MAX_PLAY_TIME_TICKS:
+        raise ValueError("Expedition PlayTime exceeds the native TimeSpan range")
+    return ticks
+
+
 def practice_result(request, stage, constants):
+    ticks = play_time_ticks(request["PlayTime"])
     if (
-        not integer(request["PlayTime"], maximum=0x7FFFFFFFFFFFFFFF)
-        or not all(integer(request[key]) for key in ("KillScore", "PartySwitchingCount", "Kills"))
+        not all(integer(request[key]) for key in ("KillScore", "PartySwitchingCount", "Kills"))
         or not integer(request["Survivors"], maximum=4 * stage["PartyCount"])
         or type(request["SupportSkillUsed"]) is not bool
     ):
         raise ValueError("Invalid Expedition practice result")
-    elapsed = request["PlayTime"] // DOTNET_TICKS_PER_MILLISECOND
+    elapsed = ticks // DOTNET_TICKS_PER_MILLISECOND
     remaining = max(0, stage["Time"] * 1000 - elapsed)
     time_score = int(remaining * constants["RemainingTimeBonus"])
     base = request["KillScore"] + time_score

@@ -34,6 +34,8 @@ flowchart LR
 | `guild_meteor.py` | Fresh meteor menu, latest started catalog season and native empty progress without account writes |
 | `guild_war.py`, `guild_war_static.py` | Opt-in season-1 menu entry, reversible Global War/Raid calendar overlay composed above existing Raid/arena selections |
 | `guild_raid.py` | Fresh raid menus, empty history/rankings, combat entry/exit trial and season selector; no account writes, persistent raid progress or rewards |
+| `expedition_levels.py` | Optional per-stage Global enemy-level CLI and reversible static overlay, without account or preserved-file writes |
+| `andras_trial.py`, `andras_trial_static.py`, `andras_trial_training.py`, `andras_trial_growth.py`, `andras_trial_labels.py` | Owner-bound Andras view, separate transactional XP, activated extra awakening, stock Eunha leader, optional in-memory English CDN title, reversible static composition and unchanged saved hero |
 | `raid_static.py` | Bounded external static-table preparation, LZ4 encoding and immutable raid-only calendar overrides for historical selection |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
@@ -44,6 +46,8 @@ flowchart LR
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `imported_hero_knowledge.py` | Eight native hero-book progress rules, nonpaying official flags, awakening bit decoding and atomic per-objective/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
+| `hero_equipment.py` | Catalog-backed weapon/accessory/card/merch/relic changes, exact holder detachment and atomic route-bound retry receipts |
+| `multi_presets.py` | Expedition three-party preset persistence, selection clearing, slot ordering and atomic route-bound receipts |
 | `item_lock.py` | Owned inventory protection batches with atomic profile/retry receipts, independent of option locks |
 | `item_sell.py` | Shared protected removal, no-gold sales, proposal cleanup and route-bound sale/extraction receipts |
 | `item_extract.py` | Native equipment-ID batches for zero-reward extraction through the shared removal path |

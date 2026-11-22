@@ -20,6 +20,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = ["black==26.10.1", "ruff==0.17.5"]
 raid-custom = ["xxhash>=3.5,<5"]
+hero-trials = ["xxhash>=3.5,<5", "cryptography>=46,<49"]
 
 [project.scripts]
 gt-local = "guardian_tales.__main__:main"
