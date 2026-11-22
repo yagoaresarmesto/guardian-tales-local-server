@@ -15,7 +15,7 @@ SOURCE = 490
 ORIGIN = 488
 VARIANT = 20488
 STONE = 85488
-NAME = "demon_slayer_myth"
+NAME = "demon_slayer_6"
 HEADER = struct.Struct("<4sIII")
 ENTRY = struct.Struct("<IQHH")
 
@@ -44,7 +44,7 @@ def same_definition(left, right):
     return True
 
 
-def binary_rows(encoded):
+def binary_rows(encoded, *, require_id=True):
     data = base64.b64decode(encoded, validate=True)
     if len(data) < HEADER.size:
         raise ValueError("Missing native hero binary header")
@@ -74,7 +74,7 @@ def binary_rows(encoded):
         offset = offsets[block]
         raw = chunks[block][offset : offset + length]
         offsets[block] += length
-        if len(raw) != length or json.loads(raw).get("Id") != ident:
+        if len(raw) != length or (require_id and json.loads(raw).get("Id") != ident):
             raise ValueError("Hero binary record does not match its index")
         result.append((ident, name_hash, raw))
     if offsets != list(map(len, chunks)) or len({r[0] for r in result}) != count:
@@ -149,20 +149,31 @@ def definitions(body):
         not same_definition(row, actual[row["Id"]]) for row in heroes
     ):
         raise ValueError("Hero JSON and binary definitions do not agree")
-    return heroes, items, source[0], stone_templates[0], binary
+    from .andras_trial_growth import overlay
+
+    return heroes, items, source[0], stone_templates[0], binary, overlay(tables)
 
 
 @lru_cache(maxsize=2)
 def prepare(body, generation, active):
+    from .andras_trial_growth import LEADER, TABLES
+
     lines, tables = records(decode(body))
-    values = {name: tables[name][1] for name in ("heroes", "heroes-bin", "items")}
+    values = {
+        name: tables[name][1]
+        for name in ("heroes", "heroes-bin", "items", *TABLES)
+        if name in tables
+    }
     if active:
-        heroes, items, source, template, binary = definitions(body)
+        heroes, items, source, template, binary, growth = definitions(body)
+        values.update(growth)
         updated = copy.deepcopy(source)
         updated["MythTo"] = {"KakaoGlobal": VARIANT}
         updated["MythStoneId"] = STONE
         variant = copy.deepcopy(source)
-        variant.update(Id=VARIANT, Name=NAME, Rank=6)
+        variant.update(
+            Id=VARIANT, Name=NAME, Rank=6, Options=[{"OptionId": LEADER}, *source["Options"]]
+        )
         variant.pop("MythTo", None)
         stone = copy.deepcopy(template)
         stone.update(Id=STONE, Name="local_trial_myth_stone_demon_slayer")
@@ -171,7 +182,13 @@ def prepare(body, generation, active):
         values["items"] = json.dumps(items + [stone], ensure_ascii=False, separators=(",", ":"))
         binary_source = json.loads(next(raw for ident, _, raw in binary if ident == SOURCE))
         binary_updated = dict(binary_source, MythTo={"KakaoGlobal": VARIANT}, MythStoneId=STONE)
-        binary_variant = dict(binary_source, Id=VARIANT, Name=NAME, Rank=6)
+        binary_variant = dict(
+            binary_source,
+            Id=VARIANT,
+            Name=NAME,
+            Rank=6,
+            Options=[{"OptionId": LEADER}, *binary_source["Options"]],
+        )
         binary_variant.pop("MythTo", None)
         replacement = json.dumps(binary_updated, ensure_ascii=False, separators=(",", ":")).encode()
         payload = json.dumps(binary_variant, ensure_ascii=False, separators=(",", ":")).encode()
@@ -190,7 +207,7 @@ def prepare(body, generation, active):
             ]
             + [(VARIANT, name_hash, payload)]
         )
-    revision = max(tables[name][2] for name in (*values, "__checksum__")) + generation
+    revision = max(tables[name][2] for name in (*values, "__checksum__")) + generation + 2
     if (
         type(generation) is not int
         or not 1 <= generation <= 0x7FFFFFFF
@@ -199,7 +216,7 @@ def prepare(body, generation, active):
     ):
         raise ValueError("Invalid Andras trial static generation")
     checksum = digest(
-        b"local-andras-myth-trial-v1\n"
+        b"local-andras-myth-trial-v3\n"
         + tables["__checksum__"][1].encode()
         + b"\n"
         + str(generation).encode()

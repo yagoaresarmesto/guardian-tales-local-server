@@ -61,6 +61,31 @@ The full Windows run passes all 1,090
 tests, with formatting, lint and indexed repository/link checks passing too.
 See the [commands and trial scope](reference-data.md#experimental-andras-myth-view).
 
+The subsequent activated-growth prototype retains all 248 original awakening
+bits and projects the 52-node extension already open, reusing the existing
+300-node snowflake layout. It supplies the stock Eunha leader and her party
+increase, with modest explicit Andras normal/role/weapon/chain/passive tuning.
+Andras's original chain reads direct coefficients rather than a generic Myth
+parameter, so this prototype changes the effective shared Andras combat data
+while all new nodes are activated; marker options describe those active changes.
+It does not claim interactive awakening, per-instance combat isolation or a
+newly implemented Andras leader script. Other heroes' definitions, APK, scripts,
+strings and preserved files are retained. The original class's leader title may
+remain unlocalized. The owner subsequently confirmed launching the stock leader
+and continuing to play, as well as the corrected chain text after a native UI
+link was added. The screenshot confirms Myth150 and the 55% ranged-party bonus.
+
+All 34 trial regressions and a coherent account-plus-XP-copy check pass. The
+exact projected profile changes only the intended view fields; all original
+awakening bits and current trial XP persist. Disable/re-enable restores the
+expected exact views, get/check checksums agree, all 74 main tables and 50 source
+reference files remain unchanged, and the separate XP database is unchanged.
+Integrity and zero diagnostic source writes pass. The full growth checkpoint
+passes 1,098 tests; all 34 targeted regressions additionally pass after cost/UI
+refinements. Read-only live inspection finds original development, awakening,
+currencies, counters and XP state intact, with no new API errors. Exact numerical
+combat balance was not benchmarked. See the [tuning table](reference-data.md#activated-experimental-growth).
+
 ## Reversible Expedition enemy levels
 
 The first per-stage CLI trial wrote raw `StandardLevel=130`; the owner saw

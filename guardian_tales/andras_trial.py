@@ -71,9 +71,19 @@ def validate_active(store, selection):
             "Andras trial content changed; disable the trial before using another pack"
         )
     definitions(body)
+    from .andras_trial_growth import activated_tree
+
+    hero = next(
+        r
+        for r in store.account.profile()["User"]["Characters"]
+        if r["Id"] == selection["inventory_id"]
+    )
+    activated_tree(hero.get("AwakeningTree"))
 
 
 def project_response(reply, selection, store=None):
+    from .andras_trial_growth import activated_tree
+
     if reply.body_type != 1:
         return reply
     experience, revision = None, 0
@@ -116,6 +126,9 @@ def project_response(reply, selection, store=None):
                             changed = True
                         if experience is not None and "Experience" in hero:
                             hero["Experience"] = experience
+                            changed = True
+                        if "AwakeningTree" in hero:
+                            hero["AwakeningTree"] = activated_tree(hero["AwakeningTree"])
                             changed = True
             for key, child in node.items():
                 visit(child, key)
@@ -216,7 +229,9 @@ def main(argv=None):
                     "active": bool(value and value["active"]),
                     "stored_spec_id": SOURCE,
                     "trial_spec_id": VARIANT,
-                    "appearance_and_skills": "original",
+                    "appearance_and_skills": "original appearance and kit, experimental buffs",
+                    "leader_skill": "Eunha Myth (stock)" if value and value["active"] else None,
+                    "extra_awakening_nodes": 52 if value and value["active"] else 0,
                     "saved_account_modified": False,
                     "restart_backend_and_game_required": args.action != "status",
                 },

@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The latest full Windows regression run passes **1,090 tests**, including 26
+The preceding full Windows regression run passed **1,090 tests**, including 26
 regressions for the experimental Andras Myth view and isolated training, disabled
 compatibility, owner/content binding, full and partial replies, other-owner
 isolation, source/binary agreement, native block boundaries, no-op choices,
@@ -46,6 +46,35 @@ The layout/statistical pattern can be reused, but five special centers depend on
 their template hero's ability implementation. Leader actions also require
 compatible existing client scripts/graphs and localization, beyond Myth rank.
 Neither the extra tree nor a leader action has been implemented by the review.
+
+The follow-up activated-growth prototype now supplies Eunha's stock leader,
+the 300-node snowflake tree and 52 projected open nodes. Its party center follows
+Eunha's +50 per-mille (+5 percentage points) ranged-party increase. Normal/role
+and weapon coefficients gain 10%; the chain gains 20% (300 to 360% DPS), and
+Bitter Cold gains five percentage points of ATK/DEF and one second of duration.
+All 34 trial regressions pass, including exact tuning, original-bit retention,
+partial replies, all-table restoration, unchanged unrelated binary bytes, native
+resource reuse and malformed/colliding contracts. A coherent real account/XP
+copy passes complete projected-profile comparison, 248 original flags retained,
+52 new flags open, get/check consistency, disable and re-enable. All 74 main
+database tables, 50 original reference files and the XP sidecar remain unchanged;
+integrity passes with zero diagnostic source writes. The full Windows growth
+checkpoint passes **1,098 tests** in 614.945 seconds with no failures/errors.
+The final cost/label refinements additionally pass all 34 targeted cases. Black
+(199 files), Ruff and indexed repository/link checks (257 files) pass.
+The owner's screenshot confirms level 150, original appearance, Myth state and
+55% ranged-party bonus. Its `???` chain label led to a native-verified missing
+`MythOptionId` UI link, now supplied. A numeric-suffix variant name also reuses
+the original name localization. All 34 targeted cases pass after those changes
+and the addition of stock cost definitions for inspecting open special centers.
+The copy check still passes. The owner confirms the corrected chain label and
+launching Eunha's leader while continuing to play. A read-only audit finds the
+original hero development/mask, currencies, saved counters and XP sidecar intact;
+integrity passes and no new API errors were observed. The numeric hero-name
+correction is implemented without separate owner confirmation. The original
+class's leader-title key remains untranslated; no controlled numerical combat
+benchmark was recorded.
+See the [growth scope and limitations](reference-data.md#activated-experimental-growth).
 
 The enemy-level CLI now supports `set-level --all`, covering all 44 solo
 Expedition stage definitions in the matching pack, including hidden, boss,

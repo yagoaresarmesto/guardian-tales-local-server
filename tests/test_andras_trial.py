@@ -86,6 +86,7 @@ class AndrasTrialTests(unittest.TestCase):
             "charactertreeconfig": [{"OriginId": 488, "TreeLayoutName": "original_tree"}],
             "__checksum__": "source",
         }
+        self.add_growth_fixture()
         self.write_source()
         # Tests do not require the optional xxhash package; the real pack is
         # checked separately with native xxh3 hashes, never this synthetic hash.
@@ -96,6 +97,99 @@ class AndrasTrialTests(unittest.TestCase):
                     hashlib.sha256(name.encode()).digest()[:8], "little"
                 ),
             )
+        )
+
+    def add_growth_fixture(self):
+        centers = (248, 257, 266, 275, 283, 291)
+        original = [2000000000 + i if i < 30 else 1090300000 + i for i in range(248)]
+        extra = [2000060000 + i if i in centers else 1790160000 + i for i in range(248, 300)]
+        self.tables["charactertreeconfig"] = [
+            dict(
+                OriginId=488,
+                TreeLayoutName="layout_snowflake_01",
+                AwakeningTreeName="original_andras",
+                SpecialNodes=list(range(30)),
+            ),
+            dict(
+                OriginId=350,
+                TreeLayoutName="layout_snowflake_01_myth",
+                AwakeningTreeName="stock_myth",
+                SpecialNodes=[*range(30), 995, 996, 997, 998, 999, 989],
+            ),
+        ]
+        self.tables["awakeningtreenodes"] = {
+            "original_andras": original,
+            "stock_myth": original + extra,
+        }
+        self.tables["awakeningnodelayout"] = {
+            name: [dict(NodeIndex=i, ConnectedNodes=[]) for i in range(count)]
+            for name, count in (("layout_snowflake_01", 248), ("layout_snowflake_01_myth", 300))
+        }
+        self.tables["awakeningnodelayout_client"] = {
+            name: dict(Circles=[dict(NodeIndex=i) for i in range(count)], Edges=[])
+            for name, count in (("layout_snowflake_01", 30), ("layout_snowflake_01_myth", 36))
+        }
+        self.tables["awakeningnodedata"] = dict(
+            NodeOptions=[],
+            OverrideOptions=[],
+            ResourcesToOpenNode=[
+                dict(Id=20000 + i, OriginId=542, Gold=28000, Item1=60017, Item1Amount=1)
+                for i in (995, 996, 997, 998, 999, 989)
+            ],
+        )
+        self.tables["options"] = [
+            dict(
+                Id=20500542,
+                Name="stock_eunha_leader",
+                Class="MythBattleAction",
+                BattleActionName="MythDokkaebi",
+            ),
+            dict(Id=320488, Name="original_andras_passive", OverrideModifier=2.8),
+            dict(Id=10820, Class="Buff", BuffId=10820),
+            dict(
+                Id=300488,
+                Name="demon_slayer_support_skill",
+                Class="BattleAction",
+                BattleActionName="BasicSupport:DemonSlayer",
+            ),
+        ]
+        self.tables["buffs"] = [
+            dict(Id=10820, ClassName="ProjectileAttackScale", AttackScaleAdd=0.001),
+            dict(
+                Id=3204880,
+                Name="buff_demon_slayer_special_option_0",
+                AttackScaleBase=0.3,
+                Duration=5,
+            ),
+            dict(
+                Id=3204881,
+                Name="buff_demon_slayer_special_option_1",
+                DefenseScaleBase=0.3,
+                Duration=5,
+            ),
+            dict(
+                Id=320488,
+                Name="buff_demon_slayer_special_option",
+                BuffId=[3204880, 3204881],
+                Level=[0, 0],
+            ),
+        ]
+        self.tables["battleactions"] = [
+            dict(Name="MythDokkaebi", UseScript=True, ScriptName="Myth"),
+            *[
+                dict(Name="ManualDemonSlayer:" + name, ModifierBase=value)
+                for name, value in (("First", 0.8), ("Second", 0.8), ("Third", 1.4))
+            ],
+            dict(Name="RoleDemonSlayer", ModifierBase=0.25),
+            dict(Name="CwpDemonSlayer", ModifierBase=0.95, ModifierAdd=0.3),
+            dict(Name="BasicSupport:DemonSlayer", HitDpsMultipliers=[0.3, 0.3, 0.3, 0.3, 1.8]),
+            dict(Name="UnrelatedAction", ModifierBase=9),
+        ]
+        self.tables["battleactions-bin"] = pack_rows(
+            [
+                (i, i + 100, json.dumps(row).encode())
+                for i, row in enumerate(self.tables["battleactions"])
+            ]
         )
 
     def write_source(self):
@@ -144,6 +238,11 @@ class AndrasTrialTests(unittest.TestCase):
         before, changes = list(self.db.iterdump()), self.db.total_changes
         expected = copy.deepcopy(self.store.account.profile())
         expected["User"]["Characters"][0]["CharacterId"] = VARIANT
+        from guardian_tales.andras_trial_growth import activated_tree
+
+        expected["User"]["Characters"][0]["AwakeningTree"] = activated_tree(
+            expected["User"]["Characters"][0]["AwakeningTree"]
+        )
         self.db.execute("PRAGMA query_only=ON")
         self.assertTrue(self.cli("enable")["active"])
         self.assertEqual(self.fetch(), expected)
@@ -176,14 +275,21 @@ class AndrasTrialTests(unittest.TestCase):
         )
         self.assertEqual(other, self.heroes[1])
         self.assertEqual(
-            variant, dict(self.heroes[0], Id=VARIANT, Name="demon_slayer_myth", Rank=6)
+            variant,
+            dict(
+                self.heroes[0],
+                Id=VARIANT,
+                Name="demon_slayer_6",
+                Rank=6,
+                Options=[{"OptionId": 20500542}, *self.heroes[0]["Options"]],
+            ),
         )
         binary = {ident: json.loads(raw) for ident, _, raw in binary_rows(tables["heroes-bin"][1])}
         self.assertEqual(binary, {row["Id"]: row for row in heroes})
         stone = json.loads(tables["items"][1])[-1]
         self.assertEqual(stone["SpriteName"], self.tables["items"][0]["SpriteName"])
         self.assertEqual(
-            tables["charactertreeconfig"], records(decode(self.original))[1]["charactertreeconfig"]
+            json.loads(tables["charactertreeconfig"][1])[1], self.tables["charactertreeconfig"][1]
         )
         self.assertEqual((self.refs / "static_data_get.bin").read_bytes(), self.original)
 
@@ -195,6 +301,182 @@ class AndrasTrialTests(unittest.TestCase):
             self.assertEqual(after[name][1], before[name][1])
         self.assertNotEqual(first, second)
         self.assertGreater(after["heroes"][2], records(decode(active))[1]["heroes"][2])
+
+    def test_growth_uses_stock_leader_and_preserves_all_other_hero_and_resource_definitions(self):
+        body, _ = prepare(self.original, 1, True)
+        tables, original = records(decode(body))[1], records(decode(self.original))[1]
+        variant = json.loads(tables["heroes"][1])[-1]
+        self.assertEqual(variant["Options"][0], {"OptionId": 20500542})
+        self.assertEqual(variant["Class"], self.heroes[0]["Class"])
+        self.assertEqual(variant["SpineAssetName"], self.heroes[0]["SpineAssetName"])
+        for name in ("awakeningnodelayout", "awakeningnodelayout_client"):
+            self.assertEqual(tables[name], original[name])
+        before = self.tables["battleactions"][0]
+        after = json.loads(tables["battleactions"][1])[0]
+        self.assertEqual(before, after)
+        self.assertEqual(json.loads(tables["options"][1])[0], self.tables["options"][0])
+
+    def test_growth_tree_retains_original_indices_and_adds_six_owned_special_centers(self):
+        from guardian_tales.andras_trial_growth import MARKERS, SPECIALS, TREE
+
+        body, _ = prepare(self.original, 1, True)
+        tables = records(decode(body))[1]
+        trees = json.loads(tables["awakeningtreenodes"][1])
+        self.assertEqual(trees[TREE][:248], self.tables["awakeningtreenodes"]["original_andras"])
+        self.assertEqual(trees[TREE][248:], self.tables["awakeningtreenodes"]["stock_myth"][248:])
+        self.assertEqual(len(trees[TREE]), 300)
+        self.assertEqual(trees["stock_myth"], self.tables["awakeningtreenodes"]["stock_myth"])
+        config = json.loads(tables["charactertreeconfig"][1])[0]
+        self.assertEqual(config["SpecialNodes"], [*range(30), *SPECIALS])
+        self.assertEqual(config["AwakeningTreeName"], TREE)
+        nodes = json.loads(tables["awakeningnodedata"][1])
+        own = [row for row in nodes["NodeOptions"] if row["OriginId"] == 488]
+        self.assertEqual([row["OptionId"] for row in own], [10820, *MARKERS])
+        self.assertEqual(own[0]["OptionLevel"], 50)
+        self.assertEqual(
+            nodes["ResourcesToOpenNode"][:6],
+            self.tables["awakeningnodedata"]["ResourcesToOpenNode"],
+        )
+        self.assertEqual(
+            nodes["ResourcesToOpenNode"][6:],
+            [dict(row, OriginId=488) for row in nodes["ResourcesToOpenNode"][:6]],
+        )
+
+    def test_growth_mask_preserves_original_prefix_bits_and_reserved_bits(self):
+        from guardian_tales.andras_trial_growth import activated_tree
+
+        for original in (b"", b"\x81" * 31, b"\x55" * 50):
+            prefix = b"old!"
+            encoded = base64.b64encode(prefix).decode() + "|" + base64.b64encode(original).decode()
+            projected = activated_tree(encoded)
+            actual_prefix, flags = [base64.b64decode(part) for part in projected.split("|")]
+            self.assertEqual(actual_prefix, prefix)
+            for i in range(max(len(original), 38) * 8):
+                actual = bool(flags[i // 8] & (1 << (i % 8)))
+                expected = 248 <= i < 300 or (
+                    i // 8 < len(original) and bool(original[i // 8] & (1 << (i % 8)))
+                )
+                self.assertEqual(actual, expected, i)
+            self.assertEqual(activated_tree(projected), projected)
+        empty = base64.b64decode(activated_tree("").split("|")[1])
+        self.assertEqual(empty[:31], b"\0" * 31)
+
+    def test_growth_partial_awakening_reply_does_not_invent_other_fields_or_touch_other_owners(
+        self,
+    ):
+        from guardian_tales.andras_trial_growth import activated_tree
+
+        self.cli("enable")
+        hero = {"Id": self.target, "AwakeningTree": ""}
+        body = {
+            "User": {"Id": self.owner, "Characters": [hero]},
+            "OtherUser": {"Id": self.owner + 1, "Characters": [hero]},
+        }
+        reply = Packet(1, json.dumps(body).encode(), body_type=1)
+        actual = json.loads(project_response(reply, load(self.store.references)).body)
+        self.assertEqual(
+            actual["User"]["Characters"], [{"Id": self.target, "AwakeningTree": activated_tree("")}]
+        )
+        self.assertEqual(actual["OtherUser"], body["OtherUser"])
+
+    def test_growth_applies_exact_moderate_combat_changes_and_preserves_unrelated_binary_bytes(
+        self,
+    ):
+        body, _ = prepare(self.original, 1, True)
+        tables = records(decode(body))[1]
+        actions = {r["Name"]: r for r in json.loads(tables["battleactions"][1])}
+        self.assertEqual(actions["ManualDemonSlayer:First"]["ModifierBase"], 0.88)
+        self.assertEqual(actions["ManualDemonSlayer:Third"]["ModifierBase"], 1.54)
+        self.assertEqual(actions["RoleDemonSlayer"]["ModifierBase"], 0.275)
+        self.assertEqual(actions["CwpDemonSlayer"]["ModifierBase"], 1.045)
+        self.assertEqual(actions["CwpDemonSlayer"]["ModifierAdd"], 0.33)
+        self.assertEqual(
+            actions["BasicSupport:DemonSlayer"]["HitDpsMultipliers"], [0.36, 0.36, 0.36, 0.36, 2.16]
+        )
+        options = {r["Id"]: r for r in json.loads(tables["options"][1])}
+        self.assertEqual(options[320488]["OverrideModifier"], 3.08)
+        self.assertEqual(options[300488]["MythOptionId"], 20300488)
+        buffs = {r["Id"]: r for r in json.loads(tables["buffs"][1])}
+        self.assertEqual((buffs[3204880]["AttackScaleBase"], buffs[3204880]["Duration"]), (0.35, 6))
+        self.assertEqual(
+            (buffs[3204881]["DefenseScaleBase"], buffs[3204881]["Duration"]), (0.35, 6)
+        )
+        before = binary_rows(self.tables["battleactions-bin"], require_id=False)
+        after = binary_rows(tables["battleactions-bin"][1], require_id=False)
+        for old, new in zip(before, after):
+            name = json.loads(old[2])["Name"]
+            self.assertEqual(old[:2], new[:2])
+            self.assertEqual(json.loads(new[2]), actions[name])
+            if name in ("MythDokkaebi", "UnrelatedAction"):
+                self.assertEqual(old, new)
+
+    def test_growth_markers_display_matching_values_without_consuming_source_resources(self):
+        from guardian_tales.andras_trial_growth import MARKERS
+
+        before = list(self.db.iterdump())
+        self.cli("enable")
+        self.fetch()
+        tables = records(decode(self.session.handle(request("/static-data/get", {})).body))[1]
+        options = {r["Id"]: r for r in json.loads(tables["options"][1])}
+        for ident in MARKERS[:3]:
+            self.assertEqual(options[ident]["Increase"], 10)
+            self.assertTrue(options[ident]["AwakenTitle"].endswith("_awaken"))
+            self.assertEqual(options[ident]["AwakenDescription"], options[ident]["DescKey"])
+        self.assertEqual(sum(options[MARKERS[3]]["HitDpsMultipliers"]), 3.6)
+        self.assertEqual(options[MARKERS[4]]["BuffName"], "buff_demon_slayer_special_option")
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertFalse((self.state / "andras-myth-trial.sqlite3").exists())
+
+    def test_growth_bad_awakening_encodings_reject_before_training_or_other_handler_writes(self):
+        from guardian_tales.andras_trial_growth import activated_tree
+
+        for value in (
+            True,
+            42,
+            "bad",
+            "AAAA|!!!!",
+            "AA==|",
+            "AAAAAA==|" + base64.b64encode(b"x" * 126).decode(),
+        ):
+            with self.subTest(value=str(value)[:20]), self.assertRaises(ValueError):
+                activated_tree(value)
+        self.cli("enable")
+        profile = self.store.account.profile()
+        profile["User"]["Characters"][0]["AwakeningTree"] = "invalid"
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.fetch()
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.cli("disable")
+        self.assertEqual(self.fetch(), profile)
+
+    def test_growth_missing_corrupt_and_conflicting_contracts_cannot_publish_active_configuration(
+        self,
+    ):
+        original = copy.deepcopy(self.tables)
+        changes = (
+            lambda: self.tables.pop("battleactions-bin"),
+            lambda: self.tables["charactertreeconfig"][0].update(TreeLayoutName="different"),
+            lambda: self.tables["options"].append(dict(Id=20350488)),
+            lambda: self.tables["options"].append(dict(Id=999999, Name="local_andras_myth_manual")),
+            lambda: self.tables["options"][0].update(BattleActionName="other"),
+            lambda: self.tables["buffs"][0].update(AttackScaleAdd=1),
+            lambda: self.tables["awakeningtreenodes"]["stock_myth"].pop(),
+            lambda: self.tables["awakeningnodelayout_client"]["layout_snowflake_01_myth"][
+                "Circles"
+            ][0].update(NodeIndex=9),
+            lambda: self.tables["battleactions"][-1].update(ModifierBase=10),
+            lambda: self.tables["awakeningnodedata"].update(NodeOptions=None),
+            lambda: self.tables["awakeningnodedata"]["ResourcesToOpenNode"].clear(),
+        )
+        for change in changes:
+            self.tables = copy.deepcopy(original)
+            change()
+            self.write_source()
+            self.reject("enable")
+            self.assertFalse((self.refs / SELECTION).exists())
 
     def test_bootstrap_get_and_check_share_active_and_restored_checksums(self):
         before = list(self.db.iterdump())

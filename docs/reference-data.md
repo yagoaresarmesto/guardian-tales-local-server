@@ -9,10 +9,10 @@ preservation layouts.
 ## Experimental Andras Myth view
 
 The opt-in `andras-trial` command temporarily presents one owned five-star
-Andras as a local Myth variant. It retains her original class, skill options,
-base stats, portrait, voice, animation references, equipment and awakening data.
+Andras as a local Myth variant. It retains her original class, base stats,
+portrait, voice, equipment, original attack/chain animations and original
+awakening flags, while applying experimental combat tuning and an extra branch.
 She starts with her original experience and can train to the existing Myth cap.
-This prototype adds no custom stat bonuses or skills.
 It uses the client's existing Myth presentation, not a new six-gold-star UI.
 
 Run from the project root with the same state/reference directories as the
@@ -34,13 +34,14 @@ The configuration is private and bound to that owner, inventory ID and content
 hash. Do not copy it between accounts. Repeating a choice is a no-op.
 
 The CLI opens SQLite read-only. A reply projection changes the selected hero's
-outgoing `CharacterId` and experimental experience, plus the owning `User` revision
+outgoing `CharacterId`, experimental experience and extra awakening flags, plus the owning `User` revision
 when trial training exists; the saved hero retains her original spec and XP.
 Training uses the matching imported-account free-experience policy, respects
 story unlocks, saved limit breaks/blessing and the existing Myth level modifier,
 and requires only Andras in that request. No currency, item or saved training
 counter is granted/consumed/advanced. Other development operations are outside
-this prototype.
+this prototype. The new branch is activated for the experiment; interactive
+awakening purchases/reset are not implemented and no stones or gold are spent.
 
 Trial XP and retry receipts commit together in the private
 `andras-myth-trial.sqlite3` file next to `server.sqlite3`. They are bound to the
@@ -63,6 +64,55 @@ definitions and reply values. Preserved content files, APK and asset bundles
 are never patched. Missing dependencies, conflicting IDs, wrong ownership or
 changed content reject the active trial before handling account mutations.
 
+### Activated experimental growth
+
+The added snowflake branch has **52 already-open nodes**: 46 standard-stat nodes
+from the compatible existing Myth layout and six special centers. The original
+248 encoded nodes, their saved bits and the serialized prefix remain intact.
+Extra bits are projected when the client receives the target hero; they are not
+written to the original account or the separate XP database.
+
+| Feature | Experimental setting |
+| --- | --- |
+| Leader | Existing Eunha Myth option/action, including its original damage, content-specific buffs and cinematic. No original Andras leader implementation is invented. |
+| Party center | The same ranged-party option and 50 additional per-mille levels as Eunha: **+5 percentage points**. |
+| Normal-attack center | Base coefficients +10%; the last-hit passive override scales equally, retaining its original doubling relationship. |
+| Role-action center | Base coefficient +10%. |
+| Weapon-skill center | Base/additive damage coefficients +10%. |
+| Chain center | The original five hits total **360% DPS instead of 300%**, a 20% increase. |
+| Special-ability center | Bitter Cold's ATK/DEF buffs rise from **30% to 35%** and from **5 to 6 seconds**; activation conditions remain unchanged. |
+
+These are local experimental balance choices. The 20% chain increase follows an
+existing AA72 example (3 to 3.6 DPS); other supplied Myth chains differ, including
+Kamael's approximately 13.6% increase and Eunha's area improvement rather than a
+damage increase. The node headers reuse existing localized generic enhancement
+titles; descriptions use existing stat/Andras templates and the tuned values.
+The original Andras class has no shipped leader-title localization, so that title
+may remain unresolved even though the stock leader option/action is supplied.
+The owner verified launching the borrowed leader and continuing to play.
+
+The captured hero screen confirms level 150, the Myth state and the ranged-party
+bonus at 55%, with the original appearance. It exposed an empty chain label:
+the native ability list skips a base chain on Myth heroes without a
+`MythOptionId` link. The effective base chain now links to its experimental
+awakening option while keeping the original localized `Cold Death` title.
+The variant uses a unique numeric-suffix name so native rank-name stripping can
+reuse Andras's existing name key, instead of looking up a new untranslated Myth
+name. The owner confirmed the corrected chain text. The numeric name correction
+is implemented without separate owner confirmation. The unresolved leader title
+remains a known presentation limitation. Numerical combat tuning has static/copy
+coverage; no controlled damage benchmark was recorded.
+
+Andras's original chain has no generic Myth-node parameter consumer. Since all
+new nodes are deliberately active, the backend applies the corresponding combat
+changes directly to the **effective shared Andras combat definitions**, with
+matching JSON/binary records; the node options describe those active changes.
+This is not per-node interactive unlocking or per-instance combat isolation:
+other Andras instances using those same effective definitions can share the
+tuning while the trial is active. Other heroes' combat definitions remain intact.
+Disabling restores the original tables and exact saved awakening mask. Shipped
+scripts, strings, APK, asset bundles and source reference files stay unchanged.
+
 ### Myth compatibility review
 
 The matching pack contains 42 rank-six hero definitions, including definitions
@@ -72,11 +122,11 @@ uniform upgrade. The Andras trial currently has the following scope:
 | Area | Current experimental behavior | Remaining work |
 | --- | --- | --- |
 | Myth identity and level cap | Existing Myth presentation; isolated free XP uses story, limit-break, blessing and Myth modifiers. The owner reached 150 and retained it after reopening. | Other saved accounts/caps need their own APK checks. |
-| Appearance, equipment and base abilities | Original class, origin, combat/visual definitions, equipment and saved progression are retained. The owner confirmed the original appearance and abilities. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
+| Appearance, equipment and base abilities | Original class, origin, animations, equipment and saved progression are retained; the active combat coefficients are tuned as above. The owner confirmed the original appearance. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
 | Base-stat changes | Original five-star base stats remain unchanged; levels still scale normally. | Official Myth variants can have different base stats. No common ratio or Andras-specific rebalancing has been selected. |
-| Leader skill | No additional Myth leader option or action is supplied. | A working action, option, description and compatible native resources are required; a Myth rank alone does not create them. |
-| Awakening | All original nodes and saved flags are retained. | The extra Myth branch and interactive open/reset requests are not implemented. |
-| Myth ability improvements | Original normal/role, weapon, chain and special abilities remain in use. | Hero-specific Myth changes need compatible client behavior, beyond copying option names or descriptions. |
+| Leader skill | The stock Eunha Myth option/action is supplied. | Its presentation and use on Andras need APK verification; the original class lacks a localized leader title. |
+| Awakening | Original nodes/flags are retained; 52 extra nodes are projected already open. | Interactive open/reset requests are not implemented. |
+| Myth ability improvements | Original animations/mechanics remain, with the active experimental coefficients above. | Full hero-specific Myth reworks are not reconstructed by this trial. |
 | Other development | Original limit breaks and blessing affect the cap and retained options. | Blessing, limit-break, conversion and awakening mutations are not added by this trial. Training Room placement/removal is also outside its supported entry/read path. |
 | Collection and rewards | Original stored hero and knowledge/mission records remain normal. | Experimental Myth progression does not grant official conversion rewards or rewrite collection counters. |
 | Reversion | Disable restores original hero/XP/static views, retaining the separate trial XP and ordinary saved gameplay changes. | Any future extra awakening state must use the same separation and restoration rules. |
@@ -88,7 +138,8 @@ uniform upgrade. The Andras trial currently has the following scope:
 first 30 circle coordinates match the original layout, and six original node
 connections gain the branch links. The existing layout therefore offers a
 concrete template without replacing Andras's original node indices or artwork.
-This is a static-definition comparison, not an APK-verified new Andras tree.
+This comparison supplied the activated experimental branch above; its APK checks
+are separate from the static-definition and copy-based checks.
 
 The statistical pattern can be reused while preserving the original 248 encoded
 nodes. The special pattern needs adaptation: one center improves the party buff,
@@ -112,8 +163,9 @@ A future branch should retain the original encoded node prefix, validate all
 new graph references, adapt the party/special effects explicitly, and keep extra
 opened flags and retry receipts outside the saved account. Interactive awakening
 also needs its actual request/reply contract, costs policy, revision handling and
-disable/re-enable tests. No tree, leader action, saved awakening flags, APK or
-preserved resource files were changed by this review.
+disable/re-enable tests. The initial review did not change any tree or leader;
+the subsequent activated prototype is described above. Saved awakening flags,
+APK and preserved resource files remain unchanged.
 
 ## Free local nickname changes
 

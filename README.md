@@ -279,7 +279,8 @@ external static overlays without editing the saved account.
 
 The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
 projects one owned Andras as an experimental Myth variant using her existing
-appearance, skills and stats. Enable/disable changes the server's view only;
+appearance and combat kit, with Eunha's stock leader and an activated extra
+awakening branch. Enable/disable changes the server's view only;
 experimental experience is saved separately, while the stored hero, preserved
 resources and APK remain unchanged. Disabling shows her original experience.
 

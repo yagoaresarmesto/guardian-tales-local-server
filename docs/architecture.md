@@ -35,7 +35,7 @@ flowchart LR
 | `guild_war.py`, `guild_war_static.py` | Opt-in season-1 menu entry, reversible Global War/Raid calendar overlay composed above existing Raid/arena selections |
 | `guild_raid.py` | Fresh raid menus, empty history/rankings, combat entry/exit trial and season selector; no account writes, persistent raid progress or rewards |
 | `expedition_levels.py` | Optional per-stage Global enemy-level CLI and reversible static overlay, without account or preserved-file writes |
-| `andras_trial.py`, `andras_trial_static.py`, `andras_trial_training.py` | Owner-bound experimental Andras view, separate transactional trial XP, unchanged saved hero, JSON/binary static composition and reversible CLI configuration |
+| `andras_trial.py`, `andras_trial_static.py`, `andras_trial_training.py`, `andras_trial_growth.py` | Owner-bound Andras view, separate transactional XP, activated extra awakening, stock Eunha leader, reversible combat/static composition and unchanged saved hero |
 | `raid_static.py` | Bounded external static-table preparation, LZ4 encoding and immutable raid-only calendar overrides for historical selection |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
