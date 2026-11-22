@@ -36,11 +36,11 @@ All **91 campaign/core tests** pass after this change; discovery lists 1,044
 tests, without a new full-suite run. The actual result, equivalent ticks, repeated
 result, start and exit passed on a query-only account copy with all 74 tables
 intact, no source writes and valid SQLite integrity. After backend restart,
-the live APK completed one clear-result request without new Expedition errors.
+the live APK completed two clear-result requests without new Expedition errors.
 A read-only audit found the full profile and all 71 gameplay tables unchanged;
-only login/epoch/counter metadata changed. The owner's result-screen, map-return
-and reopening checks are pending. New stage unlocks and reward claims remain
-outside practice scope.
+only login/epoch/counter metadata changed. The owner confirmed that results
+appear, returning to the map works and the account remains intact after
+reopening. New stage unlocks and reward claims remain outside practice scope.
 
 The Solo Expedition trial opens feature rules 31 and 110 for the Android 3.57.0
 Global client. The archived data includes four areas, ten districts, the wave

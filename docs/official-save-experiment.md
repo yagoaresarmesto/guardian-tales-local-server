@@ -28,12 +28,13 @@ equivalent integer ticks, repeated result and start/exit checks passed on a
 query-only coherent copy of the current account: the entire database, including
 all 74 tables, remained unchanged. The source connection had zero diagnostic
 writes and the backup passed integrity checks. After backend restart, the live
-APK completed a clear-result request without new Expedition errors. A read-only
+APK completed two clear-result requests without new Expedition errors. A read-only
 audit found the entire profile and all 71 gameplay tables unchanged, with only
 normal login/epoch/counter metadata changes and valid SQLite integrity. The
-owner's result-screen, map-return and reopening checks remain pending. This fixes
-result parsing within the existing practice policy; it does not add progression,
-records or rewards. No save or content reimport is required.
+owner confirmed that the result screen opens, returning to the map works and the
+account remains intact after reopening. This fixes result parsing within the
+existing practice policy; it does not add progression, records or rewards.
+No save or content reimport is required.
 
 ## Expedition three-party preset management
 
