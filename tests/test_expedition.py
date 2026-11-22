@@ -15,10 +15,12 @@ from guardian_tales.expedition import (
     END,
     ENTRY,
     FARM_ENTRY,
+    MAX_PLAY_TIME_TICKS,
     RANKINGS,
     START,
     TODAY_SCORE,
     TRIAL,
+    play_time_ticks,
 )
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
@@ -124,7 +126,7 @@ class ExpeditionTests(unittest.TestCase):
             with self.assertRaises(PacketError):
                 self.session.handle(request(ENTRY, bad))
 
-    def test_unlocked_stage_can_run_and_score_without_spending_or_advancing_save(self):
+    def install_stage_trial(self):
         self.install_save()
         self.session.signed_in = True
         (self.root / TRIAL).touch()
@@ -148,6 +150,10 @@ class ExpeditionTests(unittest.TestCase):
             ).encode()
         )
         (self.root / "static_data_get.bin").write_bytes(data)
+        return stage
+
+    def test_unlocked_stage_can_run_and_score_without_spending_or_advancing_save(self):
+        stage = self.install_stage_trial()
         clear = dict(
             stage,
             PlayTime=80 * 10_000_000,
@@ -195,6 +201,129 @@ class ExpeditionTests(unittest.TestCase):
         ):
             with self.subTest(route=route, payload=payload), self.assertRaises(PacketError):
                 self.session.handle(request(route, payload))
+
+    def test_native_timespan_result_before_timeout_matches_ticks_without_writes(self):
+        stage = self.install_stage_trial()
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        source = (self.root / "static_data_get.bin").read_bytes()
+        clear = dict(
+            stage,
+            KillScore=120000,
+            Survivors=8,
+            PartySwitchingCount=4,
+            Kills=15,
+            SupportSkillUsed=False,
+        )
+        # Compare the native TimeSpan representation with the existing tick
+        # contract, including the final 100 ns tick before a millisecond boundary.
+        for text, ticks, time_score, survivor_score in (
+            ("00:01:20.0000000", 800_000_000, 100000, 52800),
+            ("00:01:19.9999999", 799_999_999, 100005, 52801),
+            ("1.00:00:00", 864_000_000_000, 0, 28800),
+            ("10675199.02:48:05.4775807", MAX_PLAY_TIME_TICKS, 0, 28800),
+        ):
+            with self.subTest(time=text):
+                self.session.handle(request(START, stage))
+                expected = json.loads(
+                    self.session.handle(request(CLEAR, dict(clear, PlayTime=ticks))).body
+                )
+                for _ in range(2):
+                    actual = json.loads(
+                        self.session.handle(request(CLEAR, dict(clear, PlayTime=text))).body
+                    )
+                    self.assertEqual(actual, expected)
+                self.assertEqual(actual["TimeScore"], time_score)
+                self.assertEqual(actual["SurvivorsScore"], survivor_score)
+                self.assertFalse(actual["NewRecord"])
+                for key in ("TodayMaxScore", "Rankings", "AddedItems", "AddedCollectibles"):
+                    self.assertEqual(actual[key], [])
+                self.session.handle(request(END, stage))
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+        self.assertEqual((self.root / "static_data_get.bin").read_bytes(), source)
+
+    def test_timespan_preserves_tick_precision_and_native_range(self):
+        for value, expected in (
+            ("00:00:00", 0),
+            ("00:00:00.0000001", 1),
+            ("00:00:00.1", 1_000_000),
+            ("00:00:00.123456", 1_234_560),
+            ("00:00:01.2345678", 12_345_678),
+            ("00:01:20.1234567", 801_234_567),
+            ("1.02:03:04.0000005", 937_840_000_005),
+            ("10675199.02:48:05.4775807", MAX_PLAY_TIME_TICKS),
+            (0, 0),
+            (MAX_PLAY_TIME_TICKS, MAX_PLAY_TIME_TICKS),
+        ):
+            with self.subTest(value=value):
+                self.assertEqual(play_time_ticks(value), expected)
+
+    def test_result_rejects_invalid_timespans_without_changing_the_save(self):
+        stage = self.install_stage_trial()
+        before = list(self.db.iterdump())
+        changes = self.db.total_changes
+        clear = dict(
+            stage,
+            KillScore=120000,
+            Survivors=8,
+            PartySwitchingCount=4,
+            Kills=15,
+            SupportSkillUsed=False,
+        )
+        for value in (
+            None,
+            [],
+            {},
+            True,
+            False,
+            1.0,
+            -1,
+            MAX_PLAY_TIME_TICKS + 1,
+            "",
+            "80",
+            " 00:01:20",
+            "00:01:20\n",
+            "00:00",
+            "0:01:20",
+            "24:00:00",
+            "00:60:00",
+            "00:01:60",
+            "-00:00:01",
+            "1.24:00:00",
+            "00:00:00.00000001",
+            "10675199.02:48:05.4775808",
+            "PT1M20S",
+            "００:０１:２０",
+        ):
+            with self.subTest(value=value), self.assertRaises(PacketError):
+                self.session.handle(request(CLEAR, dict(clear, PlayTime=value)))
+        self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+
+    def test_timespan_keeps_stage_result_validation_and_score_limits(self):
+        stage = self.install_stage_trial()
+        clear = dict(
+            stage,
+            PlayTime="00:01:20.0000000",
+            KillScore=120000,
+            Survivors=8,
+            PartySwitchingCount=4,
+            Kills=15,
+            SupportSkillUsed=False,
+        )
+        for changed in (
+            {"StageId": 250011002},
+            {"Survivors": 13},
+            {"Survivors": True},
+            {"KillScore": -1},
+            {"KillScore": 0x7FFFFFFF},
+            {"Kills": 1.0},
+            {"PartySwitchingCount": True},
+            {"SupportSkillUsed": 0},
+        ):
+            with self.subTest(changed=changed), self.assertRaises(PacketError):
+                self.session.handle(request(CLEAR, dict(clear, **changed)))
 
     def test_switching_to_a_captured_expedition_preset_preserves_its_parties(self):
         self.install_save()

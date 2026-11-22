@@ -6,7 +6,7 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The latest Windows regression run passes **1,040 tests**, including 22 new
+The latest full Windows regression run passed **1,040 tests**, including 22 new
 Expedition preset cases. The teams/Orbital union passes 137 cases. The actual
 delete request and create/copy, rename, party edits, ordering and selection also
 passed on a coherent copy of the current imported account. Deletion preserved
@@ -26,10 +26,21 @@ in that snapshot; its contract has automated/native/clone coverage alongside
 the owner's UI report. See the
 [multi-party preset contract](reference-data.md#expedition-multi-party-presets).
 
-The Expedition scope audit also found three preexisting rejected
-`/expedition/clear-stage/v2` calls. Those predate this preset fix and need their
-own captured result payload before diagnosis; they are not covered by preset
-verification. New stage unlocks and reward claims remain outside practice scope.
+The separate Expedition result failure was reproduced approximately 20 seconds
+before the countdown ended. Its native `/expedition/clear-stage/v2` request sent
+`PlayTime` as an invariant TimeSpan string, while the handler required integer
+ticks. The duration parser now accepts both forms with exact tick precision and
+native range checks. Four new regressions cover early results, fractional
+boundaries, malformed/overflowing inputs, existing result guards and zero writes.
+All **91 campaign/core tests** pass after this change; discovery lists 1,044
+tests, without a new full-suite run. The actual result, equivalent ticks, repeated
+result, start and exit passed on a query-only account copy with all 74 tables
+intact, no source writes and valid SQLite integrity. After backend restart,
+the live APK completed one clear-result request without new Expedition errors.
+A read-only audit found the full profile and all 71 gameplay tables unchanged;
+only login/epoch/counter metadata changed. The owner's result-screen, map-return
+and reopening checks are pending. New stage unlocks and reward claims remain
+outside practice scope.
 
 The Solo Expedition trial opens feature rules 31 and 110 for the Android 3.57.0
 Global client. The archived data includes four areas, ten districts, the wave

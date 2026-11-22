@@ -11,6 +11,30 @@ and one- and ten-hero draws using selectable controllers in the APK. Wishlist
 changes and the other supported payment types have synthetic coverage only.
 Unlocked systems are not automatically implemented by import.
 
+## Expedition result duration compatibility
+
+A rejected result occurred with approximately 20 seconds remaining in a
+100-second stage. The captured `/expedition/clear-stage/v2` request contained
+`PlayTime` as a TimeSpan string representing about 79.33 seconds, whereas the
+practice handler only accepted integer ticks. Native inspection confirms that
+the request boxes a TimeSpan. The parser now accepts its invariant nonnegative
+text representation and legacy ticks, preserving 100 ns precision until the
+existing millisecond-based score calculation. Invalid formats, negative values
+and native-range overflow remain rejected, as do invalid result counters or
+stages unavailable in the saved progression.
+
+Four new regressions and all 91 campaign/core cases pass. The actual request,
+equivalent integer ticks, repeated result and start/exit checks passed on a
+query-only coherent copy of the current account: the entire database, including
+all 74 tables, remained unchanged. The source connection had zero diagnostic
+writes and the backup passed integrity checks. After backend restart, the live
+APK completed a clear-result request without new Expedition errors. A read-only
+audit found the entire profile and all 71 gameplay tables unchanged, with only
+normal login/epoch/counter metadata changes and valid SQLite integrity. The
+owner's result-screen, map-return and reopening checks remain pending. This fixes
+result parsing within the existing practice policy; it does not add progression,
+records or rewards. No save or content reimport is required.
+
 ## Expedition three-party preset management
 
 The Expedition preset deletion failed at unsupported

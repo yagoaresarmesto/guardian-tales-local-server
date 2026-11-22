@@ -118,6 +118,16 @@ leaderboard. Selecting a saved Expedition preset updates the selected slot.
 The trial covers stage replay and the preset operations below. New stage unlocks
 and Expedition reward claims remain outside that scope.
 
+The native `/expedition/clear-stage/v2` request serializes `PlayTime` as a
+nonnegative invariant TimeSpan string, `[d.]hh:mm:ss[.fffffff]`. The backend
+also accepts the previous integer tick representation. It parses fractional
+seconds into exact 100 ns ticks before applying the existing whole-millisecond
+scoring calculation; it rejects malformed, negative and overflowing durations.
+This includes results reported before the countdown reaches zero. Result
+requests remain read-only, including repeated reports; no records, rewards or
+progression are written. See the
+[standard TimeSpan format](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
+
 ### Expedition multi-party presets
 
 Expedition uses `UserMultiPartyPreset`, separately from the single-team
