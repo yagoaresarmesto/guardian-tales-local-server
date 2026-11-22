@@ -120,20 +120,66 @@ creation or editing, and Expedition reward claims are outside that scope.
 
 ## Classic Co-op Defense trial
 
-This Android 3.57.0 trial targets the original Fire Defense stage on Easy
-(`303050001`). It adds **Classic Co-op** beside Expedition on page 2 of the
-**Book of Contents → Challenge** tab, using the existing Hero Tower artwork.
-The client creates a one-player Defense room and uses the leader of the normal
-party for the solo run. It sets the legacy Co-op hero slot in memory during
-the run and uses the stage's fixed Easy tier without the online season's
-unified matchmaking adjustments. The saved hero selection is preserved.
+Classic Co-op opens the original **Fire Defense (Easy)** stage as solo
+practice on the local Android 3.57.0 client. This guide assumes the same
+prepared client pack and local account used for normal play.
 
-The backend accepts practice creation, start, and end requests after local
-sign-in if `classic_coop_trial.enabled` is present in the external reference
-directory. The responses carry no item grants and do not write the account.
-The new card requires a separate local CDN overlay. Add the overlay's
-`resources/files` root after the preserved resource root in the CDN command.
-Its `manifest.json` lists the files below.
+### Enable and play
+
+Run commands in PowerShell from the project folder. Do this from the lobby or
+with the game closed.
+
+1. Enable Classic Co-op by creating the marker file if it is missing.
+
+   ```powershell
+   New-Item -ItemType File -Path .\local\client-data\reference\classic_coop_trial.enabled -Force
+   ```
+
+2. Start the CDN in PyCharm Tab 2 with both resource roots in this order.
+   If the CDN is running, stop it with **Ctrl+C** before pasting this command.
+   This assumes the prepared overlay is in `local\classic-coop-trial`.
+
+   ```powershell
+   .\.venv\Scripts\python.exe -m guardian_tales assets --resource-root .\local\client-data\resources\files --resource-root .\local\classic-coop-trial\resources\files --port 18081 --journal .\local\cdn-requests.jsonl
+   ```
+
+3. Keep the backend and the Android bridge running. The bridge should use
+   `--cdn-port 18081` with the CDN command above. If you are starting all
+   three services from scratch, see the [MuMu startup guide](mumu-client.md)
+   and use the two-root CDN command from step 2.
+4. Fully close and reopen Guardian Tales. In **Book of Contents → Challenge**,
+   go to page 2 and tap **Classic Co-op** beside Expedition. The card starts
+   Fire Defense directly.
+
+To choose a hero, set them as the leader of your normal party before tapping
+the card. The trial runs a one-player room on Easy and grants no rewards.
+After defeat, **Confirm** on the results screen returns to the lobby. That
+path has been verified in the Android client. The victory results path still
+needs client verification.
+
+If the card is missing, check that the CDN command includes both
+`--resource-root` arguments, then reopen the game. If the card says
+**Tap to retry**, check that the marker exists and the backend is running.
+
+### Disable practice
+
+From the project folder in PowerShell, remove the marker before reopening the
+game.
+
+```powershell
+Remove-Item -LiteralPath .\local\client-data\reference\classic_coop_trial.enabled
+```
+
+The card can still appear while the overlay is served. Keeping both CDN roots
+also keeps any other files installed in that overlay, such as the local Guild
+Raid and Guild War banners. Re-create the marker to enable practice again.
+
+### Client overlay build
+
+The backend reads the marker on each practice request after local sign-in.
+The client uses the normal party leader for stage `303050001` and restores
+the legacy Co-op hero slot after each run. The prepared overlay's
+`manifest.json` lists the client files below.
 
 | Client file under `files/` | Build input |
 | --- | --- |
@@ -143,18 +189,14 @@ Its `manifest.json` lists the files below.
 | `Android.index` | Replace both bundle rows and add the script row with their sizes and SHA-1 hashes. Pack the index using the matching external 3.57.0 index codec. |
 | `media/immediates/Conditions-v2.encrypted` | Use the preserved 3.57.0 network-monitor settings. The client fetches this file separately from the bundle index. |
 
-Unity validates the lobby bundle against the index at startup. Use a separate
-overlay so the preserved pack stays available for rollback. To roll back,
-remove the reference marker, start the CDN with the original resource root
-alone, and fully reopen the app to fetch the stock index and bundle.
-Automated tests cover the backend request contracts and account preservation.
-The Android client has completed a run through defeat and returned to the lobby.
-The trial's
-results Exit button uses the normal stage-to-lobby routine, which can request
+Unity validates the lobby bundle against the index at startup. The original
+resource root alone serves the stock index and bundle after a full app restart.
+This also drops any other files supplied by the overlay. Automated tests cover
+the backend request contracts and account preservation.
+The results Exit button uses the normal stage-to-lobby routine, which can request
 `/auth/unpause` to resync the clock on the signed-in connection. For this trial,
 the final `/stage/end-stage` request returns the saved state of the practice
-stage and an empty reward list. It can be retried after reconnecting. A victory
-and its results screen have yet to be verified in the client.
+stage and an empty reward list. It can be retried after reconnecting.
 
 ## Backroom entry
 
