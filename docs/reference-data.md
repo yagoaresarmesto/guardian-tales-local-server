@@ -63,6 +63,58 @@ definitions and reply values. Preserved content files, APK and asset bundles
 are never patched. Missing dependencies, conflicting IDs, wrong ownership or
 changed content reject the active trial before handling account mutations.
 
+### Myth compatibility review
+
+The matching pack contains 42 rank-six hero definitions, including definitions
+whose release dates/versions may not be active. Their mechanics are not a single
+uniform upgrade. The Andras trial currently has the following scope:
+
+| Area | Current experimental behavior | Remaining work |
+| --- | --- | --- |
+| Myth identity and level cap | Existing Myth presentation; isolated free XP uses story, limit-break, blessing and Myth modifiers. The owner reached 150 and retained it after reopening. | Other saved accounts/caps need their own APK checks. |
+| Appearance, equipment and base abilities | Original class, origin, combat/visual definitions, equipment and saved progression are retained. The owner confirmed the original appearance and abilities. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
+| Base-stat changes | Original five-star base stats remain unchanged; levels still scale normally. | Official Myth variants can have different base stats. No common ratio or Andras-specific rebalancing has been selected. |
+| Leader skill | No additional Myth leader option or action is supplied. | A working action, option, description and compatible native resources are required; a Myth rank alone does not create them. |
+| Awakening | All original nodes and saved flags are retained. | The extra Myth branch and interactive open/reset requests are not implemented. |
+| Myth ability improvements | Original normal/role, weapon, chain and special abilities remain in use. | Hero-specific Myth changes need compatible client behavior, beyond copying option names or descriptions. |
+| Other development | Original limit breaks and blessing affect the cap and retained options. | Blessing, limit-break, conversion and awakening mutations are not added by this trial. Training Room placement/removal is also outside its supported entry/read path. |
+| Collection and rewards | Original stored hero and knowledge/mission records remain normal. | Experimental Myth progression does not grant official conversion rewards or rewrite collection counters. |
+| Reversion | Disable restores original hero/XP/static views, retaining the separate trial XP and ordinary saved gameplay changes. | Any future extra awakening state must use the same separation and restoration rules. |
+
+**An extra awakening branch is feasible as server-supplied data.** Andras uses
+`layout_snowflake_01` with 248 nodes. An existing
+`layout_snowflake_01_myth` layout, used by Bianca's Myth definition, has 300 nodes:
+52 extra nodes, comprising 46 standard-stat nodes and six special centers. Its
+first 30 circle coordinates match the original layout, and six original node
+connections gain the branch links. The existing layout therefore offers a
+concrete template without replacing Andras's original node indices or artwork.
+This is a static-definition comparison, not an APK-verified new Andras tree.
+
+The statistical pattern can be reused while preserving the original 248 encoded
+nodes. The special pattern needs adaptation: one center improves the party buff,
+while the other five target that hero's particular abilities. For example,
+Bianca's party center supplies critical multiplier, whereas existing ranged Myth
+heroes can increase their ranged party buff. Copying Bianca's custom-action and
+battle-parameter options onto Andras would not prove those effects work. The
+original Andras combat code must actually consume each chosen parameter, or the
+trial must reuse compatible behavior already present in the client.
+
+The leader path has a similar requirement. The native ability screen checks Myth
+rank and `Class`, looks up the class's leader-skill text, and renders a
+`MythBattleActionOption`. That option resolves a battle action through the native
+factory. Lua Myth actions load a script named from the action definition; graph
+actions require their existing graph/resources. New static IDs or translated
+labels do not create missing client code. A server-only implementation must reuse
+compatible shipped behavior and resources; a fully original Andras Myth ability
+is not established by this audit.
+
+A future branch should retain the original encoded node prefix, validate all
+new graph references, adapt the party/special effects explicitly, and keep extra
+opened flags and retry receipts outside the saved account. Interactive awakening
+also needs its actual request/reply contract, costs policy, revision handling and
+disable/re-enable tests. No tree, leader action, saved awakening flags, APK or
+preserved resource files were changed by this review.
+
 ## Free local nickname changes
 
 `/user/change-name` accepts exactly `{"Name":"NewName"}` after sign-in and

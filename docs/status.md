@@ -38,6 +38,15 @@ variant; that and combat checks remain open. Black (198 files), Ruff
 and indexed repository/link checks (256 source files) pass.
 See the [Andras trial](reference-data.md#experimental-andras-myth-view).
 
+A read-only [Myth compatibility review](reference-data.md#myth-compatibility-review)
+found a matching existing snowflake Myth layout with 300 nodes versus Andras's
+248: 46 extra statistical nodes and six special centers. Original circle
+coordinates match; the six original connection changes attach the extra branch.
+The layout/statistical pattern can be reused, but five special centers depend on
+their template hero's ability implementation. Leader actions also require
+compatible existing client scripts/graphs and localization, beyond Myth rank.
+Neither the extra tree nor a leader action has been implemented by the review.
+
 The enemy-level CLI now supports `set-level --all`, covering all 44 solo
 Expedition stage definitions in the matching pack, including hidden, boss,
 unexplored and archived event variants. It accepts visible levels 1 through 220
