@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 from guardian_tales.__main__ import main
 from guardian_tales.admin_test_items import grant_test_pin
+from guardian_tales.andras_trial_growth import LEADER
 from guardian_tales.head_hunter import grant, history, remove
 from guardian_tales.head_hunter_static import ACTION, CLASS, OPTION, SOURCE, TABLE, VARIANT
 from guardian_tales.items import inventory_item
@@ -302,7 +303,7 @@ class HeadHunterTests(unittest.TestCase):
         self.grant()
         after = self.tables()
         hero = next(r for r in json.loads(after["heroes2"][1]) if r["Id"] == 20488)
-        self.assertTrue(any(o["OptionId"] == 20500542 for o in hero["Options"]))
+        self.assertTrue(any(o["OptionId"] == LEADER for o in hero["Options"]))
         self.assertEqual(hero["Class"], CLASS)
         actions = {r["Name"]: r for r in json.loads(after["battleactions"][1])}
         self.assertEqual(

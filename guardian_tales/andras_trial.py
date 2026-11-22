@@ -230,7 +230,11 @@ def main(argv=None):
                     "stored_spec_id": SOURCE,
                     "trial_spec_id": VARIANT,
                     "appearance_and_skills": "original appearance and kit, experimental buffs",
-                    "leader_skill": "Eunha Myth (stock)" if value and value["active"] else None,
+                    "leader_skill": (
+                        "Eunha Myth effects with Bianca Myth cinematic and cast animation"
+                        if value and value["active"]
+                        else None
+                    ),
                     "extra_awakening_nodes": 52 if value and value["active"] else 0,
                     "saved_account_modified": False,
                     "restart_backend_and_game_required": args.action != "status",

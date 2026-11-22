@@ -6,6 +6,23 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
+The Andras presentation follow-up selects Bianca's existing leader movie and
+shared cast animation, retaining Eunha's gameplay controller, hit timing, damage,
+ATK buffs and cooldowns. An Andras-only option/action alias leaves original Eunha
+and Bianca actions intact. Its native index uses the alias and its payload keeps
+the original Lua dispatch name, avoiding a request for a nonexistent script.
+Three new regressions cover exact visual-only changes, native alias dispatch and
+conflicting/missing content. All 143 targeted Windows tests pass; Black (205
+files), Ruff and repository/link checks (264 files) pass. Discovery lists 1,140
+tests. A coherent account/XP copy passes the new leader definitions, original
+Eunha/Bianca record preservation, existing-script dispatch and Head Hunter/test-pin
+composition, with unchanged main account/trial XP during projection, 52 unchanged
+reference files, three unchanged checked resources and valid SQLite integrity.
+Diagnostics write nothing to the source account. The matching preserved Bianca graph was inspected
+read-only to identify its animation; no graph or original resource is edited.
+Actual APK presentation verification is pending. See the
+[presentation and native dispatch contract](reference-data.md#activated-experimental-growth).
+
 The optional [Head Hunter Myth command](head-hunter.md) adds a separate locked
 level-150 copy with its own four-crystal 25% option, backed-up receipts and
 targeted retirement. Original weapon, option, role and style definitions remain

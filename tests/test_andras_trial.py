@@ -16,6 +16,7 @@ from unittest.mock import patch
 
 from guardian_tales.__main__ import main
 from guardian_tales.andras_trial import SELECTION, load, project_response
+from guardian_tales.andras_trial_growth import LEADER, LEADER_ACTION
 from guardian_tales.andras_trial_static import (
     SOURCE,
     STONE,
@@ -175,7 +176,26 @@ class AndrasTrialTests(unittest.TestCase):
             ),
         ]
         self.tables["battleactions"] = [
-            dict(Name="MythDokkaebi", UseScript=True, ScriptName="Myth"),
+            dict(
+                Name="MythDokkaebi",
+                UseScript=True,
+                ScriptName="Myth",
+                MediaName={"Default": "dokkaebi_myth"},
+                CutInDuration=4,
+                TotalDpsMult=4,
+                HitTiming=[0, 0.15, 0.3],
+                Cooltime=10,
+                BuffInfo=[dict(Content="Default", BuffName="attack_up_leader_default", Level=20)],
+                AnimationInfo=[dict(Name="cast", Animation="dokkaebi/attack_cwp")],
+            ),
+            dict(
+                Name="GraphMyth:SuccubusNoble",
+                MediaName={"Default": "succubus_noble_myth"},
+                CutInDuration=4,
+                TotalDpsMult=4,
+                GraphName="graph_hero/succubus_noble:MythSuccubusNoble",
+                BuffInfo=[dict(Content="Default", BuffName="defense_up_leader_default", Level=20)],
+            ),
             *[
                 dict(Name="ManualDemonSlayer:" + name, ModifierBase=value)
                 for name, value in (("First", 0.8), ("Second", 0.8), ("Third", 1.4))
@@ -281,7 +301,7 @@ class AndrasTrialTests(unittest.TestCase):
                 Id=VARIANT,
                 Name="demon_slayer_6",
                 Rank=6,
-                Options=[{"OptionId": 20500542}, *self.heroes[0]["Options"]],
+                Options=[{"OptionId": LEADER}, *self.heroes[0]["Options"]],
             ),
         )
         binary = {ident: json.loads(raw) for ident, _, raw in binary_rows(tables["heroes-bin"][1])}
@@ -306,7 +326,7 @@ class AndrasTrialTests(unittest.TestCase):
         body, _ = prepare(self.original, 1, True)
         tables, original = records(decode(body))[1], records(decode(self.original))[1]
         variant = json.loads(tables["heroes"][1])[-1]
-        self.assertEqual(variant["Options"][0], {"OptionId": 20500542})
+        self.assertEqual(variant["Options"][0], {"OptionId": LEADER})
         self.assertEqual(variant["Class"], self.heroes[0]["Class"])
         self.assertEqual(variant["SpineAssetName"], self.heroes[0]["SpineAssetName"])
         for name in ("awakeningnodelayout", "awakeningnodelayout_client"):
@@ -341,6 +361,84 @@ class AndrasTrialTests(unittest.TestCase):
             nodes["ResourcesToOpenNode"][6:],
             [dict(row, OriginId=488) for row in nodes["ResourcesToOpenNode"][:6]],
         )
+
+    def test_bianca_cinematic_changes_only_private_leader_media_and_retains_eunha_effects(self):
+        body, _ = prepare(self.original, 1, True)
+        tables = records(decode(body))[1]
+        source = {r["Name"]: r for r in self.tables["battleactions"]}
+        actions = {r["Name"]: r for r in json.loads(tables["battleactions"][1])}
+        for name in ("MythDokkaebi", "GraphMyth:SuccubusNoble"):
+            self.assertEqual(actions[name], source[name])
+        expected = dict(
+            source["MythDokkaebi"],
+            Name=LEADER_ACTION,
+            MediaName=source["GraphMyth:SuccubusNoble"]["MediaName"],
+            AnimationInfo=[
+                dict(
+                    source["MythDokkaebi"]["AnimationInfo"][0], Animation="weapon/twohand_role_cast"
+                )
+            ],
+        )
+        self.assertEqual(actions[LEADER_ACTION], expected)
+        options = {r["Id"]: r for r in json.loads(tables["options"][1])}
+        self.assertEqual(options[20500542], self.tables["options"][0])
+        self.assertEqual(
+            options[LEADER], dict(options[20500542], Id=LEADER, BattleActionName=LEADER_ACTION)
+        )
+        self.assertNotIn("GraphName", actions[LEADER_ACTION])
+        self.assertEqual(actions[LEADER_ACTION]["BuffInfo"], source["MythDokkaebi"]["BuffInfo"])
+
+    def test_private_native_leader_alias_reuses_stock_lua_script_and_preserves_source_records(self):
+        body, _ = prepare(self.original, 1, True)
+        tables = records(decode(body))[1]
+        old = binary_rows(self.tables["battleactions-bin"], require_id=False)
+        new = binary_rows(tables["battleactions-bin"][1], require_id=False)
+        self.assertEqual(len(new), len(old) + 1)
+        expected_hash = int.from_bytes(
+            hashlib.sha256(LEADER_ACTION.encode()).digest()[:8], "little"
+        )
+        self.assertEqual(new[-1][:2], (max(r[0] for r in old) + 1, expected_hash))
+        original = next(r for r in self.tables["battleactions"] if r["Name"] == "MythDokkaebi")
+        self.assertEqual(
+            json.loads(new[-1][2]),
+            dict(
+                original,
+                MediaName={"Default": "succubus_noble_myth"},
+                AnimationInfo=[
+                    dict(original["AnimationInfo"][0], Animation="weapon/twohand_role_cast")
+                ],
+            ),
+        )
+        for name in ("MythDokkaebi", "GraphMyth:SuccubusNoble"):
+            index = next(i for i, r in enumerate(old) if json.loads(r[2])["Name"] == name)
+            self.assertEqual(new[index], old[index])
+
+    def test_missing_conflicting_or_incompatible_cinematics_reject_without_publication(self):
+        for mode in ("missing", "duration", "alias", "option"):
+            original = copy.deepcopy(self.tables)
+            if mode == "missing":
+                self.tables["battleactions"] = [
+                    r
+                    for r in self.tables["battleactions"]
+                    if r["Name"] != "GraphMyth:SuccubusNoble"
+                ]
+            elif mode == "duration":
+                next(
+                    r
+                    for r in self.tables["battleactions"]
+                    if r["Name"] == "GraphMyth:SuccubusNoble"
+                )["CutInDuration"] = 5
+            elif mode == "alias":
+                self.tables["battleactions"].append(dict(Name=LEADER_ACTION))
+            else:
+                self.tables["options"].append(dict(Id=LEADER))
+            self.write_source()
+            before = list(self.db.iterdump())
+            self.reject("enable")
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertFalse((self.refs / SELECTION).exists())
+            self.tables = original
+        self.write_source()
 
     def test_growth_mask_preserves_original_prefix_bits_and_reserved_bits(self):
         from guardian_tales.andras_trial_growth import activated_tree

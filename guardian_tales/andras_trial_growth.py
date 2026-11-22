@@ -1,13 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Activated experimental awakening and stock Eunha leader for the Andras view."""
+"""Experimental awakening and Eunha leader effects with Bianca's cut-in."""
 
 import base64
+import copy
 import json
 import math
 import struct
 
 ORIGIN = 488
-LEADER = 20500542
+EUNHA_LEADER = 20500542
+LEADER = 20500488
+LEADER_ACTION = "MythDokkaebi:AndrasTrial"
+LEADER_CAST_ANIMATION = "weapon/twohand_role_cast"
 BASE_NODES = 248
 TOTAL_NODES = 300
 TREE = "layout_snowflake_01_myth_local_andras"
@@ -81,7 +85,7 @@ def overlay(tables):
 
 
 def _overlay(tables):
-    from .andras_trial_static import binary_rows, pack_rows, same_definition
+    from .andras_trial_static import binary_name_hash, binary_rows, pack_rows, same_definition
 
     required = {*TABLES, "awakeningnodelayout", "awakeningnodelayout_client"}
     if not required <= tables.keys():
@@ -121,12 +125,17 @@ def _overlay(tables):
     )
 
     options = values["options"]
-    leader = one(options, "Id", LEADER)
+    leader = one(options, "Id", EUNHA_LEADER)
     if (
         leader.get("Class") != "MythBattleAction"
         or leader.get("BattleActionName") != "MythDokkaebi"
     ):
         raise ValueError("Andras growth requires the stock Eunha Myth leader skill")
+    if any(row.get("Id") == LEADER for row in options):
+        raise ValueError("Andras leader option identifier collides with the content")
+    local_leader = copy.deepcopy(leader)
+    local_leader.update(Id=LEADER, BattleActionName=LEADER_ACTION)
+    options.append(local_leader)
     names = {
         "local_andras_myth_" + suffix for suffix in ("manual", "role", "weapon", "chain", "special")
     }
@@ -165,7 +174,24 @@ def _overlay(tables):
         costs.append(dict(one(source_costs, "Id", cost_id), OriginId=ORIGIN))
 
     actions = values["battleactions"]
-    one(actions, "Name", "MythDokkaebi")
+    eunha = one(actions, "Name", "MythDokkaebi")
+    bianca = one(actions, "Name", "GraphMyth:SuccubusNoble")
+    if (
+        eunha.get("UseScript") is not True
+        or eunha.get("ScriptName") != "Myth"
+        or eunha.get("MediaName") != {"Default": "dokkaebi_myth"}
+        or bianca.get("MediaName") != {"Default": "succubus_noble_myth"}
+        or bianca.get("GraphName") != "graph_hero/succubus_noble:MythSuccubusNoble"
+        or eunha.get("CutInDuration") != bianca.get("CutInDuration")
+        or any(row.get("Name") == LEADER_ACTION for row in actions)
+    ):
+        raise ValueError("Andras leader requires compatible stock Eunha/Bianca cut-ins")
+    local_action = copy.deepcopy(eunha)
+    local_action.update(Name=LEADER_ACTION, MediaName=copy.deepcopy(bianca["MediaName"]))
+    # The matching preserved Bianca graph's anim_cast resource uses this shared
+    # weapon animation. Retain Eunha's controller, track and gameplay timings;
+    # importing Bianca's entire graph would also change the damage execution.
+    one(local_action.get("AnimationInfo", []), "Name", "cast")["Animation"] = LEADER_CAST_ANIMATION
     changed = {}
     for name in (
         "ManualDemonSlayer:First",
@@ -253,22 +279,37 @@ def _overlay(tables):
         or any(not same_definition(row, indexed[row["Name"]]) for row in original_actions)
     ):
         raise ValueError("Andras growth combat JSON and binary definitions disagree")
-    updated_binary = pack_rows(
-        [
+    updated_rows = [
+        (
+            ident,
+            name_hash,
             (
-                ident,
-                name_hash,
-                (
-                    json.dumps(
-                        changed[json.loads(raw)["Name"]], ensure_ascii=False, separators=(",", ":")
-                    ).encode()
-                    if json.loads(raw)["Name"] in changed
-                    else raw
-                ),
-            )
-            for ident, name_hash, raw in binary
-        ]
+                json.dumps(
+                    changed[json.loads(raw)["Name"]], ensure_ascii=False, separators=(",", ":")
+                ).encode()
+                if json.loads(raw)["Name"] in changed
+                else raw
+            ),
+        )
+        for ident, name_hash, raw in binary
+    ]
+    # The native dictionary looks up the full alias through its index hash.
+    # LuaMythActionAddOn separately opens the script named by payload["Name"],
+    # without stripping alias suffixes. Keep that dispatch name stock, while
+    # the JSON catalog exposes the alias used by the private leader option.
+    script_action = dict(local_action, Name=eunha["Name"])
+    alias_hash = binary_name_hash(LEADER_ACTION)
+    if alias_hash in {row[1] for row in binary}:
+        raise ValueError("Andras leader alias collides with the native action index")
+    updated_rows.append(
+        (
+            max(r[0] for r in binary) + 1,
+            alias_hash,
+            json.dumps(script_action, ensure_ascii=False, separators=(",", ":")).encode(),
+        )
     )
+    updated_binary = pack_rows(updated_rows)
+    actions.append(local_action)
     result = {
         name: json.dumps(values[name], ensure_ascii=False, separators=(",", ":"))
         for name in TABLES

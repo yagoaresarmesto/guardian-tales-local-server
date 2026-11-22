@@ -74,7 +74,7 @@ written to the original account or the separate XP database.
 
 | Feature | Experimental setting |
 | --- | --- |
-| Leader | Existing Eunha Myth option/action, including its original damage, content-specific buffs and cinematic. No original Andras leader implementation is invented. |
+| Leader | An Andras-only clone of Eunha's Myth effects, retaining its damage, content buffs and gameplay timings, with Bianca's existing leader movie and shared cast animation. Original Eunha/Bianca actions remain unchanged. |
 | Party center | The same ranged-party option and 50 additional per-mille levels as Eunha: **+5 percentage points**. |
 | Normal-attack center | Base coefficients +10%; the last-hit passive override scales equally, retaining its original doubling relationship. |
 | Role-action center | Base coefficient +10%. |
@@ -91,6 +91,26 @@ The original Andras class has no shipped leader-title localization. Without the
 optional English input below, that title remains unresolved even though the
 stock leader option/action is supplied.
 The owner verified launching the borrowed leader and continuing to play.
+
+The subsequent presentation change uses Bianca's `succubus_noble_myth` movie and
+the `weapon/twohand_role_cast` animation referenced by her matching preserved
+`MythSuccubusNoble` graph. Only those two visual references change on the private
+action. Eunha's script/controller, animation track, cast timing, hit sequence,
+damage, content-specific ATK buffs, cooldowns, sounds and effect presets remain
+in place. Bianca's graph and its DEF buffs are not imported. Consequently, this
+reuses her cast movement with the existing action timing rather than transplanting
+her complete graph sequence. How that animation plays on Andras still requires
+an APK check.
+
+The private leader option points to `MythDokkaebi:AndrasTrial`. The JSON catalog
+identifies that alias; the native binary index hashes the same alias, while its
+payload retains `Name: MythDokkaebi`. Native `LuaMythActionAddOn` builds its script
+path directly from that payload field, so this distinction reuses the existing
+script instead of requesting a nonexistent alias-named script. This dispatch
+targets the matching client's binary static-data path. All stock native action
+records remain byte-identical. The overlay changes no saved hero, trial XP,
+preserved graph, movie, character bundle or shipped script; a backend restart
+and game reopen load it without a CDN restart or re-enabling the trial.
 
 The captured hero screen confirms level 150, the Myth state and the ranged-party
 bonus at 55%, with the original appearance. It exposed an empty chain label:
@@ -177,7 +197,7 @@ uniform upgrade. The Andras trial currently has the following scope:
 | Myth identity and level cap | Existing Myth presentation; isolated free XP uses story, limit-break, blessing and Myth modifiers. The owner reached 150 and retained it after reopening. | Other saved accounts/caps need their own APK checks. |
 | Appearance, equipment and base abilities | Original class, origin, animations, equipment and saved progression are retained; the active combat coefficients are tuned as above. The owner confirmed the original appearance. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
 | Base-stat changes | Original five-star base stats remain unchanged; levels still scale normally. | Official Myth variants can have different base stats. No common ratio or Andras-specific rebalancing has been selected. |
-| Leader skill | The owner confirms casting the stock Eunha action and continuing to play. | The original class has no shipped title; the optional English CDN overlay supplies the requested name. Numerical combat benchmarking remains separate. |
+| Leader skill | The owner confirmed the preceding stock Eunha presentation. The Bianca movie/cast-reference follow-up has automated/copy coverage; its APK check is pending. | The original class has no shipped title; the optional English CDN overlay supplies the requested name. Numerical combat benchmarking remains separate. |
 | Awakening | Original nodes/flags are retained; 52 extra nodes are projected already open. | Interactive open/reset requests are not implemented. |
 | Myth ability improvements | Original animations/mechanics remain, with the active experimental coefficients above. | Full hero-specific Myth reworks are not reconstructed by this trial. |
 | Other development | Original limit breaks and blessing affect the cap and retained options. | Blessing, limit-break, conversion and awakening mutations are not added by this trial. Training Room placement/removal is also outside its supported entry/read path. |
