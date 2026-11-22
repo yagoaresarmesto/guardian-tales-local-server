@@ -44,7 +44,7 @@ def same_definition(left, right):
     return True
 
 
-def binary_rows(encoded, *, require_id=True):
+def binary_rows(encoded, *, require_id=True, max_count=10000):
     data = base64.b64decode(encoded, validate=True)
     if len(data) < HEADER.size:
         raise ValueError("Missing native hero binary header")
@@ -54,7 +54,7 @@ def binary_rows(encoded, *, require_id=True):
     if (
         magic != b"k1ng"
         or version != 1
-        or not 1 <= count <= 10000
+        or not 1 <= count <= max_count
         or not 1 <= blocks <= count
         or start > len(data)
     ):

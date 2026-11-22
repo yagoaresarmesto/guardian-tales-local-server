@@ -87,8 +87,9 @@ existing AA72 example (3 to 3.6 DPS); other supplied Myth chains differ, includi
 Kamael's approximately 13.6% increase and Eunha's area improvement rather than a
 damage increase. The node headers reuse existing localized generic enhancement
 titles; descriptions use existing stat/Andras templates and the tuned values.
-The original Andras class has no shipped leader-title localization, so that title
-may remain unresolved even though the stock leader option/action is supplied.
+The original Andras class has no shipped leader-title localization. Without the
+optional English input below, that title remains unresolved even though the
+stock leader option/action is supplied.
 The owner verified launching the borrowed leader and continuing to play.
 
 The captured hero screen confirms level 150, the Myth state and the ranged-party
@@ -99,8 +100,8 @@ awakening option while keeping the original localized `Cold Death` title.
 The variant uses a unique numeric-suffix name so native rank-name stripping can
 reuse Andras's existing name key, instead of looking up a new untranslated Myth
 name. The owner confirmed the corrected chain text. The numeric name correction
-is implemented without separate owner confirmation. The unresolved leader title
-remains a known presentation limitation. Numerical combat tuning has static/copy
+is confirmed in a read-only client screenshot alongside Cold Death. The optional
+English CDN overlay below supplies the missing leader title. Numerical combat tuning has static/copy
 coverage; no controlled damage benchmark was recorded.
 
 Andras's original chain has no generic Myth-node parameter consumer. Since all
@@ -111,7 +112,57 @@ This is not per-node interactive unlocking or per-instance combat isolation:
 other Andras instances using those same effective definitions can share the
 tuning while the trial is active. Other heroes' combat definitions remain intact.
 Disabling restores the original tables and exact saved awakening mask. Shipped
-scripts, strings, APK, asset bundles and source reference files stay unchanged.
+script/string resource files, APK, asset bundles and source reference files stay unchanged.
+
+### Optional English leader title
+
+The optional CDN title overlay supplies **Sovereign of Eternal Slaughter** for
+`demon_slayer_leader_skill` while the Andras trial is active. It generates the
+English download response in memory; it does not overwrite the original resource,
+manifest, ETag file, APK, scripts, source references, account or XP sidecar.
+The client stores the response through its normal language-download/cache path.
+Other languages keep their original responses.
+
+This path requires an explicit CDN `--reference-dir` pointing to the same
+reference directory used by the backend and trial commands:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales assets --resource-root .\local\client-data\resources\files --port 18081 --journal .\local\cdn-requests.jsonl --reference-dir .\local\client-data\reference
+```
+
+Install the optional dependencies with `python -m pip install ".[hero-trials]"`.
+The private compatibility input is
+`andras-trial-strings-<static-sha256>.key` in that reference directory. The hash is
+the configured trial's original `static_data_get.bin` SHA-256. The file contains
+the 64 hexadecimal characters of the AES-256 key for the matching original
+English resource envelope. Preparing that input requires separate inspection of
+the matching client/content; this feature does not extract or distribute game
+keys or content. Keep it private and outside Git. A fresh clone without the
+matching input retains ordinary trial behavior with the unresolved title key.
+
+The server verifies the static-pack binding, original resource SHA-256 against
+its preservation manifest, native envelope and known English labels. It retains
+every original string record/index entry and compressed block, adding one title
+record, then creates a native-compatible encrypted response with a different IV
+prefix and the original version/key selector. No extra language table is sent
+through `/static-data/get`: the matching client's native item iterator explicitly
+discards all names beginning with `strings-`.
+
+GET and HEAD share a content-derived ETag and length, with conditional downloads
+and byte ranges. `andras-trial disable` returns the exact original resource and
+its original ETag on the next request, even if the optional key is invalid.
+Re-enabling restores the same title response. Invalid active inputs return a
+generic 503 for that English resource without disclosing keys; unrelated
+resources remain available. After changing the trial, fully close and reopen
+the game so its normal language check refreshes the cached file. Introducing the
+CDN option requires restarting the CDN; the bridge can stay open.
+
+Native/copy/HTTP checks and actual APK outcomes are recorded separately in the
+[verification status](status.md). After restarting the backend and CDN with the
+explicit reference directory, the owner confirms the requested title appears
+and the other texts remain correct. Read-only cache inspection finds exactly the
+expected generated English table; the original server resource and saved hero
+development remain intact.
 
 ### Myth compatibility review
 
@@ -124,7 +175,7 @@ uniform upgrade. The Andras trial currently has the following scope:
 | Myth identity and level cap | Existing Myth presentation; isolated free XP uses story, limit-break, blessing and Myth modifiers. The owner reached 150 and retained it after reopening. | Other saved accounts/caps need their own APK checks. |
 | Appearance, equipment and base abilities | Original class, origin, animations, equipment and saved progression are retained; the active combat coefficients are tuned as above. The owner confirmed the original appearance. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
 | Base-stat changes | Original five-star base stats remain unchanged; levels still scale normally. | Official Myth variants can have different base stats. No common ratio or Andras-specific rebalancing has been selected. |
-| Leader skill | The stock Eunha Myth option/action is supplied. | Its presentation and use on Andras need APK verification; the original class lacks a localized leader title. |
+| Leader skill | The owner confirms casting the stock Eunha action and continuing to play. | The original class has no shipped title; the optional English CDN overlay supplies the requested name. Numerical combat benchmarking remains separate. |
 | Awakening | Original nodes/flags are retained; 52 extra nodes are projected already open. | Interactive open/reset requests are not implemented. |
 | Myth ability improvements | Original animations/mechanics remain, with the active experimental coefficients above. | Full hero-specific Myth reworks are not reconstructed by this trial. |
 | Other development | Original limit breaks and blessing affect the cap and retained options. | Blessing, limit-break, conversion and awakening mutations are not added by this trial. Training Room placement/removal is also outside its supported entry/read path. |

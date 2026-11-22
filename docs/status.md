@@ -76,6 +76,35 @@ class's leader-title key remains untranslated; no controlled numerical combat
 benchmark was recorded.
 See the [growth scope and limitations](reference-data.md#activated-experimental-growth).
 
+The custom English title follow-up initially passed static/copy tests but failed
+the owner's APK check: the raw leader key still appeared after reopening.
+Further native inspection located an explicit `strings-` exclusion in the API's
+static-item iterator. Read-only client inspection found the original English
+resource and decoded cache unchanged, explaining why the API-only table was
+ignored. That ineffective API layer and compression dependency were removed.
+
+The replacement generates an optional English CDN response in memory, retaining
+all 171,554 original strings and adding only **Sovereign of Eternal Slaughter**.
+It uses a private external content-bound key and the optional cryptography
+dependency; no game key, resource or account is included in source. Forty-eight
+Andras/CDN tests pass, covering native envelope round trips, original-record
+preservation, pack/language/opt-in gates, unchanged database/resource files,
+GET/HEAD, ETags, conditional requests, ranges, invalid-input 503s and exact
+disable/re-enable restoration. An isolated HTTP server over the real resource
+pack passes download/cache checks with a 5,877,216-byte response, while retaining
+the original resource exactly. All **232 core/content/account tests** pass,
+including 42 Andras cases; total discovery is 1,106. Black (200 files), Ruff and
+indexed repository/link checks (258 files) pass. After restarting backend and CDN
+with the explicit reference directory, the owner confirms the requested title
+appears and other texts remain correct. Read-only inspection finds the exact
+generated resource and decoded 171,555-entry table in the selected client's
+normal caches. The original server resource still matches its manifest; the
+original saved hero/awakening, currencies, counters and separate trial XP remain
+intact. SQLite integrity passes with zero diagnostic source writes and no new
+API errors. A fresh read-only client screenshot also confirms the corrected
+Andras name and Cold Death label.
+See the [private inputs and restoration scope](reference-data.md#optional-english-leader-title).
+
 The enemy-level CLI now supports `set-level --all`, covering all 44 solo
 Expedition stage definitions in the matching pack, including hidden, boss,
 unexplored and archived event variants. It accepts visible levels 1 through 220

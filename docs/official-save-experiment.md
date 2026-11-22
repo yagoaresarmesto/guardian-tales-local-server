@@ -3116,3 +3116,31 @@ Use synthetic accounts for regression fixtures. Real profiles, captured response
 bodies, identifiers, credentials and resource files remain private. The supported
 fresh-local-account workflow continues to be described in the
 [content guide](offline-content.md) and [verified status](status.md).
+
+## Experimental Andras English leader title
+
+On 2026-11-22, the owner requested **Sovereign of Eternal Slaughter** for the
+experimental Andras leader. An initial API-only translation table passed copy
+tests but did not change the APK label. Native inspection then found that
+`GetStaticDataItems` explicitly skips `strings-` entries; read-only inspection
+confirmed that the client's English resource/cache were still original.
+
+The replacement uses an explicitly enabled CDN response overlay with private
+matching-content inputs. It retains all 171,554 existing English records and
+adds one requested title, generating the encrypted download in memory with its
+own ETag. Original server resources, manifests, scripts, references and account
+files are retained. Synthetic tests cover native envelope round trips,
+conditional/range downloads, content/language gates, invalid inputs and exact
+disable/re-enable restoration. All 232 core/content/account tests pass. A
+temporary isolated HTTP server over the actual pack passes download/cache checks
+with a 5,877,216-byte response and no source-resource/account writes.
+
+After manually restarting backend and CDN with the shared reference directory,
+the owner confirms the requested title appears and other text remains correct.
+Read-only inspection finds the exact generated encrypted resource and decoded
+171,555-entry table in the selected client's normal caches. The original server
+resource still matches its manifest. Saved original hero development/awakening,
+currencies, counters and the separate trial XP remain intact; SQLite integrity
+passes, with no diagnostic source writes or new API errors. This is a title/UI
+check; numerical combat benchmarking remains separate. See the
+[optional input and restoration instructions](reference-data.md#optional-english-leader-title).

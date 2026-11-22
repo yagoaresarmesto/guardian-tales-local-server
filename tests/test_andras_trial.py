@@ -528,6 +528,228 @@ class AndrasTrialTests(unittest.TestCase):
         ):
             self.assertIs(project_response(packet, selection), packet)
 
+    def string_source(self):
+        from guardian_tales import andras_trial_labels
+
+        def hashed(key):
+            return int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "little")
+
+        self.enterContext(patch.object(andras_trial_labels, "binary_name_hash", side_effect=hashed))
+        strings = {
+            "name_demon_slayer": "Andras",
+            "demon_slayer_support_skill": "Cold Death",
+            "dokkaebi_myth_leader_skill": "Nimbus",
+            "unrelated_label": "Unchanged text",
+        }
+        self.string_rows = [
+            (i, hashed(key), value.encode()) for i, (key, value) in enumerate(strings.items())
+        ]
+        return base64.b64decode(pack_rows(self.string_rows))
+
+    def test_native_string_overlay_adds_only_requested_title_and_retains_every_original_record(
+        self,
+    ):
+        from guardian_tales.andras_trial_labels import KEY, TITLE, string_table
+
+        source = self.string_source()
+        result = string_table(source, True)
+        rows = binary_rows(base64.b64encode(result).decode(), require_id=False)
+        self.assertEqual(rows[:-1], self.string_rows)
+        expected_hash = int.from_bytes(hashlib.sha256(KEY.encode()).digest()[:8], "little")
+        self.assertEqual(rows[-1], (4, expected_hash, TITLE.encode()))
+        self.assertEqual(string_table(source, False), source)
+        self.assertEqual(string_table(source, True), result)
+
+    def title_resource(self):
+        import zlib
+
+        from guardian_tales.andras_trial_labels import cipher, filename
+
+        try:
+            import cryptography  # noqa: F401
+        except ImportError:
+            self.skipTest("Optional hero-trials cryptography dependency is not installed")
+        source = self.string_source()
+        key, iv = bytes(range(32)), bytes(range(16))
+        compressor = zlib.compressobj(wbits=-15)
+        clear = compressor.compress(source) + compressor.flush()
+        pad = 16 - len(clear) % 16
+        encryptor = cipher(key, iv).encryptor()
+        encrypted = iv + encryptor.update(clear + bytes([pad]) * pad) + encryptor.finalize()
+        path = self.root / "resources/files/static_data/strings-bin-enUS"
+        path.parent.mkdir(parents=True)
+        path.write_bytes(encrypted)
+        Path(str(path) + ".etag").write_text('"original-English"')
+        self.cli("enable")
+        key_path = self.refs / filename(load(self.store.references)["source_sha256"])
+        key_path.write_text(key.hex() + "\n")
+        return source, key, path, key_path
+
+    def test_cdn_title_native_envelope_retains_original_records_and_content_version(self):
+        from guardian_tales.andras_trial_labels import decode_resource, resource, string_table
+
+        source, key, path, _ = self.title_resource()
+        original = path.read_bytes()
+        changed = resource(original, key)
+        self.assertNotEqual(changed[:16], original[:16])
+        self.assertEqual(changed[12:16], original[12:16])
+        self.assertEqual(decode_resource(changed, key), string_table(source, True))
+        self.assertEqual(resource(original, key), changed)
+        self.assertEqual(decode_resource(original, key), source)
+
+    def test_cdn_title_disable_restores_original_without_database_or_resource_writes(self):
+        from guardian_tales.andras_trial_labels import cdn_override
+
+        _, _, path, key_path = self.title_resource()
+        original = path.read_bytes()
+        sha = hashlib.sha256(original).hexdigest()
+        before = list(self.db.iterdump())
+        files = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        first = cdn_override(self.refs, path, sha)
+        self.assertNotEqual(first, original)
+        self.cli("disable")
+        key_path.write_text("malformed optional key")
+        self.assertIsNone(cdn_override(self.refs, path, sha))
+        key_path.write_bytes(files[key_path])
+        self.cli("enable")
+        self.assertEqual(cdn_override(self.refs, path, sha), first)
+        self.assertEqual(list(self.db.iterdump()), before)
+        for p, content in files.items():
+            if p.name != SELECTION:
+                self.assertEqual(p.read_bytes(), content)
+
+    def test_title_source_rejects_wrong_language_duplicate_hash_and_already_patched_input(self):
+        from guardian_tales.andras_trial_labels import string_table
+
+        source = self.string_source()
+        modified = [*self.string_rows]
+        modified[1] = (*modified[1][:2], b"Different translation")
+        wrong = base64.b64decode(pack_rows(modified))
+        duplicate = base64.b64decode(
+            pack_rows([*self.string_rows, (9, self.string_rows[0][1], b"Andras")])
+        )
+        for value in (b"bad", wrong, duplicate, string_table(source, True)):
+            with self.subTest(length=len(value)), self.assertRaises(ValueError):
+                string_table(value, True)
+
+    def test_optional_title_never_adds_language_tables_discarded_by_native_api_parser(self):
+        from guardian_tales.andras_trial_labels import filename
+
+        self.cli("enable")
+        key_path = self.refs / filename(load(self.store.references)["source_sha256"])
+        key_path.write_text("invalid optional CDN key")
+        body = self.session.handle(request("/static-data/get", {})).body
+        tables = records(decode(body))[1]
+        self.assertFalse(any(name.startswith("strings-") for name in tables))
+        checksum = tables["__checksum__"][1]
+        check = json.loads(
+            self.session.handle(request("/static-data/check-update", {"Checksum": checksum})).body
+        )
+        self.assertTrue(check["UpToDate"])
+        self.assertEqual(check["Checksum"], checksum)
+
+    def test_cdn_title_gates_language_explicit_opt_in_and_matching_pack(self):
+        from guardian_tales.andras_trial_labels import cdn_override, filename
+
+        _, _, path, key_path = self.title_resource()
+        sha = hashlib.sha256(path.read_bytes()).hexdigest()
+        self.assertIsNone(cdn_override(None, path, sha))
+        for other in (path.with_name("strings-bin-esES"), path.parent.parent / path.name):
+            self.assertIsNone(cdn_override(self.refs, other, sha))
+        key = key_path.read_bytes()
+        key_path.unlink()
+        self.assertIsNone(cdn_override(self.refs, path, sha))
+        (self.refs / filename("0" * 64)).write_bytes(key)
+        self.assertIsNone(cdn_override(self.refs, path, sha))
+        (self.refs / SELECTION).unlink()
+        self.assertIsNone(cdn_override(self.refs, path, sha))
+
+    def test_cdn_title_invalid_inputs_fail_without_secret_values_or_source_writes(self):
+        from guardian_tales.andras_trial_labels import cdn_override, decode_resource, resource
+
+        _, key, path, key_path = self.title_resource()
+        original = path.read_bytes()
+        sha = hashlib.sha256(original).hexdigest()
+        for raw in (b"", original[:-1], original[:16] + bytes(len(original) - 16)):
+            with self.assertRaises(ValueError):
+                decode_resource(raw, key)
+        with self.assertRaises(ValueError):
+            resource(original, bytes(32))
+        with self.assertRaises(ValueError):
+            cdn_override(self.refs, path, "0" * 64)
+        key_path.write_text("private malformed input")
+        with self.assertRaises(ValueError) as error:
+            cdn_override(self.refs, path, sha)
+        self.assertNotIn("private malformed input", str(error.exception))
+        key_path.write_text(key.hex())
+        (self.refs / "static_data_get.bin").write_bytes(b"different pack")
+        with self.assertRaises(ValueError):
+            cdn_override(self.refs, path, sha)
+        self.assertEqual(path.read_bytes(), original)
+
+    def test_cdn_title_http_head_etags_ranges_and_restoration_use_same_payload(self):
+        import http.client
+        import threading
+        from http.server import ThreadingHTTPServer
+
+        from guardian_tales.assets import ResourceLibrary, handler_for
+
+        _, _, path, key_path = self.title_resource()
+        original = path.read_bytes()
+        (self.root / "manifest.json").write_text(
+            json.dumps(
+                {
+                    "files": [
+                        {
+                            "path": "resources/files/static_data/strings-bin-enUS",
+                            "sha256": hashlib.sha256(original).hexdigest(),
+                        }
+                    ]
+                }
+            )
+        )
+        library = ResourceLibrary([self.root / "resources/files"])
+        server = ThreadingHTTPServer(
+            ("127.0.0.1", 0), handler_for(library, reference_dir=self.refs)
+        )
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        connection = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=5)
+        url = "/live/global/0491/media/staticdata/strings-bin-enUS"
+
+        def get(method="GET", headers=None):
+            connection.request(method, url, headers=headers or {})
+            reply = connection.getresponse()
+            return reply.status, dict(reply.getheaders()), reply.read()
+
+        try:
+            status, headers, body = get(headers={"If-None-Match": '"original-English"'})
+            self.assertEqual(status, 200)
+            self.assertNotEqual(body, original)
+            etag = headers["ETag"]
+            self.assertEqual(headers["Content-Length"], str(len(body)))
+            status, headers, head = get("HEAD")
+            self.assertEqual((status, headers["ETag"], head), (200, etag, b""))
+            self.assertEqual(headers["Content-Length"], str(len(body)))
+            self.assertEqual(get(headers={"If-None-Match": etag})[0], 304)
+            status, headers, part = get(headers={"Range": "bytes=11-47"})
+            self.assertEqual((status, part), (206, body[11:48]))
+            self.assertEqual(headers["Content-Range"], f"bytes 11-47/{len(body)}")
+            self.cli("disable")
+            status, headers, restored = get(headers={"If-None-Match": etag})
+            self.assertEqual((status, restored), (200, original))
+            self.assertEqual(headers["ETag"], '"original-English"')
+            self.cli("enable")
+            self.assertEqual(get()[2], body)
+            key_path.write_text("bad input")
+            self.assertEqual(get()[0], 503)
+            self.assertEqual(path.read_bytes(), original)
+        finally:
+            connection.close()
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=2)
+
     def test_missing_wrong_or_multiple_owned_andras_cannot_be_enabled(self):
         profile = self.store.account.profile()
         for change in (
