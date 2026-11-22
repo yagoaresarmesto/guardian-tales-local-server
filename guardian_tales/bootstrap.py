@@ -15,7 +15,7 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from . import classic_coop, colosseum, expedition
+from . import classic_coop, colosseum, expedition, multi_presets
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
@@ -70,6 +70,7 @@ BOOTSTRAP_ROUTES = (
     *LOBBY_ROUTES,
     *PLAY_MENU_ROUTES,
     *expedition.ROUTES,
+    *multi_presets.ROUTES,
     *classic_coop.ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
@@ -302,6 +303,17 @@ class BootstrapSession:
                 return json_response(request, operation(self.store, body, operation_id))
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
+        if route in multi_presets.ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                epoch = self.request_epoch or self.store.request_epoch(True)
+                operation_id = epoch + ":" + str(request["sequence_id"])
+                return json_response(
+                    request, multi_presets.handle(self.store.account, route, body, operation_id)
+                )
+            except ValueError as error:
+                raise PacketError(str(error)) from error
         if route in PLAY_MENU_ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")

@@ -1,10 +1,35 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-20**. The public source tree reorganizes the working
+Status recorded on **2026-11-22**. The public source tree reorganizes the working
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
 ## Automated checks
+
+The latest Windows regression run passes **1,040 tests**, including 22 new
+Expedition preset cases. The teams/Orbital union passes 137 cases. The actual
+delete request and create/copy, rename, party edits, ordering and selection also
+passed on a coherent copy of the current imported account. Deletion preserved
+all 71 other preexisting tables, the imported seed, other preset resources and
+all owned inventory/heroes; only the multi-party group and selected slot's user
+revision changed. Delayed retries made no writes and did not delete a recreated
+slot. The retained backup passed integrity checks with zero diagnostic source
+writes. After restart, the owner confirmed deletion, saving, copying, naming,
+member/gear edits, ordering and persistence across reopening, including a
+separate two-slot copy/name/order check. The read-only snapshot recorded four
+deletions and two saves across two request epochs, with no new preset errors.
+Replaying those requests against the backup reproduced the full current profile
+and both preset resources exactly. All 68 other gameplay tables stayed intact;
+only normal login/epoch/counter metadata also changed. Old replay checks made
+no writes and integrity passed. A separate type-9 reorder packet was not present
+in that snapshot; its contract has automated/native/clone coverage alongside
+the owner's UI report. See the
+[multi-party preset contract](reference-data.md#expedition-multi-party-presets).
+
+The Expedition scope audit also found three preexisting rejected
+`/expedition/clear-stage/v2` calls. Those predate this preset fix and need their
+own captured result payload before diagnosis; they are not covered by preset
+verification. New stage unlocks and reward claims remain outside practice scope.
 
 The Solo Expedition trial opens feature rules 31 and 110 for the Android 3.57.0
 Global client. The archived data includes four areas, ten districts, the wave

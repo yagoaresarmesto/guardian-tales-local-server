@@ -115,8 +115,47 @@ native requests. The result uses the run's kill score and the preserved time,
 survivor, and party-switching bonus settings. Practice runs preserve stamina,
 collectibles, rewards, and saved records. Stage Rankings displays an empty local
 leaderboard. Selecting a saved Expedition preset updates the selected slot.
-The trial covers replay and selection of existing presets. New unlocks, preset
-creation or editing, and Expedition reward claims are outside that scope.
+The trial covers stage replay and the preset operations below. New stage unlocks
+and Expedition reward claims remain outside that scope.
+
+### Expedition multi-party presets
+
+Expedition uses `UserMultiPartyPreset`, separately from the single-team
+`UserPartyPreset2` resource used by Orbital/Raid. With `expedition_trial.enabled`,
+its 20 slots have IDs `[900,920)` and each definition holds three parties.
+
+- `/preset/set-multi-party-preset` accepts exactly `MultiPartyPreset` and Boolean
+  `SetSelected`. The definition contains `Id`, `Name`, `Order` and `Parties`.
+  Each of the three ordered parties has `Id` 1/2/3, `Name`, unchanged `Order`
+  and `Characters`; member fields use the existing owned hero/gear contract.
+  Characters can be moved within or between parties, with no duplicate hero
+  within the three teams. Missing nullable gear fields explicitly clear slots.
+- Creating/copying into an unused slot requires native `Order=999`; the backend
+  appends it after the highest existing Expedition order. Editing and renaming
+  keep slot identity/order and saved opaque metadata. Empty drafts may be saved
+  with `SetSelected=false`; selecting/saving a selected preset requires a leader
+  in its first party, as in the existing selection contract.
+- `/preset/delete-multi-party-preset` accepts exactly `PresetId` and removes one
+  existing definition. Deleting the selected slot clears only
+  `SelectedPresetId.Expedition` to zero. Other definitions and resources remain.
+- `/preset/reorder-preset` accepts `PresetType=9` with 20 position entries.
+  `Order[PresetId % 100]` assigns each saved preset a distinct position from
+  zero; unused slots remain zero. Whole party definitions and physical array
+  order are retained. Selecting existing or newly saved slots continues through
+  `/preset/set-selected-preset`.
+
+The mutable group is stored in `multi_party_preset_state`, while immutable
+imported startup reads remain intact. `multi_preset_requests` binds canonical
+payloads to route/session/sequence identity for saves, deletes and ordering.
+One transaction stores the group, selection changes and receipt. The group
+revision increases only for actual edits; `User.Cas` increases only when the
+selected slot changes. Revision overflow rejects before writes. Replies carry
+the current group and relevant selection resource; delayed retries preserve
+later edits, recreated slots and selections rather than replaying old state.
+Reopening `/preset/get-presets` composes both mutable preset groups. Equipment
+sale/extraction protection therefore sees current Expedition references too.
+No heroes, equipment, resources, stage progress, rewards or other-mode presets
+are changed by these operations.
 
 ## Classic Co-op Defense trial
 

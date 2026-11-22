@@ -11,6 +11,40 @@ and one- and ten-hero draws using selectable controllers in the APK. Wishlist
 changes and the other supported payment types have synthetic coverage only.
 Unlocked systems are not automatically implemented by import.
 
+## Expedition three-party preset management
+
+The Expedition preset deletion failed at unsupported
+`/preset/delete-multi-party-preset`, with exactly an integer `PresetId`. Related
+native callers also use `/preset/set-multi-party-preset` for creation, copying,
+member/gear editing and renaming. Those operations had no handler, and the
+shared reorder route did not admit Expedition's type 9. Native builders,
+serializers and resource consumers confirm the distinct `UserMultiPartyPreset`
+group, three ordered parties and full-list replacement response.
+
+The new mutable overlay preserves the captured seed and ordinary preset group.
+Operations are restricted to enabled Expedition slots `[900,920)`, with owned
+hero/gear validation, canonical nullable slots, atomic group/selection/retry
+updates and current state on old requests. Deleting a selected preset clears
+only its Expedition selection. Other presets, currencies, heroes, inventory,
+stage records and rewards remain unchanged. The common equipment-removal guard
+already scans both groups and now sees the current mutable multi-party view.
+
+Twenty-two new regressions and all 137 teams/Orbital cases pass. A coherent
+source-account backup passed deletion of the captured slot, copying/recreation,
+renaming, party edits, reordering, selection and stale-request checks on an
+in-memory copy. All 71 other tables remained intact on deletion, the source
+connection had zero writes, and integrity passed. After backend restart, the
+owner confirmed the requested operations and reopening persistence, followed
+by a separate copy/name/order check with two slots. The recorded snapshot had
+four deletions and two saves across two request epochs. Replay against the
+backup exactly reproduced the full current profile and both preset resources,
+with all 68 other gameplay tables intact, expected login metadata changes and
+no new preset errors. Inventory, heroes, currencies, stage records and rewards
+were preserved; old retries made no writes and integrity passed. The snapshot
+did not contain a separate type-9 reorder packet, so its wire contract retains
+automated/native/clone verification plus the owner's UI report. Only a backend
+restart is required; no content or save reimport is needed.
+
 ## Orbital formation saving before stage entry
 
 Moving heroes on the Orbital deployment grid reached unsupported

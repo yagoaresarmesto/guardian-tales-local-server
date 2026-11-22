@@ -11,7 +11,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
-from . import colosseum
+from . import colosseum, multi_presets
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .account_name import change as change_account_name
 from .account_name import create_tables as create_account_name_tables
@@ -311,6 +311,7 @@ class AccountStore:
         self.references = ReferenceData(reference_dir)
         create_snapshot_tables(db)
         create_preset_tables(db)
+        multi_presets.create_tables(db)
         colosseum.create_tables(db)
         create_party_member_tables(db)
         create_representative_character_tables(db)

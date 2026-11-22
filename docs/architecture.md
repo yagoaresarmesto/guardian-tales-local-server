@@ -44,6 +44,7 @@ flowchart LR
 | `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
 | `imported_hero_knowledge.py` | Eight native hero-book progress rules, nonpaying official flags, awakening bit decoding and atomic per-objective/request receipts |
 | `items.py` | Shared persistent inventory-row defaults |
+| `multi_presets.py` | Expedition three-party preset persistence, selection clearing, slot ordering and atomic route-bound receipts |
 | `item_lock.py` | Owned inventory protection batches with atomic profile/retry receipts, independent of option locks |
 | `item_sell.py` | Shared protected removal, no-gold sales, proposal cleanup and route-bound sale/extraction receipts |
 | `item_extract.py` | Native equipment-ID batches for zero-reward extraction through the shared removal path |
