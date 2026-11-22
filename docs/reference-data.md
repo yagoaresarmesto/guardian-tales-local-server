@@ -1476,60 +1476,85 @@ remains available without it. Other configured markers require Inn's saved
 clear flag and only record UI completion; they do not run tutorial actions or
 grant gameplay rewards. The test fixture is a synthetic subset.
 
-The optional quest catalog contains `chapters`, mapping string chapter codes to
-lists of distinct positive quest IDs. Registration currently requires an active
-Inn session and preserves any existing quest state. It does not supply quest
-scripts, implement later checkpoints/rewards or open linked stages. Without the
-catalog, registration is limited to the original main quest 27.
+## Main story and completed campaign testing
 
-The optional side-stage catalog contains `stages`, mapping string source stage
-IDs to objects whose keys are map handles and whose values are target stage IDs.
-Resolve these from matching client map objects and stage definitions, rather
-than assuming a naming pattern. Discovery requires an active Inn session and
-sets only the target's opened flag; it does not spend entry stamina, complete
-the target or implement its gameplay. No targets are built into the source.
+Use the commands below from the project folder with the matching 3.57.0
+client data installed. The default database is `local/state/server.sqlite3`.
 
-The optional story catalog contains `stages`, mapping string stage IDs to
-`stamina` (a nonnegative integer), `requires_cleared` (stage IDs) and `quest_ids`.
-Optional `requires_discovery: true` also requires the saved opened flag and
-prevents automatic opening from clear prerequisites. It defaults to false.
-Use only stages whose requirements have been reviewed. The prepared Chapter 1
-catalog includes Inn, passage 110011001 (`passage_1_1`, 10 stamina) and main stage
-100010002 (`easy_forest_1_2`, 15 stamina). The loaded world-map state identifies
-the passage as the immediate destination after Inn. These two later story entries
-require Inn's saved clear flag as a local rule; this does not reconstruct the
-complete official route graph. The catalog also includes discovered side stage
-110010005 (`substage_1_5`, 10 stamina, quest 57) with `requires_discovery: true`.
-Its entry requires finding the map; adding its definition does not reveal it.
-Adding a
-catalog materializes earned openings in an existing save when the account store
-opens, without resetting it. Clear events also refresh these openings.
-With the original matching `static_data_get.bin`, chapter reads use the
-`chapterdata` and `stages` tables to initialize each requested chapter's
-progress entries, including its passages and side stages. The pinned data
-covers 39 chapter variants and 412 stages. Entry uses the configured override
-when present and otherwise checks the preserved clear and quest prerequisites
-or the stage's saved discovery. Without the full tables, the original World 1
-fallback and optional catalog still apply.
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales campaign preview
+.\.venv\Scripts\python.exe -m guardian_tales campaign complete
+```
 
-On fresh local saves, the shared quest handlers record configured checkpoints,
-named quest variables, and ending grades. The clear response includes linked
-stage openings and known asset or hero rewards. Rewards in unverified item
-formats reject without advancing the quest. Imported saves retain their
-existing campaign mutation guard.
+`preview` runs the transformation in memory and prints the totals.
+For `complete`, stop the backend in PyCharm Tab 1. The command backs up the
+whole database under `local/state/backups`, prints its path, then writes the
+completed campaign in a single SQLite transaction. Start the backend again,
+fully reopen the game and choose a stage on the story map. A different test
+database or build can be selected with `--data-dir` and `--reference-dir`.
+To restore the previous save, stop the backend and copy the printed backup
+over `server.sqlite3` in that same data directory. Restoring rolls the whole
+account back to the time shown in the backup filename.
 
-An optional external `story_handles.json` maps `tilemaps` by their preserved
-names, then progress stores `1` (gimmicks), `2` (purple coins), `3` (star
-pieces) and `10` (monsters) to name/index pairs from each map's handle table.
-Use the original indices, including gaps. The catalog supports stage custom
-flags and integers for known gimmicks, collectible pickups, and defeat
-markers. Derived monster handles give zero experience and gold unless the
-explicit monster catalog supplies a reward rule.
+The installed build contains Normal Worlds 1–22, Nightmare Worlds 1–16 and
+Hell World 1. The command opens and clears all 412 story stages and completes
+463 campaign quests, including hidden chapter quests. It imports saved puzzle
+state and fills the world-map stars, purple coins, star pieces, map items,
+chests, listed story followers, and stone boards. Each newly finished quest
+receives the lowest numeric ending grade defined for it. Previously recorded
+endings are preserved. The command records completion directly. Inventory,
+currency balances and outstanding reward claims keep their prior values.
+Entering an already unlocked stage costs no stamina. Quest and cutscene
+availability in a completed stage follows the client's replay behavior.
+A fresh guest in a separate state directory can exercise first-time scripts.
 
-The host packet tests cover World 21 quest progress and completion, the
-resulting World 22 entry gate, and leaving a stage without clearing it. Later
-APK playthroughs, clear exits beyond the configured paths, and scripted chest,
-pickup, payment, puzzle, and reward contracts still need verification.
+The matching static tables supply chapter membership, prerequisites, quest
+grades and rewards, inventory definitions, and stage metadata. The external
+`story_handles.json` supplies additional tilemap handle indices, including
+maps where the static data omits them. Stores include gimmicks, purple coins,
+star pieces, items, boxes, flags, exits, gatherables, monsters and waypoints.
+`story_map_events.json` supplies tilemap-defined exit destinations and side
+stage discoveries, plus pickup definitions absent from the static table.
+Both catalogs have a top-level `tilemaps` object keyed by the stage's
+`Tilemap.Default` name. In `story_handles.json`, each category number maps
+handle names to their original byte indices (1–254). In
+`story_map_events.json`, `exits` maps an exit handle to its destination
+stage name, or an empty string for a clear without a destination. `inner_exits`
+maps within-stage travel handles to `true`. `discoveries` maps a gimmick
+handle to its side-stage name. `items` maps a pickup handle to a record with
+`ItemSpecId`, `Amount` and optional `Level` or `NotForInventory`; `boxes`
+maps chest handles to lists of those records. These entries come from the
+matching tilemap's handle table and placed TileProp definitions, including
+`Interactable.ClearExit`, `MoveStage.OpenStageName` and `FieldObjectBehaviour`.
+For scripted stages without an explicit clear tile, the server uses the
+client's clear flag during the active stage session. Script-only objects can
+complete without an inventory grant. Equipment boxes use a local uniform
+draw among eligible weapons of the source box's rarity and type.
+
+Both files are local build-specific inputs. The smaller `story_catalog.json`,
+`quest_catalog.json`, `substage_catalog.json`, and `completion_catalog.json`
+retain the earlier verified stage-specific rules.
+
+The backend handles story entry and exit, quest registration, checkpoints and
+endings, custom quest and map state, coin, monster, item and treasure reports,
+side-stage discoveries, story payments, stone-board insertion, follower
+recruitment, scripted party changes, revives, radar and Hell timers. The
+Hell ranking response contains an empty local list. Chapter, feature and SNS
+milestone claims use the saved eligibility and the matching reward tables.
+World Clear Pass supports individual and batch claims on the free track
+and any gold track the saved player already owns.
+Campaign play on an imported account is enabled by `campaign complete`.
+Other imports keep the original mutation guard.
+
+Host-side checks on a copy of the imported account covered all 39 chapter
+reads and entry and return for all 412 stages. A disposable guest with test
+stamina reached all 412 stages and completed all 463 quests with simulated
+checkpoint reports. Separate checks exercised every catalogued quest reward,
+all 224 named map items, and all 205 chests, including pickup retries.
+The Android client displayed 100% for Normal World 22 on the completed
+save and entered and returned from a stage there. The Inn main clear was
+also verified in-game. A fresh playthrough of every world, script branch
+and cutscene is still unverified.
 
 The optional monster catalog contains `stages`, mapping string stage IDs to
 objects keyed by public monster handle. Each handle has exactly `index`,
@@ -1537,7 +1562,8 @@ objects keyed by public monster handle. Each handle has exactly `index`,
 and nonnegative integer rewards up to 1,000,000. Preserve the tilemap name-table
 indices once a save contains progress; renumbering would change defeat receipts.
 Inn retains its built-in handle definitions and provisional local rates.
-Additional stages require an explicit catalog and a matching active session.
+Other stages can resolve named monster handles from the map data; these grant
+zero experience and gold unless a configured reward exists.
 Only newly saved category-10 markers grant rewards; mixed batches, duplicate
 handles, overlap and retries use one transaction with the balances.
 
@@ -1558,10 +1584,16 @@ One transaction saves its clear flag, hit/no-damage telemetry, completion receip
 and earned catalog openings, then removes the active session. A retry preserves
 any later active stage and does not spend resources or change quest progress.
 
-Configured completion currently grants no extra items or grade gems and creates
-no grade-claim receipt. The passage's public `Rewards` and `FailRewards` are null;
-its separate grade reward has not been verified. Previously earned monster
-rewards remain saved. Inn keeps its existing verified 50-gem claim behavior.
+The 3.57.0 world-map reward notice reads `GemsForStageClearGrade` (50 free
+gems) for each newly earned flag. The flags are the stage clear, the complete
+purple-coin and star-piece sets on Normal and Nightmare main stages, and the
+two Hell challenges. The backend pays each flag in the transaction that first
+sets it. Completing a set during play pays on the pickup. The exit pays any
+newly earned clear or challenge. Replaying an already earned flag pays zero.
+Passages in the matching build use the clear flag. The earlier synthetic
+catalog without the native tables has no separate grade schedule. Inn keeps
+its previously verified first-clear receipt. The campaign-completion command
+sets the test profile's flags directly and pays no star rewards.
 
 The optional summon-selection catalog contains a `characters` list. Each row has
 distinct positive `Id` and `CharacterOriginId`, `SummonCategory: "Unique"`,

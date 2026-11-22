@@ -4,10 +4,10 @@
 import json
 
 from .campaign import STAGE_OPENED
-from .challenges import grant_reward
+from .campaign_complete import campaign_test_enabled
 from .characters import new_character
 from .story import open_eligible_stages
-from .story_data import load
+from .story_data import load, stage_quest
 from .story_handles import stage_handles
 from .village import integer
 
@@ -32,46 +32,23 @@ def custom_state(value):
     return value
 
 
-def stage_custom(value, stage_id, quest_id=None):
-    if value is None:
-        return {}
-    if (
-        not isinstance(value, dict)
-        or value.get("StageId") not in (None, stage_id)
-        or value.get("QuestId") not in (None, quest_id)
-        or any(
-            v is not None
-            for key, v in value.items()
-            if key not in {"StageId", "QuestId", "QuestCustomState"}
-        )
-    ):
-        raise ValueError("Only quest custom state is supported in story StageCustom")
-    values = value.get("QuestCustomState")
-    return custom_state(values) if values is not None else {}
-
-
-def commit(account, profile):
-    with account.db:
-        account.db.execute(
-            "UPDATE local_account SET profile=? WHERE id=1",
-            (json.dumps(profile, separators=(",", ":")),),
-        )
+def save_profile(account, profile):
+    account.db.execute(
+        "UPDATE local_account SET profile=? WHERE id=1",
+        (json.dumps(profile, separators=(",", ":")),),
+    )
 
 
 def grant(account, profile, rewards):
+    from .story_loot import grant_item
+
     user = profile["User"]
-    assets = {row["Id"]: row for row in user["Assets"]}
     response = {"AddedItems": [], "AddedCharacters": []}
     for reward in rewards:
-        if (
-            set(reward) == {"ItemId", "Amount"}
-            and integer(reward["ItemId"], minimum=1)
-            and integer(reward["Amount"], minimum=1)
-            and reward["ItemId"] in assets
-        ):
-            response["AddedItems"].append(
-                grant_reward(
-                    user, assets, {"item_id": reward["ItemId"], "amount": reward["Amount"]}
+        if {"ItemId", "Amount"} <= reward.keys() <= {"ItemId", "Amount", "Level"}:
+            response["AddedItems"].extend(
+                grant_item(
+                    account, user, reward["ItemId"], reward["Amount"], reward.get("Level", 0)
                 )
             )
         elif set(reward) == {"CharacterId", "Level"}:
@@ -113,23 +90,10 @@ def open_stages(progress, targets, stages):
 
 
 def save_gimmicks(account, stage_id, custom):
-    if (
-        not integer(stage_id, minimum=1)
-        or type(custom.get("Category")) is not int
-        or custom["Category"] != 1
-        or custom.get("StageId") not in (None, stage_id)
-        or any(
-            v is not None
-            for key, v in custom.items()
-            if key not in {"StageId", "Category", "CustomValues"}
-        )
-        or account.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone()
-        != (stage_id,)
-    ):
-        raise ValueError(
-            "Named stage custom values require an active story stage and gimmick store"
-        )
-    handles = stage_handles(account.references, stage_id).get("1", {})
+    category = custom.get("Category")
+    if type(category) is not int or category not in (1, 6, 7, 8, 9, 11):
+        raise ValueError("Invalid story custom handle category")
+    handles = stage_handles(account.references, stage_id).get(str(category), {})
     values = custom.get("CustomValues")
     if not isinstance(values, list) or not 1 <= len(values) <= len(handles):
         raise ValueError("Invalid story gimmick update")
@@ -156,14 +120,73 @@ def save_gimmicks(account, stage_id, custom):
         ):
             raise ValueError("Unknown or invalid story gimmick value")
         updates[index] = json.dumps(i if b is None else b)
-    with account.db:
-        account.db.executemany(
-            "INSERT INTO campaign_progress VALUES(?,1,?,?) "
-            "ON CONFLICT(stage_id,category,key) DO UPDATE SET value=excluded.value "
-            "WHERE value<>excluded.value",
-            [(stage_id, index, value) for index, value in updates.items()],
+    account.db.executemany(
+        "INSERT INTO campaign_progress VALUES(?,?,?,?) "
+        "ON CONFLICT(stage_id,category,key) DO UPDATE SET value=excluded.value "
+        "WHERE value<>excluded.value",
+        [(stage_id, category, index, value) for index, value in updates.items()],
+    )
+
+
+def apply_custom(account, profile, stage_id, custom, quest_id=None):
+    """Apply accompanying map/quest data inside the caller's transaction."""
+    if custom is None:
+        return False
+    if not isinstance(custom, dict) or not integer(stage_id, minimum=1):
+        raise ValueError("Malformed story StageCustom")
+    if account.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
+        stage_id,
+    ):
+        raise ValueError("Enter the story stage before updating its map")
+    fields = {k: v for k, v in custom.items() if v is not None}
+    if (
+        fields.keys()
+        - {
+            "StageId",
+            "Category",
+            "CustomValues",
+            "QuestId",
+            "QuestCustomState",
+            "HitCount",
+            "Score",
+            "NoDamage",
+            "ClearInTime",
+            "ChallengeA",
+            "ChallengeB",
+        }
+        or "StageId" in fields
+        and (type(fields["StageId"]) is not int or fields["StageId"] != stage_id)
+        or any(not integer(fields[k]) for k in ("HitCount", "Score") if k in fields)
+        or any(
+            type(fields[k]) is not bool
+            for k in ("NoDamage", "ClearInTime", "ChallengeA", "ChallengeB")
+            if k in fields
         )
-    return {}
+    ):
+        raise ValueError("Invalid custom story stage data")
+    if {"HitCount", "Score", "NoDamage", "ClearInTime", "ChallengeA", "ChallengeB"} & fields.keys():
+        if str(stage_id) not in load(account.references)[1]:
+            raise ValueError("Story telemetry requires a matching native stage definition")
+    if "CustomValues" in fields or "Category" in fields:
+        save_gimmicks(account, stage_id, fields)
+    if "QuestId" in fields and not integer(fields["QuestId"], minimum=1):
+        raise ValueError("Invalid custom quest ID")
+    if "QuestCustomState" not in fields:
+        return False
+    target = fields.get("QuestId", quest_id)
+    _, stages, quests = load(account.references)
+    if not integer(target, minimum=1) or not stage_quest(stages, quests, stage_id, target):
+        raise ValueError("Custom quest state must belong to this stage")
+    progress = profile["UserProgress"]
+    quest = next((q for q in progress["QuestProgresses"] if q["Id"] == target), None)
+    if quest is None:
+        raise ValueError("Start the quest before saving its variables")
+    values = custom_state(fields["QuestCustomState"])
+    if any(quest["CustomStates"].get(k) != v for k, v in values.items()):
+        quest["CustomStates"].update(values)
+        progress["Cas"] += 1
+        return True
+    return False
 
 
 def handle(account, route, request):
@@ -172,17 +195,16 @@ def handle(account, route, request):
     _, stages, quests = load(account.references)
     stage_id = request.get("StageId")
     quest_id = request.get("QuestId")
-    values = {}
+    custom = request.get("StageCustom")
     if route == SET_CUSTOM:
-        if set(request) != {"StageId", "StageCustom"} or not isinstance(
-            request["StageCustom"], dict
-        ):
+        if set(request) != {"StageId", "StageCustom"} or not isinstance(custom, dict):
             raise ValueError("Malformed story StageCustom request")
-        if request["StageCustom"].get("CustomValues") is not None:
-            return save_gimmicks(account, stage_id, request["StageCustom"])
-        quest_id = request["StageCustom"].get("QuestId")
-        values = stage_custom(request["StageCustom"], stage_id, quest_id)
-    elif route == SET_QUEST_CUSTOM:
+        profile = account.profile()
+        with account.db:
+            if apply_custom(account, profile, stage_id, custom):
+                save_profile(account, profile)
+        return {}
+    if route == SET_QUEST_CUSTOM:
         if set(request) != {"QuestId", "CustomState"}:
             raise ValueError("Malformed quest custom-state request")
         values = custom_state(request["CustomState"])
@@ -194,12 +216,11 @@ def handle(account, route, request):
             or not integer(request[field])
         ):
             raise ValueError("Malformed story quest progression request")
-        values = stage_custom(request.get("StageCustom"), stage_id, quest_id)
     if not integer(quest_id, minimum=1) or quest_id not in quests:
         raise ValueError("Unknown story quest")
     if route != SET_QUEST_CUSTOM and (
         not integer(stage_id, minimum=1)
-        or quest_id not in stages.get(str(stage_id), {}).get("quest_ids", [])
+        or not stage_quest(stages, quests, stage_id, quest_id)
         or account.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone()
         != (stage_id,)
     ):
@@ -212,22 +233,35 @@ def handle(account, route, request):
     state = quest.get("CustomStates")
     if not isinstance(state, dict):
         raise ValueError("Invalid saved story quest custom state")
-    if route in (SET_CUSTOM, SET_QUEST_CUSTOM):
+    if route == SET_QUEST_CUSTOM:
         if any(state.get(key) != v for key, v in values.items()):
             state.update(values)
             progress["Cas"] += 1
-            commit(account, profile)
+            with account.db:
+                save_profile(account, profile)
         return {}
 
     spec = quests[quest_id]
+    if route == CLEAR and request["Grade"] not in (spec.get("EndingGrades") or []):
+        raise ValueError("Unknown ending grade for this story quest")
+    already_saved = quest["Grade"] >= 0 or (
+        route != CLEAR and request["InnerProgress"] <= quest["InnerProgress"]
+    )
+    if already_saved:
+        if (
+            route == CLEAR
+            and quest["Grade"] != request["Grade"]
+            and not campaign_test_enabled(account.db)
+        ):
+            raise ValueError("Story quest was already cleared with a different grade")
+        with account.db:
+            if apply_custom(account, profile, stage_id, custom, quest_id):
+                save_profile(account, profile)
+        if route == CLEAR:
+            return {"OpenedStages": [], "AddedItems": [], "AddedCharacters": []}
+        return {"OpenedStages": []}
     if route == CLEAR:
         grade = request["Grade"]
-        if grade not in (spec.get("EndingGrades") or []):
-            raise ValueError("Unknown ending grade for this story quest")
-        if quest["Grade"] >= 0:
-            if quest["Grade"] != grade:
-                raise ValueError("Story quest was already cleared with a different grade")
-            return {"OpenedStages": [], "AddedItems": [], "AddedCharacters": []}
         rewards = list(spec.get("CommonRewards") or [])
         grade_reward = (spec.get("AdditionalRankResources") or {}).get(str(grade))
         if grade_reward:
@@ -236,13 +270,10 @@ def handle(account, route, request):
         quest["Grade"] = grade
     else:
         checkpoint = request["InnerProgress"]
-        if quest["Grade"] >= 0 or checkpoint <= quest["InnerProgress"]:
-            return {"OpenedStages": []}
         rewards = (spec.get("ProgressRewards") or {}).get(str(checkpoint), [])
         targets = (spec.get("ProgressOpenStages") or {}).get(str(checkpoint), [])
         quest["InnerProgress"] = checkpoint
 
-    state.update(values)
     response = grant(account, profile, rewards)
     before = {key for key, flags in progress["StageStates"].items() if flags & STAGE_OPENED}
     open_stages(progress, targets, stages)
@@ -253,5 +284,7 @@ def handle(account, route, request):
         for key, flags in progress["StageStates"].items()
         if flags & STAGE_OPENED and key not in before
     )
-    commit(account, profile)
+    with account.db:
+        apply_custom(account, profile, stage_id, custom, quest_id)
+        save_profile(account, profile)
     return response

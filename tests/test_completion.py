@@ -149,3 +149,180 @@ class CompletionCatalogTests(unittest.TestCase):
         self.assertEqual(
             self.db.execute("SELECT stage_id FROM campaign_session").fetchall(), [(100010002,)]
         )
+
+
+class NativeMapInteractionTests(unittest.TestCase):
+    def setUp(self):
+        from guardian_tales.raid_static import compress, digest
+
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        directory = Path(tmp.name)
+        tables = {
+            "chapterdata": {
+                "Chapter": [
+                    {"ChapterId": 10022, "Chapters": "chapter_22", "FirstStageId": 100220001},
+                    {"ChapterId": 10201, "Chapters": "chapter_1_hell", "FirstStageId": 102010001},
+                ]
+            },
+            "stages": [
+                {
+                    "Id": 100220001,
+                    "Name": "first",
+                    "Stamina": 0,
+                    "Tilemap": {"Default": "one"},
+                    "IsOpened": True,
+                },
+                {"Id": 100220002, "Name": "second", "Stamina": 0, "Tilemap": {"Default": "two"}},
+                {
+                    "Id": 102010001,
+                    "Name": "hell_forest_1",
+                    "Stamina": 0,
+                    "Tilemap": {"Default": "hell"},
+                    "IsOpened": True,
+                },
+            ],
+            "quests": [],
+            "constants": {"GemsForStageClearGrade": 50},
+            "items": [{"Id": 9010010, "Type": "weapon"}, {"Id": 20050, "Type": "quest_item"}],
+            "weaponenhance": {"LevelExps": [{"TotalExps": 200}]},
+            "stagemetaitem": {
+                "one": {
+                    "HandleNames": {
+                        "Box": ["", "box"],
+                        "Item": ["", "left", "right"],
+                        "Exit": ["", "cave", "gate"],
+                        "PurpleCoin": ["", "coin"],
+                        "StarPiece": ["", "star"],
+                    },
+                    "Boxes": {
+                        "box": [
+                            {"ItemSpecId": 9010010, "Amount": 1, "Level": 1},
+                            {"ItemSpecId": 70001, "Amount": 4},
+                        ]
+                    },
+                    "Items": {k: {"ItemSpecId": 20050, "Amount": 1} for k in ("left", "right")},
+                },
+                "two": {"HandleNames": {"PurpleCoin": [""], "StarPiece": [""], "Exit": [""]}},
+                "hell": {"HandleNames": {"PurpleCoin": [""], "StarPiece": [""], "Exit": [""]}},
+            },
+        }
+        data = []
+        for k, v in tables.items():
+            raw = json.dumps(v)
+            data.append(f"{k}\n{raw}\n1\n{digest(raw.encode())}\n")
+        (directory / "static_data_get.bin").write_bytes(
+            compress(("".join(data) + "\n\n\n").encode())
+        )
+        (directory / "story_map_events.json").write_text(
+            json.dumps(
+                {
+                    "tilemaps": {
+                        "one": {"exits": {"gate": "second"}, "inner_exits": {"cave": True}},
+                        "two": {},
+                    }
+                }
+            )
+        )
+        self.db = sqlite3.connect(":memory:")
+        self.addCleanup(self.db.close)
+        self.account = GuestStore(self.db, directory).account
+        self.account.complete_prologue(
+            "lab",
+            {
+                "IsMale": True,
+                "VoiceType": 1,
+                "Weapon1ItemId": 9010010,
+                "Weapon2ItemId": 9080010,
+                "BobLindaQuestGrade": 0,
+            },
+        )
+        self.account.start_stage({"StageId": 100220001})
+        self.body = {"StageId": 100220001}
+
+    def test_multi_item_chest_quest_item_quantity_and_failed_write(self):
+        chest = self.body | {"TreasureBoxKey": "box"}
+        with self.assertRaises(ValueError):
+            self.account.open_treasure(chest | {"StageCustom": {"StageId": 100220002}})
+        self.assertEqual(self.db.execute("SELECT count(*) FROM campaign_loot").fetchone(), (0,))
+        got = self.account.open_treasure(chest)
+        self.assertEqual(
+            [(x["ItemId"], x["Amount"]) for x in got["AddedItems"]], [(9010010, 1), (70001, 4)]
+        )
+        self.assertEqual(got["AddedItems"][0]["Experience"], 200)
+        self.assertEqual(self.account.open_treasure(chest), got)
+        for name in ("left", "right", "right"):
+            self.account.pick_stage_item(self.body | {"StageItemKey": name})
+        self.assertEqual(
+            [(i["ItemId"], i["Amount"]) for i in self.account.profile()["User"]["ItemMiscs"]],
+            [(20050, 2)],
+        )
+
+    def test_gate_opens_target_across_replays_and_scripted_finish_has_no_exit_handle(self):
+        with self.assertRaises(ValueError):
+            self.account.end_stage(self.body | {"IsClearExit": True, "ExitName": "cave"})
+        clear = self.body | {"IsClearExit": True, "ExitName": "gate"}
+        result = self.account.end_stage(clear)
+        self.assertEqual(result["UserProgress"]["StageStates"]["100220002"], 1)
+        self.account.start_stage(self.body)
+        self.assertEqual(self.account.end_stage(clear)["StageState"], result["StageState"])
+        self.assertEqual(self.db.execute("SELECT * FROM campaign_session").fetchall(), [])
+        self.account.start_stage({"StageId": 100220002})
+        self.assertTrue(
+            self.account.end_stage({"StageId": 100220002, "IsClearExit": True, "ExitName": None})[
+                "StageState"
+            ]
+            & 4
+        )
+
+    def test_hell_returns_run_score_and_keeps_best_time_and_both_challenges(self):
+        stage = {"StageId": 102010001}
+        baseline = next(
+            a["Amount"] for a in self.account.profile()["User"]["Assets"] if a["Id"] == 70003
+        )
+        for score, flag in ((81, "ChallengeA"), (92, "ChallengeB"), (76, "ChallengeA")):
+            self.account.start_stage(stage)
+            result = self.account.end_stage(
+                stage
+                | {
+                    "ExitName": None,
+                    "IsClearExit": True,
+                    "StageCustom": {"Score": score, flag: True},
+                }
+            )
+            self.assertEqual(result["CurrentScore"], score)
+        self.assertEqual(result["StageState"], 1543)
+        self.assertEqual(
+            next(a["Amount"] for a in result["User"]["Assets"] if a["Id"] == 70003), baseline + 150
+        )
+        self.assertEqual(
+            self.db.execute(
+                "SELECT value FROM campaign_progress WHERE stage_id=102010001 AND category=9 AND key=0"
+            ).fetchone(),
+            ("76",),
+        )
+
+    def test_native_star_gems_pay_on_pickup_or_clear_once_and_never_for_precompleted_state(self):
+        def gems():
+            return next(
+                a["Amount"] for a in self.account.profile()["User"]["Assets"] if a["Id"] == 70003
+            )
+
+        baseline = gems()
+        for i, spec in enumerate((71022, 70005), 1):
+            request = self.body | {"Items": [{"Id": 1, "ItemId": spec}]}
+            self.account.pick_stage_coins(request)
+            self.account.pick_stage_coins(request)
+            self.assertEqual(gems(), baseline + 50 * i)
+        clear = self.body | {"IsClearExit": True, "ExitName": "gate"}
+        self.account.end_stage(clear)
+        self.account.start_stage(self.body)
+        self.account.end_stage(clear)
+        self.assertEqual(gems(), baseline + 150)
+        profile = self.account.profile()
+        profile["UserProgress"]["StageStates"]["100220002"] = 31
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        self.account.start_stage({"StageId": 100220002})
+        self.account.end_stage({"StageId": 100220002, "IsClearExit": True, "ExitName": None})
+        self.assertEqual(gems(), baseline + 150)

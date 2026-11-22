@@ -663,8 +663,9 @@ Existing official mutation/reward receipts cannot be inferred merely from an
 inventory snapshot. New draws receive this local server's own operation receipts
 without resetting the historical summon counter. Replaying a prologue or issuing
 rewards to repair an unsupported response would damage the imported state.
-Captured stage strings are retained in SQLite but imported campaign play remains
-outside the current scope.
+Captured stage strings are retained in SQLite. The optional
+[completed campaign test](reference-data.md#main-story-and-completed-campaign-testing)
+uses them to prepare a replayable local save.
 
 The first attempt to open summons reached `/summon/enter` and then failed at the
 automatic `/user/exchange-summon-pickup-ticket` check. The imported account had a

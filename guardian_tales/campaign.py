@@ -56,14 +56,16 @@ FIRST_STAGE_ITEMS = {
 }
 
 
-def encode_stage_progress(stores):
+def encode_stage_progress(stores, stone_pieces=0):
     """Encode native StageProgress v2 / CustomDataStore values.
 
     Stores contain byte-indexed booleans or signed 32-bit integers. Integer keys
-    also occupy a zero bit in the boolean bitmap. The trailing StonePieces byte
-    remains zero; stone-board puzzles are not implemented yet.
+    also occupy a zero bit in the boolean bitmap. The trailing byte counts
+    inserted stone pieces. The client considers three pieces a complete board.
     """
-    if not stores:
+    if type(stone_pieces) is not int or not 0 <= stone_pieces <= 3:
+        raise ValueError("Invalid stone-board piece count")
+    if not stores and not stone_pieces:
         return ""
     wire = bytearray((2, len(stores)))
     for category, values in sorted(stores.items()):
@@ -88,7 +90,7 @@ def encode_stage_progress(stores):
         for key, value in integers:
             wire.append(key)
             wire.extend(struct.pack("<i", value))
-    wire.append(0)
+    wire.append(stone_pieces)
     return base64.b64encode(wire).decode("ascii")
 
 

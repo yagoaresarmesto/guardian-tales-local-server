@@ -15,9 +15,19 @@ import time
 import uuid
 from datetime import datetime, timezone
 
-from . import andras_trial, classic_coop, colosseum, expedition, multi_presets
+from . import (
+    andras_trial,
+    classic_coop,
+    colosseum,
+    expedition,
+    multi_presets,
+    story_interactions,
+    story_rewards,
+    story_world_pass,
+)
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
+from .campaign_complete import campaign_test_enabled
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
 from .head_hunter_static import bootstrap_seed as head_hunter_bootstrap_seed
 from .hero_equipment import ROUTES as HERO_EQUIPMENT_ROUTES
@@ -295,9 +305,25 @@ class BootstrapSession:
             except ValueError as error:
                 raise PacketError(str(error)) from error
         if self.signed_in and is_imported(self.store.db):
-            if route in ACCOUNT_ROUTES and route not in ACCOUNT_READS | IMPORTED_MUTATIONS:
+            test_story = (
+                route.startswith("/stage/")
+                or route in story_interactions.ROUTES
+                or route in story_rewards.ROUTES
+                or route in story_world_pass.ROUTES
+            ) and campaign_test_enabled(self.store.db)
+            if (
+                route in ACCOUNT_ROUTES
+                and route not in ACCOUNT_READS | IMPORTED_MUTATIONS
+                and not test_story
+            ):
                 raise PacketError("Imported-account operation requires its own validated contract")
-            preserved = preserved_read(self.store.db, route)
+            if story_rewards.is_story_feature(route, body) and not campaign_test_enabled(
+                self.store.db
+            ):
+                raise PacketError(
+                    "Imported account requires campaign test mode for story feature rewards"
+                )
+            preserved = None if test_story else preserved_read(self.store.db, route)
             if preserved is not None:
                 try:
                     validate_preserved_request(route, body)
@@ -694,6 +720,19 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route in story_world_pass.ROUTES:
+                return json_response(
+                    request, story_world_pass.handle(self.store.account, route, body)
+                )
+            if route in story_interactions.ROUTES:
+                epoch = self.request_epoch or self.store.request_epoch(True)
+                operation_id = epoch + ":" + str(request["sequence_id"])
+                return json_response(
+                    request,
+                    story_interactions.handle(self.store.account, route, body, operation_id),
+                )
+            if route in story_rewards.ROUTES or story_rewards.is_story_feature(route, body):
+                return json_response(request, story_rewards.claim(self.store.account, route, body))
             if route == "/stage/start-stage":
                 try:
                     return json_response(request, self.store.account.start_stage(body))

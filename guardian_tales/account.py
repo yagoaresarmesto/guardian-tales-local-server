@@ -11,7 +11,14 @@ import hashlib
 import json
 from datetime import datetime, timezone
 
-from . import colosseum, multi_presets
+from . import (
+    colosseum,
+    multi_presets,
+    story_interactions,
+    story_loot,
+    story_rewards,
+    story_world_pass,
+)
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .account_name import change as change_account_name
 from .account_name import create_tables as create_account_name_tables
@@ -26,7 +33,6 @@ from .campaign import (
     FIRST_CHAPTER_CODE,
     FIRST_CLEAR_GEMS,
     FIRST_STAGE_ID,
-    FIRST_STAGE_ITEMS,
     FIRST_STAGE_PICKUPS,
     FIRST_STAGE_STAMINA,
     FREE_GEMS,
@@ -156,11 +162,14 @@ from .story import (
     leave_story_stage,
     load_story_catalog,
     open_eligible_stages,
+    refresh_collectibles,
     stage_catalog_for,
 )
 from .story_data import load as load_native_story
+from .story_data import stage_quest
 from .story_handles import stage_handles
 from .story_quests import ROUTES as STORY_QUEST_ROUTES
+from .story_quests import apply_custom, open_stages, save_profile
 from .story_quests import handle as handle_story_quest
 from .summon_draw import draw_characters
 from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
@@ -288,6 +297,9 @@ ACCOUNT_ROUTES = (
     "/stage/start-quest",
     "/stage/progress-quest",
     *STORY_QUEST_ROUTES,
+    *story_interactions.ROUTES,
+    *story_rewards.ROUTES,
+    *story_world_pass.ROUTES,
     "/stage/pick-stage-coins",
     "/stage/beat-monsters",
     "/stage/pick-stage-item",
@@ -362,6 +374,8 @@ class AccountStore:
         db.execute(
             "CREATE TABLE IF NOT EXISTS campaign_session (id INTEGER PRIMARY KEY CHECK(id=1), stage_id INTEGER NOT NULL)"
         )
+        story_interactions.create_tables(db)
+        story_loot.create_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS campaign_progress (stage_id INTEGER NOT NULL, category INTEGER NOT NULL, key INTEGER NOT NULL, value TEXT NOT NULL, PRIMARY KEY(stage_id,category,key))"
         )
@@ -621,14 +635,13 @@ class AccountStore:
             "SELECT category,key,value FROM campaign_progress WHERE stage_id=?", (stage_id,)
         ):
             stores.setdefault(category, {})[key] = json.loads(value)
-        return encode_stage_progress(stores)
+        return encode_stage_progress(stores, story_interactions.stone_count(self.db, stage_id))
 
     def pick_stage_coins(self, request):
         """Collect known stage currencies atomically, once per kind and tilemap key."""
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
-            or request.get("StageCustom") is not None
             or not isinstance(request.get("Items"), list)
             or not 1 <= len(request["Items"]) <= 508
         ):
@@ -664,6 +677,7 @@ class AccountStore:
         profile = self.profile()
         user = profile["User"]
         with self.db:
+            custom_changed = apply_custom(self, profile, stage_id, request.get("StageCustom"))
             added = {}
             for category, key, item_id in sorted(pickups):
                 inserted = self.db.execute(
@@ -688,79 +702,17 @@ class AccountStore:
                         raise ValueError("The saved account is missing a collectible asset")
                     assets[item_id]["Amount"] += amount
                 user["Cas"] += 1
-                self.db.execute(
-                    "UPDATE local_account SET profile=? WHERE id=1",
-                    (json.dumps(profile, separators=(",", ":")),),
-                )
+            if added:
+                refresh_collectibles(self, profile, stage_id)
+            if added or custom_changed:
+                save_profile(self, profile)
         return {"User": user}
 
     def pick_stage_item(self, request):
-        """Grant each named first-phase item once and return its stable inventory ID."""
-        if (
-            not isinstance(request, dict)
-            or type(request.get("StageId")) is not int
-            or request["StageId"] != FIRST_STAGE_ID
-            or not isinstance(request.get("StageItemKey"), str)
-            or request["StageItemKey"] not in FIRST_STAGE_ITEMS
-            or request.get("StageCustom") is not None
-        ):
-            raise ValueError("Unknown first-phase item")
-        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-            FIRST_STAGE_ID,
-        ):
-            raise ValueError("Start the phase before collecting its items")
-        key = request["StageItemKey"]
-        index, item_id, collection = FIRST_STAGE_ITEMS[key]
-        return self._grant_campaign_item(key, 4, index, item_id, collection)
+        return story_loot.pickup(self, request, 4)
 
     def open_treasure(self, request):
-        """Open the first phase's glove chest once; preserve its inventory receipt."""
-        if (
-            not isinstance(request, dict)
-            or type(request.get("StageId")) is not int
-            or request["StageId"] != FIRST_STAGE_ID
-            or request.get("TreasureBoxKey") != "mole_glove_box"
-            or request.get("StageCustom") is not None
-        ):
-            raise ValueError("Unknown first-phase treasure box")
-        if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-            FIRST_STAGE_ID,
-        ):
-            raise ValueError("Start the phase before opening its treasure")
-        # The loaded TreasureBehaviour contains one ItemPlaceholder: 30017 x1.
-        value = self._grant_campaign_item("treasure:mole_glove_box", 5, 1, 30017, "ItemMiscs")
-        return {"User": value["User"], "AddedItems": [value["AddedItem"]]}
-
-    def _grant_campaign_item(self, key, category, index, item_id, collection):
-        profile = self.profile()
-        user = profile["User"]
-        previous = self.db.execute(
-            "SELECT inventory_id FROM campaign_item_receipts WHERE stage_id=? AND item_key=?",
-            (FIRST_STAGE_ID, key),
-        ).fetchone()
-        if previous:
-            item = next((item for item in user[collection] if item["Id"] == previous[0]), None)
-            if item is None or item["ItemId"] != item_id:
-                raise ValueError("Saved stage item receipt does not match the inventory")
-        else:
-            user["ItemIdCounter"] += 1
-            item = inventory_item(user["ItemIdCounter"], item_id)
-            user[collection].append(item)
-            user["Cas"] += 1
-            with self.db:
-                self.db.execute(
-                    "INSERT INTO campaign_item_receipts VALUES(?,?,?)",
-                    (FIRST_STAGE_ID, key, item["Id"]),
-                )
-                self.db.execute(
-                    "INSERT INTO campaign_progress VALUES(?,?,?,?)",
-                    (FIRST_STAGE_ID, category, index, "true"),
-                )
-                self.db.execute(
-                    "UPDATE local_account SET profile=? WHERE id=1",
-                    (json.dumps(profile, separators=(",", ":")),),
-                )
-        return {"User": user, "AddedItem": item}
+        return story_loot.pickup(self, request, 5)
 
     def end_stage(self, request):
         """Commit the first phase's clear exit and its first-grade gem reward once."""
@@ -769,7 +721,6 @@ class AccountStore:
             and request.get("IsClearExit") is False
             and str(request.get("StageId")) in load_native_story(self.references)[1]
         ):
-            completion_custom(request.get("StageCustom"))
             return leave_story_stage(self, request)
         if isinstance(request, dict) and request.get("StageId") != FIRST_STAGE_ID:
             return complete_catalog_stage(self, request)
@@ -781,17 +732,28 @@ class AccountStore:
             or request.get("IsClearExit") is not True
         ):
             raise ValueError("Only the first phase's clear exit is implemented")
-        hit_count, no_damage = completion_custom(request.get("StageCustom"))
+        native = load_native_story(self.references)[1]
+        custom = request.get("StageCustom")
+        if str(FIRST_STAGE_ID) in native and isinstance(custom, dict):
+            hit_count, no_damage = completion_custom(
+                {k: custom.get(k) for k in ("HitCount", "NoDamage")}
+            )
+        else:
+            hit_count, no_damage = completion_custom(custom)
         profile = self.profile()
         progress, user = profile["UserProgress"], profile["User"]
+        state = progress["StageStates"].get(str(FIRST_STAGE_ID), 0)
         completed = self.db.execute(
             "SELECT 1 FROM campaign_completions WHERE stage_id=?", (FIRST_STAGE_ID,)
         ).fetchone()
-        if not completed:
-            if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
-                FIRST_STAGE_ID,
-            ):
-                raise ValueError("Start the phase before completing it")
+        live = self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() == (
+            FIRST_STAGE_ID,
+        )
+        if completed and not state & STAGE_CLEARED:
+            raise ValueError("Completion receipt does not match the saved phase state")
+        if not completed and (not live or not state & STAGE_UNLOCKED):
+            raise ValueError("Start the phase before completing it")
+        if not state & STAGE_CLEARED:
             quest = next((q for q in progress["QuestProgresses"] if q["Id"] == 27), None)
             glove = self.db.execute(
                 "SELECT 1 FROM campaign_item_receipts WHERE stage_id=? AND item_key=?",
@@ -799,36 +761,34 @@ class AccountStore:
             ).fetchone()
             if quest is None or quest["InnerProgress"] < 4 or not glove:
                 raise ValueError("Complete the first phase's initial quest steps and glove chest")
-            progress["StageStates"][str(FIRST_STAGE_ID)] |= STAGE_CLEARED
-            progress["Cas"] += 1
-        grade_claimed = self.db.execute(
-            "SELECT 1 FROM campaign_grade_claims WHERE stage_id=?", (FIRST_STAGE_ID,)
-        ).fetchone()
-        if not progress["StageStates"].get(str(FIRST_STAGE_ID), 0) & STAGE_CLEARED:
-            raise ValueError("Completion receipt does not match the saved phase state")
-        if not grade_claimed:
-            next(asset for asset in user["Assets"] if asset["Id"] == FREE_GEMS)[
-                "Amount"
-            ] += FIRST_CLEAR_GEMS
-            user["Cas"] += 1
-        opened_next = open_eligible_stages(profile, load_story_catalog(self.references))
         with self.db:
-            if not completed:
+            if live:
+                if str(FIRST_STAGE_ID) in native:
+                    apply_custom(self, profile, FIRST_STAGE_ID, custom)
+                if not state & STAGE_CLEARED:
+                    progress["StageStates"][str(FIRST_STAGE_ID)] = state | STAGE_CLEARED
+                    progress["Cas"] += 1
+                    grant = self.db.execute(
+                        "INSERT OR IGNORE INTO campaign_grade_claims VALUES(?,?)",
+                        (FIRST_STAGE_ID, FIRST_CLEAR_GEMS),
+                    ).rowcount
+                    if grant:
+                        next(asset for asset in user["Assets"] if asset["Id"] == FREE_GEMS)[
+                            "Amount"
+                        ] += FIRST_CLEAR_GEMS
+                        user["Cas"] += 1
+                if not completed:
+                    self.db.execute(
+                        "INSERT INTO campaign_completions VALUES(?,?,?,?)",
+                        (FIRST_STAGE_ID, request["ExitName"], hit_count, no_damage),
+                    )
+                if str(FIRST_STAGE_ID) in native:
+                    refresh_collectibles(self, profile, FIRST_STAGE_ID)
+                open_eligible_stages(profile, native | (load_story_catalog(self.references) or {}))
                 self.db.execute(
-                    "INSERT INTO campaign_completions VALUES(?,?,?,?)",
-                    (FIRST_STAGE_ID, request["ExitName"], hit_count, no_damage),
+                    "DELETE FROM campaign_session WHERE id=1 AND stage_id=?", (FIRST_STAGE_ID,)
                 )
-                self.db.execute("DELETE FROM campaign_session WHERE id=1")
-            if not grade_claimed:
-                self.db.execute(
-                    "INSERT INTO campaign_grade_claims VALUES(?,?)",
-                    (FIRST_STAGE_ID, FIRST_CLEAR_GEMS),
-                )
-            if not completed or not grade_claimed or opened_next:
-                self.db.execute(
-                    "UPDATE local_account SET profile=? WHERE id=1",
-                    (json.dumps(profile, separators=(",", ":")),),
-                )
+                save_profile(self, profile)
         # StageSpec.Rewards and FailRewards are null for this preserved phase.
         # The separate grade reward is the 50 free gems shown on first clear.
         return {
@@ -1161,15 +1121,20 @@ class AccountStore:
             ):
                 raise ValueError("Invalid external chapter quest catalog")
             allowed.update(ids)
+        quest_id = request.get("QuestId") if isinstance(request, dict) else None
+        if type(quest_id) is int and type(stage_id) is int:
+            _, native, quests = load_native_story(self.references)
+            if stage_quest(native, quests, stage_id, quest_id):
+                allowed.add(quest_id)
         if (
             not isinstance(request, dict)
             or type(request.get("StageId")) is not int
             or (request["StageId"] != FIRST_STAGE_ID and not story_spec)
             or type(request.get("QuestId")) is not int
             or request["QuestId"] not in allowed
-            or request.get("StageCustom") is not None
+            or request.keys() - {"StageId", "QuestId", "StageCustom"}
         ):
-            raise ValueError("Only known stage quests without custom start state can be registered")
+            raise ValueError("Only known stage quests can be registered")
         if self.db.execute("SELECT stage_id FROM campaign_session WHERE id=1").fetchone() != (
             stage_id,
         ):
@@ -1177,19 +1142,27 @@ class AccountStore:
         profile = self.profile()
         progress = profile["UserProgress"]
         quest_id = request["QuestId"]
-        if not any(quest["Id"] == quest_id for quest in progress["QuestProgresses"]):
+        opened = []
+        new = not any(quest["Id"] == quest_id for quest in progress["QuestProgresses"])
+        if new:
             progress["QuestProgresses"].append(
                 {"Id": quest_id, "Grade": -1, "InnerProgress": 0, "CustomStates": {}}
             )
             progress["Cas"] += 1
-            with self.db:
-                self.db.execute(
-                    "UPDATE local_account SET profile=? WHERE id=1",
-                    (json.dumps(profile, separators=(",", ":")),),
-                )
+            targets = quests.get(quest_id, {}).get("PreOpenStages") or []
+            opened = [
+                i for i in targets if not progress["StageStates"].get(str(i), 0) & STAGE_OPENED
+            ]
+            open_stages(progress, targets, native)
+        with self.db:
+            custom_changed = apply_custom(
+                self, profile, stage_id, request.get("StageCustom"), quest_id
+            )
+            if new or custom_changed:
+                save_profile(self, profile)
         # The native success callback adds its own QuestProgress instance.
         # Returning UserProgress here would add the same quest twice in memory.
-        return {"OpenedStages": []}
+        return {"OpenedStages": opened}
 
     def beat_monsters(self, request):
         return record_defeated_monsters(self, request)
@@ -1227,6 +1200,8 @@ class AccountStore:
         if quest is None:
             raise ValueError("Start the quest before progressing it")
         checkpoint = request["InnerProgress"]
+        if quest["Grade"] >= 0:
+            return {"OpenedStages": []}
         if checkpoint > quest["InnerProgress"] + 1:
             raise ValueError("Quest checkpoints must advance sequentially")
         if checkpoint > quest["InnerProgress"]:

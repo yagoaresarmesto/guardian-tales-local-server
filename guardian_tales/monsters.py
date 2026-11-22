@@ -6,6 +6,7 @@ import re
 
 from .campaign import FIRST_MONSTER_EXP, FIRST_MONSTER_GOLD, FIRST_MONSTERS, FIRST_STAGE_ID
 from .story_handles import stage_handles
+from .story_quests import apply_custom
 
 
 def stage_monsters(references, stage_id):
@@ -62,7 +63,6 @@ def record_defeated_monsters(account, request):
     if (
         not isinstance(request, dict)
         or type(request.get("StageId")) is not int
-        or request.get("StageCustom") is not None
         or not isinstance(request.get("MonsterHandleNames"), list)
     ):
         raise ValueError("Malformed defeated-monster report")
@@ -81,6 +81,7 @@ def record_defeated_monsters(account, request):
     user = profile["User"]
     exp = gold = 0
     with account.db:
+        custom_changed = apply_custom(account, profile, stage_id, request.get("StageCustom"))
         added = False
         for name in sorted(set(names)):
             row = catalog[name]
@@ -97,6 +98,7 @@ def record_defeated_monsters(account, request):
             assets[70004]["Amount"] += exp
             assets[70001]["Amount"] += gold
             user["Cas"] += 1
+        if added or custom_changed:
             account.db.execute(
                 "UPDATE local_account SET profile=? WHERE id=1",
                 (json.dumps(profile, separators=(",", ":")),),

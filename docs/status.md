@@ -6,6 +6,16 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
+The main campaign backend was exercised against the preserved 3.57.0 tables.
+A test guest reached all 412 stages and completed all 463 campaign quests using
+simulated stage and checkpoint requests. Separate runs covered the 224 named
+pickups, 205 chests, repeat clear requests and imported-account stage entry.
+The completed-save command was verified on a SQLite copy and across all 39
+chapter reads. In the Android client, Normal World 22 showed 100% and a
+stage could be entered and exited. An in-game playthrough of every world
+remains unverified.
+See [main story and completed campaign testing](reference-data.md#main-story-and-completed-campaign-testing).
+
 The Andras presentation follow-up selects Bianca's existing leader movie and
 shared cast animation, retaining Eunha's gameplay controller, hit timing, damage,
 ATK buffs and cooldowns. An Andras-only option/action alias leaves original Eunha

@@ -17,6 +17,8 @@
   keys, account databases and machine-specific lab tools outside the source tree.
 - Preserve the saved local account when changing persistence or lab tooling.
 - The current compatibility baseline is Android 3.57.0, Google Play, European
-  service, with matching external content. A visible lobby or world map does not
-  establish a working campaign. Inn's clear path has been verified with the APK;
-  optional interactions and Chapter 1 beyond Inn remain unfinished.
+  service, with matching external content. Keep backend campaign tests distinct
+  from APK playthroughs. All 39 story chapter variants are covered on the host.
+  The Inn clear and entry/exit on a completed Normal World 22 save have
+  been verified in-game. See the main story section of
+  docs/reference-data.md for campaign test-save behavior and coverage.

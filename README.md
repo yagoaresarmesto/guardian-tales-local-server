@@ -291,10 +291,11 @@ resources and APK remain unchanged. Disabling shows her original experience.
 
 ## Starting a new account
 
-Creating a fresh local guest remains an **experimental secondary path**. Its
-prologue, persistence and early campaign clear paths were previously exercised,
-but a full playthrough from zero is not the project's main workflow. Later
-campaign interactions and general progression remain incomplete.
+The local backend supports the main story stage and quest requests. For
+stage testing, you can open every world and complete all story quests in a
+backed-up local save. See [main story and completed campaign testing](docs/reference-data.md#main-story-and-completed-campaign-testing).
+A fresh guest starts with the prologue and can exercise first-time scripts.
+The complete campaign has yet to be played through in the APK.
 
 Use a separate empty state directory for that experiment. See the
 [early campaign checkpoint](docs/first-phase-checkpoint.md) and

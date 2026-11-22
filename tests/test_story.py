@@ -51,6 +51,29 @@ class NativeStoryTests(unittest.TestCase):
                 {"Id": 110220001, "Stamina": 10, "Tilemap": {"Default": "substage"}},
                 {"Id": 810220001, "Stamina": 0, "Tilemap": {"Default": "raid"}},
             ],
+            "items": [
+                {"Id": 30001, "Type": "orb"},
+                {"Id": 10101, "Type": "costume"},
+            ],
+            "chapterprogressreward": [
+                {
+                    "ChapterId": 21,
+                    "StageType": 10,
+                    "Difficulty": 0,
+                    "Rewards": [{"ItemId": 10101, "Amount": 1}],
+                }
+            ],
+            "followers": {
+                "Rewards": [{"Id": 1, "Count": 1, "Rewards": [{"ItemId": 70003, "Amount": 5}]}]
+            },
+            "unlockfeature": [
+                {
+                    "Id": 12,
+                    "Type": "StageClear",
+                    "Value": {"Default": 100210001},
+                    "Rewards": [{"ItemId": 70003, "Amount": 4}],
+                }
+            ],
             "quests": [
                 {
                     "Id": 465,
@@ -162,6 +185,58 @@ class NativeStoryTests(unittest.TestCase):
         left = self.call("/stage/end-stage", stage | {"ExitName": None, "IsClearExit": False})
         self.assertEqual(left["StageState"], 3)
         self.assertTrue(left["StageProgress"])
+
+    def test_story_reward_claims_require_progress_and_survive_retries(self):
+        chapter = "/user/claim-chapter-progress-rewards", {"ChapterCode": 10021}
+        feature = "/user/claim-unlock-feature-rewards", {"Feature": 12}
+        follower = "/user/claim-sns-follower-rewards", {"SnsFollowerRewardId": 1}
+        for route, body in (chapter, feature, follower):
+            with self.subTest(route=route), self.assertRaises(PacketError):
+                self.call(route, body)
+        p = self.account.profile()
+        p["UserProgress"]["StageStates"]["100210001"] = 31
+        p["UserProgress"]["Followers"] = [42]
+        for field in ("PurpleCoins", "StarPieces"):
+            p[field]["10021"] = {"Current": 1, "Total": 1}
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(p),))
+        for route, body in (chapter, feature, follower):
+            self.assertEqual(len(self.call(route, body)["AddedItems"]), 1)
+            saved = self.account.profile()
+            self.assertEqual(self.call(route, body)["AddedItems"], [])
+            self.assertEqual(self.account.profile(), saved)
+
+    def test_gimmick_and_invalid_collectible_batch_roll_back_together(self):
+        p = self.account.profile()
+        p["UserProgress"]["QuestProgresses"].append(
+            {"Id": 465, "Grade": 0, "InnerProgress": 3, "CustomStates": {}}
+        )
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(p),))
+        stage = {"StageId": 100220001}
+        self.call("/stage/start-stage", stage)
+        custom = {
+            "Category": 1,
+            "CustomValues": [{"KeyIndex": 1, "KeyName": "door", "BooleanValue": True}],
+        }
+        before = self.account.profile()
+        with self.assertRaises(PacketError):
+            self.call(
+                "/stage/pick-stage-coins",
+                stage | {"StageCustom": custom, "Items": [{"Id": 8, "ItemId": 71022}]},
+            )
+        self.assertEqual(self.account.profile(), before)
+        self.assertEqual(self.account.stage_progress(100220001), "")
+        self.call(
+            "/stage/pick-stage-coins",
+            stage | {"StageCustom": custom, "Items": [{"Id": 1, "ItemId": 71022}]},
+        )
+        self.assertEqual(
+            self.db.execute(
+                "SELECT category,key FROM campaign_progress ORDER BY category"
+            ).fetchall(),
+            [(1, 1), (2, 1)],
+        )
 
 
 class StoryEntryTests(unittest.TestCase):
