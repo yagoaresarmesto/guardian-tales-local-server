@@ -187,6 +187,10 @@ class AndrasTrialTests(unittest.TestCase):
                 Cooltime=10,
                 BuffInfo=[dict(Content="Default", BuffName="attack_up_leader_default", Level=20)],
                 AnimationInfo=[dict(Name="cast", Animation="dokkaebi/attack_cwp")],
+                PresetInfo=[
+                    {"explosion": "fx_m_dokkaebimyth_myth_explosion"},
+                    {"buff": "fx_leader_skill_buff_atk"},
+                ],
             ),
             dict(
                 Name="GraphMyth:SuccubusNoble",
@@ -211,6 +215,13 @@ class AndrasTrialTests(unittest.TestCase):
                 for i, row in enumerate(self.tables["battleactions"])
             ]
         )
+        self.tables["objectpoolspec"] = [
+            dict(
+                PresetName="fx_m_succubusnoble_myth_explpsion_main",
+                AssetName="fx_succubusmyth_myth_explpsion_main",
+                AssetBundleName="effects/manual/succubusnoble",
+            )
+        ]
 
     def write_source(self):
         text = ""
@@ -373,6 +384,10 @@ class AndrasTrialTests(unittest.TestCase):
             source["MythDokkaebi"],
             Name=LEADER_ACTION,
             MediaName=source["GraphMyth:SuccubusNoble"]["MediaName"],
+            PresetInfo=[
+                {"explosion": "fx_m_succubusnoble_myth_explpsion_main"},
+                *source["MythDokkaebi"]["PresetInfo"][1:],
+            ],
             AnimationInfo=[
                 dict(
                     source["MythDokkaebi"]["AnimationInfo"][0], Animation="weapon/twohand_role_cast"
@@ -404,6 +419,10 @@ class AndrasTrialTests(unittest.TestCase):
             dict(
                 original,
                 MediaName={"Default": "succubus_noble_myth"},
+                PresetInfo=[
+                    {"explosion": "fx_m_succubusnoble_myth_explpsion_main"},
+                    *original["PresetInfo"][1:],
+                ],
                 AnimationInfo=[
                     dict(original["AnimationInfo"][0], Animation="weapon/twohand_role_cast")
                 ],
@@ -412,6 +431,42 @@ class AndrasTrialTests(unittest.TestCase):
         for name in ("MythDokkaebi", "GraphMyth:SuccubusNoble"):
             index = next(i for i, r in enumerate(old) if json.loads(r[2])["Name"] == name)
             self.assertEqual(new[index], old[index])
+
+    def test_bianca_impact_keeps_pool_catalog_and_atk_buff_binding_unchanged(self):
+        body, _ = prepare(self.original, 1, True)
+        before, after = records(decode(self.original))[1], records(decode(body))[1]
+        self.assertEqual(after["objectpoolspec"], before["objectpoolspec"])
+        actions = {r["Name"]: r for r in json.loads(after["battleactions"][1])}
+        self.assertEqual(
+            actions[LEADER_ACTION]["PresetInfo"],
+            [
+                {"explosion": "fx_m_succubusnoble_myth_explpsion_main"},
+                {"buff": "fx_leader_skill_buff_atk"},
+            ],
+        )
+        self.assertEqual(
+            actions["MythDokkaebi"]["PresetInfo"][0],
+            {"explosion": "fx_m_dokkaebimyth_myth_explosion"},
+        )
+
+    def test_missing_or_misbound_impact_prefab_rejects_without_account_or_config_writes(self):
+        original = copy.deepcopy(self.tables)
+        for mode in ("missing", "bundle", "asset", "spawn"):
+            if mode == "missing":
+                self.tables.pop("objectpoolspec")
+            elif mode == "bundle":
+                self.tables["objectpoolspec"][0]["AssetBundleName"] = "wrong_bundle"
+            elif mode == "asset":
+                self.tables["objectpoolspec"][0]["AssetName"] = "wrong_prefab"
+            else:
+                self.tables["battleactions"][0]["PresetInfo"].pop(0)
+            self.write_source()
+            before = list(self.db.iterdump())
+            self.reject("enable")
+            self.assertEqual(list(self.db.iterdump()), before)
+            self.assertFalse((self.refs / SELECTION).exists())
+            self.tables = copy.deepcopy(original)
+        self.write_source()
 
     def test_missing_conflicting_or_incompatible_cinematics_reject_without_publication(self):
         for mode in ("missing", "duration", "alias", "option"):

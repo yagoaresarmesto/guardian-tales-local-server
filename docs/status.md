@@ -20,7 +20,19 @@ composition, with unchanged main account/trial XP during projection, 52 unchange
 reference files, three unchanged checked resources and valid SQLite integrity.
 Diagnostics write nothing to the source account. The matching preserved Bianca graph was inspected
 read-only to identify its animation; no graph or original resource is edited.
-Actual APK presentation verification is pending. See the
+The owner confirms Bianca's movie appears, but reports a missing hit animation.
+The follow-up identifies a separate animated impact prefab in Bianca's preserved
+graph and redirects the private action's explosion binding to it. The source
+pool entry and prefab are checked read-only; the ATK-buff visual, damage,
+cooldowns and hit sequence remain intact. Two additional tests cover the visual
+binding/catalog preservation and missing/misbound prefab rejection. The hit
+follow-up passes all 145 targeted Windows tests, Black/Ruff and repository/link
+checks; discovery lists 1,142 tests. The coherent account/XP copy also passes,
+retaining the pool catalog and ATK-buff visual, all 52 source reference files and
+four checked original resources with zero diagnostic source writes. The hit
+prefab still uses Eunha's target-position spawn and controller timing, so this
+does not claim a full Bianca graph transplant. Actual APK hit verification is
+pending. See the
 [presentation and native dispatch contract](reference-data.md#activated-experimental-growth).
 
 The optional [Head Hunter Myth command](head-hunter.md) adds a separate locked

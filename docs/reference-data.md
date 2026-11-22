@@ -74,7 +74,7 @@ written to the original account or the separate XP database.
 
 | Feature | Experimental setting |
 | --- | --- |
-| Leader | An Andras-only clone of Eunha's Myth effects, retaining its damage, content buffs and gameplay timings, with Bianca's existing leader movie and shared cast animation. Original Eunha/Bianca actions remain unchanged. |
+| Leader | An Andras-only clone of Eunha's Myth effects, retaining its damage, content buffs and gameplay timings, with Bianca's existing leader movie, shared cast animation and animated hit prefab. Original Eunha/Bianca actions remain unchanged. |
 | Party center | The same ranged-party option and 50 additional per-mille levels as Eunha: **+5 percentage points**. |
 | Normal-attack center | Base coefficients +10%; the last-hit passive override scales equally, retaining its original doubling relationship. |
 | Role-action center | Base coefficient +10%. |
@@ -92,15 +92,23 @@ optional English input below, that title remains unresolved even though the
 stock leader option/action is supplied.
 The owner verified launching the borrowed leader and continuing to play.
 
-The subsequent presentation change uses Bianca's `succubus_noble_myth` movie and
-the `weapon/twohand_role_cast` animation referenced by her matching preserved
-`MythSuccubusNoble` graph. Only those two visual references change on the private
-action. Eunha's script/controller, animation track, cast timing, hit sequence,
-damage, content-specific ATK buffs, cooldowns, sounds and effect presets remain
-in place. Bianca's graph and its DEF buffs are not imported. Consequently, this
-reuses her cast movement with the existing action timing rather than transplanting
-her complete graph sequence. How that animation plays on Andras still requires
-an APK check.
+The presentation overlay uses Bianca's `succubus_noble_myth` movie and the
+`weapon/twohand_role_cast` animation referenced by her matching preserved
+`MythSuccubusNoble` graph. The owner confirmed the movie, but reported that the
+hit animation was missing: that first change retained Eunha's explosion prefab.
+The follow-up redirects only the private action's `explosion` binding to Bianca's
+`fx_m_succubusnoble_myth_explpsion_main` animated hit effect. Its stock pool entry
+must resolve to `fx_succubusmyth_myth_explpsion_main` in
+`effects/manual/succubusnoble`; the original pool catalog remains unchanged.
+
+Eunha's script/controller, animation track, cast timing, hit sequence, damage,
+content-specific ATK buffs, cooldowns, sounds and ATK-buff visual remain in place.
+Bianca's complete graph and its DEF buffs are not imported. The impact uses the
+existing controller's target-position spawn, whereas Bianca's graph normally
+spawns it at her root with the action direction. The controller also retains
+Eunha's recoil and timing. Thus this is a reuse of existing visual resources,
+not an identical transplant of Bianca's full graph sequence. The follow-up hit
+effect's actual appearance and placement on Andras still require an APK check.
 
 The private leader option points to `MythDokkaebi:AndrasTrial`. The JSON catalog
 identifies that alias; the native binary index hashes the same alias, while its
@@ -197,7 +205,7 @@ uniform upgrade. The Andras trial currently has the following scope:
 | Myth identity and level cap | Existing Myth presentation; isolated free XP uses story, limit-break, blessing and Myth modifiers. The owner reached 150 and retained it after reopening. | Other saved accounts/caps need their own APK checks. |
 | Appearance, equipment and base abilities | Original class, origin, animations, equipment and saved progression are retained; the active combat coefficients are tuned as above. The owner confirmed the original appearance. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
 | Base-stat changes | Original five-star base stats remain unchanged; levels still scale normally. | Official Myth variants can have different base stats. No common ratio or Andras-specific rebalancing has been selected. |
-| Leader skill | The owner confirmed the preceding stock Eunha presentation. The Bianca movie/cast-reference follow-up has automated/copy coverage; its APK check is pending. | The original class has no shipped title; the optional English CDN overlay supplies the requested name. Numerical combat benchmarking remains separate. |
+| Leader skill | The owner confirmed casting the preceding Eunha action and subsequently seeing Bianca's movie, but reported a missing hit animation. The separate impact-prefab follow-up has automated/copy coverage; its APK check is pending. | The original class has no shipped title; the optional English CDN overlay supplies the requested name. Numerical combat benchmarking remains separate. |
 | Awakening | Original nodes/flags are retained; 52 extra nodes are projected already open. | Interactive open/reset requests are not implemented. |
 | Myth ability improvements | Original animations/mechanics remain, with the active experimental coefficients above. | Full hero-specific Myth reworks are not reconstructed by this trial. |
 | Other development | Original limit breaks and blessing affect the cap and retained options. | Blessing, limit-break, conversion and awakening mutations are not added by this trial. Training Room placement/removal is also outside its supported entry/read path. |
