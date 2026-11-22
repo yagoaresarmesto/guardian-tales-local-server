@@ -130,8 +130,8 @@ progression are written. See the
 
 ### Per-stage enemy levels
 
-The optional `expedition` CLI overrides the enemy level of a listed solo
-Expedition district stage for KakaoGlobal. It requires the matching external
+The optional `expedition` CLI overrides the visible enemy level of one or all
+listed solo Expedition stages for KakaoGlobal. It requires the matching external
 static data and the existing `expedition_trial.enabled` marker. Run these
 PowerShell commands from the repository root:
 
@@ -139,28 +139,44 @@ PowerShell commands from the repository root:
 .\.venv\Scripts\python.exe -m guardian_tales expedition list
 .\.venv\Scripts\python.exe -m guardian_tales expedition list --stage 250014003
 .\.venv\Scripts\python.exe -m guardian_tales expedition set-level --stage 250014003 --level 130
+.\.venv\Scripts\python.exe -m guardian_tales expedition set-level --all --level 130
+.\.venv\Scripts\python.exe -m guardian_tales expedition set-level --all --level 220
 .\.venv\Scripts\python.exe -m guardian_tales expedition restore-level --stage 250014003
 .\.venv\Scripts\python.exe -m guardian_tales expedition restore-level --all
 ```
 
 `list` shows stage IDs, internal names, original Global levels, configured levels
-and the maximum supported by the preserved experience table. Add
+and the maximum supported by the preserved experience table. `--all` applies
+one level to every listed phase in a single atomic configuration update,
+including hidden, boss, unexplored and archived event variants. An individual
+`--stage` command can subsequently override or restore one of those phases.
+Add
 `--reference-dir PATH` when the backend uses another directory; the default is
-`local/client-data/reference`. Level 130 has a matching experience row in the
-preserved 3.57.0 pack, whose table permits levels 1 through 220. Native inspection
-shows Expedition's monster preparation reading `StageStandardLevel` and looking
-up its level experience. This establishes the input path, not APK verification
-of every level or enemy variant.
+`local/client-data/reference`. The preserved 3.57.0 pack supports visible levels
+**1 through 220**, including both boundaries; higher values are rejected.
+Native inspection shows monster preparation reading `StageStandardLevel`,
+looking up its level experience and resolving a zero-based experience row before
+the UI adds one. The command therefore writes the requested visible level minus
+one. All 220 choices have automated experience-lookup round-trip coverage;
+this does not establish APK verification of every level or enemy variant.
+
+The original command wrote the raw standard level directly: its `--level 130`
+trial appeared as 131 in the APK. The owner confirmed combat/map return and
+restoration to the original level. New commands use visible levels; `list` now
+reports visible original and configured levels too. Existing version-1 files
+retain their raw interpretation and are never silently rewritten on reads.
+Reissue `set-level` to choose an exact visible level for an older override.
 
 Close Guardian Tales before changing or restoring levels. Restart the backend
 and fully reopen the game afterward; CDN and bridge can remain running. For a
 first test, change one stage and verify entry, enemies, results and map return.
-Only stages already opened and unlocked in the saved account remain playable.
+This setting does not unlock stages or implement missing entry handlers;
+the existing saved-progression and practice-entry restrictions still apply.
 
 The command writes only `expedition_levels.json` in the external reference
 directory. It never opens the account database or overwrites preserved static
 files. At bootstrap, an overlay replaces only the selected stages'
-`StandardLevel.KakaoGlobal`; other regions, stages, enemy definitions, waves,
+`StandardLevel.KakaoGlobal`; other regions, unselected stages, enemy definitions, waves,
 Exorcism requirements, scoring and the practice reward policy remain unchanged.
 Get/check responses share the effective checksum, composed with existing mode,
 nickname and test-pin overlays. Writes are atomic and repeated identical choices

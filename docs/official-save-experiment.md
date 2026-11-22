@@ -11,6 +11,31 @@ and one- and ten-hero draws using selectable controllers in the APK. Wishlist
 changes and the other supported payment types have synthetic coverage only.
 Unlocked systems are not automatically implemented by import.
 
+## Reversible Expedition enemy levels
+
+The first per-stage CLI trial wrote raw `StandardLevel=130`; the owner saw
+level 131, completed the phase and returned to the map. Restoring the override
+recovered the original enemy level and worked in the APK. Native experience
+lookup explains the numbering: standard level N supplies the experience for
+zero-based level N, displayed as N+1. At the final experience row, the lookup
+saturates. New CLI choices are visible levels 1 through 220 and are translated
+to raw N-1. Existing version-1 settings remain raw and readable without silent
+changes to their effects.
+
+`set-level --all` updates all 44 solo Expedition definitions in the matching
+pack, including hidden, boss, unexplored and archived event variants, while
+leaving other modes, regional settings and saved progression intact. Individual
+overrides/restoration and full restoration remain available. Twenty enemy-level
+regressions and all 138 campaign/core/content tests pass, including native
+experience round trips for each supported visible level. A coherent account
+copy passed all 44 stages at visible level 220 and full restoration: the entire
+original stage table and all other effective table contents were preserved,
+get/check checksums matched, revisions advanced, all 74 account tables and all
+49 original reference files stayed intact, and integrity passed with zero
+diagnostic source writes. Updated global/exact-visible-level APK checks are
+pending. See the
+[commands and restrictions](reference-data.md#per-stage-enemy-levels).
+
 ## Expedition result duration compatibility
 
 A rejected result occurred with approximately 20 seconds remaining in a

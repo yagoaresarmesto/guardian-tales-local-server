@@ -36,8 +36,19 @@ def catalog(body):
     stages = json.loads(tables["stages"][1])
     if not isinstance(stages, list) or any(not isinstance(row, dict) for row in stages):
         raise ValueError("Invalid stage definitions")
-    rows = [row for row in stages if row.get("Id") in ids]
-    if len(rows) != len(ids) or len({row["Id"] for row in rows}) != len(ids):
+    # Include archived hidden, unexplored and event variants too. This changes
+    # their data only; their entry/unlock contracts remain independent.
+    rows = [row for row in stages if row.get("Id") in ids or "ExpeditionStageType" in row]
+    if (
+        not ids <= {row.get("Id") for row in rows}
+        or len({row.get("Id") for row in rows}) != len(rows)
+        or any(
+            not integer(row.get("Id"), minimum=1)
+            or "ExpeditionStageType" in row
+            and not integer(row["ExpeditionStageType"], maximum=3)
+            for row in rows
+        )
+    ):
         raise ValueError("Expedition stage definitions must be complete and unique")
     experience = json.loads(tables["exps2"][1])
     levels = experience.get("LevelExps") if isinstance(experience, dict) else None
@@ -48,7 +59,7 @@ def catalog(body):
             not isinstance(row, dict)
             or row.get("Level") != index
             or type(row.get("Level")) is not int
-            or not integer(row.get("TotalExps"))
+            or not integer(row.get("TotalExps"), minimum=1)
             for index, row in enumerate(levels)
         )
         or any(a["TotalExps"] >= b["TotalExps"] for a, b in zip(levels, levels[1:]))
@@ -60,7 +71,7 @@ def catalog(body):
         level = (
             region.get("KakaoGlobal", region.get("Default")) if isinstance(region, dict) else None
         )
-        if not integer(level, minimum=1, maximum=len(levels)):
+        if not integer(level, maximum=len(levels)):
             raise ValueError("Invalid original Expedition enemy level")
         result[row["Id"]] = {"name": row.get("Name"), "original_level": level}
     return result, len(levels)
@@ -86,7 +97,7 @@ def load_levels(references):
             or not key.isdecimal()
             or len(key) > 10
             or str(int(key)) != key
-            or not integer(level, minimum=1, maximum=1000)
+            or not integer(level, maximum=1000)
             for key, level in value["stages"].items()
         )
     ):
@@ -99,9 +110,15 @@ def load_levels(references):
 def validate_levels(body, overrides):
     stages, maximum = catalog(body)
     for ident, level in overrides:
-        if ident not in stages or not integer(level, minimum=1, maximum=maximum):
+        if ident not in stages or not integer(level, maximum=maximum):
             raise ValueError(f"Choose a listed Expedition stage and a level from 1 to {maximum}")
     return stages, maximum
+
+
+def visible_level(standard_level, maximum):
+    # ExpToLevel returns a zero-based row and the UI adds one. At the final
+    # threshold the lookup saturates at its last row. Retain raw v1 settings.
+    return min(standard_level + 1, maximum)
 
 
 @lru_cache(maxsize=2)
@@ -170,9 +187,11 @@ def main(argv=None):
     parser.add_argument("action", choices=("list", "set-level", "restore-level"))
     parser.add_argument("--stage", type=int, help="Expedition stage ID, from list")
     parser.add_argument(
-        "--level", type=int, help="Enemy level supported by the Global experience table"
+        "--level",
+        type=int,
+        help="Visible enemy level; list reports the maximum for the Global data",
     )
-    parser.add_argument("--all", action="store_true", help="Restore every stage's original level")
+    parser.add_argument("--all", action="store_true", help="Set or restore all Expedition stages")
     parser.add_argument("--reference-dir", default="local/client-data/reference")
     args = parser.parse_args(argv)
     references = ReferenceData(args.reference_dir)
@@ -181,12 +200,12 @@ def main(argv=None):
             args.action == "list"
             and (args.level is not None or args.all)
             or args.action == "set-level"
-            and (args.stage is None or args.level is None or args.all)
+            and (args.level is None or (args.stage is not None) == args.all)
             or args.action == "restore-level"
             and (args.level is not None or (args.stage is not None) == args.all)
         ):
             raise ValueError(
-                "Use list [--stage ID], set-level --stage ID --level N, or restore-level --stage ID/--all"
+                "Use list [--stage ID], set-level --stage ID/--all --level N, or restore-level --stage ID/--all"
             )
         body = references.read_bytes("static_data_get.bin")
         selection = load_levels(references)
@@ -200,7 +219,11 @@ def main(argv=None):
 
             if not enabled(references):
                 raise ValueError("Enable the Expedition trial before setting enemy levels")
-            chosen[args.stage] = args.level
+            if not integer(args.level, minimum=1, maximum=maximum):
+                raise ValueError(f"Choose a visible enemy level from 1 to {maximum}")
+            targets = stages if args.all else (args.stage,)
+            for ident in targets:
+                chosen[ident] = args.level - 1
             validate_levels(body, tuple(chosen.items()))
         elif args.action == "restore-level":
             if args.all:
@@ -218,8 +241,11 @@ def main(argv=None):
                     "stages": [
                         dict(
                             stage_id=ident,
-                            **row,
-                            enemy_level=chosen.get(ident, row["original_level"]),
+                            name=row["name"],
+                            original_level=visible_level(row["original_level"], maximum),
+                            enemy_level=visible_level(
+                                chosen.get(ident, row["original_level"]), maximum
+                            ),
                             overridden=ident in chosen,
                         )
                         for ident, row in sorted(stages.items())

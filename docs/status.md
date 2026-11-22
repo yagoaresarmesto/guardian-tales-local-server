@@ -6,12 +6,29 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-Fourteen regressions cover the optional per-stage Expedition enemy-level CLI,
+The enemy-level CLI now supports `set-level --all`, covering all 44 solo
+Expedition stage definitions in the matching pack, including hidden, boss,
+unexplored and archived event variants. It accepts visible levels 1 through 220
+and translates them to zero-based standard levels. Six additional regressions
+cover all-stage isolation, all 220 native experience-lookup round trips,
+individual changes after a global setting, restoration to distinct originals,
+atomic failure and compatibility with previous raw version-1 files. All
+**138 campaign/core/content tests** pass; discovery lists 1,064 cases, without a
+new full-suite run. The owner's earlier raw-130 trial displayed 131 and completed
+the phase/map return; original-level restoration is now confirmed too.
+A coherent source-account copy passed all 44 stages at the visible maximum
+220 and full restoration. The entire original stage table and all other
+effective table contents were preserved, all 74 account tables stayed intact,
+and all 49 original reference files remained unchanged. Get/check checksums
+matched, stage revisions advanced and integrity passed with zero diagnostic
+source writes. Updated global/exact-visible-level APK checks are pending.
+
+The initial fourteen regressions covered the per-stage Expedition enemy-level CLI,
 level 130, source-table bounds, independent overrides, partial/full restoration,
 advancing cache revisions, current get/check checksums, composition with existing
 nickname/feature/test-pin overlays, malformed inputs and atomic-write failure.
-All **132 campaign/core/content cases** pass; discovery now contains 1,058 tests.
-No new full-suite run was performed for this change. The native monster
+All **132 campaign/core/content cases** passed at that checkpoint, with 1,058
+discovered tests. No new full-suite run was performed. The native monster
 preparation reads the stage's standard level and corresponding experience; the
 preserved Global experience table has 220 rows, including level 130. On a
 coherent account copy with the actual reference pack, setting level 130 changed
@@ -20,8 +37,8 @@ stage table, get/check checksums matched, and revisions advanced. All other
 effective table contents stayed intact, including active test-pin definitions;
 their outer overlay only advanced its expected revision. All 74 account tables
 and all 48 source reference files remained unchanged, with zero diagnostic
-source writes and valid SQLite integrity. Actual APK level/restoration
-verification is pending. See the
+source writes and valid SQLite integrity. The owner's original single-stage
+APK trial and restoration are recorded above. See the
 [enemy-level commands](reference-data.md#per-stage-enemy-levels).
 
 The latest full Windows regression run passed **1,040 tests**, including 22 new

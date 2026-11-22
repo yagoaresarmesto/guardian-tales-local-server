@@ -100,7 +100,7 @@ class ExpeditionLevelTests(unittest.TestCase):
         result = self.cli("list")
         self.assertEqual(result["max_enemy_level"], 220)
         self.assertEqual([s["stage_id"] for s in result["stages"]], [STAGE, OTHER])
-        self.assertEqual([s["enemy_level"] for s in result["stages"]], [100, 110])
+        self.assertEqual([s["enemy_level"] for s in result["stages"]], [101, 111])
         self.assertFalse(any(s["overridden"] for s in result["stages"]))
         self.assertEqual({p.name: p.read_bytes() for p in self.root.iterdir()}, files)
         self.assertEqual(list(self.db.iterdump()), before)
@@ -110,7 +110,7 @@ class ExpeditionLevelTests(unittest.TestCase):
         self.assertEqual(result["stages"][0]["enemy_level"], 130)
         body, checksum = prepare(self.source, *load_levels(self.refs))
         expected = copy.deepcopy(self.tables["stages"])
-        expected[0]["StandardLevel"]["KakaoGlobal"] = 130
+        expected[0]["StandardLevel"]["KakaoGlobal"] = 129
         self.assertEqual(self.stage_rows(body), expected)
         original, updated = records(decode(self.source))[1], records(decode(body))[1]
         for name in original.keys() - {"stages", "__checksum__"}:
@@ -121,9 +121,9 @@ class ExpeditionLevelTests(unittest.TestCase):
     def test_partial_and_full_restoration_preserve_other_overrides_and_advance_revision(self):
         revisions = []
         for args, expected in (
-            (("set-level", "--stage", str(STAGE), "--level", "130"), [130, 110]),
-            (("set-level", "--stage", str(OTHER), "--level", "90"), [130, 90]),
-            (("restore-level", "--stage", str(STAGE)), [100, 90]),
+            (("set-level", "--stage", str(STAGE), "--level", "130"), [129, 110]),
+            (("set-level", "--stage", str(OTHER), "--level", "90"), [129, 89]),
+            (("restore-level", "--stage", str(STAGE)), [100, 89]),
             (("restore-level", "--all"), [100, 110]),
         ):
             self.cli(*args)
@@ -292,6 +292,7 @@ class ExpeditionLevelTests(unittest.TestCase):
             lambda: self.tables["stages"].pop(0),
             lambda: self.tables["stages"].append(copy.deepcopy(self.tables["stages"][0])),
             lambda: self.tables["exps2"]["LevelExps"][1].update(TotalExps=1),
+            lambda: self.tables["exps2"]["LevelExps"][0].update(TotalExps=0),
             lambda: self.tables["stages"][0].update(StandardLevel={"Default": True}),
         ):
             original = copy.deepcopy(self.tables)
@@ -300,3 +301,106 @@ class ExpeditionLevelTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 catalog(self.source)
             self.tables = original
+
+    def test_all_includes_hidden_unexplored_boss_and_event_stages_without_other_modes(self):
+        extra = [
+            {
+                "Id": ident,
+                "ExpeditionStageType": kind,
+                "StandardLevel": {"Default": 90},
+                "StageExorcism": 100,
+                "Name": name,
+            }
+            for ident, kind, name in (
+                (250011010, 2, "boss"),
+                (250011011, 3, "unexplored"),
+                (250011012, 1, "hidden"),
+                (250020001, 3, "event"),
+            )
+        ]
+        self.tables["stages"].extend(extra)
+        self.tables["stages"].append(
+            {"Id": 320010001, "StandardLevel": {"Default": 99}, "CoopType": 1}
+        )
+        self.write_source()
+        before = list(self.db.iterdump())
+        self.db.execute("PRAGMA query_only=ON")
+        result = self.cli("set-level", "--all", "--level", "220")
+        self.assertEqual(len(result["stages"]), 6)
+        self.assertTrue(all(row["enemy_level"] == 220 for row in result["stages"]))
+        prepared, _ = prepare(self.source, *load_levels(self.refs))
+        expected = copy.deepcopy(self.tables["stages"])
+        for row in expected:
+            if row["Id"] in {STAGE, OTHER} or "ExpeditionStageType" in row:
+                row["StandardLevel"]["KakaoGlobal"] = 219
+        self.assertEqual(self.stage_rows(prepared), expected)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_every_visible_level_round_trips_through_native_experience_lookup(self):
+        levels = self.tables["exps2"]["LevelExps"]
+        for visible in range(1, len(levels) + 1):
+            with self.subTest(level=visible):
+                result = self.cli("set-level", "--stage", str(STAGE), "--level", str(visible))
+                raw = dict(load_levels(self.refs)[1])[STAGE]
+                # Native GetTotalExpForLevel uses index (level-1), then
+                # ExpToLevel finds the first threshold strictly greater than XP.
+                xp = 0 if raw == 0 else levels[min(raw - 1, len(levels) - 1)]["TotalExps"]
+                resolved = next(
+                    (r["Level"] for r in levels if r["TotalExps"] > xp), levels[-1]["Level"]
+                )
+                self.assertEqual(resolved + 1, visible)
+                self.assertEqual(result["stages"][0]["enemy_level"], visible)
+
+    def test_legacy_raw_configuration_is_preserved_until_explicit_visible_level_change(self):
+        path = self.root / SELECTION
+        path.write_text(json.dumps({"version": 1, "generation": 1, "stages": {str(STAGE): 130}}))
+        before = path.read_bytes()
+        result = self.cli("list", "--stage", str(STAGE))
+        self.assertEqual(result["stages"][0]["enemy_level"], 131)
+        self.assertEqual(path.read_bytes(), before)
+        prepared, _ = prepare(self.source, *load_levels(self.refs))
+        self.assertEqual(self.stage_rows(prepared)[0]["StandardLevel"]["KakaoGlobal"], 130)
+        self.cli("set-level", "--stage", str(STAGE), "--level", "130")
+        self.assertEqual(load_levels(self.refs), (2, ((STAGE, 129),)))
+
+    def test_all_then_individual_override_and_restoration_recover_distinct_original_levels(self):
+        self.cli("set-level", "--all", "--level", "130")
+        before = (self.root / SELECTION).read_bytes()
+        self.cli("set-level", "--all", "--level", "130")
+        self.assertEqual((self.root / SELECTION).read_bytes(), before)
+        self.cli("set-level", "--stage", str(STAGE), "--level", "1")
+        self.assertEqual(dict(load_levels(self.refs)[1]), {STAGE: 0, OTHER: 129})
+        restored = self.cli("restore-level", "--stage", str(STAGE))
+        self.assertEqual(restored["stages"][0]["enemy_level"], 101)
+        self.assertEqual(dict(load_levels(self.refs)[1]), {OTHER: 129})
+        restored = self.cli("restore-level", "--all")
+        self.assertEqual([r["enemy_level"] for r in restored["stages"]], [101, 111])
+        prepared, _ = prepare(self.source, *load_levels(self.refs))
+        self.assertEqual(self.stage_rows(prepared), self.tables["stages"])
+
+    def test_all_rejects_unsupported_levels_and_ambiguous_targets_without_publication(self):
+        self.cli("set-level", "--all", "--level", "130")
+        before = (self.root / SELECTION).read_bytes()
+        for args in (
+            ("set-level", "--all", "--level", "0"),
+            ("set-level", "--all", "--level", "221"),
+            ("set-level", "--all"),
+            ("set-level", "--all", "--stage", str(STAGE), "--level", "130"),
+        ):
+            self.reject_cli(*args)
+        self.assertEqual((self.root / SELECTION).read_bytes(), before)
+        with patch(
+            "guardian_tales.expedition_levels.atomic_replace", side_effect=OSError("disk failure")
+        ):
+            self.reject_cli("set-level", "--all", "--level", "220")
+        self.assertEqual((self.root / SELECTION).read_bytes(), before)
+
+    def test_zero_internal_level_and_saturated_legacy_upper_bound_are_reported_correctly(self):
+        self.tables["stages"][0]["StandardLevel"]["Default"] = 0
+        self.tables["stages"][1]["StandardLevel"]["KakaoGlobal"] = 220
+        self.write_source()
+        result = self.cli("list")
+        self.assertEqual([r["original_level"] for r in result["stages"]], [1, 220])
+        path = self.root / SELECTION
+        path.write_text(json.dumps({"version": 1, "generation": 1, "stages": {str(STAGE): 220}}))
+        self.assertEqual(self.cli("list", "--stage", str(STAGE))["stages"][0]["enemy_level"], 220)
