@@ -16,8 +16,8 @@
     "modules": ["test_campaign", "test_completion", "test_discovery", "test_monsters", "test_story", "test_play_menu", "test_expedition", "test_expedition_levels", "test_classic_coop"]
   },
   "heroes": {
-    "description": "Hero experience, training caps and saved Training Room slots",
-    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room"]
+    "description": "Hero experience, equipment, training caps and saved Training Room slots",
+    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room", "test_hero_equipment"]
   },
   "inventory": {
     "description": "Item protection/sales/extraction, weapons, relic options and jewels",

@@ -19,6 +19,7 @@ from . import andras_trial, classic_coop, colosseum, expedition, multi_presets
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
+from .hero_equipment import ROUTES as HERO_EQUIPMENT_ROUTES
 from .item_extract import ROUTE as ITEM_EXTRACT_ROUTE
 from .item_lock import ROUTES as ITEM_LOCK_ROUTES
 from .item_sell import ROUTE as ITEM_SELL_ROUTE
@@ -402,6 +403,15 @@ class BootstrapSession:
             if route == "/user/charge-stamina":
                 try:
                     return json_response(request, self.store.account.charge_stamina(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route in HERO_EQUIPMENT_ROUTES:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, self.store.account.change_hero_equipment(body, operation_id, route)
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == PARTY_MEMBER_ROUTE:

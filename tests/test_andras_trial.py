@@ -750,6 +750,41 @@ class AndrasTrialTests(unittest.TestCase):
             server.server_close()
             thread.join(timeout=2)
 
+    def test_equipment_change_preserves_saved_andras_and_projects_active_myth_development(self):
+        from guardian_tales.andras_trial_growth import activated_tree
+        from guardian_tales.items import inventory_item
+
+        self.tables["items"].append(
+            {
+                "Id": 9110003,
+                "Name": "synthetic_accessory",
+                "Type": "weapon",
+                "WeaponType": "accessory",
+            }
+        )
+        self.write_source()
+        profile = self.store.account.profile()
+        profile["User"]["ItemWeapons"].append(inventory_item(888, 9110003))
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        self.cli("enable")
+        reply = json.loads(
+            self.session.handle(
+                request("/user/change-accessory", {"CharacterId": self.target, "Accessory1": 888})
+            ).body
+        )
+        expected = copy.deepcopy(profile)
+        expected["User"]["Characters"][0]["Accessory1"] = 888
+        expected["User"]["Cas"] += 1
+        self.assertEqual(self.store.account.profile(), expected)
+        hero = next(row for row in reply["User"]["Characters"] if row["Id"] == self.target)
+        self.assertEqual(hero["CharacterId"], VARIANT)
+        self.assertEqual(hero["Accessory1"], 888)
+        self.assertEqual(
+            hero["AwakeningTree"],
+            activated_tree(expected["User"]["Characters"][0]["AwakeningTree"]),
+        )
+
     def test_missing_wrong_or_multiple_owned_andras_cannot_be_enabled(self):
         profile = self.store.account.profile()
         for change in (

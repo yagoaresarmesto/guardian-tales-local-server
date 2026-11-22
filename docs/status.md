@@ -6,6 +6,31 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
+The Hero-screen equipment follow-up implements five native individual routes:
+weapons, accessories, cards, merch and relics. The captured failing request used
+`/user/change-weapons`; native send methods and the card UI confirm the other
+payloads and card slot numbering. Fourteen new equipment regressions cover
+holder transfers, both card slots, clearing, type/ownership checks, atomic
+rollback, no-ops, stale retries and registered test pins. An additional Andras
+case verifies that equipping retains the saved base hero while projecting the
+active Myth variant. These targeted cases pass. A coherent real account/XP copy
+passes the captured request, all five routes, both card slots and active Andras
+equipment projection. Only the profile and equipment receipt tables change;
+inventory, assets, presets and development remain intact. All 52 source reference
+files are unchanged, integrity passes and diagnostics write nothing to the source
+account. The broader 520-case core/account/heroes/inventory/teams run found one
+stale expected import-summary route list; the other 519 cases passed. Updating
+that explicit expected list for the five newly enabled routes is followed by all
+14 snapshot/import tests passing. Discovery lists 1,121 tests. Black (202 files),
+Ruff and indexed repository/link checks (260 files) pass.
+The owner confirms equipment changes and persistence after reopening. Read-only
+inspection finds 14 successful equipment receipts across all five routes,
+including six card changes, and 12 final slot differences from the backup. The
+inventories, currencies, hero development, other user/profile fields, presets and
+separate Andras trial XP remain intact. Integrity passes with no diagnostic
+source writes or new API errors. See the
+[request and persistence contract](reference-data.md#hero-equipment-changes).
+
 The preceding full Windows regression run passed **1,090 tests**, including 26
 regressions for the experimental Andras Myth view and isolated training, disabled
 compatibility, owner/content binding, full and partial replies, other-owner

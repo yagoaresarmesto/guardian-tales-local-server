@@ -194,7 +194,7 @@ and an actual APK observation are different forms of verification.
 |---|---|
 | Account and clean-client restore | Preserved profile, owned heroes/equipment and startup reads load locally; only observed account data is preserved, and detailed campaign coverage varies. |
 | Summons | One- and ten-hero local draws worked in the APK. Rates, payment variants and catalogs are local rules; importing a profile does not recover official summon logic or history. |
-| Equipment and relics | Catalog-backed local enhancement, limit breaks, engraving, option changes and locks. Prepared free policies retain materials for supported operations; actual APK coverage varies by operation. |
+| Equipment and relics | Catalog-backed hero equipment changes, local enhancement, limit breaks, engraving, option changes and locks. Prepared free policies retain materials for supported operations; actual APK coverage varies by operation. |
 | Jewels, hero experience and collection systems | Additional local handlers and retry-safe persistence are implemented. Several result/claim paths have automated coverage but still need their documented APK checks. |
 | Teams and presets | Saved formations plus preset selection, editing, deletion and creation; several Orbital operations were verified in the APK. Other team/preset paths retain their individual limits. |
 | Village and mastery | Resource collection, mastery upgrades/reset and selected no-reward mocks; fixed base-camp mastery rewards require an explicit debug policy. |

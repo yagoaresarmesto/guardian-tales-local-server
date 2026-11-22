@@ -519,6 +519,48 @@ Placing/removing items or heroes, unlocking slots and paying to reactivate them
 remain separate unsupported operations. After updating, close the game and restart
 only the backend; CDN and bridge can remain running.
 
+## Hero equipment changes
+
+These individual Hero-screen routes use the matching external `heroes` and
+`items` tables from `static_data_get.bin`, without an additional debug catalog:
+
+| Route | Exact request fields |
+| --- | --- |
+| `/user/change-weapons` | `CharacterId`, `Weapon1`, `Weapon2` |
+| `/user/change-accessory` | `CharacterId`, `Accessory1` |
+| `/user/change-orb` | `CharacterId`, `Orb`, `Slot` (1 or 2) |
+| `/user/change-merch` | `CharacterId`, `Merch` |
+| `/user/change-relic` | `CharacterId`, `Relic` |
+
+The native send methods confirm these names; the card UI maps its two slots to
+1 and 2. An actual pending APK weapon request confirms nullable equipment values.
+`CharacterId` identifies an **owned hero inventory row**, and gear values identify
+owned item inventory rows, not static specification IDs. Null or zero clears the
+selected slot and is saved/returned as explicit null. Slot types and inventory
+categories must match. Main-hand weapons must be compatible attack weapon types;
+the second hand accepts a compatible shield. Locked equipment can be equipped.
+Explicitly registered test-pin definitions remain available as accessories.
+
+All validation completes before writing. Taking an item from another owned hero
+clears only that item's previous slot; moving a card between one hero's slots
+also clears its previous location. The old target item remains in inventory.
+Only affected character equipment fields and one `User.Cas` increment change.
+Inventory rows, quantities, options, locks, currencies, development, normal-party
+membership, stored presets and captured startup reads remain intact. The
+experimental Andras projection continues to apply to outgoing hero data without
+persisting its Myth spec, virtual XP or extra awakening nodes in the base hero.
+
+The profile and route/epoch/sequence receipt commit together. A no-op records the
+identity without rewriting the profile or advancing its revision. Replays return
+the current complete character roster without another write, preserving later
+equipment/development changes; reusing an identity for another body or route
+rejects. The response supplies owner ID, revision and the complete current roster,
+including explicit nulls for displaced holders. It does not replace inventories
+or unrelated resource fields. Restart only the backend and fully reopen the game
+after updating. This contract covers the five individual routes above; costume,
+weapon-costume and bulk `change-characters-equipments` requests remain separate
+unimplemented contracts.
+
 ## Inventory item protection
 
 `/item/lock` and `/item/unlock` accept exactly `itemIndexes`: a nonempty array

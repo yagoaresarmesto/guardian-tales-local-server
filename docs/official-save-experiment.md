@@ -3117,6 +3117,36 @@ bodies, identifiers, credentials and resource files remain private. The supporte
 fresh-local-account workflow continues to be described in the
 [content guide](offline-content.md) and [verified status](status.md).
 
+## Hero-screen equipment changes
+
+On 2026-11-22, the owner reported an error changing weapons/accessories from
+HEROES and suspected cards/relics too. A bounded read-only probe of the selected
+test instance captured `/user/change-weapons` with an owned hero ID, an owned
+main-hand item ID and a null second hand. Native send methods confirm separate
+accessory, card, merch and relic routes; the card UI maps the slots to 1 and 2.
+These five individual routes now validate ownership, item type and weapon
+compatibility before committing exact slot changes and their retry receipt.
+An incoming item is detached only from its previous holder/slot. The response
+includes the complete current roster with explicit nulls for displaced gear.
+
+Fourteen new equipment regressions and one Andras projection case pass. A
+coherent file-backed account/XP copy passes the captured request, all five routes,
+both card slots and active Andras projection while retaining inventories,
+currencies, presets and hero development. Only profile and equipment receipts
+change; source reference files and original databases are not written by the
+diagnostics. The 520-case broader run finds one outdated expected import-summary
+route list; after adding the newly enabled routes in sorted order, all 14 import
+regressions pass. The other 519 cases in that broader run passed.
+
+After manually restarting only the backend, the owner confirms the changes work
+and persist after reopening. A read-only audit finds 14 successful equipment
+requests across weapons, accessories, cards, merch and relics. Inventories,
+currencies, hero development, other profile/user fields, presets and the separate
+Andras XP remain intact. Integrity passes, with no diagnostic source writes or
+new rejected/unsupported API calls. No CDN/resource change is required for this
+fix. Costume, weapon-costume and bulk equipment requests remain separate
+contracts. See the [equipment contract](reference-data.md#hero-equipment-changes).
+
 ## Experimental Andras English leader title
 
 On 2026-11-22, the owner requested **Sovereign of Eternal Slaughter** for the
