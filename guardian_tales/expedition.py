@@ -80,6 +80,12 @@ def bootstrap_seed(references, filename, request, parent):
     if filename not in ("static_data_get.bin", "static_data_check.bin") or not enabled(references):
         return parent(references, filename, request)
     body, checksum = prepare(parent(references, "static_data_get.bin", request))
+    from .expedition_levels import load_levels
+    from .expedition_levels import prepare as prepare_levels
+
+    selection = load_levels(references)
+    if selection is not None:
+        body, checksum = prepare_levels(body, *selection)
     if filename == "static_data_get.bin":
         return body
     return json.dumps(

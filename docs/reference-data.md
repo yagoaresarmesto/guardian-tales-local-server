@@ -128,6 +128,49 @@ requests remain read-only, including repeated reports; no records, rewards or
 progression are written. See the
 [standard TimeSpan format](https://learn.microsoft.com/en-us/dotnet/standard/base-types/standard-timespan-format-strings).
 
+### Per-stage enemy levels
+
+The optional `expedition` CLI overrides the enemy level of a listed solo
+Expedition district stage for KakaoGlobal. It requires the matching external
+static data and the existing `expedition_trial.enabled` marker. Run these
+PowerShell commands from the repository root:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales expedition list
+.\.venv\Scripts\python.exe -m guardian_tales expedition list --stage 250014003
+.\.venv\Scripts\python.exe -m guardian_tales expedition set-level --stage 250014003 --level 130
+.\.venv\Scripts\python.exe -m guardian_tales expedition restore-level --stage 250014003
+.\.venv\Scripts\python.exe -m guardian_tales expedition restore-level --all
+```
+
+`list` shows stage IDs, internal names, original Global levels, configured levels
+and the maximum supported by the preserved experience table. Add
+`--reference-dir PATH` when the backend uses another directory; the default is
+`local/client-data/reference`. Level 130 has a matching experience row in the
+preserved 3.57.0 pack, whose table permits levels 1 through 220. Native inspection
+shows Expedition's monster preparation reading `StageStandardLevel` and looking
+up its level experience. This establishes the input path, not APK verification
+of every level or enemy variant.
+
+Close Guardian Tales before changing or restoring levels. Restart the backend
+and fully reopen the game afterward; CDN and bridge can remain running. For a
+first test, change one stage and verify entry, enemies, results and map return.
+Only stages already opened and unlocked in the saved account remain playable.
+
+The command writes only `expedition_levels.json` in the external reference
+directory. It never opens the account database or overwrites preserved static
+files. At bootstrap, an overlay replaces only the selected stages'
+`StandardLevel.KakaoGlobal`; other regions, stages, enemy definitions, waves,
+Exorcism requirements, scoring and the practice reward policy remain unchanged.
+Get/check responses share the effective checksum, composed with existing mode,
+nickname and test-pin overlays. Writes are atomic and repeated identical choices
+are no-ops. Restoration removes the selected override, revealing the preserved
+original value; it does not restore an older account or configuration wholesale.
+An empty configuration is retained after the last restoration so its advancing
+revision refreshes client caches too. The maximum is validated against the
+current Global experience rows; missing stages, malformed configuration,
+overflowing revisions and unsupported levels fail before publication.
+
 ### Expedition multi-party presets
 
 Expedition uses `UserMultiPartyPreset`, separately from the single-team

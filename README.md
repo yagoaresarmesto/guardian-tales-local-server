@@ -272,6 +272,10 @@ The opt-in [test-pin commands](docs/test-items.md) add new equipment with
 configurable base DEF and an optional ATK-percent suboption only when explicitly
 run against a stopped account.
 
+The optional [Expedition enemy-level commands](docs/reference-data.md#per-stage-enemy-levels)
+list stages, set a per-stage level and restore original levels. They configure
+external static overlays without editing the saved account.
+
 ## Starting a new account
 
 Creating a fresh local guest remains an **experimental secondary path**. Its

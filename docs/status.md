@@ -6,6 +6,24 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
+Fourteen regressions cover the optional per-stage Expedition enemy-level CLI,
+level 130, source-table bounds, independent overrides, partial/full restoration,
+advancing cache revisions, current get/check checksums, composition with existing
+nickname/feature/test-pin overlays, malformed inputs and atomic-write failure.
+All **132 campaign/core/content cases** pass; discovery now contains 1,058 tests.
+No new full-suite run was performed for this change. The native monster
+preparation reads the stage's standard level and corresponding experience; the
+preserved Global experience table has 220 rows, including level 130. On a
+coherent account copy with the actual reference pack, setting level 130 changed
+only the chosen stage's Global level. Restoration recovered the entire original
+stage table, get/check checksums matched, and revisions advanced. All other
+effective table contents stayed intact, including active test-pin definitions;
+their outer overlay only advanced its expected revision. All 74 account tables
+and all 48 source reference files remained unchanged, with zero diagnostic
+source writes and valid SQLite integrity. Actual APK level/restoration
+verification is pending. See the
+[enemy-level commands](reference-data.md#per-stage-enemy-levels).
+
 The latest full Windows regression run passed **1,040 tests**, including 22 new
 Expedition preset cases. The teams/Orbital union passes 137 cases. The actual
 delete request and create/copy, rename, party edits, ordering and selection also
@@ -32,8 +50,8 @@ before the countdown ended. Its native `/expedition/clear-stage/v2` request sent
 ticks. The duration parser now accepts both forms with exact tick precision and
 native range checks. Four new regressions cover early results, fractional
 boundaries, malformed/overflowing inputs, existing result guards and zero writes.
-All **91 campaign/core tests** pass after this change; discovery lists 1,044
-tests, without a new full-suite run. The actual result, equivalent ticks, repeated
+All **91 campaign/core tests** passed after that change; its discovery listed
+1,044 tests, without a new full-suite run. The actual result, equivalent ticks, repeated
 result, start and exit passed on a query-only account copy with all 74 tables
 intact, no source writes and valid SQLite integrity. After backend restart,
 the live APK completed two clear-result requests without new Expedition errors.

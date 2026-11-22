@@ -34,6 +34,7 @@ flowchart LR
 | `guild_meteor.py` | Fresh meteor menu, latest started catalog season and native empty progress without account writes |
 | `guild_war.py`, `guild_war_static.py` | Opt-in season-1 menu entry, reversible Global War/Raid calendar overlay composed above existing Raid/arena selections |
 | `guild_raid.py` | Fresh raid menus, empty history/rankings, combat entry/exit trial and season selector; no account writes, persistent raid progress or rewards |
+| `expedition_levels.py` | Optional per-stage Global enemy-level CLI and reversible static overlay, without account or preserved-file writes |
 | `raid_static.py` | Bounded external static-table preparation, LZ4 encoding and immutable raid-only calendar overrides for historical selection |
 | `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
 | `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |

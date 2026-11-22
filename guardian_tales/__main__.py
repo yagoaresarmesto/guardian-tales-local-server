@@ -11,6 +11,7 @@ COMMANDS = {
     "raid-season": ("guild_raid", "List, select or customize local Raid seasons"),
     "dka-season": ("punchking", "List/select Dungeon Kingdom Arena variants and days"),
     "guild-war": ("guild_war", "Enable/disable an experimental local Guild War season"),
+    "expedition": ("expedition_levels", "List, set or restore per-stage Expedition enemy levels"),
     "assets": ("assets", "Serve manifest-listed local resources"),
     "content": (
         "content_pack",

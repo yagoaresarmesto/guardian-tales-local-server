@@ -13,7 +13,7 @@
   },
   "campaign": {
     "description": "Story entry, stage progress, completion and play menus",
-    "modules": ["test_campaign", "test_completion", "test_discovery", "test_monsters", "test_story", "test_play_menu", "test_expedition", "test_classic_coop"]
+    "modules": ["test_campaign", "test_completion", "test_discovery", "test_monsters", "test_story", "test_play_menu", "test_expedition", "test_expedition_levels", "test_classic_coop"]
   },
   "heroes": {
     "description": "Hero experience, training caps and saved Training Room slots",
