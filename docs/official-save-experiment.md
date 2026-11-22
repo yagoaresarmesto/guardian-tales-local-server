@@ -26,11 +26,16 @@ preparation, while unchanged binary record bytes are retained.
 The account remains normal in SQLite. An owner-bound response projection
 replaces only the selected hero's outgoing spec, including later compact and
 nested own-user replies. It never feeds projected resources into persistence.
-Target training is guarded during the trial; ordinary saved changes remain
+Trial training stores XP and retry receipts atomically in a separate private
+SQLite file, not in the saved account. Matching story/limit-break/blessing caps
+include the existing Myth modifier. Own-user replies project that XP and a
+virtual revision consistently; saved assets and training counters stay intact.
+Disabling shows original XP, while re-enabling resumes trial growth if its
+owner/content/original-XP binding still matches. Ordinary saved changes remain
 when it is disabled. The existing Myth UI is reused; literal new star cells,
 new abilities and custom stat bonuses are outside this prototype.
 
-Sixteen synthetic regressions and a coherent account-copy trial pass. The full
+The initial sixteen synthetic regressions and a coherent account-copy trial pass. The full
 projected profile matched only the intended spec substitution. All 74 database
 tables, original hero progression and 49 reference files stayed intact, with
 zero diagnostic source writes and valid integrity. Other hero JSON/binary
@@ -40,10 +45,20 @@ with matching get/check checksums. After activation and backend restart, the
 owner confirmed lobby loading and Andras's Myth state with original appearance,
 portrait, equipment and skills. A read-only audit found the hero still stored
 normally, the entire profile and all 71 gameplay tables unchanged, expected
-login metadata changes and valid integrity. Two experience requests were rejected
-during the trial, whose target training is intentionally guarded; no growth
-was persisted. The full Windows suite passes all 1,080 tests, with formatting,
-lint and repository checks passing too. Combat/reopening checks remain pending.
+login metadata changes and valid integrity. Two experience requests exposed the
+initial deliberate training guard. The follow-up implements isolated trial XP:
+26 trial regressions cover caps, retries, replays, rollback, malformed/unsigned
+packets, partial replies, disable/re-enable and later original growth. Replaying
+the captured 6,600,000-XP request on a coherent account copy reaches visible level
+150 from 130. All 74 main database tables and 50 reference files stay unchanged;
+retry, restoration, sidecar integrity and zero source writes pass. The owner
+confirms reaching 150 and retaining it after reopening. The live sidecar has two
+receipts totaling 6,600,000 XP, while the original hero/XP, currencies and saved
+training counters stay intact. Ordinary preset selection/edit and login metadata
+changes remain; no new API errors were observed and integrity passed. The owner
+reports a missing leader skill in the variant; this and combat checks remain open.
+The full Windows run passes all 1,090
+tests, with formatting, lint and indexed repository/link checks passing too.
 See the [commands and trial scope](reference-data.md#experimental-andras-myth-view).
 
 ## Reversible Expedition enemy levels

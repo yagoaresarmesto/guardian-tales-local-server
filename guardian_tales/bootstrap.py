@@ -235,12 +235,12 @@ class BootstrapSession:
         try:
             selection = andras_trial.load(self.store.references)
             if selection is None or not selection["active"]:
+                self.andras_trial_selection = None
                 return self._handle(request)
             if selection != self.andras_trial_selection:
                 andras_trial.validate_active(self.store, selection)
                 self.andras_trial_selection = selection
-            andras_trial.guard_request(request, selection, read_json_body)
-            return andras_trial.project_response(self._handle(request), selection)
+            return andras_trial.project_response(self._handle(request), selection, self.store)
         except ValueError as error:
             raise PacketError(str(error)) from error
 
@@ -735,6 +735,14 @@ class BootstrapSession:
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
+                    if self.andras_trial_selection is not None:
+                        from .andras_trial_training import targets_trial, train
+
+                        if targets_trial(body, self.andras_trial_selection):
+                            return json_response(
+                                request,
+                                train(self.store, self.andras_trial_selection, body, operation_id),
+                            )
                     return json_response(
                         request, self.store.account.add_character_experience(body, operation_id)
                     )

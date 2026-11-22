@@ -27,6 +27,7 @@ from guardian_tales.andras_trial_static import (
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
 from guardian_tales.protocol import Packet, PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.snapshots import CLIENT
 from tests.test_snapshots import request, synthetic_snapshot
 
 
@@ -277,14 +278,238 @@ class AndrasTrialTests(unittest.TestCase):
                 self.fetch()
         self.assertEqual(list(self.db.iterdump()), before)
 
-    def test_trial_hero_training_is_guarded_before_mutating_the_save(self):
+    def training_catalog(self):
+        from guardian_tales.campaign import FIRST_STAGE_ID
+
+        profile = self.store.account.profile()
+        profile["UserProgress"]["StageStates"][str(FIRST_STAGE_ID)] = 7
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        value = dict(
+            client=CLIENT,
+            free_experience=True,
+            experience_by_level=[n * 100 for n in range(30)],
+            caps=[{"opened_stage_id": 0, "max_level": 5}],
+            character_ids=[SOURCE, 200],
+            myth_ids=[],
+            limit_break_coefficient=3,
+            blessing_coefficient=5,
+            myth_coefficient=2,
+            max_limit_breaks=5,
+            max_bless_level=3,
+        )
+        (self.refs / "imported_training_catalog.json").write_text(json.dumps(value))
+
+    def train(self, amount, sequence=100):
+        packet = request(
+            "/user/add-character-experience", {"Experiences": {str(self.target): amount}}
+        )
+        packet["sequence_id"] = sequence
+        return json.loads(self.session.handle(packet).body)
+
+    def test_trial_hero_training_leaves_the_original_save_unchanged(self):
+        from guardian_tales.andras_trial_training import state_path
+
+        self.training_catalog()
         self.cli("enable")
         before = list(self.db.iterdump())
-        with self.assertRaisesRegex(PacketError, "Disable the Andras trial"):
-            self.session.handle(
-                request("/user/add-character-experience", {"Experiences": {str(self.target): 100}})
-            )
+        changes = self.db.total_changes
+        self.db.execute("PRAGMA query_only=ON")
+        result = self.train(100)
+        self.assertEqual(result["User"]["Characters"][0]["Experience"], 100)
+        self.assertEqual(result["User"]["Characters"][0]["CharacterId"], VARIANT)
+        self.assertTrue(state_path(self.db).is_file())
+        self.assertEqual(self.store.account.profile()["User"]["Characters"][0]["Experience"], 0)
         self.assertEqual(list(self.db.iterdump()), before)
+        self.assertEqual(self.db.total_changes, changes)
+
+    def test_trial_training_retries_and_old_replays_return_current_virtual_progress(self):
+        from guardian_tales.andras_trial_training import state_path
+
+        self.training_catalog()
+        self.cli("enable")
+        self.train(100, 100)
+        path = state_path(self.db)
+        with closing(sqlite3.connect(path)) as trial:
+            before = list(trial.iterdump())
+        self.assertEqual(self.train(100, 100)["User"]["Characters"][0]["Experience"], 100)
+        with closing(sqlite3.connect(path)) as trial:
+            self.assertEqual(list(trial.iterdump()), before)
+        self.train(200, 101)
+        self.assertEqual(self.train(100, 100)["User"]["Characters"][0]["Experience"], 300)
+        with self.assertRaises(PacketError):
+            self.train(150, 100)
+        self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 300)
+
+    def test_trial_training_reopens_and_disable_restores_original_while_retaining_trial_progress(
+        self,
+    ):
+        self.training_catalog()
+        self.cli("enable")
+        self.train(700)
+        reopened = BootstrapSession(GuestStore(self.db, self.refs))
+        reopened.signed_in = True
+        self.assertEqual(
+            json.loads(reopened.handle(request("/auth/fetch-account", {})).body)["User"][
+                "Characters"
+            ][0]["Experience"],
+            700,
+        )
+        self.cli("disable")
+        normal = self.fetch()["User"]["Characters"][0]
+        self.assertEqual((normal["CharacterId"], normal["Experience"]), (SOURCE, 0))
+        self.cli("enable")
+        self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 700)
+
+    def test_trial_training_enforces_myth_cap_and_rejects_invalid_deltas_without_new_state(self):
+        from guardian_tales.andras_trial_training import state_path
+
+        self.training_catalog()
+        self.cli("enable")
+        for amount in (0, -1, True, 1.0, 701, 0x80000000):
+            with self.subTest(amount=amount), self.assertRaises(PacketError):
+                self.train(amount)
+        self.assertFalse(state_path(self.db).exists())
+        self.train(700)
+        with self.assertRaises(PacketError):
+            self.train(1, 101)
+        self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 700)
+
+    def test_trial_training_keeps_user_revisions_coherent_in_partial_and_unrelated_replies(self):
+        self.training_catalog()
+        self.cli("enable")
+        original = self.store.account.profile()
+        result = self.train(100)
+        self.assertEqual(result["User"]["Cas"], original["User"]["Cas"] + 1)
+        self.assertEqual(result["UserRecord"], original["UserRecord"])
+        packet = Packet(
+            1,
+            json.dumps(
+                {
+                    "User": {
+                        "Id": self.owner,
+                        "Cas": original["User"]["Cas"],
+                        "Characters": [{"Id": self.target, "Experience": 0}],
+                    },
+                    "UserRecord": original["UserRecord"],
+                }
+            ).encode(),
+            body_type=1,
+        )
+        result = json.loads(project_response(packet, load(self.store.references), self.store).body)
+        self.assertEqual(result["User"]["Cas"], original["User"]["Cas"] + 1)
+        self.assertEqual(result["User"]["Characters"], [{"Id": self.target, "Experience": 100}])
+        self.assertEqual(result["UserRecord"], original["UserRecord"])
+        packet = replace(
+            packet,
+            body=json.dumps({"User": {"Id": self.owner, "Cas": original["User"]["Cas"]}}).encode(),
+        )
+        self.assertEqual(
+            json.loads(project_response(packet, load(self.store.references), self.store).body)[
+                "User"
+            ]["Cas"],
+            original["User"]["Cas"] + 1,
+        )
+
+    def test_trial_training_mixed_targets_and_unauthenticated_or_malformed_packets_cannot_write(
+        self,
+    ):
+        from guardian_tales.andras_trial_training import state_path
+
+        self.training_catalog()
+        self.cli("enable")
+        before = list(self.db.iterdump())
+        mixed = request(
+            "/user/add-character-experience", {"Experiences": {str(self.target): 100, "999": 100}}
+        )
+        with self.assertRaises(PacketError):
+            self.session.handle(mixed)
+        self.session.signed_in = False
+        with self.assertRaises(PacketError):
+            self.train(100)
+        self.session.signed_in = True
+        invalid = request(
+            "/user/add-character-experience", {"Experiences": {str(self.target): 100}}
+        )
+        invalid["version"] = 2
+        with self.assertRaises(PacketError):
+            self.session.handle(invalid)
+        self.assertFalse(state_path(self.db).exists())
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_trial_training_missing_catalog_and_revision_overflow_preserve_original(self):
+        self.cli("enable")
+        with self.assertRaises(PacketError):
+            self.train(100)
+        self.training_catalog()
+        profile = self.store.account.profile()
+        profile["User"]["Cas"] = 0x7FFFFFFFFFFFFFFF
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.train(100)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_trial_training_can_decode_compressed_request_bodies(self):
+        self.training_catalog()
+        self.cli("enable")
+        payload = {"Experiences": {str(self.target): 100}}
+        packet = request("/user/add-character-experience", payload)
+        packet.update(body_type=2, body_hex=compress(json.dumps(payload).encode()).hex())
+        result = json.loads(self.session.handle(packet).body)
+        self.assertEqual(result["User"]["Characters"][0]["Experience"], 100)
+
+    def test_trial_progress_is_bound_to_original_experience_and_never_overwrites_later_growth(self):
+        self.training_catalog()
+        self.cli("enable")
+        self.train(100)
+        self.cli("disable")
+        profile = self.store.account.profile()
+        profile["User"]["Characters"][0]["Experience"] = 50
+        profile["User"]["Cas"] += 1
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        self.cli("enable")
+        self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 50)
+        self.train(100, 101)
+        self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 150)
+        self.cli("disable")
+        self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 50)
+
+    def test_trial_training_receipt_failure_rolls_back_sidecar_progress_and_revision(self):
+        from guardian_tales.andras_trial_training import state_path
+
+        self.training_catalog()
+        self.cli("enable")
+        self.train(100)
+        with closing(sqlite3.connect(state_path(self.db))) as trial:
+            trial.execute(
+                "CREATE TRIGGER fail_receipt BEFORE INSERT ON requests BEGIN SELECT RAISE(ABORT,'synthetic'); END"
+            )
+            trial.commit()
+            before = list(trial.iterdump())
+        original = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.train(100, 101)
+        with closing(sqlite3.connect(state_path(self.db))) as trial:
+            self.assertEqual(list(trial.iterdump()), before)
+        self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 100)
+        self.assertEqual(list(self.db.iterdump()), original)
+
+    def test_invalid_sidecar_can_be_disabled_without_touching_original_hero(self):
+        from guardian_tales.andras_trial_training import state_path
+
+        self.training_catalog()
+        self.cli("enable")
+        self.train(100)
+        with closing(sqlite3.connect(state_path(self.db))) as trial:
+            trial.execute("PRAGMA user_version=999")
+        original = self.store.account.profile()
+        with self.assertRaises(PacketError):
+            self.fetch()
+        self.cli("disable")
+        self.assertEqual(self.fetch(), original)
 
     def test_repeated_enable_disable_and_status_are_configuration_noops(self):
         for action in ("enable", "disable"):

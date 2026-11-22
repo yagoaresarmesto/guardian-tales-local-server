@@ -6,11 +6,11 @@ attachments. Test results and original-client observations have different scopes
 
 ## Automated checks
 
-The latest full Windows regression run passes **1,080 tests**, including sixteen
-regressions for the response-only Andras Myth prototype, disabled
+The latest full Windows regression run passes **1,090 tests**, including 26
+regressions for the experimental Andras Myth view and isolated training, disabled
 compatibility, owner/content binding, full and partial replies, other-owner
-isolation, source/binary agreement, native block boundaries, target training
-guard, no-op choices, restoration and failed atomic publication. A coherent
+isolation, source/binary agreement, native block boundaries, no-op choices,
+restoration and failed atomic publication. A coherent
 account copy passed enable/project/disable with all 74 database tables unchanged.
 Only the target hero's outgoing spec changed; all saved fields, original combat
 and visual definitions, other hero records and 49 original reference files
@@ -20,10 +20,22 @@ zero diagnostic source writes. After activation and backend restart, the owner
 confirmed that the lobby loads and Andras appears as Myth with her original
 appearance, portrait, equipment and skills. A read-only audit found the stored
 hero and all 71 gameplay tables unchanged; only login/epoch/counter metadata
-changed and integrity passed. Two experience requests were rejected during the
-trial; target training is deliberately guarded and no growth was persisted.
-Combat/reopening checks are pending. Black (197 files), Ruff and the indexed
-repository/link checks pass.
+changed and integrity passed. Two experience requests exposed the initial
+deliberate training guard. The follow-up now permits free trial training in a
+separate SQLite sidecar, with atomic XP/retry receipts and consistent virtual
+user revisions. All 26 trial regressions pass, including cap enforcement,
+retries/replays, transaction rollback, malformed/unsigned packets, partial
+replies, restoration and isolation from later saved growth. Replaying the
+captured 6,600,000-XP request on a coherent account copy reaches visible level
+150 from 130, with all 74 main database tables and 50 reference files unchanged.
+Retry, restoration and SQLite integrity pass with zero diagnostic source writes.
+The owner confirms level 150 and persistence after reopening. Read-only inspection
+finds two trial training receipts totaling 6,600,000 XP in the sidecar; the original
+hero, XP, currencies and saved training counters remain intact. Ordinary preset
+selection/edit and login metadata changes were retained. No new API errors were
+observed and integrity passed. The owner reports a missing leader skill in the
+variant; that and combat checks remain open. Black (198 files), Ruff
+and indexed repository/link checks (256 source files) pass.
 See the [Andras trial](reference-data.md#experimental-andras-myth-view).
 
 The enemy-level CLI now supports `set-level --all`, covering all 44 solo

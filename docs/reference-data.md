@@ -10,8 +10,9 @@ preservation layouts.
 
 The opt-in `andras-trial` command temporarily presents one owned five-star
 Andras as a local Myth variant. It retains her original class, skill options,
-base stats, portrait, voice, animation references, equipment, experience and
-awakening data. This first prototype adds no custom stat bonuses or skills.
+base stats, portrait, voice, animation references, equipment and awakening data.
+She starts with her original experience and can train to the existing Myth cap.
+This prototype adds no custom stat bonuses or skills.
 It uses the client's existing Myth presentation, not a new six-gold-star UI.
 
 Run from the project root with the same state/reference directories as the
@@ -32,10 +33,23 @@ one owned five-star Andras in an existing account and matching original content.
 The configuration is private and bound to that owner, inventory ID and content
 hash. Do not copy it between accounts. Repeating a choice is a no-op.
 
-The CLI opens SQLite read-only. A reply projection changes only the selected
-hero's outgoing `CharacterId`; the saved hero retains its original spec. No
-currency or item is granted/consumed. Training the trial hero is blocked until
-the trial is disabled. Other development operations are outside this prototype.
+The CLI opens SQLite read-only. A reply projection changes the selected hero's
+outgoing `CharacterId` and experimental experience, plus the owning `User` revision
+when trial training exists; the saved hero retains her original spec and XP.
+Training uses the matching imported-account free-experience policy, respects
+story unlocks, saved limit breaks/blessing and the existing Myth level modifier,
+and requires only Andras in that request. No currency, item or saved training
+counter is granted/consumed/advanced. Other development operations are outside
+this prototype.
+
+Trial XP and retry receipts commit together in the private
+`andras-myth-trial.sqlite3` file next to `server.sqlite3`. They are bound to the
+owner, inventory ID, content hash and original saved XP. Repeated requests cannot
+apply XP twice. Reopening retains trial growth; disabling shows the original XP,
+and re-enabling resumes the separate growth while that original binding matches.
+If normal training changes the original XP while the trial is off, its later
+growth becomes the new starting point; an older trial never overwrites it.
+Keep this sidecar with the private state directory when backing up the trial.
 Normal supported gameplay can still persist its ordinary changes; disabling the
 trial does not restore an older save or discard progress made afterward.
 

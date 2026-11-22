@@ -73,26 +73,32 @@ def validate_active(store, selection):
     definitions(body)
 
 
-def guard_request(request, selection, read_body):
-    if request.get("api") == "/user/add-character-experience":
-        body = read_body(request)
-        if (
-            isinstance(body, dict)
-            and isinstance(body.get("Experiences"), dict)
-            and str(selection["inventory_id"]) in body["Experiences"]
-        ):
-            raise ValueError("Disable the Andras trial before training this hero")
+def project_response(reply, selection, store=None):
+    if reply.body_type != 1:
+        return reply
+    experience, revision = None, 0
+    if store is not None:
+        from .andras_trial_training import current
 
-
-def project_response(reply, selection):
-    if reply.body_type != 1 or b'"Characters"' not in reply.body:
+        experience, revision = current(store, selection)
+    if b'"Characters"' not in reply.body and not revision:
         return reply
     value = json.loads(reply.body)
     changed = False
 
-    def visit(node):
+    def visit(node, resource=None):
         nonlocal changed
         if isinstance(node, dict):
+            if (
+                resource == "User"
+                and node.get("Id", selection["owner_id"]) == selection["owner_id"]
+                and "Cas" in node
+                and revision
+            ):
+                if not integer(node["Cas"], 0x7FFFFFFFFFFFFFFF - revision):
+                    raise ValueError("Andras trial resource revision exceeds the native range")
+                node["Cas"] += revision
+                changed = True
             characters = node.get("Characters")
             if (
                 isinstance(characters, list)
@@ -103,12 +109,16 @@ def project_response(reply, selection):
                         isinstance(hero, dict)
                         and type(hero.get("Id")) is int
                         and hero["Id"] == selection["inventory_id"]
-                        and hero.get("CharacterId") == SOURCE
+                        and hero.get("CharacterId", SOURCE) == SOURCE
                     ):
-                        hero["CharacterId"] = VARIANT
-                        changed = True
-            for child in node.values():
-                visit(child)
+                        if "CharacterId" in hero:
+                            hero["CharacterId"] = VARIANT
+                            changed = True
+                        if experience is not None and "Experience" in hero:
+                            hero["Experience"] = experience
+                            changed = True
+            for key, child in node.items():
+                visit(child, key)
         elif isinstance(node, list):
             for child in node:
                 visit(child)
