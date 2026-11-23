@@ -347,6 +347,45 @@ qualitative APK improvement observation; no instrumented end-to-end duration
 or proven cause of the previous long wait is claimed. Read-only coroutine
 sampling was partial and cannot attribute that wait to a specific client step.
 
+The next captured `start-stage` targets node 123, a generated Special (?) node,
+after the first cleared battle of a fresh run. The owner points out that events
+should be random but can follow story threads. A data-driven handler now draws
+eligible seasonal events using their original weights/conditions and retains the
+draw per node. Separate RNG namespaces preserve the existing map/monster rolls.
+Hidden continuations require a stored next-event link. Challenge and season
+threads have separate reset scopes, migrate with their choice history and expose
+the native progress dictionaries; learned decisions affect conditional weights.
+
+Native inspection establishes that SpecialEventChoices true means chosen, not
+available. Choosing marks state 9 and retains effect results; confirming the
+nullable, aligned gift/replacement arrays marks state 11 and enables onward
+movement. Local effects cover eighteen of season 43's twenty nontrivial kinds:
+HP, silver coins, artifact/curse gifts and removals, weighted conclusions and
+story links. Artifacts/curses are granted at confirmation with the native
+eight-slot limits, exact offered IDs and checked replacements/declines. All-hero
+HP effects render one description; random effects render character rows.
+Counter updates, replay guards and bounded atomic state publication prevent
+duplicate effects or partial rewards. No account/XP database changes occur.
+
+Event battles and bottle-cap awards remain unavailable and their choices are
+omitted from the response; unsupported conditions/effects also fail eligibility.
+Hero/bounty predicates need separate contracts. This is a local reconstruction,
+not complete coverage of all 328 retained events or an official RNG algorithm.
+Full-HP revival and potentially lethal event damage are explicit local policies.
+At the reported owner state, 36 initial events and 65 choices are eligible;
+hidden chapters depend on later story progress. Floor advancement and combat
+artifact loot/reactive effects remain pending work.
+
+All 190 core/content/integration cases pass in 26.613 seconds, including 111
+Kama-ZONE cases and fifteen event regressions. Black (235 files), Ruff and
+repository/link checks (295 files) pass. A coherent actual-account copy opens
+the exact node as event 402 with choices 40202/40203/40204, then exercises every
+one of the 65 initial eligible choices through entry, choice and confirmation.
+Reopen/retry, account/XP tables, effective static responses, existing map/enemy
+rolls and 55 source reference files are verified. Diagnostics make zero source
+writes, live run edits/resets or gamefile changes. APK event display, result
+feedback, confirmation and reopen persistence await the backend-only restart.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

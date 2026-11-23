@@ -9,7 +9,14 @@ import random
 import secrets
 from functools import lru_cache
 
-from . import kamazone, kamazone_battle, kamazone_shelter, kamazone_shop
+from . import (
+    kamazone,
+    kamazone_battle,
+    kamazone_event_effects,
+    kamazone_events,
+    kamazone_shelter,
+    kamazone_shop,
+)
 from .punchking_static import atomic_write
 from .raid_static import decode, records
 from .village import integer
@@ -26,6 +33,7 @@ ROUTES = (
     BATTLE,
     CONCLUDE,
     *kamazone_battle.ROUTES,
+    *kamazone_events.ROUTES,
     kamazone_shop.CLOSE,
     kamazone_shelter.TAKE,
 )
@@ -33,7 +41,7 @@ STATE = "kamazone_run.json"
 HP_SCALE = 10000
 COMBAT = ("Normal", "Elite", "Boss")
 NODE_TYPES = ("Starting", *COMBAT, "Shelter", "Shop", "Special")
-ENTRY_TYPES = (*COMBAT, "Shelter", "Shop")
+ENTRY_TYPES = (*COMBAT, "Shelter", "Shop", "Special")
 PROBABILITIES = ("Normal", "Elite", "Shelter", "Shop", "Special")
 
 
@@ -212,7 +220,9 @@ def load(references):
         return None
     if not path.is_file() or path.stat().st_size > 32768:
         raise ValueError("Invalid local Kama-ZONE run file")
-    value = kamazone_shelter.upgrade(kamazone_battle.upgrade(references.json(STATE)))
+    value = kamazone_events.upgrade(
+        kamazone_shelter.upgrade(kamazone_battle.upgrade(references.json(STATE)))
+    )
     # Existing v1 files predate the distinction between opening the encounter
     # panel and loading combat. Reading them must not rewrite their contents.
     if isinstance(value, dict) and "battle_started" not in value:
@@ -240,6 +250,7 @@ def load(references):
             "shops",
             *kamazone_shelter.defaults(),
             *kamazone_battle.defaults(),
+            *kamazone_events.defaults(),
         }
         or type(value["version"]) is not int
         or value["version"] != 1
@@ -273,6 +284,7 @@ def load(references):
         or not kamazone_battle.valid_state(value)
         or not kamazone_shop.valid(value["shops"])
         or not kamazone_shelter.valid(value)
+        or not kamazone_events.valid(value)
     ):
         raise ValueError("Invalid local Kama-ZONE run state")
     return value
@@ -313,6 +325,7 @@ def matching(account, source, season_id):
         or not kamazone_battle.matches(value, owned, nodes)
         or not kamazone_shop.matches(value, source, season_id, nodes)
         or not kamazone_shelter.matches(value, source, season_id, nodes)
+        or not kamazone_events.matches(value, source, season_id, nodes)
     ):
         raise ValueError("Local Kama-ZONE run no longer matches its owner or content")
     kamazone_battle.finish_empty_victory(
@@ -344,6 +357,7 @@ def project(account, source, season_id, response):
         kamazone_battle.project(value, owned, user)
         kamazone_shop.project(value, user)
         kamazone_shelter.project(value, user)
+        kamazone_events.project(value, user)
     return response
 
 
@@ -417,6 +431,10 @@ def handle(account, source, season_id, route, request, operation_id):
             )
         if previous is None or not previous["states"]:
             raise ValueError("Start a Kama-ZONE challenge before finishing it")
+    elif route in kamazone_events.ROUTES:
+        kamazone_events.validate(route, request)
+        if previous is None:
+            raise ValueError("Open a Kama-ZONE special event before choosing/closing it")
     else:
         raise ValueError("Unsupported local Kama-ZONE run operation")
     if previous and operation_id in previous["seen_operations"]:
@@ -442,6 +460,7 @@ def handle(account, source, season_id, route, request, operation_id):
             shops={},
             **kamazone_battle.defaults(),
             **kamazone_shelter.defaults(),
+            **kamazone_events.defaults(),
         )
     )
     if route == CHALLENGE:
@@ -458,6 +477,7 @@ def handle(account, source, season_id, route, request, operation_id):
             **kamazone_shelter.defaults(),
         )
         floor_nodes(source, season_id, value["seed"])
+        kamazone_events.reset(value)
     elif route == SELECT:
         if value["battle_started"] or value["pending_result"] == 1:
             raise ValueError("Cannot change Kama-ZONE characters during an active stage")
@@ -485,13 +505,18 @@ def handle(account, source, season_id, route, request, operation_id):
         value["states"][str(request["NodeId"])] = 1
         value.update(pending_result=None, last_result_hash=None)
     elif route in kamazone_battle.ROUTES:
+        count = value["battle_count"]
         kamazone_battle.apply(value, route, request, floor_nodes(source, season_id, value["seed"]))
+        if value["battle_count"] != count:
+            kamazone_event_effects.tick(value, "Battle")
     elif route == kamazone_shop.CLOSE:
         kamazone_shop.close(value, request, floor_nodes(source, season_id, value["seed"]))
     elif route == kamazone_shelter.TAKE:
         kamazone_shelter.take(
             value, source, season_id, request, floor_nodes(source, season_id, value["seed"])
         )
+    elif route in kamazone_events.ROUTES:
+        kamazone_events.handle(value, source, season_id, route, request, owned)
     elif route == CONCLUDE:
         if value["active"]:
             if (
@@ -545,10 +570,18 @@ def handle(account, source, season_id, route, request, operation_id):
         value["stage_started"] = True
         value["states"][str(ident)] = 1
         if node["Type"] == "Shelter":
+            new_visit = str(ident) not in value["shelters"]
             kamazone_shelter.open_shelter(value, source, season_id, node)
+            if new_visit:
+                kamazone_event_effects.tick(value, "Shelter")
+        if node["Type"] == "Special":
+            kamazone_events.open_event(value, source, season_id, node, owned)
         value.update(pending_result=None, last_result_hash=None)
     value["seen_operations"] = (value["seen_operations"] + [operation_id])[-64:]
-    atomic_write(account.references.directory / STATE, json.dumps(value, indent=2).encode() + b"\n")
+    encoded = json.dumps(value, indent=2).encode() + b"\n"
+    if not kamazone_events.valid(value) or len(encoded) > 32768:
+        raise ValueError("Local Kama-ZONE event state exceeds its bounded format")
+    atomic_write(account.references.directory / STATE, encoded)
     return response_extras(route)
 
 
@@ -557,4 +590,5 @@ def response_extras(route):
         kamazone_battle.response(route)
         | kamazone_shop.response(route)
         | kamazone_shelter.response(route)
+        | kamazone_events.response(route)
     )

@@ -7,8 +7,10 @@ before displaying its drawer, so `/kamazonland/enter` supplies the preview even
 without a card tap. Experimental challenge and combat entry now cover the first
 floor at difficulties 1, 2 and 3, with local battle results, retained HP and
 connected combat-node progression. Shop entry/exit displays preserved seasonal
-artifacts. Shelters support resting, reviving and purification. Purchases, loot,
-special events, later floors and rewards remain unimplemented. APK combat entry,
+artifacts. Shelters support resting, reviving and purification. Special nodes
+support weighted events, local effects and story continuations. Purchases,
+battle loot, event battles/bottle caps, later floors and season rewards remain
+unimplemented. APK combat entry,
 accepted victory results, map return, further normal/elite encounters and shop
 entry/exit, shelter Rest and the following boss battle are observed. Finish
 Challenge can conclude the local run; an accepted finish followed by a fresh
@@ -32,7 +34,7 @@ while representative APK runs verify scene loading, action feedback and caching.
 | Boss (4) | Same combat lifecycle using its boss preset/level | Following floor, final season clear and infinity |
 | Shelter (5) | Rest, one random revive, one random curse removal, skip and resume; Rest observed in the APK | Artifact-based recovery modifiers; revive/purify APK verification |
 | Shop (6) | Seasonal stock, entry, resume and exit | Purchases, currency income and curse/effect goods |
-| Special (7) | Type, native requests and data inventory identified; unsupported actions reject without progress changes | Event conditions, choices, effects, random conclusions and nested encounters |
+| Special (7) | Weighted seasonal events, conditions, persistent choice/results, local effects, random conclusions and story continuations | Event battles, bottle-cap awards, additional condition/effect kinds and APK validation |
 
 The retained pack contains 328 special events, 779 choices and 135 random
 conclusions across its seasons/services. Season 43 references 68 events and
@@ -40,8 +42,11 @@ conclusions across its seasons/services. Season 43 references 68 events and
 availability does not mean every event can appear on every floor. Effects include
 HP changes, artifacts/curses, local coins, conditional progress and battles.
 Across all retained choices there are eight condition kinds. Building their
-generic condition/effect engine is distinct from merely opening a Special node;
-the current backend does not claim those branches work or silently skip them.
+generic condition/effect engine is distinct from merely opening a Special node.
+The implementation below covers eighteen of season 43's twenty nontrivial kinds.
+Choices requiring unavailable effects are omitted from the outgoing choice list,
+rather than displaying a successful reward which was never granted. This is not
+complete coverage of every retained event branch.
 
 The matching external pack retains three Global/EU event seasons:
 
@@ -309,8 +314,8 @@ algorithm. It uses the original opening-floor connections and probabilities,
 preserved nonhidden monster groups and preset positions, and guarantees one
 reachable opening battle with an originally allowed type. Elite affixes are not
 generated yet. Shops and special nodes retain their original probabilities.
-Shop and shelter navigation are implemented, while special events remain
-unsupported. Loot, artifact retention, currency rewards,
+Shop, shelter and supported special-event navigation are implemented.
+Battle loot, cross-run artifact retention, account currency rewards,
 scored rankings, further floors and season progression are also unimplemented.
 Only reported wins in an active matching battle clear a local combat node;
 reward balances and season-wide clears are not fabricated.
@@ -472,6 +477,72 @@ effective static data, account/XP tables and 55 source reference files. APK
 shelter entry, Rest and return navigation are now observed: the stored visit
 records choice 1, followed by a successfully entered and completed boss node 160.
 Reopening persistence and revive/purify actions lack separate owner confirmation.
+
+## Special events and story threads
+
+The captured node-123 `start-stage` targets Special (7). Entry uses the selected
+season's original event list, base/additional weights, conditions, floor and
+difficulty gates. A separate seeded stream leaves all existing map/monster rolls
+unchanged. The event and its offered choices are stored per node, so reopening
+and retries never redraw them. Hidden continuation events require an active
+story link. Original event names, descriptions, actors and art stay unchanged.
+
+Generation is a local reconstruction, not the recovered official algorithm.
+For the implemented first floor, positive `AppearFloor` values are treated as
+earliest floors and negative values as latest floors. Artifact/curse ownership,
+coin/count and event-choice conditions gate the available branch. Hero-spec and
+bounty conditions remain unavailable; owned instance IDs are not mistaken for
+hero catalog IDs. Completed choices affect conditional weights, including the
+original negative additions that suppress completed story entries.
+
+The native requests are:
+
+- `/kamazonland/choice-special-event`: `NodeId` and `ChoiceId`.
+- `/kamazonland/close-special-event`: `NodeId`, `LootArtifactIds`,
+  `DiscardArtifactIndices`, `LootCurseIds` and `DiscardCurseIndices`.
+
+In `SpecialEventChoices`, **true means chosen**, as confirmed by native
+`EnterNode`; it does not indicate availability. Entry supplies false flags,
+choosing marks exactly one true and state Chosen (9), and confirmation marks
+Cleared|Chosen (11). The unconfirmed result blocks onward movement and can be
+resumed. Nullable loot/discard arrays align with each offered gift: accept its
+exact ID, replace an existing zero-based slot or decline it with null. Both
+artifact and curse inventories respect the native eight-slot limit. Validation
+rejects fabricated IDs, bad lengths/indices and changing an already confirmed
+reward. Empty omitted/null/list forms are equivalent on retries.
+
+Supported local effects include silver-coin gain/cost, living-hero healing and
+damage, random single-hero effects, counted revival, artifact gain by ID/rarity,
+all-ID gifts, specified/random artifact removal and seasonal curses. All-hero
+results use one native description; random/revive effects use character rows.
+Gifts remain pending until confirmation. Revived HP follows the existing full-HP
+trial policy; event damage can defeat a hero. Those are explicit local policies
+where authoritative server rules are unavailable. Artifact battle/shelter/removal
+counters are retained; reactive battle artifact-effect handling is still pending.
+Silver coins are run currency, separate from the 4,000 benefit allocation.
+
+Random conclusions use their original group, conditions, highest eligible
+priority and weights, and retain the selected conclusion ID for native text.
+Story links keep a root, next event and choice history. Challenge links reset on
+an explicit new challenge; season links and learned events/choices/conclusions
+survive it. A link can migrate from challenge to season scope without losing its
+history. The outgoing native progress dictionaries contain the recorded choices.
+These policies are outside the working account, bound to source, season and user.
+
+`Battle` and `GetCap` branches are not offered yet: nested battles and bottle-cap
+account rewards need separate implementations. Unknown condition/effect kinds
+also reject eligibility. The engine does not substitute another outcome for an
+unsupported random conclusion. At the reported season-43 state, 36 initial
+events with 65 choices are eligible; hidden chapters require later progress.
+
+Fifteen regressions cover variety, source gates, native flags, entry/choice/close,
+season/challenge continuations, weighted conclusions, HP/coins, deferred gifts,
+capacity/replacements, counters, reopen/retry and atomic rejection. The coherent
+actual-account copy opens the exact node as event 402 with choices
+40202/40203/40204, then exercises all 65 eligible initial choices through entry,
+choice and confirmation. Account/XP tables, effective static data, existing
+map/enemy rolls and all 55 original reference files remain unchanged. APK event
+display, choice feedback and confirmation remain pending verification.
 
 ## Finish Challenge
 

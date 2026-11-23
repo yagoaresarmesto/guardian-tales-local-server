@@ -298,6 +298,10 @@ Shelters support resting, reviving one hero, purifying one curse and leaving
 without an action. See the [complete node coverage](docs/kamazone.md#node-coverage)
 for each known node type and the remaining mechanics; APK probes validate
 representative flows rather than discovering types one at a time.
+Special nodes now draw eligible seasonal events, retain choices and follow
+story continuations across visits. Local HP, silver coins and confirmed
+artifact/curse gifts are supported; event battles and bottle-cap rewards remain
+unavailable.
 Finish Challenge can also conclude the separate local run and return to the
 idle lobby. Artifact retention/rewards and progression to another floor remain
 unimplemented.
