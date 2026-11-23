@@ -1,0 +1,42 @@
+<main>
+  <section class="banner mall-banner" aria-labelledby="page-title">
+    <div id="mall-art" aria-hidden="true" hidden></div>
+    <div class="banner-copy">
+      <p class="season-status">Events · Global / EU</p>
+      <h1 id="page-title">Kama-<em>ZONE</em></h1>
+    </div>
+  </section>
+
+  <div class="workspace">
+    <section class="surface" aria-labelledby="seasons-title">
+      <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="seasons-title">Season selection</h2></header>
+      <form id="editor">
+        <fieldset id="controls" disabled>
+          <legend class="sr">Choose a season</legend>
+          <div id="seasons"></div>
+          <div class="actions">
+            <button type="submit" id="apply" disabled>Apply season</button>
+            <span>Close the game before changing the calendar.</span>
+          </div>
+        </fieldset>
+      </form>
+      <p id="feedback" role="status" hidden></p>
+    </section>
+    <aside class="surface" aria-labelledby="calendar-title">
+      <header class="panel-heading">
+        <span class="section-icon stack" aria-hidden="true"></span><h2 id="calendar-title">Current calendar</h2>
+        <button type="button" id="reload" aria-label="Reload current calendar" title="Reload current calendar">↻</button>
+      </header>
+      <div class="calendar">
+        <strong id="current">Loading…</strong>
+        <p id="phase"></p>
+        <dl id="period" hidden>
+          <dt>Starts</dt><dd id="starts"></dd>
+          <dt>Season ends</dt><dd id="ends"></dd>
+          <dt>Leaves Events</dt><dd id="leaves"></dd>
+        </dl>
+        <button type="button" id="restore" hidden>Restore original calendar</button>
+      </div>
+    </aside>
+  </div>
+</main>

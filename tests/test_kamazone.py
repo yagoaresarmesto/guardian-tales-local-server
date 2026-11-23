@@ -24,6 +24,7 @@ from guardian_tales.kamazone import FIELDS, INACTIVE, REGION, SELECTION, load
 from guardian_tales.packet_reader import parse_packet
 from guardian_tales.protocol import Packet, PacketError, encode_packet
 from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.web_panel.server import WebPanel
 from tests import test_andras_trial as andras_fixture
 from tests.test_snapshots import request, synthetic_snapshot
 
@@ -108,6 +109,63 @@ class KamazoneTests(unittest.TestCase):
 
     def decoded(self):
         return records(decode(self.fetch()))[1]
+
+    def test_panel_and_cli_share_the_season_calendar_and_reject_stale_edits(self):
+        panel = WebPanel(self.refs, 0)
+        panel.start()
+        self.addCleanup(panel.stop)
+        origin = f"http://127.0.0.1:{panel.server_port}"
+
+        def api(body=None):
+            req = Request(
+                origin + "/api/kamazone",
+                data=json.dumps(body).encode() if body is not None else None,
+                headers={"Content-Type": "application/json", "Origin": origin},
+            )
+            with urlopen(req, timeout=5) as response:
+                return json.load(response)
+
+        files = {p.name: p.read_bytes() for p in self.root.iterdir()}
+        empty = api()
+        self.assertEqual(empty["phase"], "disabled")
+        self.assertEqual([s["id"] for s in empty["seasons"]], [41, 42, 43])
+        self.assertEqual({p.name: p.read_bytes() for p in self.root.iterdir()}, files)
+        edit = dict(action="select", seasonId=42, revision=empty["revision"])
+        api(edit)
+        first = api()
+        self.assertEqual((first["seasonId"], first["phase"]), (42, "active"))
+        self.assertEqual(first["period"], self.cli("status")["local_period"])
+        self.cli("select", "--season-id", "41")
+        with self.assertRaises(HTTPError) as conflict:
+            api(dict(action="disable", revision=first["revision"]))
+        self.assertEqual(conflict.exception.code, 409)
+        conflict.exception.close()
+        current = api()
+        self.assertEqual(current["seasonId"], 41)
+        for value in (2041, None, True):
+            with self.subTest(value=value), self.assertRaises(HTTPError) as rejected:
+                api(dict(edit, seasonId=value, revision=current["revision"]))
+            self.assertEqual(rejected.exception.code, 400)
+            rejected.exception.close()
+        self.assertEqual(api(), current)
+        api(dict(action="disable", revision=current["revision"]))
+        self.assertIsNone(self.cli("status")["selected_season_id"])
+        self.assertEqual(self.source, (self.root / "static_data_get.bin").read_bytes())
+
+    def test_selection_status_distinguishes_play_and_reward_windows_and_content_binding(self):
+        selected = self.cli("select", "--season-id", "43")
+        for key, phase in (("From", "active"), ("To", "reward-period"), ("RewardUntil", "expired")):
+            when = datetime.fromisoformat(selected["local_period"][key])
+            with (
+                self.subTest(phase=phase),
+                patch("guardian_tales.kamazone.utc_now", return_value=when),
+            ):
+                status = self.cli("status")
+                self.assertEqual(status["calendar_phase"], phase)
+                self.assertEqual(status["menu_active_now"], phase != "expired")
+        self.tables["untouched"]["value"].append(9)
+        self.write_source()
+        self.assertEqual(self.cli("status")["calendar_phase"], "pack-mismatch")
 
     def test_unconfigured_bootstrap_is_byte_identical_and_reads_create_no_files(self):
         before = list(self.db.iterdump())

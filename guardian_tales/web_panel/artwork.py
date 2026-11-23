@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Read individual PNGs from the panel's fixed local TexturePacker atlases."""
+"""Read sprite frames and background artwork from fixed local texture bundles."""
 
 import json
 from dataclasses import dataclass
@@ -20,19 +20,21 @@ class Atlas:
     def available(self, references):
         return self.path(references).is_file() and find_spec("UnityPy") is not None
 
-    def read(self, references, *, frame):
+    def read(self, references, *, frame=None):
+        """Return a transparent sprite PNG, or the full background as a JPEG."""
         if not self.available(references):
             raise FileNotFoundError("The local sprite atlas and panel-art extra are required")
         path = self.path(references)
         stat = path.stat()
         # Concurrent image requests share one decoded sheet per bundle version.
         with _lock:
-            return _read_png(path, self.sheet, stat.st_mtime_ns, stat.st_size, frame)
+            return _read_image(path, self.sheet, stat.st_mtime_ns, stat.st_size, frame)
 
 
 BOSSES = Atlas("spritesheets/bosses", "bosses")
 UI = Atlas("spritesheets/ui/main_s3", "MainUiS3")
 WAR = Atlas("ondemand/guild_war/ui", "guildWar")
+KAMAZONE = Atlas("ondemand/ancientmall/ui", "roguelike_mall_bg")
 ELEMENT_FRAMES = {
     "basic": "ic_attribute_no",
     "dark": "ic_attribute_dark",
@@ -72,7 +74,7 @@ def frame_png(sheet, entry):
     return output.getvalue()
 
 
-@lru_cache(maxsize=3)
+@lru_cache(maxsize=4)
 def _read_sheet(path, sheet, mtime_ns, size):
     import UnityPy
 
@@ -81,14 +83,20 @@ def _read_sheet(path, sheet, mtime_ns, size):
         for obj in UnityPy.load(str(path)).objects
         if obj.type.name in ("TextAsset", "Texture2D") and obj.peek_name() == sheet
     }
-    frames = json.loads(objects["TextAsset"].read().m_Script)["frames"]
+    frames = (
+        json.loads(objects["TextAsset"].read().m_Script)["frames"] if "TextAsset" in objects else {}
+    )
     pixels = objects["Texture2D"].read().image.convert("RGBA")
     return pixels, frames
 
 
 @lru_cache(maxsize=64)
-def _read_png(path, sheet, mtime_ns, size, frame):
+def _read_image(path, sheet, mtime_ns, size, frame):
     pixels, frames = _read_sheet(path, sheet, mtime_ns, size)
+    if frame is None:
+        output = BytesIO()
+        pixels.convert("RGB").save(output, format="JPEG", quality=85)
+        return output.getvalue()
     if frame not in frames:
         raise FileNotFoundError("Frame unavailable in the local atlas")
     return frame_png(pixels, frames[frame])

@@ -304,7 +304,10 @@ matching pack, and restore original levels. They configure
 external static overlays without editing the saved account.
 
 The optional [Kama-ZONE selector](docs/kamazone.md) activates one preserved Global
-season's calendar for its Events card, with status and restoration commands.
+season's calendar for its Events card. The [Kama-ZONE tab](http://127.0.0.1:17658/kamazone)
+lists the same seasons as the CLI. View the current calendar, apply a season or
+restore the original calendar. Close the game before applying a change, then
+restart the backend and reopen the game.
 The three retained difficulties support combat, HP retention and artifact
 selection after victories. Confirming a regular floor boss's loot opens the
 next floor when the selected difficulty has a matching layout and level row.

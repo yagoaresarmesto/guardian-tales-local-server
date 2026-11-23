@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Optional Kama-ZONE season visibility in Events; gameplay remains unsupported."""
+"""Select a preserved Global Kama-ZONE season for the Events menu."""
 
 import argparse
 import hashlib
@@ -11,6 +11,7 @@ from functools import lru_cache
 from .punchking_static import atomic_write
 from .raid_static import compress, decode, digest, records
 from .reference import ReferenceData
+from .state_lock import StateLock
 from .village import integer
 
 SELECTION = "kamazone_selection.json"
@@ -235,6 +236,94 @@ def bootstrap_seed(references, filename, request, parent):
     ).encode()
 
 
+class SeasonSelectionChanged(ValueError):
+    """A more recent season selection must be reloaded before applying."""
+
+
+def selection_status(selected, seasons, source_hash, now, *, changed=False):
+    season_id = selected["season_id"] if selected else None
+    period = selected["period"] if selected else None
+    matches = season_id is None or selected["source_sha256"] == source_hash
+    phase = "disabled"
+    if period:
+        start, end, reward_end = (timestamp(period[k]) for k in FIELDS)
+        if not matches:
+            phase = "pack-mismatch"
+        elif now < start:
+            phase = "scheduled"
+        elif now < end:
+            phase = "active"
+        elif now < reward_end:
+            phase = "reward-period"
+        else:
+            phase = "expired"
+    return dict(
+        selected_season_id=season_id,
+        content_matches=matches,
+        local_period=period,
+        menu_active_now=phase in ("active", "reward-period"),
+        calendar_phase=phase,
+        generation=(selected or {}).get("generation", 0),
+        seasons=list(seasons.values()),
+        scope="Global Kama-ZONE season calendar for the Events menu",
+        saved_account_modified=False,
+        restart_backend_and_game_required=changed,
+    )
+
+
+def status(references):
+    source = references.read_bytes("static_data_get.bin")
+    return selection_status(
+        load(references), catalog(source), hashlib.sha256(source).hexdigest(), utc_now()
+    )
+
+
+def change_season(references, season_id, *, expected_generation=None):
+    """Select a season, or restore the parent calendar when season_id is None."""
+    source = references.read_bytes("static_data_get.bin")
+    seasons = catalog(source)
+    sha = hashlib.sha256(source).hexdigest()
+    if season_id is not None and (not integer(season_id, minimum=1) or season_id not in seasons):
+        raise ValueError("Select a Global Kama-ZONE season ID from kamazone list")
+
+    # Restoring an unconfigured installation is a read-only no-op.
+    if season_id is None and not (references.directory / SELECTION).exists():
+        if expected_generation not in (None, 0):
+            raise SeasonSelectionChanged("Season selection changed. Reload before applying.")
+        return selection_status(None, seasons, sha, utc_now())
+
+    with StateLock(references.directory, filename=".kamazone_season.lock"):
+        selected = load(references)
+        generation = (selected or {}).get("generation", 0)
+        if expected_generation is not None and expected_generation != generation:
+            raise SeasonSelectionChanged("Season selection changed. Reload before applying.")
+        now = utc_now()
+        current = selection_status(selected, seasons, sha, now)
+        if current["selected_season_id"] == season_id and current["calendar_phase"] in (
+            "active",
+            "disabled",
+        ):
+            return current
+        period = None
+        if season_id is not None:
+            start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            dates = (start, start + timedelta(days=14), start + timedelta(days=21))
+            period = {key: date.isoformat() for key, date in zip(FIELDS, dates)}
+        candidate = dict(
+            version=1,
+            generation=generation + 1,
+            season_id=season_id,
+            source_sha256=sha if season_id is not None else selected["source_sha256"],
+            period=period,
+        )
+        window = tuple(period[k] for k in FIELDS) if period else None
+        prepare(source, candidate["generation"], season_id, window)
+        atomic_write(
+            references.directory / SELECTION, json.dumps(candidate, indent=2).encode() + b"\n"
+        )
+        return selection_status(candidate, seasons, sha, now, changed=True)
+
+
 def main(argv=None):
     arguments = list(sys.argv[1:] if argv is None else argv)
     if arguments and arguments[0] == "practice":
@@ -253,65 +342,10 @@ def main(argv=None):
     try:
         if (args.action == "select") != (args.season_id is not None):
             raise ValueError("Use select --season-id ID; list/status/disable take no season ID")
-        selected = load(references)
-        source = references.read_bytes("static_data_get.bin")
-        seasons = catalog(source)
-        sha = hashlib.sha256(source).hexdigest()
-        now = utc_now()
-        candidate = selected
-        if args.action == "select":
-            if args.season_id not in seasons:
-                raise ValueError("Select a Global Kama-ZONE season ID from kamazone list")
-            if not (
-                selected
-                and selected["season_id"] == args.season_id
-                and selected["source_sha256"] == sha
-                and timestamp(selected["period"]["From"])
-                <= now
-                < timestamp(selected["period"]["To"])
-            ):
-                start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-                dates = (start, start + timedelta(days=14), start + timedelta(days=21))
-                candidate = dict(
-                    version=1,
-                    generation=(selected or {}).get("generation", 0) + 1,
-                    season_id=args.season_id,
-                    source_sha256=sha,
-                    period={k: d.isoformat() for k, d in zip(FIELDS, dates)},
-                )
-        elif args.action == "disable" and selected and selected["season_id"] is not None:
-            candidate = dict(
-                selected, generation=selected["generation"] + 1, season_id=None, period=None
-            )
-        changed = candidate != selected
-        if changed:
-            window = tuple(candidate["period"][k] for k in FIELDS) if candidate["period"] else None
-            prepare(source, candidate["generation"], candidate["season_id"], window)
-            atomic_write(
-                references.directory / SELECTION, json.dumps(candidate, indent=2).encode() + b"\n"
-            )
-        enabled = bool(candidate and candidate["season_id"] is not None)
-        matches = not enabled or candidate["source_sha256"] == sha
-        print(
-            json.dumps(
-                dict(
-                    selected_season_id=candidate["season_id"] if candidate else None,
-                    content_matches=matches,
-                    local_period=candidate["period"] if candidate else None,
-                    menu_active_now=bool(
-                        enabled
-                        and matches
-                        and timestamp(candidate["period"]["From"])
-                        <= now
-                        < timestamp(candidate["period"]["RewardUntil"])
-                    ),
-                    seasons=list(seasons.values()),
-                    scope="Events menu, idle lobby and empty local rankings; gameplay is not implemented",
-                    saved_account_modified=False,
-                    restart_backend_and_game_required=changed,
-                ),
-                indent=2,
-            )
-        )
-    except (OSError, ValueError, TypeError, KeyError) as error:
+        if args.action in ("select", "disable"):
+            result = change_season(references, args.season_id)
+        else:
+            result = status(references)
+        print(json.dumps(result, indent=2))
+    except (OSError, ValueError, TypeError, KeyError, RuntimeError) as error:
         parser.error(str(error))

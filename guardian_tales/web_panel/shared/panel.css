@@ -130,9 +130,9 @@ fieldset:disabled { opacity: .66; }
 .mode-nav a { display: grid; place-items: center; min-width: 58px; padding: 5px 12px; border-bottom: 3px solid transparent; color: var(--muted); font-weight: 700; text-decoration: none; }
 .mode-nav a:hover { color: var(--ink); background: #25344a; }
 .mode-nav a[aria-current="page"] { color: var(--gold); border-color: currentColor; }
-@media (max-width: 540px) {
+@media (max-width: 700px) {
   .bar-inner { flex-wrap: wrap; }
-  .mode-nav { order: 1; width: 100%; margin: 0; }
-  .mode-nav a { min-height: 40px; }
+  .mode-nav { order: 1; width: 100%; margin: 0; flex-wrap: wrap; }
+  .mode-nav a { min-height: 40px; min-width: 0; padding-inline: 8px; }
   .brand, .local { min-height: 42px; }
 }

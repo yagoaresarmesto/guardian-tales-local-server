@@ -59,6 +59,16 @@ Four additional records belong to another service and are excluded from this
 selector. The older permanent Kama-ZONE data and Tetis/RogueChess are separate
 systems. The Events card requires a selected season.
 
+## Web panel
+
+Open the [Kama-ZONE tab](http://127.0.0.1:17658/kamazone) on the host PC while
+the backend is running. The current calendar shows the saved season, whether
+it is active in Events, and its UTC dates. Pick a season and click **Apply
+season**. During the post-season window or after expiry, **Renew season** starts
+a fresh window for the same season. **Restore original calendar** performs
+the same action as `kamazone disable`. Close the game before applying changes,
+then restart the backend and reopen the game. The CDN and bridge can stay running.
+
 ## Commands
 
 Run from the repository root in PowerShell. The default reference directory is
@@ -121,7 +131,8 @@ The private `kamazone_selection.json` file is published atomically in the chosen
 reference directory and bound to the original static pack's SHA-256. An active
 selection rejects a changed content pack until disabled or explicitly selected
 again. No account database is opened by the command. Its persistent change is
-only the optional selection file; imported progress and trial XP stay intact.
+the optional selection file. The CLI and panel use a local lock file to serialize
+changes. Imported progress and trial XP stay intact.
 
 The backend composes the calendar over its other effective static overlays. It
 changes the chosen season's Global dates and suppresses any overlapping Global
