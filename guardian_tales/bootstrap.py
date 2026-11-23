@@ -21,6 +21,7 @@ from . import (
     colosseum,
     expedition,
     kamazone,
+    kamazone_preview,
     multi_presets,
     story_interactions,
     story_rewards,
@@ -87,6 +88,7 @@ BOOTSTRAP_ROUTES = (
     *expedition.ROUTES,
     *multi_presets.ROUTES,
     *classic_coop.ROUTES,
+    kamazone_preview.ROUTE,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
@@ -331,6 +333,13 @@ class BootstrapSession:
                 except ValueError as error:
                     raise PacketError(str(error)) from error
                 return json_response(request, preserved)
+        if route == kamazone_preview.ROUTE:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                return json_response(request, kamazone_preview.enter(self.store.account, body))
+            except ValueError as exc:
+                raise PacketError(str(exc)) from exc
         if route == ORBITAL_ENTRY_ROUTE:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")

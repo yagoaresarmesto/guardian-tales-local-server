@@ -23,7 +23,7 @@ from guardian_tales.kamazone import FIELDS, INACTIVE, REGION, SELECTION, load
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
 from tests import test_andras_trial as andras_fixture
-from tests.test_snapshots import request
+from tests.test_snapshots import request, synthetic_snapshot
 
 NOW = datetime(2030, 11, 23, 14, 0, tzinfo=timezone.utc)
 
@@ -42,6 +42,7 @@ class KamazoneTests(unittest.TestCase):
                         Id=41 + i,
                         SeasonName="mall_season_name_" + str(i + 1),
                         SeasonDateId=7000101 + i,
+                        MiniSeasonGroupId=1,
                         Banner=json.dumps(
                             {
                                 "enUS": f"media/kamazon_land/v3.{(18,30,47)[i]}_kamazon_land_event_banner_enUS.png"
@@ -52,6 +53,7 @@ class KamazoneTests(unittest.TestCase):
                 ]
                 + [dict(Id=2041, SeasonName="mall_season_name_1", SeasonDateId=7100033)],
                 "Artifacts": [{"Id": 900, "Keep": True}],
+                "MiniSeasons": [{"Id": 101, "MiniSeasonGroupId": 1}],
             },
             "seasondate": {
                 "EventPeriod": [
@@ -279,11 +281,11 @@ class KamazoneTests(unittest.TestCase):
             self.reject("select", "--season-id", "42")
         self.assertEqual({p.name: p.read_bytes() for p in self.root.iterdir()}, before)
 
-    def test_selection_does_not_claim_unsupported_mode_entry_or_create_progress(self):
+    def test_selection_does_not_claim_unsupported_gameplay_or_create_progress(self):
         self.cli("select", "--season-id", "41")
         before = list(self.db.iterdump())
         with self.assertRaises(PacketError):
-            self.fetch("/kamazonland/enter", dict(IsPartial=False))
+            self.fetch("/kamazonland/challenge", dict(Difficulty=1))
         self.assertEqual(list(self.db.iterdump()), before)
 
     def test_andras_overlay_composes_without_changing_its_configuration_or_account(self):
@@ -304,6 +306,143 @@ class KamazoneTests(unittest.TestCase):
             self.assertEqual(new[name], old[name])
         self.assertEqual(list(f.db.iterdump()), saved)
         self.assertTrue(all((f.refs / name).read_bytes() == raw for name, raw in config.items()))
+
+
+class KamazonePreviewTests(unittest.TestCase):
+    def setUp(self):
+        self.fixture = KamazoneTests()
+        self.addCleanup(self.fixture.doCleanups)
+        self.fixture.setUp()
+        self.db, self.session = self.fixture.db, self.fixture.session
+        snapshot = synthetic_snapshot()
+        # An older saved mode state must remain stored verbatim while the preview
+        # uses its separate, unsaved idle view for the locally selected season.
+        snapshot["profile"]["UserKamazonLand"] = {
+            "SeasonId": 7,
+            "SilverCoin": 123,
+            "Progress": {"Floor": 3},
+        }
+        with self.db:
+            self.db.execute(
+                "INSERT INTO imported_account VALUES(1,?,?,?,?)",
+                ("0" * 64, "synthetic", json.dumps(snapshot["startup_reads"]), "{}"),
+            )
+            self.db.execute(
+                "UPDATE local_account SET profile=? WHERE id=1", (json.dumps(snapshot["profile"]),)
+            )
+        self.session.signed_in = True
+
+    def call(self, body=None):
+        packet = self.session.handle(
+            request("/kamazonland/enter", {"IsPartial": False} if body is None else body)
+        )
+        self.assertEqual((packet.packet_type, packet.body_type, packet.sequence_id), (1, 1, 12))
+        return json.loads(packet.body)
+
+    def test_events_automatic_full_and_partial_entry_are_read_only_idle_previews(self):
+        self.fixture.cli("select", "--season-id", "43")
+        before, changes = list(self.db.iterdump()), self.db.total_changes
+        files = {p.name: p.read_bytes() for p in self.fixture.root.iterdir()}
+        for partial in (False, True, False):
+            reply = self.call({"IsPartial": partial})
+            self.assertEqual(set(reply), {"NewSeason", "UserKamazonLand"})
+            self.assertFalse(reply["NewSeason"])
+            user = reply["UserKamazonLand"]
+            self.assertEqual((user["SeasonId"], user["MiniSeasonId"]), (43, 101))
+            self.assertEqual(user["Progress"], {"Floor": 0, "CurrentNodeId": 0, "Concluded": True})
+            self.assertEqual(user["Likeability"], {"Points": 0, "ClaimedRewardStep": 0})
+            self.assertEqual(user["Characters"], [])
+            self.assertEqual(user["Nodes"], {})
+            self.assertTrue(
+                all(
+                    user[key] == 0
+                    for key in (
+                        "SilverCoin",
+                        "KamazonPoint",
+                        "KamazonPointTotal",
+                        "KamazonTicket",
+                        "KamazonEventPoint",
+                    )
+                )
+            )
+        self.assertEqual((list(self.db.iterdump()), self.db.total_changes), (before, changes))
+        self.assertEqual({p.name: p.read_bytes() for p in self.fixture.root.iterdir()}, files)
+
+    def test_switching_selected_season_refreshes_the_view_without_creating_saved_progress(self):
+        for ident in (41, 42, 43):
+            self.fixture.cli("select", "--season-id", str(ident))
+            self.assertEqual(self.call()["UserKamazonLand"]["SeasonId"], ident)
+        self.assertEqual(self.session.store.account.profile()["UserKamazonLand"]["SeasonId"], 7)
+
+    def test_entry_requires_authentication_and_completed_prologue(self):
+        self.fixture.cli("select", "--season-id", "43")
+        self.session.signed_in = False
+        with self.assertRaises(PacketError):
+            self.call()
+        self.session.signed_in = True
+        with self.db:
+            self.db.execute("DELETE FROM imported_account")
+        with self.assertRaises(PacketError):
+            self.call()
+
+    def test_entry_rejects_malformed_parameters_without_writes(self):
+        self.fixture.cli("select", "--season-id", "43")
+        before = list(self.db.iterdump())
+        for body in (
+            {},
+            [],
+            {"IsPartial": 0},
+            {"IsPartial": "false"},
+            {"IsPartial": False, "x": 1},
+        ):
+            with self.assertRaises(PacketError):
+                self.call(body)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_unconfigured_disabled_expired_or_mismatched_preview_fails_closed(self):
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.call()
+        self.fixture.cli("select", "--season-id", "43")
+        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=22)):
+            with self.assertRaises(PacketError):
+                self.call()
+        self.fixture.tables["untouched"]["value"].append(4)
+        self.fixture.write_source()
+        with self.assertRaises(PacketError):
+            self.call()
+        self.fixture.cli("disable")
+        with self.assertRaises(PacketError):
+            self.call()
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_missing_or_ambiguous_mini_season_cannot_fabricate_an_identity(self):
+        for minis in (
+            None,
+            [],
+            [{"Id": 0, "MiniSeasonGroupId": 1}],
+            [{"Id": 101, "MiniSeasonGroupId": 1}] * 2,
+        ):
+            self.fixture.tables["kamazonland2"]["MiniSeasons"] = minis
+            self.fixture.write_source()
+            self.fixture.cli("select", "--season-id", "43")
+            with self.assertRaises(PacketError):
+                self.call()
+
+    def test_preview_does_not_enable_challenges_battles_shops_or_rewards(self):
+        self.fixture.cli("select", "--season-id", "43")
+        self.call()
+        before = list(self.db.iterdump())
+        for route in (
+            "/kamazonland/challenge",
+            "/kamazonland/start-stage",
+            "/kamazonland/conclude",
+            "/kamazonland/gacha",
+            "/kamazonland/take-likeability",
+        ):
+            with self.assertRaises(PacketError):
+                self.session.handle(request(route, {}))
+        self.assertEqual(list(self.db.iterdump()), before)
 
 
 class KamazoneBannerTests(unittest.TestCase):

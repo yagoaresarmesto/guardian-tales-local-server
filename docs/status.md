@@ -9,17 +9,25 @@ attachments. Test results and original-client observations have different scopes
 The optional [Kama-ZONE selector](kamazone.md) lists/selects the three preserved
 Global/EU seasons and restores their original calendar. Native inspection locates
 the entry in the Events drawer and its reward-period visibility predicate.
-Eighteen new regressions cover scoped dates, expiry, content binding, no account
-access, revision-safe restoration, atomic publication, Andras composition and
-the optional CDN preview. The pack lacks its historical banner PNGs; the CDN
+Twenty-five regressions cover scoped dates, expiry, content binding, no account
+access, revision-safe restoration, atomic publication, Andras composition,
+the optional CDN preview and read-only automatic entry. The pack lacks its historical banner PNGs; the CDN
 can generate an original menu image in memory for the selected declared URL
 when started with `--reference-dir`, without changing preserved files.
-This milestone deliberately leaves `/kamazonland/enter` and gameplay unsupported.
-Actual APK card visibility is pending; no live season is activated by diagnostics.
-All 240 targeted Windows tests pass, together with Black (220 files), Ruff and
-repository/link checks (280 files). A coherent account/XP copy passes all three
+The first APK probe failed because Events can automatically load Kamazone before
+showing the drawer. Its pending `/kamazonland/enter` request and native scene
+loader establish the missing read contract. A follow-up supplies a read-only
+idle lobby for the selected season, with a real mini-season ID and no saved
+progress, inventory or balance changes. Challenges and gameplay remain
+unsupported. Actual APK entry/card visibility is pending a retry; no live season
+is activated by diagnostics.
+All 271 targeted Windows tests pass, together with Black (221 files), Ruff and
+repository/link checks (281 files). A coherent account/XP copy passes all three
 selections and restoration, retaining every main-account table, trial XP,
 existing overlays and 52 original reference files, with zero source writes.
+A follow-up coherent copy passes the captured entry request and both partial
+flags for every Global season with zero database writes during entry, unchanged
+trial XP and all 53 reference files (including the local selection) retained.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using

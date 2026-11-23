@@ -1,10 +1,12 @@
 # Optional Kama-ZONE entry in Events
 
 `kamazone` selects one preserved Global/EU season so the Android 3.57.0 client
-can show its card in **Events**. This first milestone covers **menu visibility
-only**. Opening the card, entering the mode, challenges, battles, shops and
-rewards are not implemented yet. Do not use the card to test gameplay at this
-stage; first verify that it appears after reopening the game.
+can show its card in **Events**. This first milestone covers the menu and a
+**read-only idle lobby preview**. Events can select and load a mode automatically
+before displaying its drawer, so `/kamazonland/enter` supplies the preview even
+without a card tap. Challenges, battles, shops and rewards are not implemented
+yet. First verify that Events opens, the card appears and you can return to the
+main lobby; do not start a challenge.
 
 The matching external pack retains three Global/EU event seasons:
 
@@ -47,8 +49,9 @@ as usual. The CDN must also use the same reference directory:
 After updating the project, restart the CDN with this command too. The bridge can
 remain running. Reopen the game and inspect **Events** for the Kama-ZONE card.
 When its historical banner is absent, expect a generated **KAMA-ZONE / SEASON 43 /
-MENU PREVIEW** image (with the selected ID). Do not open the card yet:
-`/kamazonland/enter` is intentionally still unsupported.
+MENU PREVIEW** image (with the selected ID). The idle lobby may load automatically.
+You can inspect the entry and return to the main lobby; do not use challenge,
+shop, gift, mission or reward buttons yet.
 
 Inspect the selection and whether its visibility window is active:
 
@@ -101,12 +104,32 @@ Preserved reference/resource files, the resource manifest, the APK and shipped
 scripts remain unchanged. No banner file is written. Existing Raid, Guild War,
 Expedition, Andras and generated-item overlays remain independent.
 
+## Read-only automatic entry
+
+The observed entry request is `{"IsPartial":false}`. Both Boolean values are
+accepted after local guest sign-in and the prologue, with an active selected
+season bound to the matching pack. The response supplies the native
+`UserKamazonLand` singleton and `NewSeason:false`. The mini-season ID comes from
+the selected season's preserved group rather than being invented.
+
+The preview has no party or run, a concluded floor zero, empty collections,
+nonnull progress/likeability objects and zero preview points/tickets/coins.
+Those are temporary display defaults, not changes to saved balances or any
+historical Kama-ZONE progress. No `User` inventory delta, reward, operation
+receipt or database row is created. Missing/ambiguous mini-season data,
+disabled/expired selection and a changed content pack are rejected. This route
+does not enable any gameplay or reward endpoint.
+
 ## Evidence
 
 Native inspection finds Kama-ZONE in `UIEventDrawer.RefreshEventList`, which
 requires `KamazonLand2Data.GetCurrentSeasonByRewardUntil`; its predicate checks
 the season's reward-period dates. The card routes through `GoKamazonLandMain`.
 The preserved Global calendars have all expired, explaining their absence.
+`UIEventDrawer.InitEventScene` can call `GoKamazonLandMain` automatically;
+`KamazonLandLobby.Load` sends `/kamazonland/enter` before setting the drawer.
+The first APK probe reached that request and exposed the missing read response.
+The pending request and a fresh unsupported-operation counter delta confirm it.
 
 Automated checks cover Global-only selection, calendar restoration/revisions,
 get/check consistency, default compatibility, no database access, source
@@ -115,9 +138,13 @@ composition with Andras and scoped CDN preview GET/HEAD/range/ETag responses.
 The actual APK card-visibility check remains pending.
 Seeing a card does not establish a playable Kama-ZONE mode.
 
-All 240 targeted Windows tests pass, including existing static-overlay and CDN
-tests. A coherent file-backed account/XP copy passes selection of all three
+All 271 targeted Windows tests pass, including existing static-overlay, CDN,
+Backroom and Training Room tests. A coherent file-backed account/XP copy passes selection of all three
 seasons and restoration. It retains every main-account table, trial XP, the
 other effective overlays and all 52 original reference files. Each missing
 historical banner yields a valid generated preview; the source account and
 reference directory receive no diagnostic writes or live selection.
+A follow-up coherent copy replays the captured automatic entry and both Boolean
+partial flags for all three seasons. It records zero database writes during
+entry, retains trial XP and all 53 source reference files including the local
+selection, and sends no shared account/inventory delta.
