@@ -12,6 +12,8 @@ on the PC's loopback interface and uses the backend's reference directory. For a
 different port, add `--raid-panel-port PORT` to the backend command.
 
 **Active lineup** shows the season, its four encounters and round-one HP per bar.
+Select a numbered platform on the map or a boss in the lineup to inspect its
+name and element. Browsing encounters keeps your pending edits in the form.
 **Catalog default** means a season is defined but its local calendar has yet to
 be applied. Use **Original season** to preview and apply a stock rotation.
 Use **Custom lineup** to choose four boss and element pairs. A boss can appear

@@ -5,6 +5,7 @@ const modes = [...document.querySelectorAll('input[name="mode"]')];
 const number = new Intl.NumberFormat("en-US");
 let data;
 let applying = false;
+let selectedEncounter = 0;
 
 function title(name) {
   return name.replace(/\b\w/g, char => char.toUpperCase());
@@ -24,25 +25,75 @@ async function readState() {
   return state;
 }
 
-function showBosses(container, bosses) {
+function bossName(slot) {
+  return slot.boss ? title(slot.boss) : "Stage " + slot.stage;
+}
+
+function slotNumber(index) {
+  return String(index + 1).padStart(2, "0");
+}
+
+function markEncounter(index) {
+  selectedEncounter = index;
+  const slot = data.active.bosses[index];
+  $("encounter-detail").hidden = false;
+  $("encounter-detail").dataset.element = slot.element || "";
+  $("encounter-name").textContent = bossName(slot);
+  $("encounter-meta").textContent = "Encounter " + slotNumber(index) + (slot.element ? " · " + title(slot.element) : "");
+  for (const list of [$("map-pins"), $("active-bosses")]) {
+    list.querySelectorAll("button").forEach((button, i) => {
+      button.setAttribute("aria-pressed", String(index === i));
+    });
+  }
+}
+
+function encounterButton(slot, index) {
+  const button = document.createElement("button");
+  button.type = "button";
+  const label = "Encounter " + (index + 1) + ", " + bossName(slot) +
+    (slot.element ? ", " + title(slot.element) : "");
+  button.setAttribute("aria-label", label);
+  button.setAttribute("aria-controls", "encounter-detail");
+  button.addEventListener("click", () => markEncounter(index));
+  return button;
+}
+
+function showBosses(container, bosses, active = false) {
   container.replaceChildren();
+  if (active) $("map-pins").replaceChildren();
   bosses.forEach((slot, index) => {
     const row = document.createElement("li");
+    const card = active ? encounterButton(slot, index) : document.createElement("div");
+    card.className = "boss-card";
+    card.dataset.element = slot.element || "";
     const order = document.createElement("span");
     order.className = "slot-num";
-    order.textContent = String(index + 1).padStart(2, "0");
-    const name = document.createElement("span");
+    order.textContent = slotNumber(index);
+    const sigil = document.createElement("span");
+    sigil.className = "sigil";
+    sigil.setAttribute("aria-hidden", "true");
+    const name = document.createElement("strong");
     name.className = "boss-name";
-    name.textContent = slot.boss ? title(slot.boss) : "Stage " + slot.stage;
-    row.append(order, name);
+    name.textContent = bossName(slot);
+    card.append(order, sigil, name);
     if (slot.element) {
       const element = document.createElement("span");
       element.className = "element";
-      element.dataset.element = slot.element;
       element.textContent = title(slot.element);
-      row.append(element);
+      card.append(element);
     }
+    row.append(card);
     container.append(row);
+    if (active) {
+      const pin = encounterButton(slot, index);
+      pin.className = "map-pin";
+      pin.dataset.element = slot.element || "";
+      pin.title = pin.getAttribute("aria-label");
+      const number = document.createElement("span");
+      number.textContent = slotNumber(index);
+      pin.append(number);
+      $("map-pins").append(pin);
+    }
   });
 }
 
@@ -78,7 +129,8 @@ function display(state) {
   $("season-status").textContent = (data.prepared ? "Active season " : "Catalog default · Season ") + active.id;
   $("active-season").textContent = "Season " + active.id + " · " + kind;
   $("active-hp").textContent = number.format(active.hpPerBar);
-  showBosses($("active-bosses"), active.bosses);
+  showBosses($("active-bosses"), active.bosses, true);
+  markEncounter(selectedEncounter);
   if (data.hasMap && $("map").hidden) {
     $("map").src = "/map.png";
     $("map").hidden = false;
@@ -96,9 +148,13 @@ function display(state) {
     row.className = "slot-row";
     const order = document.createElement("span");
     order.className = "slot-num";
-    order.textContent = String(index + 1).padStart(2, "0");
-    row.append(order, choice("Boss", data.bossNames, slot.boss, index),
-      choice("Element", data.elementNames, slot.element, index));
+    order.textContent = slotNumber(index);
+    const boss = choice("Boss", data.bossNames, slot.boss, index);
+    const element = choice("Element", data.elementNames, slot.element, index);
+    const select = element.querySelector("select");
+    row.dataset.element = select.value;
+    select.addEventListener("change", () => { row.dataset.element = select.value; });
+    row.append(order, boss, element);
     $("slots").append(row);
   });
   modes[data.custom ? 1 : 0].checked = true;
