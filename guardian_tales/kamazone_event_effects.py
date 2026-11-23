@@ -157,20 +157,20 @@ def grant(value, visit, request):
                 continue
             if ident != expected:
                 raise ValueError("Event loot contains an unoffered artifact/curse")
-            if index is not None and index >= len(inventory):
-                raise ValueError("Invalid event artifact/curse replacement index")
-            if index is None and len(inventory) >= LIMIT:
-                raise ValueError("Replace or decline the new artifact/curse at the native limit")
-            row = (
-                dict(Id=ident, Shelter=0, Battle=0, EliminateArtifact=0)
-                if suffix == "Artifact"
-                else ident
-            )
-            if index is None:
-                inventory.append(row)
-            else:
-                inventory[index] = row
-                if suffix == "Artifact":
-                    for i, item in enumerate(inventory):
-                        if i != index:
-                            item["EliminateArtifact"] += 1
+            add_reward(inventory, ident, index, artifact=suffix == "Artifact")
+
+
+def add_reward(inventory, ident, index, *, artifact):
+    if index is not None and not 0 <= index < len(inventory):
+        raise ValueError("Invalid artifact/curse replacement index")
+    if index is None and len(inventory) >= LIMIT:
+        raise ValueError("Replace or decline the new artifact/curse at the native limit")
+    row = dict(Id=ident, Shelter=0, Battle=0, EliminateArtifact=0) if artifact else ident
+    if index is None:
+        inventory.append(row)
+    else:
+        inventory[index] = row
+        if artifact:
+            for i, other in enumerate(inventory):
+                if i != index:
+                    other["EliminateArtifact"] = min(0x7FFFFFFF, other["EliminateArtifact"] + 1)

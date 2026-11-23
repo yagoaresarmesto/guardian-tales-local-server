@@ -283,11 +283,10 @@ external static overlays without editing the saved account.
 
 The optional [Kama-ZONE selector](docs/kamazone.md) activates one preserved Global
 season's calendar for its Events card, with status and restoration commands.
-This milestone covers the menu, benefit allocation and experimental opening-floor
-combat at the three preserved difficulties, including local results, HP retention
-and movement between connected combat nodes. Shop entry/exit displays a stable
-seasonal artifact catalog. Purchases, loot, special events, later floors and
-rewards remain unsupported. Run the CDN with `--reference-dir` to supply an
+The three retained difficulties support combat, HP retention and artifact
+selection after victories. Confirming a regular floor boss's loot opens the
+next floor when the selected difficulty has a matching layout and level row.
+Shop entry and exit display seasonal artifacts. Run the CDN with `--reference-dir` to supply an
 in-memory preview image when the selected season's historical banner is missing.
 Its separate opt-in benefit practice can unlock Strong Body for season 43 and
 provide a 4,000-point allocation budget at the original benefit prices, with
@@ -303,8 +302,7 @@ story continuations across visits. Local HP, silver coins and confirmed
 artifact/curse gifts are supported; event battles and bottle-cap rewards remain
 unavailable.
 Finish Challenge can also conclude the separate local run and return to the
-idle lobby. Artifact retention/rewards and progression to another floor remain
-unimplemented.
+idle lobby. Cross-challenge artifact retention and season completion rewards remain unavailable.
 
 The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
 projects one owned Andras as an experimental Myth variant using her existing

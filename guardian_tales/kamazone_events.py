@@ -324,9 +324,9 @@ def available(data, value, owned):
             and ident not in next_ids
             or ident in active
             and ident not in next_ids
-            or floor > 1
+            or floor > value["floor"]
             or floor < 0
-            and 1 > -floor
+            and value["floor"] > -floor
             or event.get("Difficulty") is not None
             and value["difficulty"] not in event["Difficulty"]
         ):

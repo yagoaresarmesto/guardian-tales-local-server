@@ -14,6 +14,7 @@ from . import (
     kamazone_battle,
     kamazone_event_effects,
     kamazone_events,
+    kamazone_loot,
     kamazone_shelter,
     kamazone_shop,
 )
@@ -64,7 +65,7 @@ def valid_formation(value):
 
 
 @lru_cache(maxsize=2)
-def catalog(source, season_id):
+def catalog(source, season_id, floor=1):
     if season_id not in kamazone.catalog(source):
         raise ValueError("Kama-ZONE challenge requires a preserved Global season")
     mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
@@ -72,12 +73,15 @@ def catalog(source, season_id):
     maximum = season.get("MaxDifficulty")
     if not integer(maximum, maximum=32, minimum=1):
         raise ValueError("Invalid Kama-ZONE season difficulty range")
+    layouts = season.get("Floors", [1])
+    if not isinstance(layouts, list) or not 1 <= floor <= len(layouts):
+        raise ValueError("Missing seasonal Kama-ZONE floor layout")
     tiers = {}
     for difficulty in range(1, maximum + 1):
         rows = [
             r
             for r in mode.get("Difficulty", [])
-            if isinstance(r, dict) and r.get("Difficulty") == difficulty and r.get("Floor") == 1
+            if isinstance(r, dict) and r.get("Difficulty") == difficulty and r.get("Floor") == floor
         ]
         if len(rows) != 1 or any(
             not integer(rows[0].get(k), minimum=1)
@@ -86,7 +90,9 @@ def catalog(source, season_id):
             raise ValueError("Missing or ambiguous Kama-ZONE difficulty/floor definitions")
         tiers[difficulty] = rows[0]
     floors = [
-        r for r in mode.get("FloorPresets", []) if isinstance(r, dict) and r.get("FloorId") == 1
+        r
+        for r in mode.get("FloorPresets", [])
+        if isinstance(r, dict) and r.get("FloorId") == layouts[floor - 1]
     ]
     if not 2 <= len(floors) <= 128 or any(
         not integer(r.get("Id"), minimum=1) or not integer(r.get("Step")) for r in floors
@@ -158,13 +164,25 @@ def catalog(source, season_id):
         }
         if not groups[kind]:
             raise ValueError("No usable preserved Kama-ZONE " + kind + " battle preset")
-    return dict(tiers=tiers, nodes=nodes, starting=roots[0], groups=groups)
+    next_tiers = {
+        row["Difficulty"]
+        for row in mode["Difficulty"]
+        if floor < len(layouts) and row.get("Floor") == floor + 1
+    }
+    return dict(
+        tiers=tiers,
+        nodes=nodes,
+        starting=roots[0],
+        groups=groups,
+        next_tiers=next_tiers,
+        loot=kamazone_loot.pools(mode, season, COMBAT),
+    )
 
 
 @lru_cache(maxsize=4)
-def floor_nodes(source, season_id, seed):
-    data = catalog(source, season_id)
-    rng = random.Random(seed)
+def floor_nodes(source, season_id, seed, floor=1):
+    data = catalog(source, season_id, floor)
+    rng = random.Random(seed if floor == 1 else f"kamazone-floor:{seed}:{floor}")
     kinds = {}
     for ident, row in sorted(data["nodes"].items()):
         kinds[ident] = (
@@ -227,6 +245,8 @@ def load(references):
     # panel and loading combat. Reading them must not rewrite their contents.
     if isinstance(value, dict) and "battle_started" not in value:
         value = dict(value, battle_started=False)
+    if isinstance(value, dict):
+        value.setdefault("floor", 1)
     if isinstance(value, dict) and "shops" not in value:
         value = dict(value, shops={})
     if (
@@ -238,6 +258,7 @@ def load(references):
             "season_id",
             "user_id",
             "difficulty",
+            "floor",
             "seed",
             "active",
             "stage_started",
@@ -259,7 +280,7 @@ def load(references):
         or any(c not in "0123456789abcdef" for c in value["source_sha256"])
         or any(
             not integer(value[k], minimum=1)
-            for k in ("season_id", "user_id", "difficulty", "current_node_id")
+            for k in ("season_id", "user_id", "difficulty", "floor", "current_node_id")
         )
         or not integer(value["seed"], maximum=0x7FFFFFFFFFFFFFFF)
         or type(value["active"]) is not bool
@@ -311,8 +332,8 @@ def matching(account, source, season_id):
         or (value["season_id"], value["user_id"]) != (season_id, user_id)
     ):
         return None
-    data = catalog(source, season_id)
-    nodes = floor_nodes(source, season_id, value["seed"])
+    data = catalog(source, season_id, value["floor"])
+    nodes = floor_nodes(source, season_id, value["seed"], value["floor"])
     if (
         value["difficulty"] not in data["tiers"]
         or value["current_node_id"] not in data["nodes"]
@@ -328,9 +349,28 @@ def matching(account, source, season_id):
         or not kamazone_events.matches(value, source, season_id, nodes)
     ):
         raise ValueError("Local Kama-ZONE run no longer matches its owner or content")
-    kamazone_battle.finish_empty_victory(
-        value, next(node for node in nodes if node["Id"] == value["current_node_id"])
-    )
+    current = next(node for node in nodes if node["Id"] == value["current_node_id"])
+    if value["battle_loot"] and value["battle_loot"] != kamazone_loot.offer(
+        data["loot"], value, current
+    ):
+        raise ValueError("Kama-ZONE battle loot does not match its encounter")
+    # Old servers finalized empty boss victories and stranded the active run.
+    # Reopen only that terminal victory, without publishing during a read.
+    if (
+        value["active"]
+        and current["Type"] == "Boss"
+        and value["difficulty"] in data["next_tiers"]
+        and value["states"].get(str(current["Id"])) in (3, 11)
+        and value["last_result_hash"]
+        and not value["last_loot_close"]
+        and not value["battle_loot"]
+        and value["monster_hps"].get(str(current["Id"])) == [0] * len(current["BattleMonsters"])
+    ):
+        choices = kamazone_loot.offer(data["loot"], value, current)
+        if choices:
+            value.update(battle_loot=choices, stage_started=True, pending_result=1)
+            value["states"][str(current["Id"])] = 3
+    kamazone_battle.finish_empty_victory(value, current)
     return value
 
 
@@ -344,14 +384,16 @@ def project(account, source, season_id, response):
     if value["formation"] is not None:
         user["Formation"] = copy.deepcopy(value["formation"])
     if value["active"] or value["states"]:
-        nodes = copy.deepcopy(floor_nodes(source, season_id, value["seed"]))
+        nodes = copy.deepcopy(floor_nodes(source, season_id, value["seed"], value["floor"]))
         for node in nodes:
             node["State"] = value["states"].get(str(node["Id"]), 0)
         user.update(
             Difficulty=value["difficulty"],
             Nodes=nodes,
             Progress=dict(
-                Floor=1, CurrentNodeId=value["current_node_id"], Concluded=not value["active"]
+                Floor=value["floor"],
+                CurrentNodeId=value["current_node_id"],
+                Concluded=not value["active"],
             ),
         )
         kamazone_battle.project(value, owned, user)
@@ -364,8 +406,9 @@ def project(account, source, season_id, response):
 def handle(account, source, season_id, route, request, operation_id):
     if not isinstance(operation_id, str) or not 1 <= len(operation_id) <= 160:
         raise ValueError("Invalid Kama-ZONE operation identity")
-    data = catalog(source, season_id)
     previous = matching(account, source, season_id)
+    floor = previous["floor"] if previous and route != CHALLENGE else 1
+    data = catalog(source, season_id, floor)
     user_id, owned = owner(account)
     if route == CHALLENGE:
         if (
@@ -447,6 +490,7 @@ def handle(account, source, season_id, route, request, operation_id):
             source_sha256=hashlib.sha256(source).hexdigest(),
             season_id=season_id,
             user_id=user_id,
+            floor=1,
             difficulty=min(data["tiers"]),
             seed=0,
             active=False,
@@ -465,6 +509,7 @@ def handle(account, source, season_id, route, request, operation_id):
     )
     if route == CHALLENGE:
         value.update(
+            floor=1,
             difficulty=request["Difficulty"],
             seed=secrets.randbits(63),
             active=True,
@@ -476,7 +521,7 @@ def handle(account, source, season_id, route, request, operation_id):
             **kamazone_battle.defaults(),
             **kamazone_shelter.defaults(),
         )
-        floor_nodes(source, season_id, value["seed"])
+        floor_nodes(source, season_id, value["seed"], value["floor"])
         kamazone_events.reset(value)
     elif route == SELECT:
         if value["battle_started"] or value["pending_result"] == 1:
@@ -488,7 +533,9 @@ def handle(account, source, season_id, route, request, operation_id):
         if not value["characters"]:
             raise ValueError("Select a Kama-ZONE party before loading combat")
         node = next(
-            n for n in floor_nodes(source, season_id, value["seed"]) if n["Id"] == request["NodeId"]
+            n
+            for n in floor_nodes(source, season_id, value["seed"], value["floor"])
+            if n["Id"] == request["NodeId"]
         )
         if node["Type"] not in COMBAT or not node["BattleMonsters"]:
             raise ValueError("Only a Kama-ZONE combat node can load a battle")
@@ -506,21 +553,48 @@ def handle(account, source, season_id, route, request, operation_id):
         value.update(pending_result=None, last_result_hash=None)
     elif route in kamazone_battle.ROUTES:
         count = value["battle_count"]
-        kamazone_battle.apply(value, route, request, floor_nodes(source, season_id, value["seed"]))
+        nodes = floor_nodes(source, season_id, value["seed"], floor)
+        boss_closed = (
+            route == kamazone_battle.CLOSE
+            and value["pending_result"] == 1
+            and request["NodeId"] == value["current_node_id"]
+            and not data["nodes"][request["NodeId"]].get("NextNodeIds")
+        )
+        kamazone_battle.apply(value, route, request, nodes, data["loot"])
+        if boss_closed and value["difficulty"] in data["next_tiers"]:
+            next_floor = floor + 1
+            starting = catalog(source, season_id, next_floor)["starting"]
+            floor_nodes(source, season_id, value["seed"], next_floor)
+            value.update(
+                floor=next_floor,
+                current_node_id=starting,
+                states={str(starting): 8},
+                monster_hps={},
+                shops={},
+                shelters={},
+                events={},
+                last_result_hash=None,
+            )
         if value["battle_count"] != count:
             kamazone_event_effects.tick(value, "Battle")
     elif route == kamazone_shop.CLOSE:
-        kamazone_shop.close(value, request, floor_nodes(source, season_id, value["seed"]))
+        kamazone_shop.close(
+            value, request, floor_nodes(source, season_id, value["seed"], value["floor"])
+        )
     elif route == kamazone_shelter.TAKE:
         kamazone_shelter.take(
-            value, source, season_id, request, floor_nodes(source, season_id, value["seed"])
+            value,
+            source,
+            season_id,
+            request,
+            floor_nodes(source, season_id, value["seed"], value["floor"]),
         )
     elif route in kamazone_events.ROUTES:
         kamazone_events.handle(value, source, season_id, route, request, owned)
     elif route == CONCLUDE:
         if value["active"]:
             if (
-                value["current_node_id"] == data["starting"]
+                (value["floor"] == 1 and value["current_node_id"] == data["starting"])
                 or value["battle_started"]
                 or value["pending_result"] == 1
             ):
@@ -555,7 +629,7 @@ def handle(account, source, season_id, route, request, operation_id):
             ) and ident in (data["nodes"][current].get("NextNodeIds") or [])
             if not retry and not advance:
                 raise ValueError("The Kama-ZONE node is not connected to a cleared position")
-        nodes = floor_nodes(source, season_id, value["seed"])
+        nodes = floor_nodes(source, season_id, value["seed"], value["floor"])
         node = next((r for r in nodes if r["Id"] == ident), None)
         if (
             node is None

@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Kama-ZONE battle results and no-reward closing in the separate local run."""
+"""Kama-ZONE battle results and artifact selection in the separate local run."""
 
 import hashlib
 import json
 
+from . import kamazone_event_effects as effects
+from . import kamazone_loot
 from .village import integer
 
 END = "/kamazonland/end-battle"
@@ -13,7 +15,15 @@ HP_SCALE = 10000
 
 
 def defaults():
-    return dict(hps={}, monster_hps={}, pending_result=None, last_result_hash=None, battle_count=0)
+    return dict(
+        hps={},
+        monster_hps={},
+        pending_result=None,
+        last_result_hash=None,
+        battle_count=0,
+        battle_loot=[],
+        last_loot_close=None,
+    )
 
 
 def upgrade(value):
@@ -37,7 +47,13 @@ def hp_map(value, maximum):
 
 def valid_state(value):
     return (
-        hp_map(value["hps"], 1024)
+        isinstance(value["battle_loot"], list)
+        and len(value["battle_loot"]) <= 3
+        and all(integer(i, minimum=1) for i in value["battle_loot"])
+        and len(set(value["battle_loot"])) == len(value["battle_loot"])
+        and (not value["battle_loot"] or value["pending_result"] == 1)
+        and (value["last_loot_close"] is None or valid_close_receipt(value["last_loot_close"]))
+        and hp_map(value["hps"], 1024)
         and isinstance(value["monster_hps"], dict)
         and len(value["monster_hps"]) <= 128
         and all(
@@ -81,6 +97,17 @@ def matches(value, owned, nodes):
     )
 
 
+def valid_close_receipt(receipt):
+    if not isinstance(receipt, list) or len(receipt) != 3:
+        return False
+    node, item, index = receipt
+    return (
+        integer(node, minimum=1)
+        and (item is None or integer(item, minimum=1))
+        and (index is None or item is not None and integer(index, maximum=effects.LIMIT - 1))
+    )
+
+
 def validate(route, request):
     fields = (
         {"NodeId", "Result", "CharacterHps", "MonsterHps"}
@@ -105,10 +132,12 @@ def validate(route, request):
             or any(not integer(hp, maximum=HP_SCALE) for hp in request["MonsterHps"])
         ):
             raise ValueError("Kama-ZONE results require a native result and bounded HP values")
-    elif (
-        request.get("LootArtifactId") is not None or request.get("DiscardArtifactIndex") is not None
-    ):
-        raise ValueError("Kama-ZONE artifact selection is not implemented")
+    elif not valid_close_receipt(close_receipt(request)):
+        raise ValueError("Invalid Kama-ZONE artifact selection or replacement index")
+
+
+def close_receipt(request):
+    return [request["NodeId"], request.get("LootArtifactId"), request.get("DiscardArtifactIndex")]
 
 
 def has_choices(node):
@@ -123,14 +152,23 @@ def finish_empty_victory(value, node):
         value["pending_result"] == 1
         and node["BattleMonsters"]
         and value["states"].get(str(node["Id"]), 0) & 2
+        and not value["battle_loot"]
         and not has_choices(node)
     ):
         value["states"][str(node["Id"])] |= 8
         value.update(stage_started=False, pending_result=None)
 
 
-def apply(value, route, request, nodes):
+def apply(value, route, request, nodes, pools):
     ident = request["NodeId"]
+    if (
+        route == CLOSE
+        and value["last_loot_close"] is not None
+        and ident == value["last_loot_close"][0]
+    ):
+        if close_receipt(request) != value["last_loot_close"]:
+            raise ValueError("Kama-ZONE battle reward was already confirmed")
+        return
     node = next((n for n in nodes if n["Id"] == ident), None)
     if (
         not value["active"]
@@ -161,11 +199,15 @@ def apply(value, route, request, nodes):
         value.update(
             battle_started=False,
             pending_result=request["Result"],
+            battle_loot=kamazone_loot.offer(pools, value, node) if request["Result"] == 1 else [],
             last_result_hash=fingerprint,
             battle_count=value["battle_count"] + 1,
         )
         finish_empty_victory(value, node)
     else:
+        _, item, index = close_receipt(request)
+        if item is not None and item not in value["battle_loot"]:
+            raise ValueError("Kama-ZONE battle did not offer this artifact")
         if value["battle_started"] or value["last_result_hash"] is None:
             raise ValueError("Finish the Kama-ZONE battle before closing it")
         if value["pending_result"] is None:
@@ -175,6 +217,14 @@ def apply(value, route, request, nodes):
         if value["pending_result"] == 1:
             if has_choices(node):
                 raise ValueError("The Kama-ZONE battle still has unresolved loot choices")
+            if value["battle_loot"]:
+                if item is not None:
+                    inventory = value["artifacts"]
+                    if index is not None and len(inventory) < effects.LIMIT:
+                        raise ValueError("Only a full battle inventory requires a replacement")
+                    effects.add_reward(inventory, item, index, artifact=True)
+                value["last_loot_close"] = close_receipt(request)
+                value["battle_loot"] = []
             value["states"][str(ident)] |= 8
         value.update(stage_started=False, pending_result=None)
 
@@ -184,6 +234,11 @@ def project(value, owned, user):
     if value["battle_count"]:
         user["Progress"]["Battle"] = value["battle_count"]
     for node in user["Nodes"]:
+        if value["battle_loot"] and node["Id"] == value["current_node_id"]:
+            # SetStages opens the native reward flow when Defeated is set
+            # (the monsters lost) and Cleared is unset until close-battle.
+            node["State"] = 5
+            node["LootArtifacts"] = [value["battle_loot"][:]]
         hps = value["monster_hps"].get(str(node["Id"]))
         if hps is not None:
             for monster, hp in zip(node["BattleMonsters"], hps):
@@ -191,7 +246,7 @@ def project(value, owned, user):
 
 
 def response(route):
-    # This local milestone records combat/HP but creates no loot or balances.
+    # Run artifacts are projected in UserKamazonLand, outside account inventory.
     if route == END:
         return {"ArtifactEffectResults": []}
     if route == CLOSE:

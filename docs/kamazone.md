@@ -1,15 +1,15 @@
-# Optional Kama-ZONE entry, benefits and opening-floor practice
+# Optional Kama-ZONE entry, benefits and challenge practice
 
 `kamazone` selects one preserved Global/EU season so the Android 3.57.0 client
 can show its card in **Events**. Without a local run, entry shows a
 **read-only idle lobby preview**. Events can select and load a mode automatically
 before displaying its drawer, so `/kamazonland/enter` supplies the preview even
-without a card tap. Experimental challenge and combat entry now cover the first
-floor at difficulties 1, 2 and 3, with local battle results, retained HP and
-connected combat-node progression. Shop entry/exit displays preserved seasonal
+without a card tap. Difficulties 1, 2 and 3 use the preserved regular floor layouts. Combat
+victories offer seasonal artifacts. Confirming a boss reward opens the next
+regular floor and carries the party, HP and inventory forward. Shop entry/exit displays preserved seasonal
 artifacts. Shelters support resting, reviving and purification. Special nodes
 support weighted events, local effects and story continuations. Purchases,
-battle loot, event battles/bottle caps, later floors and season rewards remain
+reactive artifact effects, event battles/bottle caps and season rewards remain
 unimplemented. APK combat entry,
 accepted victory results, map return, further normal/elite encounters and shop
 entry/exit, shelter Rest and the following boss battle are observed. Finish
@@ -29,9 +29,9 @@ while representative APK runs verify scene loading, action feedback and caching.
 | Type | Implemented host behavior | Remaining work |
 | --- | --- | --- |
 | Starting (1) | Initial challenge position and original connections | No separate encounter action |
-| Normal (2) | Battle entry/results, HP, retry and connected progression | Loot, coins and other battle rewards |
-| Elite (3) | Same lifecycle using its actual monsters and level | Elite affixes, loot and rewards |
-| Boss (4) | Same combat lifecycle using its boss preset/level | Following floor, final season clear and infinity |
+| Normal (2) | Battle, HP, seasonal artifact choice and connected progression | Coins and reactive battle effects |
+| Elite (3) | Same lifecycle with elite enemies and loot weights | Elite affixes and currency |
+| Boss (4) | Boss artifact selection and transition to the next regular floor | Final season clear, infinity and season rewards |
 | Shelter (5) | Rest, one random revive, one random curse removal, skip and resume; Rest observed in the APK | Artifact-based recovery modifiers; revive/purify APK verification |
 | Shop (6) | Seasonal stock, entry, resume and exit | Purchases, currency income and curse/effect goods |
 | Special (7) | Weighted seasonal events, conditions, persistent choice/results, local effects, random conclusions and story continuations | Event battles, bottle-cap awards, additional condition/effect kinds and APK validation |
@@ -258,8 +258,8 @@ The preserved Global season defines exactly **three difficulties**, numbered
 **1, 2 and 3**, each with eight original difficulty/floor rows. The backend accepts
 each retained difficulty, without rewriting their enemy levels. For season 43,
 floor one's normal/elite/boss levels are 59/62/64, 85/88/90 and 116/116/118.
-This implementation generates only the opening floor; it does not claim eight
-playable floors or a complete run.
+Subsequent regular floors use their own layouts and difficulty rows. Final
+season scoring and infinity mode are outside the implemented flow.
 
 After updating, close the game and restart only the backend using the usual
 working state, certificate and reference arguments. Keep CDN and bridge open.
@@ -310,13 +310,13 @@ do not reroll it or replace newer progress. A new challenge explicitly replaces
 that local run, retaining its party. Selecting another season suspends it.
 
 Map generation is a **local reconstruction**, not a recovered official server
-algorithm. It uses the original opening-floor connections and probabilities,
+algorithm. It uses the original floor connections and probabilities,
 preserved nonhidden monster groups and preset positions, and guarantees one
 reachable opening battle with an originally allowed type. Elite affixes are not
 generated yet. Shops and special nodes retain their original probabilities.
 Shop, shelter and supported special-event navigation are implemented.
-Battle loot, cross-run artifact retention, account currency rewards,
-scored rankings, further floors and season progression are also unimplemented.
+Cross-run artifact retention, account currency rewards, scored rankings and
+season completion remain unimplemented.
 Only reported wins in an active matching battle clear a local combat node;
 reward balances and season-wide clears are not fabricated.
 
@@ -343,22 +343,30 @@ specs. Both use 0..10,000. Monster count must match the entered encounter, and a
 reported victory requires all generated enemies at zero HP. No result is accepted
 for a different node or a battle that was never started.
 
-A victory marks the node Started|Cleared (3), retains the reported HP and
-increments the local completed-battle counter once. The response includes the
-native callback's `ArtifactEffectResults` array, empty while artifact effects
-are unsupported. When the node has no artifact, curse or effect choices, the
-same result transaction finalizes it as Started|Cleared|Chosen (11). The observed
-client can return to the map and request the next node without `close-battle`;
-requiring that extra request left a valid victory stuck in a pending state.
-Finalization uses the actual generated node and applies to normal, elite and
-boss encounters. The next entry must still follow the original map connections.
+For a victory, the client checks the enemy-defeated flag with the node-clear
+flag still unset. The backend returns node state 5 and a single group of up to
+three distinct IDs in `LootArtifacts`. Only lootable normal artifacts from the
+selected season qualify, after applying its exclusions. The local draw weights
+each available rarity using `BattleLootWeightsNormal`, `Elite` or `Boss`,
+then picks within that rarity. Empty or zero-weight tiers are skipped. This
+choice count and weighting policy reconstruct the reward flow locally.
 
-An optional `/kamazonland/close-battle` with `NodeId` and nullable
-`LootArtifactId`/`DiscardArtifactIndex` remains compatible and idempotent;
-omitted null fields are also accepted. Its response supplies empty
-`ChoiceEffectResults` and `AddedItems` lists. Genuine unresolved choices retain
-the pending win and block party changes/another battle; they are not discarded
-by automatic finalization. Artifact choice handling is still unimplemented.
+The offer survives reopening. The player can accept one offered artifact or
+decline with a null selection. At eight occupied slots they can select a
+zero-based replacement index. The client confirms with
+`/kamazonland/close-battle` using `NodeId`, `LootArtifactId` and
+`DiscardArtifactIndex`. The backend saves the choice once and marks the node
+cleared. A boss confirmation also moves the party to the next regular floor's
+starting node in the same write. The transition retains HP, formation, run
+artifacts, curses, coins and event story progress. The new map uses its own
+connections and encounter rolls. The first floor keeps its original seed sequence.
+
+Reopening an older active run stranded on a defeated first-floor boss presents
+the outstanding offer. Reading the map leaves the run file intact. Confirm the
+reward to continue to floor 2 without restarting the challenge. Previously
+passed nodes stay complete. The original APK still needs to be checked for the
+loot popup and floor-change animation. Automated packet tests and a copy of the
+stranded run cover both ends of the transition.
 
 Draw, defeat and timeout retain hero/enemy HP without clearing the node or
 unlocking its successors. The encounter can be retried with surviving heroes,
@@ -455,8 +463,7 @@ HP scale before clamping. Original English descriptions independently establish
 living-hero recovery, one random revival and one random curse removal. The
 revival amount itself is not specified in those retained inputs: this local
 trial uses full HP, an explicit local policy rather than a recovered server rule.
-No artifact recovery modifier is claimed while earned artifacts remain
-unimplemented.
+Artifact recovery modifiers remain unimplemented.
 
 One action consumes the visit. Identical retries return the current state
 without another heal, revival or purification; a different second choice is
@@ -488,7 +495,7 @@ and retries never redraw them. Hidden continuation events require an active
 story link. Original event names, descriptions, actors and art stay unchanged.
 
 Generation is a local reconstruction, not the recovered official algorithm.
-For the implemented first floor, positive `AppearFloor` values are treated as
+At the current run floor, positive `AppearFloor` values are treated as
 earliest floors and negative values as latest floors. Artifact/curse ownership,
 coin/count and event-choice conditions gate the available branch. Hero-spec and
 bounty conditions remain unavailable; owned instance IDs are not mistaken for
@@ -553,7 +560,7 @@ closes the popup and returns to the idle Kama-ZONE lobby. It does not itself
 request the next floor or select a battle reward.
 
 The backend marks the separate local run inactive and returns its complete
-singleton with `Progress.Concluded=true`. The ended first-floor snapshot retains
+singleton with `Progress.Concluded=true`. The ended floor snapshot retains
 its node, map seed, party/formation, HP, counters, shop stock and shelter visits.
 Reads/reopening do not rewrite it. Benefit selections, allocated points, main
 account inventory/balances and trial XP are unchanged. Finishing awards no season
@@ -576,8 +583,8 @@ cleared boss 160, retaining four battles and one shelter visit, and verifies
 reopen/retry and a fresh challenge without changing account/XP tables, effective
 static data or 55 original reference files. Follow-up counters and run state
 show an accepted finish followed by a fresh challenge; a separate owner check
-of popup closing/reopening remains absent. Floor advancement and artifact rewards are
-separate unimplemented work.
+of popup closing/reopening remains absent. Battle artifact selection and regular floor advancement are described under
+[local battle results and closing](#local-battle-results-and-closing).
 
 ## Response latency
 

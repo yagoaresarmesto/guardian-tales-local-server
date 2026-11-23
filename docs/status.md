@@ -4,6 +4,16 @@ Status recorded on **2026-11-23**. The public source tree reorganizes the workin
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
+## Kama-ZONE battle loot and regular floors
+
+Host checks cover artifact selection after normal, elite and boss victories,
+declining a reward, replacement at eight artifacts, reconnects, invalid choices
+and atomic boss-to-floor advancement. On a copy of the active season 43 run, the
+already defeated floor 1 boss offered three artifacts. Selecting one opened floor
+2 at node 200. The normal encounter at node 210 then offered its own choice.
+Both selections persisted and the main account database received zero writes.
+Verification of the reward screen and escalator in the Android client is pending.
+
 ## Automated checks
 
 The optional [Kama-ZONE selector](kamazone.md) lists/selects the three preserved
