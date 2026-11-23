@@ -4,6 +4,7 @@
 import argparse
 import hashlib
 import json
+import sys
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
@@ -217,11 +218,19 @@ def bootstrap_seed(references, filename, request, parent):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    arguments = list(sys.argv[1:] if argv is None else argv)
+    if arguments and arguments[0] == "practice":
+        from .kamazone_practice import main as practice_main
+
+        return practice_main(arguments[1:])
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog="Optional benefits/points: kamazone practice enable|disable|status",
+    )
     parser.add_argument("action", choices=("list", "select", "status", "disable"))
     parser.add_argument("--season-id", type=int)
     parser.add_argument("--reference-dir", default="local/client-data/reference")
-    args = parser.parse_args(argv)
+    args = parser.parse_args(arguments)
     references = ReferenceData(args.reference_dir)
     try:
         if (args.action == "select") != (args.season_id is not None):

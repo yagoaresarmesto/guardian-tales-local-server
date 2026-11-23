@@ -21,6 +21,7 @@ from . import (
     colosseum,
     expedition,
     kamazone,
+    kamazone_practice,
     kamazone_preview,
     multi_presets,
     story_interactions,
@@ -89,6 +90,7 @@ BOOTSTRAP_ROUTES = (
     *multi_presets.ROUTES,
     *classic_coop.ROUTES,
     *kamazone_preview.ROUTES,
+    kamazone_practice.SAVE,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
@@ -333,6 +335,24 @@ class BootstrapSession:
                 except ValueError as error:
                     raise PacketError(str(error)) from error
                 return json_response(request, preserved)
+        if route == kamazone_practice.SAVE:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                selected, source = kamazone_preview.selected_source(self.store.account)
+                epoch = self.request_epoch or self.store.request_epoch(True)
+                return json_response(
+                    request,
+                    kamazone_practice.save(
+                        self.store.references,
+                        source,
+                        selected["season_id"],
+                        body,
+                        epoch + ":" + str(request["sequence_id"]),
+                    ),
+                )
+            except (OSError, ValueError) as exc:
+                raise PacketError(str(exc)) from exc
         if route in kamazone_preview.ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
@@ -924,7 +944,12 @@ class BootstrapSession:
                         self.store.db, references, name, value, pinned
                     )
 
-                seed = kamazone.bootstrap_seed(self.store.references, filename, body, equipped)
+                def calendar(references, name, value):
+                    return kamazone.bootstrap_seed(references, name, value, equipped)
+
+                seed = kamazone_practice.bootstrap_seed(
+                    self.store.references, filename, body, calendar
+                )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
             return Packet(

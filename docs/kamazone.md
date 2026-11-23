@@ -1,4 +1,4 @@
-# Optional Kama-ZONE entry in Events
+# Optional Kama-ZONE entry and benefit practice
 
 `kamazone` selects one preserved Global/EU season so the Android 3.57.0 client
 can show its card in **Events**. This first milestone covers the menu and a
@@ -7,6 +7,8 @@ before displaying its drawer, so `/kamazonland/enter` supplies the preview even
 without a card tap. Challenges, battles, shops and rewards are not implemented
 yet. First verify that Events opens, the card appears and you can return to the
 main lobby; do not start a challenge.
+An additional opt-in practice setting can unlock selected seasonal benefits,
+keep test points fixed and retain benefit choices outside the saved account.
 
 The matching external pack retains three Global/EU event seasons:
 
@@ -119,6 +121,77 @@ historical Kama-ZONE progress. No `User` inventory delta, reward, operation
 receipt or database row is created. Missing/ambiguous mini-season data,
 disabled/expired selection and a changed content pack are rejected. This route
 does not enable any gameplay or reward endpoint.
+
+## Optional free benefits and pinned points
+
+For the preserved season 43, **Strong Body** is benefit **174**. It is already
+listed by that season, but its normal unlock requires a special-event choice.
+Practice can remove that condition in the backend's outgoing static response.
+It does not fabricate completed events or change the benefit's effect/levels.
+
+Close Guardian Tales and stop the backend before changing practice settings.
+Keep the CDN and bridge running. With season 43 selected, enable the requested
+unlock and 4,000 points:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales kamazone practice enable --unlock-benefit 174 --points 4000
+```
+
+Restart the backend using the same state, certificate and reference arguments
+as usual. Reopen Events and the Kama-ZONE benefits screen. Strong Body should
+be selectable; choose benefits, save, remove one and reopen the game to verify
+the choices and the pinned point display. These checks do not require a run.
+
+Inspect the private practice settings:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales kamazone practice status
+```
+
+To return to the ordinary preview, close the game, stop the backend and run:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales kamazone practice disable
+```
+
+Restart the backend and game afterward. The selected season remains visible;
+use `kamazone disable` separately to restore its original calendar. Re-enabling
+the same practice settings retains its saved test choices.
+
+Practice writes only `kamazone_practice.json` in the external reference directory.
+It is bound to the original pack and the selected season. Selecting another
+season suspends these settings; an unlock cannot add an absent benefit to that
+season. A changed pack is rejected until practice is disabled or explicitly
+configured again. Installing the code alone activates nothing.
+
+The server supplies the configured `KamazonPoint` and `KamazonPointTotal` on
+entry and after saving. To keep the client's temporary point counter from
+dropping while editing, **all benefit prices for that practice season become
+zero in the outgoing static table**. Native `LevelUp` subtracts that price
+locally, so restoring points only after a server request would be insufficient.
+Only the requested benefits' unlock conditions change; effects, maximum levels,
+unrelated definitions and other effective static tables stay intact. The point
+setting must be positive and no higher than the mini-season's preserved limit
+(4,000 in this pack).
+
+`/kamazonland/save-benefits` accepts the native `Benefits` dictionary of IDs to
+levels. It validates membership, locks and level bounds, writes test choices to
+the optional file, and returns the native benefit list with pinned points.
+Zero-level rows explicitly clear previous choices in the client's list delta.
+The last 64 operation IDs prevent recent retries from replacing newer choices.
+Saves leave static revisions unchanged; enabling/disabling advances them to
+reload the price/unlock overlay or restore the exact parent mode content.
+
+The working account, trial XP, APK, shipped scripts, resource manifest and
+original reference/resource files are untouched. No gold, gems, tickets,
+event rewards or scored runs are added. Combat use of these benefits remains
+unverified while the run backend is not implemented.
+Twelve practice regressions and all 287 targeted Windows tests pass. A coherent
+account/XP copy also verifies activation, saving/reopening, clearing, replay
+protection and restoration against the actual pack and native field types,
+retaining all other effective overlays, saved account/XP tables and 53 source
+reference files. Diagnostics never enable practice on the live installation.
+Actual APK benefit selection and the pinned point display remain pending.
 
 ## Local rankings
 

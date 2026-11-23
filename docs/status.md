@@ -48,6 +48,21 @@ unsupported operation during that check. Entry and empty ranking navigation
 are APK verified; challenges, scored runs and rewards remain unimplemented.
 All changes remain backend response data; game files are untouched.
 
+Optional Kama-ZONE benefit practice adds a separate, content/season-bound local
+settings file. Season 43's Strong Body (174) can be unlocked in outgoing data;
+seasonal benefit prices become zero and points stay pinned at 4,000, including
+during client-side edits. Native inspection confirms the Id-to-level save map,
+Id/Level response list and local point subtraction. Choosing, clearing and
+recent retry handling write no account/trial-XP data. Default previews remain
+unchanged; disabling restores the parent static mode with a newer revision.
+Actual APK benefit selection and pinned-point checks are pending.
+All 287 targeted Windows tests pass, including twelve new practice regressions.
+A coherent account/XP copy verifies the real seasonal definitions, free prices,
+Strong Body's unchanged effects, native request/response types, saved selection,
+clearing, recent replay protection and restoration. All other effective static
+tables, main-account tables, trial XP and 53 original reference files remain
+unchanged, with zero diagnostic source writes or live practice activation.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

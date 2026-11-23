@@ -4,7 +4,7 @@
 import hashlib
 import json
 
-from . import kamazone
+from . import kamazone, kamazone_practice
 from .raid_static import decode, records
 from .village import integer
 
@@ -65,7 +65,7 @@ def enter(account, request):
     # separate UserKamazonLand singleton, nonnull Progress/Likeability and lists.
     # An idle, concluded floor zero prevents the native Challenging predicate
     # from resuming a run. This view is never saved or added to the profile.
-    return {
+    response = {
         "NewSeason": False,
         "UserKamazonLand": {
             "SeasonId": selected["season_id"],
@@ -97,3 +97,4 @@ def enter(account, request):
             "Likeability": {"Points": 0, "ClaimedRewardStep": 0},
         },
     }
+    return kamazone_practice.project(account.references, source, selected["season_id"], response)
