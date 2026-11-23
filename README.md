@@ -286,7 +286,7 @@ season's calendar for its Events card, with status and restoration commands.
 The three retained difficulties support combat, HP retention and artifact
 selection after victories. Confirming a regular floor boss's loot opens the
 next floor when the selected difficulty has a matching layout and level row.
-Shop entry and exit display seasonal artifacts. Run the CDN with `--reference-dir` to supply an
+Shops sell seasonal artifacts for the challenge's silver coins. Run the CDN with `--reference-dir` to supply an
 in-memory preview image when the selected season's historical banner is missing.
 Its separate opt-in benefit practice can unlock Strong Body for season 43 and
 provide a 4,000-point allocation budget at the original benefit prices, with

@@ -4,6 +4,15 @@ Status recorded on **2026-11-23**. The public source tree reorganizes the workin
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
+## Kama-ZONE shop purchases
+
+The floor 2 run and local request counter show a previously unhandled purchase
+at shop node 244. Normal artifact purchases now debit run-local silver and
+persist inventory and sold stock together. Host tests cover discounts,
+insufficient balance, replacement, replay, failed publication and reopen.
+For outstanding features see the [mode route audit](kamazone.md#mode-route-audit-for-android-3570-eu).
+In-game purchase feedback is pending.
+
 ## Kama-ZONE battle loot and regular floors
 
 Host checks cover artifact selection after normal, elite and boss victories,

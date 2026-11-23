@@ -392,7 +392,6 @@ class KamazoneRunTests(unittest.TestCase):
         for route in (
             "choice-special-event",
             "buy-gacha",
-            "buy-shop-item",
             "infinitize",
             "claim-likeability-reward",
         ):

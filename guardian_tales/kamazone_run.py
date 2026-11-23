@@ -35,7 +35,7 @@ ROUTES = (
     CONCLUDE,
     *kamazone_battle.ROUTES,
     *kamazone_events.ROUTES,
-    kamazone_shop.CLOSE,
+    *kamazone_shop.ROUTES,
     kamazone_shelter.TAKE,
 )
 STATE = "kamazone_run.json"
@@ -452,11 +452,11 @@ def handle(account, source, season_id, route, request, operation_id):
         kamazone_battle.validate(route, request)
         if previous is None or not previous["active"]:
             raise ValueError("Start a Kama-ZONE challenge before reporting combat")
-    elif route == kamazone_shop.CLOSE:
+    elif route in kamazone_shop.ROUTES:
         if previous is None:
-            raise ValueError("Open a Kama-ZONE shop before closing it")
+            raise ValueError("Open a Kama-ZONE shop first")
         # Validate before checking receipts as with the other native operations.
-        kamazone_shop.validate(request)
+        kamazone_shop.validate(route, request)
     elif route == kamazone_shelter.TAKE:
         kamazone_shelter.validate(request)
         if previous is None:
@@ -577,9 +577,14 @@ def handle(account, source, season_id, route, request, operation_id):
             )
         if value["battle_count"] != count:
             kamazone_event_effects.tick(value, "Battle")
-    elif route == kamazone_shop.CLOSE:
-        kamazone_shop.close(
-            value, request, floor_nodes(source, season_id, value["seed"], value["floor"])
+    elif route in kamazone_shop.ROUTES:
+        kamazone_shop.handle(
+            value,
+            source,
+            season_id,
+            route,
+            request,
+            floor_nodes(source, season_id, value["seed"], floor),
         )
     elif route == kamazone_shelter.TAKE:
         kamazone_shelter.take(

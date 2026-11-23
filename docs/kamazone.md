@@ -6,10 +6,9 @@ can show its card in **Events**. Without a local run, entry shows a
 before displaying its drawer, so `/kamazonland/enter` supplies the preview even
 without a card tap. Difficulties 1, 2 and 3 use the preserved regular floor layouts. Combat
 victories offer seasonal artifacts. Confirming a boss reward opens the next
-regular floor and carries the party, HP and inventory forward. Shop entry/exit displays preserved seasonal
-artifacts. Shelters support resting, reviving and purification. Special nodes
-support weighted events, local effects and story continuations. Purchases,
-reactive artifact effects, event battles/bottle caps and season rewards remain
+regular floor and carries the party, HP and inventory forward. Shops sell preserved seasonal artifacts for run-local silver coins. Shelters support resting, reviving and purification. Special nodes
+support weighted events, local effects and story continuations.
+Reactive battle artifact effects, event battles/bottle caps and season rewards remain
 unimplemented. APK combat entry,
 accepted victory results, map return, further normal/elite encounters and shop
 entry/exit, shelter Rest and the following boss battle are observed. Finish
@@ -33,7 +32,7 @@ while representative APK runs verify scene loading, action feedback and caching.
 | Elite (3) | Same lifecycle with elite enemies and loot weights | Elite affixes and currency |
 | Boss (4) | Boss artifact selection and transition to the next regular floor | Final season clear, infinity and season rewards |
 | Shelter (5) | Rest, one random revive, one random curse removal, skip and resume; Rest observed in the APK | Artifact-based recovery modifiers; revive/purify APK verification |
-| Shop (6) | Seasonal stock, entry, resume and exit | Purchases, currency income and curse/effect goods |
+| Shop (6) | Buy seasonal normal artifacts with silver, apply artifact discounts, replace at capacity, resume and exit | Curse and effect goods, including shop refresh |
 | Special (7) | Weighted seasonal events, conditions, persistent choice/results, local effects, random conclusions and story continuations | Event battles, bottle-cap awards, additional condition/effect kinds and APK validation |
 
 The retained pack contains 328 special events, 779 choices and 135 random
@@ -91,9 +90,8 @@ remain running. Reopen the game and inspect **Events** for the Kama-ZONE card.
 When its historical banner is absent, expect a generated **KAMA-ZONE / SEASON 43 /
 MENU PREVIEW** image (with the selected ID). The idle lobby may load automatically.
 You can inspect the entry and return to the main lobby. For the experimental
-challenge probe, follow the opening-floor section below. Shop entry and exit
-have a separate probe below; purchases, gifts, missions and rewards remain
-unsupported.
+challenge probe, follow the opening-floor section below. The shop section covers
+entry, purchases and exit. Other missing actions appear in the route audit.
 
 Inspect the selection and whether its visibility window is active:
 
@@ -409,7 +407,7 @@ excluding its `ArtifactsException` IDs. `ShopArtifacts` is an ID-to-Boolean map:
 false means available and is passed directly to the native sold-out widget.
 `ShopCurses` and `ShopEffectArtifacts` remain empty. Names, icons, descriptions
 and prices come from the preserved client tables; original definitions and
-benefit-based price calculations are unchanged. This is local stock generation,
+shop discounts come from the artifacts the player holds. This is local stock generation,
 not a recovered official shop algorithm.
 
 The separate sampler does not consume the map/monster random stream. Existing
@@ -423,12 +421,15 @@ next node. The response supplies empty `ChoiceEffectResults` and `AddedItems`
 lists for the native finish routine. A shop cannot be left for another node
 while still open. Recent retries do not reopen stock or overwrite a later battle.
 
-For this probe, restart only the backend, then enter the shop, inspect its list
-and press Exit. Reopen the game to check that its completed state persists.
-**Do not buy during this probe:** purchases, curse/effect goods and shop effects
-are not implemented. The current local `SilverCoin` balance remains zero; this
-entry/exit milestone grants no currency. The benefit allocation's 4,000 Kamazon
-Points are separate from shop silver coins.
+Buying sends `/kamazonland/buy-shop-item` with `NodeId`,
+`ChoiceArtifactOrCurseId` and an optional nullable `DiscardArtifactOrCurseIndex`.
+A purchase charges the displayed artifact's silver price, adds it to the run
+inventory and marks its stock entry sold in one write. The price includes
+`MallShopDiscount` from each held artifact before replacement, capped at 100%.
+At eight artifacts the player must choose an occupied, zero-based replacement
+slot. Insufficient funds, unavailable stock and an invalid slot leave the run
+intact. A repeated request receipt cannot charge twice. The 4,000-point benefit
+budget is a separate balance.
 
 Eight shop regressions cover seasonal/exclusion rules, native Boolean stock,
 entry/resume/exit, adjacency and combat guards, legacy files, invalid saved stock,
@@ -437,7 +438,35 @@ pack copy replays node 143, populates three seasonal artifacts at original base 
 it and checks reopen/retry without changing the existing combat map, HP, party,
 benefits, balances, battle count, account/XP tables or 55 source reference files.
 The observed follow-up reaches a Shelter from the completed shop, establishing
-shop entry/exit and retained progression in the APK. Purchases remain pending.
+shop entry/exit and retained progression in the APK. A copy of the season 43
+floor 2 shop had 90 silver. Independent purchases at 40 and 60 silver retained
+the artifact and sold flag on reopen. The 100-silver item stayed on sale after
+the insufficient-funds check. Purchase feedback in the APK awaits confirmation.
+
+## Mode route audit for Android 3.57.0 EU
+
+The [client route inventory](reference/client-api-inventory.json) lists 23 direct
+`/kamazonland/` routes. Adding the separately identified ranking read gives 24.
+The current backend registers 15. The following nine have no handler:
+
+| Player action | Missing routes under `/kamazonland/` |
+| --- | --- |
+| Apply a preset or set preset | `apply-preset`, `apply-set-preset` |
+| Look up excluded item specs | `get-except-item-spec-ids` |
+| Choose challenge aids | `pick-aids` |
+| Enter infinite mode or sweep | `infinitize`, `sweep` |
+| Buy a random box or gacha draw | `buy-random-box`, `buy-gacha` |
+| Claim a likeability reward | `claim-likeability-reward` |
+
+A related exchange operation, `/exchange/kamazon-land`, also lacks a handler
+outside that namespace. A registered route can have partial behavior. Rankings
+return an empty list, Finish Challenge accepts only a null retained artifact,
+and the final regular floor has no season scoring or payout. Normal shops do
+not yet offer curses, effect goods or stock refresh. Special-event combat and
+bottle-cap award branches remain unavailable. Combat silver income, elite
+affixes, reactive artifact effects and artifact-based shelter recovery also
+remain incomplete. This audit covers known requests and code paths. A complete
+Android playthrough has yet to be verified.
 
 ## Shelters
 

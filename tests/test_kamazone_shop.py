@@ -28,7 +28,14 @@ class KamazoneShopTests(unittest.TestCase):
                     row[kind + "Prob"] = int((row["Id"], kind) in ((110, "Normal"), (111, "Shop")))
         mode["Artifacts"] = [
             *[dict(Id=i, Kind="Normal", Lootable=True, Price=100 * i) for i in range(1, 6)],
-            dict(Id=6, Kind="Normal", Lootable=False, Price=100),
+            dict(
+                Id=6,
+                Kind="Normal",
+                Lootable=False,
+                Price=100,
+                EffectType="MallShopDiscount",
+                EffectValue=[30],
+            ),
             dict(Id=70, Kind="Normal", Lootable=True, Price=80),
             dict(Id=701, Kind="Effect", Lootable=True, Price=50),
             dict(Id=801, Kind="Curse", Lootable=True, Price=-50),
@@ -194,6 +201,90 @@ class KamazoneShopTests(unittest.TestCase):
             if route == run.START:
                 self.open()
         self.unchanged(self.entry())
+
+    def funded_shop(self, coins, artifacts=()):
+        user = self.open()
+        node = next(n for n in user["Nodes"] if n["Id"] == 111)
+        state = json.loads(self.path.read_bytes())
+        state["silver_coin"] = coins
+        state["artifacts"] = [
+            dict(Id=i, Battle=4, Shelter=3, EliminateArtifact=2) for i in artifacts
+        ]
+        self.path.write_text(json.dumps(state))
+        return sorted(int(i) for i in node["ShopArtifacts"])
+
+    def test_purchase_charges_only_run_silver_and_persists_sold_stock_on_reopen_and_retry(self):
+        ids = self.funded_shop(1200)
+        body = dict(NodeId=111, ChoiceArtifactOrCurseId=ids[0], DiscardArtifactOrCurseIndex=None)
+        projected = self.call(shop.BUY, body, 801)
+        self.assertEqual(set(projected), {"NewSeason", "UserKamazonLand"})
+        user = projected["UserKamazonLand"]
+        self.assertEqual(user["SilverCoin"], 1200 - 100 * ids[0])
+        self.assertEqual(
+            user["Artifacts"], [dict(Id=ids[0], Battle=0, Shelter=0, EliminateArtifact=0)]
+        )
+        node = next(n for n in user["Nodes"] if n["Id"] == 111)
+        self.assertEqual(node["ShopArtifacts"], {str(i): i == ids[0] for i in ids})
+        self.assertEqual(node["State"], 1)
+        for key in ("Benefits", "KamazonPoint", "KamazonPointTotal", "Hps", "Curses"):
+            self.assertEqual(user[key], self.initial[key])
+        self.assertEqual(self.call(shop.BUY, body, 801)["UserKamazonLand"], user)
+        self.reject(shop.BUY, body)
+        self.session = BootstrapSession(self.session.store)
+        self.session.signed_in = True
+        self.assertEqual(self.entry(), user)
+        second = self.call(shop.BUY, dict(NodeId=111, ChoiceArtifactOrCurseId=ids[1]))[
+            "UserKamazonLand"
+        ]
+        self.assertEqual(second["SilverCoin"], user["SilverCoin"] - 100 * ids[1])
+        self.call(shop.CLOSE, {"NodeId": 111})
+        self.reject(shop.BUY, dict(NodeId=111, ChoiceArtifactOrCurseId=ids[2]))
+        self.assertEqual((list(self.db.iterdump()), self.db.total_changes), self.before)
+        self.assertEqual(
+            {p.name: p.read_bytes() for p in self.root.iterdir() if p.name != run.STATE}, self.files
+        )
+
+    def test_shop_rejects_unavailable_unaffordable_and_malformed_purchases_atomically(self):
+        ids = self.funded_shop(0)
+        body = dict(NodeId=111, ChoiceArtifactOrCurseId=ids[0])
+        self.reject(shop.BUY, body)
+        self.funded_shop(1200)
+        for changes in (
+            {"NodeId": 110},
+            {"ChoiceArtifactOrCurseId": 5},
+            {"ChoiceArtifactOrCurseId": True},
+            {"ChoiceArtifactOrCurseId": 801},
+            {"Price": 0},
+            {"DiscardArtifactOrCurseIndex": False},
+            {"DiscardArtifactOrCurseIndex": 0},
+            {"DiscardArtifactOrCurseIndex": -1},
+        ):
+            self.reject(shop.BUY, dict(body, **changes))
+        self.session.signed_in = False
+        self.reject(shop.BUY, body)
+        self.session.signed_in = True
+        with patch("guardian_tales.kamazone_run.atomic_write", side_effect=OSError("synthetic")):
+            self.reject(shop.BUY, body)
+        self.assertEqual(self.entry()["SilverCoin"], 1200)
+
+    def test_discounts_stack_on_pre_purchase_inventory_and_full_inventory_requires_a_slot(self):
+        ids = self.funded_shop(1000, [6, 6] + [1] * 6)
+        body = dict(NodeId=111, ChoiceArtifactOrCurseId=ids[0])
+        self.reject(shop.BUY, body)
+        self.reject(shop.BUY, dict(body, DiscardArtifactOrCurseIndex=8))
+        user = self.call(shop.BUY, dict(body, DiscardArtifactOrCurseIndex=0))["UserKamazonLand"]
+        self.assertEqual(user["SilverCoin"], 1000 - 40 * ids[0])
+        self.assertEqual([r["Id"] for r in user["Artifacts"]], [ids[0], 6] + [1] * 6)
+        self.assertEqual([r["EliminateArtifact"] for r in user["Artifacts"]], [0] + [3] * 7)
+        self.assertEqual(user, self.entry())
+
+    def test_discount_is_capped_at_the_full_price(self):
+        item = self.funded_shop(0, [6] * 4)[0]
+        user = self.call(shop.BUY, dict(NodeId=111, ChoiceArtifactOrCurseId=item))[
+            "UserKamazonLand"
+        ]
+        self.assertEqual(user["SilverCoin"], 0)
+        self.assertEqual(len(user["Artifacts"]), 5)
 
     def test_stock_uses_the_selected_seasons_catalog_and_excludes_special_goods(self):
         for seed in range(5):

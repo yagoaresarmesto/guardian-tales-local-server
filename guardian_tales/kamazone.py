@@ -45,6 +45,24 @@ def one(rows, key, value):
 
 
 @lru_cache(maxsize=2)
+def mode_data(source):
+    return json.loads(records(decode(source))[1]["kamazonland2"][1])
+
+
+@lru_cache(maxsize=2)
+def artifact_specs(source):
+    rows = mode_data(source).get("Artifacts")
+    if not isinstance(rows, list):
+        raise ValueError("Missing preserved Kama-ZONE artifact definitions")
+    specs = {}
+    for row in rows:
+        if not isinstance(row, dict) or not integer(row.get("Id"), minimum=1) or row["Id"] in specs:
+            raise ValueError("Invalid or duplicate Kama-ZONE artifact definition")
+        specs[row["Id"]] = row
+    return specs
+
+
+@lru_cache(maxsize=2)
 def catalog(body):
     tables = records(decode(body))[1]
     if not {"kamazonland2", "seasondate", "__checksum__"} <= tables.keys():

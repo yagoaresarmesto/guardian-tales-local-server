@@ -9,7 +9,6 @@ from functools import lru_cache
 
 from . import kamazone
 from . import kamazone_event_effects as effects
-from .raid_static import decode, records
 from .village import integer
 
 CHOOSE = "/kamazonland/choice-special-event"
@@ -150,7 +149,7 @@ def valid(value):
 
 @lru_cache(maxsize=2)
 def catalog(source, season_id):
-    mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
+    mode = kamazone.mode_data(source)
     if any(
         not isinstance(mode.get(k), list)
         for k in ("SpecialEvents", "SpecialEventChoices", "Artifacts")
@@ -162,7 +161,7 @@ def catalog(source, season_id):
     events = {r["Id"]: r for r in mode["SpecialEvents"] if r["Id"] in season["SpecialEvents"]}
     choices = {r["Id"]: r for r in mode["SpecialEventChoices"] if r["EventId"] in events}
     randoms = {r["Id"]: r for r in mode.get("RandomConclusions", [])}
-    artifacts = {r["Id"]: r for r in mode["Artifacts"]}
+    artifacts = kamazone.artifact_specs(source)
     if len(events) != len(season["SpecialEvents"]) or any(
         not any(c["EventId"] == i for c in choices.values()) for i in events
     ):
@@ -185,15 +184,16 @@ def catalog(source, season_id):
 
 
 def matches(value, source, season_id, nodes):
+    if value["artifacts"] and not set(effects.ids(value)) <= kamazone.artifact_specs(source).keys():
+        return False
     if not any(
-        value[k] for k in ("events", "artifacts", "known_events", "known_choices", "known_random")
+        value[k] for k in ("events", "known_events", "known_choices", "known_random")
     ) and not any(value["event_progress"].values()):
         return True
     data = catalog(source, season_id)
     by_id = {n["Id"]: n for n in nodes}
     if (
-        not set(effects.ids(value)) <= data["artifacts"].keys()
-        or not set(value["known_events"]) <= data["events"].keys()
+        not set(value["known_events"]) <= data["events"].keys()
         or not set(value["known_choices"]) <= data["choices"].keys()
         or not set(value["known_random"]) <= data["randoms"].keys()
     ):
