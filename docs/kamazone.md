@@ -441,7 +441,8 @@ The observed follow-up reaches a Shelter from the completed shop, establishing
 shop entry/exit and retained progression in the APK. A copy of the season 43
 floor 2 shop had 90 silver. Independent purchases at 40 and 60 silver retained
 the artifact and sold flag on reopen. The 100-silver item stayed on sale after
-the insufficient-funds check. Purchase feedback in the APK awaits confirmation.
+the insufficient-funds check. The APK subsequently completed one purchase;
+the shop visit persisted its sold flag, artifact and 50 remaining silver.
 
 ## Mode route audit for Android 3.57.0 EU
 
@@ -643,8 +644,10 @@ $env:GT_KAMAZONE_TEST_STATIC = (Resolve-Path '.\local\client-data\reference\stat
 .\.venv\Scripts\python.exe -m unittest tests.test_kamazone_playthrough
 ```
 
-This exercises the backend. Retention and starting aids still need an APK
-confirmation. A separate replay on a copy of the owner's floor-two run covered
+On Android 3.57.0 EU, the owner confirmed that Finish Challenge retained the
+selected artifact in the next challenge and allowed the starting aid once.
+The server accepted one finish, one new challenge and one aid selection during
+that check. A separate replay on a copy of the floor-two run covered
 a null choice and each of its three distinct owned artifact IDs, a lobby
 reopen, a new difficulty, a starting aid and retries.
 
