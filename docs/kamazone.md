@@ -534,8 +534,13 @@ These measurements cover server response generation, not complete scene loading
 or emulator FPS. The first request after restart still prepares the static
 lookup. The reported apparent infinite loading eventually completed; no queued
 request or new API rejection was observed at the diagnostic snapshot. The
-longest scene delay has not been attributed to this single bottleneck, and its
-APK timing after the optimization remains unverified.
+longest scene delay has not been attributed to this single bottleneck. The owner
+later estimated another return at roughly fifteen seconds, then reported that
+the next observed return was fast. Fresh counters show an accepted finish, new
+challenge and completed first-node battle with no new Kama-ZONE rejection.
+This is a qualitative APK improvement report, not a timed end-to-end benchmark
+or proof of the earlier delay's cause. Read-only coroutine sampling was partial
+and does not identify a specific cleanup/resource step as the culprit.
 
 ## Local rankings
 

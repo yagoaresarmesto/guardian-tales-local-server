@@ -339,7 +339,13 @@ All 175 core/content/integration cases pass in 25.908 seconds, including 96
 Kama-ZONE cases and two cache regressions. These verify decode reuse, independent
 responses and source/season invalidation; existing stateful suites cover fresh
 benefit/run changes. Black (232 files), Ruff and repository/link checks (292
-files) pass. APK latency after the backend-only restart remains unverified.
+files) pass. The owner subsequently estimated a stage return at about fifteen
+seconds, then reported that another return was fast. Fresh counters confirm
+one further finish, new challenge and completed first-node battle, without new
+Kama-ZONE rejections. The new run retains its reported victory/HP. This is a
+qualitative APK improvement observation; no instrumented end-to-end duration
+or proven cause of the previous long wait is claimed. Read-only coroutine
+sampling was partial and cannot attribute that wait to a specific client step.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
