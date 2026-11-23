@@ -22,7 +22,7 @@ button:disabled, :disabled { cursor: default; }
 :focus-visible { outline: 3px solid var(--ice); outline-offset: 3px; }
 h1, h2, p, ol { margin: 0; }
 ol { list-style: none; padding: 0; }
-.bar-inner, main { width: min(1160px, calc(100% - 64px)); margin-inline: auto; }
+.bar-inner, main { margin-inline: clamp(8px, 1.25vw, 24px); }
 .topbar { background: #101a2bd9; border-bottom: 1px solid #344158; }
 .bar-inner { min-height: 58px; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.12rem; letter-spacing: -.035em; }
@@ -182,7 +182,6 @@ fieldset:disabled { opacity: .66; }
 #feedback { margin: 0 22px 18px; padding: 10px 12px; color: #a8e7ff; background: #111c2e; border-left: 3px solid currentColor; font-size: .9rem; }
 #feedback[data-error="true"] { color: #ffb8a7; }
 @media (max-width: 850px) {
-  .bar-inner, main { width: calc(100% - 36px); }
   .workspace { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 12px; }
   .encounters { grid-template-columns: 1fr; }
   .active-bosses .boss-card { grid-template-columns: auto auto minmax(0,1fr); column-gap: 8px; }
@@ -200,7 +199,6 @@ fieldset:disabled { opacity: .66; }
   .active-bosses .element { grid-column: auto; }
 }
 @media (max-width: 480px) {
-  .bar-inner, main { width: calc(100% - 24px); }
   .bar-inner { min-height: 49px; } main { padding-top: 12px; }
   .banner { grid-template-columns: 1fr; }
   .banner-copy { padding: 18px 20px 0; }
