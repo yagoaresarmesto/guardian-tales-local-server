@@ -142,8 +142,11 @@ Automated checks cover Global-only selection, calendar restoration/revisions,
 get/check consistency, default compatibility, no database access, source
 binding, invalid data, atomic publication, overlapping seasons, expiry,
 composition with Andras and scoped CDN preview GET/HEAD/range/ETag responses.
-The actual APK card-visibility check remains pending.
-Seeing a card does not establish a playable Kama-ZONE mode.
+The owner confirms that Events loads Kama-ZONE and can return to the main lobby
+on Android 3.57.0 EU with season 43 selected. Fresh counters show three successful
+entry reads and no new entry rejection; the declared preview banner is served
+by the CDN. This verifies loading and return navigation, not playable challenges,
+rewards or season 41/42 in the APK. A separate ranking request remains unsupported.
 
 The initial entry change passed 271 targeted Windows tests, including static
 overlays, CDN, Backroom and Training Room. A coherent file-backed account/XP copy passes selection of all three
@@ -159,4 +162,5 @@ The collection-type correction passes 85 focused tests, Black (221 files), Ruff
 and repository/link checks. Its coherent copy also validates every transmitted
 field against the read-only native type signatures for both partial flags and
 all three seasons, retaining all account/XP tables and 53 source reference files
-with zero diagnostic source writes. Actual APK loading remains pending a retry.
+with zero diagnostic source writes. APK loading and return navigation are now
+owner verified for season 43.

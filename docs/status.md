@@ -20,8 +20,9 @@ showing the drawer. Its pending `/kamazonland/enter` request and native scene
 loader establish the missing read contract. A follow-up supplies a read-only
 idle lobby for the selected season, with a real mini-season ID and no saved
 progress, inventory or balance changes. Challenges and gameplay remain
-unsupported. Actual APK entry/card visibility is pending a retry; no live season
-is activated by diagnostics.
+unsupported. The owner has now verified that Events loads Kama-ZONE and can
+return to the main lobby with season 43 selected. Diagnostics never activate a
+live season themselves.
 The initial entry change passed 271 targeted Windows tests, Black (221 files), Ruff and
 repository/link checks (281 files). A coherent account/XP copy passes all three
 selections and restoration, retaining every main-account table, trial XP,
@@ -35,8 +36,10 @@ field signatures also identifies `Nodes` as a list. The follow-up corrects both
 JSON shapes and adds a complete outgoing field-type regression; 85 focused tests
 pass alongside Black/Ruff and repository/link checks. A coherent account/XP copy
 matches all outgoing fields to those signatures for six entry requests, with
-zero entry/source writes and 53 unchanged source reference files. APK loading is
-pending a retry. All changes remain backend response data; game files are untouched.
+zero entry/source writes and 53 unchanged source reference files. The successful
+APK retry shows three successful entry reads and the declared banner served by
+the CDN. A separate `/kamazonland/get-rankings` request remains unsupported.
+All changes remain backend response data; game files are untouched.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
