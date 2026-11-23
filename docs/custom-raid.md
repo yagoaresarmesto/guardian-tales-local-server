@@ -4,6 +4,26 @@ Use `raid-season custom` to select four fights for local Guild Raid on the
 Guardian Tales 3.57.0 client. Run the command in PowerShell from the project
 folder. Keep the backend, CDN, and Android bridge running.
 
+## Browser panel
+
+Start the backend with the usual `serve` command and open the **Raid panel** URL
+printed in its terminal (normally <http://127.0.0.1:17658/>). The panel listens
+on the PC's loopback interface and uses the backend's reference directory. For a
+different port, add `--raid-panel-port PORT` to the backend command.
+
+**Active lineup** shows the season, its four encounters and round-one HP per bar.
+**Catalog default** means a season is defined but its local calendar has yet to
+be applied. Use **Original season** to preview and apply a stock rotation.
+Use **Custom lineup** to choose four boss and element pairs. A boss can appear
+twice with different elements. Enter a positive HP per bar for all four fights,
+or leave it blank for the original values in each round. Custom rotations use
+the lowest season ID in the catalog.
+
+Choose **Apply rotation**, wait for confirmation, then fully close and reopen
+Guardian Tales. Use the reload button beside **Active lineup** to read changes
+made through the CLI or another browser tab. The panel and CLI share the same
+selection and local static tables.
+
 ## Activate a lineup
 
 This example puts Light Sandmonster in slot 1 and Water Sandmonster in slot 4.

@@ -52,10 +52,21 @@ ELEMENTS = {
 
 def parse_lineup(text):
     entries = [" ".join(entry.lower().split()).rpartition(" ") for entry in text.split(",")]
-    if len(entries) != 4:
-        raise ValueError("Enter four comma-separated boss and element pairs")
+    return validate_lineup([(boss, element) for boss, _, element in entries])
+
+
+def validate_lineup(entries):
+    if not isinstance(entries, list) or len(entries) != 4:
+        raise ValueError("Enter four boss and element pairs")
     lineup = []
-    for boss, _, element in entries:
+    for pair in entries:
+        if (
+            not isinstance(pair, (list, tuple))
+            or len(pair) != 2
+            or not all(isinstance(v, str) for v in pair)
+        ):
+            raise ValueError("Each Raid slot requires a boss and an element")
+        boss, element = pair
         boss = BOSS_ALIASES.get(boss, boss)
         if boss not in BOSS_STAGES:
             raise ValueError(f"Unknown Raid boss {boss or element!r}")

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Guild Raid · Guardian Tales</title>
+  <link rel="stylesheet" href="/raid.css">
+  <script src="/raid.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="bar-inner">
+    <div class="brand"><span class="crest" aria-hidden="true"></span>Guardian Tales</div>
+    <span class="local"><i></i> Local server</span>
+  </div>
+</header>
+<main>
+  <section class="banner" aria-labelledby="page-title">
+    <img id="map" alt="" hidden>
+    <div class="banner-copy">
+      <h1 id="page-title">Guild Raid</h1>
+      <p id="season-status" class="season-status" aria-live="polite">Loading selection…</p>
+    </div>
+  </section>
+  <div class="workspace">
+    <section class="surface editor">
+      <div class="section-title"><span class="rule"></span><h2>Rotation editor</h2></div>
+      <form id="editor">
+        <fieldset id="controls" disabled>
+          <legend class="sr">Raid rotation settings</legend>
+          <div class="mode">
+            <label><input type="radio" name="mode" value="stock" checked><span>Original season</span></label>
+            <label><input type="radio" name="mode" value="custom"><span>Custom lineup</span></label>
+          </div>
+          <div id="stock">
+            <label class="label" for="season">Season</label>
+            <select id="season"></select>
+            <p class="label subsection">Season encounters</p>
+            <ol class="encounters" id="preview"></ol>
+          </div>
+          <div id="custom" hidden>
+            <p class="mode-note" id="base"></p>
+            <div class="slot-list" id="slots"></div>
+            <div class="hp-field">
+              <label class="label" for="hp">HP per bar <small>All four bosses</small></label>
+              <input id="hp" type="number" min="1" max="2147483647" step="1" placeholder="Use original HP" inputmode="numeric">
+            </div>
+          </div>
+          <div class="actions"><button id="apply" type="submit">Apply rotation</button>
+          <span>Reopen the game after applying.</span></div>
+        </fieldset>
+      </form>
+      <p id="feedback" role="status" aria-live="polite" hidden></p>
+    </section>
+    <aside class="surface summary">
+      <div class="summary-heading"><div class="section-title"><span class="rule"></span><h2>Active lineup</h2></div>
+        <button class="reload" type="button" id="reload" aria-label="Reload active selection" title="Reload active selection">↻</button>
+      </div>
+      <div class="active-meta" id="active-season">Loading…</div>
+      <ol id="active-bosses" class="active-bosses"></ol>
+      <div class="active-hp"><span>HP per bar <small>Round 1</small></span><strong id="active-hp">—</strong></div>
+    </aside>
+  </div>
+</main>
+</body>
+</html>

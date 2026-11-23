@@ -41,7 +41,7 @@
   },
   "guild": {
     "description": "Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War",
-    "modules": ["test_guild_reads", "test_guild_raid", "test_raid_static", "test_punchking", "test_guild_meteor", "test_guild_war"]
+    "modules": ["test_guild_reads", "test_guild_raid", "test_raid_static", "test_raid_panel", "test_punchking", "test_guild_meteor", "test_guild_war"]
   },
   "orbital": {
     "description": "Orbital entry, progress and completion",

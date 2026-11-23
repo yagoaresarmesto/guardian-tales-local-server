@@ -16,6 +16,7 @@ from .bootstrap import BOOTSTRAP_ROUTES, BootstrapSession, GuestStore
 from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
 from .protocol import PacketError, decode_frame, encode_wire, frame_length, make_pong
+from .raid_panel import RaidPanel
 from .reference import default_cert_dir
 from .snapshots import IMPORTED_MUTATIONS, is_imported
 from .state_lock import StateLock
@@ -345,6 +346,12 @@ async def run(args):
         args.reference_dir,
     )
     await server.start()
+    panel = None
+    try:
+        panel = RaidPanel(server.guests.references, args.raid_panel_port)
+        panel.start()
+    except OSError as error:
+        print(f"Raid panel unavailable ({error}). Choose another --raid-panel-port.", flush=True)
     print("Local guest server started. Full campaign gameplay is not implemented.", flush=True)
     print(
         "Game TLS: 127.0.0.1:"
@@ -354,6 +361,8 @@ async def run(args):
         flush=True,
     )
     print("Health: http://127.0.0.1:" + str(server.ports["status"]) + "/health", flush=True)
+    if panel is not None:
+        print(f"Raid panel: http://127.0.0.1:{panel.server_port}/", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     try:
         if args.run_seconds:
@@ -361,7 +370,11 @@ async def run(args):
         else:
             await asyncio.Event().wait()
     finally:
-        await server.close()
+        try:
+            if panel is not None:
+                await asyncio.to_thread(panel.stop)
+        finally:
+            await server.close()
 
 
 def main(argv=None):
@@ -370,6 +383,12 @@ def main(argv=None):
     p.add_argument("--api-port", type=int, default=10100)
     p.add_argument("--auth-port", type=int, default=10500)
     p.add_argument("--status-port", type=int, default=17657)
+    p.add_argument(
+        "--raid-panel-port",
+        type=int,
+        default=17658,
+        help="Loopback port for the Raid web panel (0 chooses a free port)",
+    )
     p.add_argument(
         "--cert-dir",
         type=Path,
@@ -382,6 +401,8 @@ def main(argv=None):
     )
     p.add_argument("--run-seconds", type=float, default=0)
     args = p.parse_args(argv)
+    if not 0 <= args.raid_panel_port <= 65535:
+        p.error("--raid-panel-port must be in the range 0..65535")
     certificates = args.cert_dir or default_cert_dir()
     if not all(
         (certificates / name).is_file() for name in ("localhost-cert.pem", "localhost-key.pem")

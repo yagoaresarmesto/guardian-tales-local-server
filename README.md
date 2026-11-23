@@ -225,6 +225,11 @@ parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
 
 ### Raid and Dungeon Kingdom Arena
 
+With the backend running, open the [Guild Raid panel](http://127.0.0.1:17658/)
+on the host PC. View the active lineup, select an original season or configure
+four boss/element pairs and the HP per bar. Click **Apply rotation**, then fully
+close and reopen the game. The CLI below uses the same Raid selection.
+
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales raid-season list --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales raid-season set 46 --reference-dir local/client-data/reference

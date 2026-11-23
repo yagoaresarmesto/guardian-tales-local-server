@@ -33,7 +33,7 @@ Issues = "https://github.com/yagoaresarmesto/guardian-tales-local-server/issues"
 include = ["guardian_tales*"]
 
 [tool.setuptools.package-data]
-guardian_tales = ["templates/*.json", "templates/*.lua"]
+guardian_tales = ["templates/*.json", "templates/*.lua", "raid_web/*.html", "raid_web/*.css", "raid_web/*.js"]
 
 [tool.black]
 line-length = 100

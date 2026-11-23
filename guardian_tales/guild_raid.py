@@ -162,7 +162,13 @@ def find_season(catalog, season_id, selection=None):
     raise ValueError("Unknown local raid season; use raid-season list")
 
 
-def select_season(references, season_id=None, *, lineup=None, hp_per_bar=None):
+class RaidSelectionChanged(ValueError):
+    """A browser submitted a selection based on an older Raid revision."""
+
+
+def select_season(
+    references, season_id=None, *, lineup=None, hp_per_bar=None, expected_revision=None
+):
     if hp_per_bar is not None and (lineup is None or not integer(hp_per_bar)):
         raise ValueError("Custom Raid HP per bar must be a positive 32-bit integer")
     catalog = load_catalog(references)
@@ -171,13 +177,19 @@ def select_season(references, season_id=None, *, lineup=None, hp_per_bar=None):
     else:
         season = min(catalog["seasons"], key=lambda s: s["season_id"])
     with StateLock(references.directory, filename=".raid_season.lock"):
-        return publish_selection(references, season, lineup, hp_per_bar)
+        previous = load_selection(references) or {}
+        if expected_revision is not None and expected_revision != previous.get(
+            "static_data_revision", 0
+        ):
+            raise RaidSelectionChanged(
+                "The Raid selection changed. Reload the panel before applying."
+            )
+        return publish_selection(references, season, lineup, hp_per_bar, previous)
 
 
-def publish_selection(references, season, lineup, hp_per_bar):
+def publish_selection(references, season, lineup, hp_per_bar, previous):
     from .raid_static import atomic_replace, prepare
 
-    previous = load_selection(references) or {}
     manifest = prepare(
         references,
         season,
