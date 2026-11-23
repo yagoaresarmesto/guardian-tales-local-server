@@ -87,8 +87,8 @@ as usual. The CDN must also use the same reference directory:
 
 After updating the project, restart the CDN with this command too. The bridge can
 remain running. Reopen the game and inspect **Events** for the Kama-ZONE card.
-When its historical banner is absent, expect a generated **KAMA-ZONE / SEASON 43 /
-MENU PREVIEW** image (with the selected ID). The idle lobby may load automatically.
+When its historical banner is absent, the generated image shows **KAMA-ZONE**
+and the selected season number. The idle lobby may load automatically.
 You can inspect the entry and return to the main lobby. For the experimental
 challenge probe, follow the opening-floor section below. The shop section covers
 entry, purchases and exit. Other missing actions appear in the route audit.

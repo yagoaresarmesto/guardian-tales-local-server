@@ -68,7 +68,6 @@ def render(season_id):
     box(0, height - 4, width, 4, (35, 184, 213))
     text("KAMA-ZONE", 22, 8, (240, 246, 255))
     text("SEASON " + str(season_id), 100, 4, (109, 218, 242))
-    text("MENU PREVIEW", 149, 3, (160, 178, 200))
 
     def chunk(kind, body):
         return (
