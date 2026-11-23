@@ -343,7 +343,7 @@ class BootstrapSession:
             try:
                 selected, source = kamazone_preview.selected_source(self.store.account)
                 epoch = self.request_epoch or self.store.request_epoch(True)
-                kamazone_run.handle(
+                extras = kamazone_run.handle(
                     self.store.account,
                     source,
                     selected["season_id"],
@@ -351,9 +351,9 @@ class BootstrapSession:
                     body,
                     epoch + ":" + str(request["sequence_id"]),
                 )
-                return json_response(
-                    request, kamazone_preview.enter(self.store.account, {"IsPartial": False})
-                )
+                response = kamazone_preview.enter(self.store.account, {"IsPartial": False})
+                response.update(extras)
+                return json_response(request, response)
             except (OSError, ValueError) as exc:
                 raise PacketError(str(exc)) from exc
         if route == kamazone_practice.SAVE:

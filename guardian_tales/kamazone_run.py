@@ -9,7 +9,7 @@ import random
 import secrets
 from functools import lru_cache
 
-from . import kamazone
+from . import kamazone, kamazone_battle
 from .punchking_static import atomic_write
 from .raid_static import decode, records
 from .village import integer
@@ -18,7 +18,7 @@ CHALLENGE = "/kamazonland/challenge"
 SELECT = "/kamazonland/select-characters"
 START = "/kamazonland/start-stage"
 BATTLE = "/kamazonland/start-battle"
-ROUTES = (CHALLENGE, SELECT, START, BATTLE)
+ROUTES = (CHALLENGE, SELECT, START, BATTLE, *kamazone_battle.ROUTES)
 STATE = "kamazone_run.json"
 HP_SCALE = 10000
 COMBAT = ("Normal", "Elite", "Boss")
@@ -200,7 +200,7 @@ def load(references):
         return None
     if not path.is_file() or path.stat().st_size > 32768:
         raise ValueError("Invalid local Kama-ZONE run file")
-    value = references.json(STATE)
+    value = kamazone_battle.upgrade(references.json(STATE))
     # Existing v1 files predate the distinction between opening the encounter
     # panel and loading combat. Reading them must not rewrite their contents.
     if isinstance(value, dict) and "battle_started" not in value:
@@ -223,6 +223,7 @@ def load(references):
             "formation",
             "states",
             "seen_operations",
+            *kamazone_battle.defaults(),
         }
         or type(value["version"]) is not int
         or value["version"] != 1
@@ -253,6 +254,7 @@ def load(references):
         or len(value["seen_operations"]) > 64
         or any(not isinstance(i, str) or not 1 <= len(i) <= 160 for i in value["seen_operations"])
         or len(set(value["seen_operations"])) != len(value["seen_operations"])
+        or not kamazone_battle.valid_state(value)
     ):
         raise ValueError("Invalid local Kama-ZONE run state")
     return value
@@ -289,6 +291,7 @@ def matching(account, source, season_id):
         and not value["active"]
         or value["battle_started"]
         and (not value["stage_started"] or not value["characters"] or value["formation"] is None)
+        or not kamazone_battle.matches(value, owned, floor_nodes(source, season_id, value["seed"]))
     ):
         raise ValueError("Local Kama-ZONE run no longer matches its owner or content")
     return value
@@ -312,6 +315,7 @@ def project(account, source, season_id, response):
             Nodes=nodes,
             Progress=dict(Floor=1, CurrentNodeId=value["current_node_id"], Concluded=False),
         )
+        kamazone_battle.project(value, owned, user)
     return response
 
 
@@ -359,10 +363,14 @@ def handle(account, source, season_id, route, request, operation_id):
             )
         if previous is None or not previous["active"]:
             raise ValueError("Start a Kama-ZONE challenge before entering a node")
+    elif route in kamazone_battle.ROUTES:
+        kamazone_battle.validate(route, request)
+        if previous is None or not previous["active"]:
+            raise ValueError("Start a Kama-ZONE challenge before reporting combat")
     else:
         raise ValueError("Unsupported local Kama-ZONE run operation")
     if previous and operation_id in previous["seen_operations"]:
-        return
+        return kamazone_battle.response(route)
     value = (
         copy.deepcopy(previous)
         if previous
@@ -381,6 +389,7 @@ def handle(account, source, season_id, route, request, operation_id):
             formation=None,
             states={},
             seen_operations=[],
+            **kamazone_battle.defaults(),
         )
     )
     if route == CHALLENGE:
@@ -392,10 +401,11 @@ def handle(account, source, season_id, route, request, operation_id):
             battle_started=False,
             current_node_id=data["starting"],
             states={str(data["starting"]): 8},
+            **kamazone_battle.defaults(),
         )
         floor_nodes(source, season_id, value["seed"])
     elif route == SELECT:
-        if value["battle_started"]:
+        if value["battle_started"] or value["pending_result"] == 1:
             raise ValueError("Cannot change Kama-ZONE characters during an active stage")
         value["characters"] = list(ids)
     elif route == BATTLE:
@@ -403,22 +413,35 @@ def handle(account, source, season_id, route, request, operation_id):
             raise ValueError("Enter the selected Kama-ZONE node before loading its battle")
         if not value["characters"]:
             raise ValueError("Select a Kama-ZONE party before loading combat")
+        if value["pending_result"] == 1 or any(
+            value["hps"].get(str(i), HP_SCALE) == 0 for i in value["characters"]
+        ):
+            raise ValueError("Close the cleared battle or select surviving Kama-ZONE heroes")
         # BeforeLoad sends Formation.Positions, not the Formation model itself.
         # The shared singleton and local state still require the model object.
         value["formation"] = dict(
             Id=(value["formation"] or {}).get("Id", 0), Positions=list(request["Formation"])
         )
         value["battle_started"] = True
+        value["states"][str(request["NodeId"])] = 1
+        value.update(pending_result=None, last_result_hash=None)
+    elif route in kamazone_battle.ROUTES:
+        kamazone_battle.apply(value, route, request, floor_nodes(source, season_id, value["seed"]))
     else:
         ident, current = request["NodeId"], value["current_node_id"]
         # The APK opens the node first. EnterStage then initializes PartyInfo,
         # sends select-characters, and finally calls start-battle from BeforeLoad.
+        if value["pending_result"] == 1:
+            raise ValueError("Close the cleared Kama-ZONE battle before moving")
         if value["stage_started"] and ident != current:
             raise ValueError("Finish the active Kama-ZONE stage before moving")
-        if not value["stage_started"] and ident not in (
-            data["nodes"][current].get("NextNodeIds") or []
-        ):
-            raise ValueError("The Kama-ZONE node is not connected to the current position")
+        if not value["stage_started"]:
+            retry = ident == current and value["states"].get(str(current), 0) & 4
+            advance = (
+                current == data["starting"] or value["states"].get(str(current), 0) & 2
+            ) and ident in (data["nodes"][current].get("NextNodeIds") or [])
+            if not retry and not advance:
+                raise ValueError("The Kama-ZONE node is not connected to a cleared position")
         nodes = floor_nodes(source, season_id, value["seed"])
         node = next((r for r in nodes if r["Id"] == ident), None)
         if node is None or node["Type"] not in COMBAT or not node["BattleMonsters"]:
@@ -426,5 +449,7 @@ def handle(account, source, season_id, route, request, operation_id):
         value["current_node_id"] = ident
         value["stage_started"] = True
         value["states"][str(ident)] = 1
+        value.update(pending_result=None, last_result_hash=None)
     value["seen_operations"] = (value["seen_operations"] + [operation_id])[-64:]
     atomic_write(account.references.directory / STATE, json.dumps(value, indent=2).encode() + b"\n")
+    return kamazone_battle.response(route)

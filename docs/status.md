@@ -147,6 +147,36 @@ static responses, account/XP tables and all 55 source reference files remain
 intact. Diagnostics make no live run edit/reset or gamefile changes. Actual APK
 combat loading is still pending; results and rewards remain unsupported.
 
+The latest APK probe loads combat and reports a victory from node 111 through
+`/kamazonland/end-battle`: Result=1, both selected heroes at 10,000 HP and all
+five generated enemies at zero. This verifies combat entry and a client-reported
+win, not successful result persistence yet. Native inspection identifies the
+result enum and the `ArtifactEffectResults` callback list, followed by
+`close-battle` with nullable artifact-selection fields and the named closing
+reward lists.
+
+Local end/close handlers now retain hero and indexed monster HP, mark a reported
+win cleared (3), close it as chosen (11), and allow the next connected combat
+node. Draw/defeat/timeout remain uncleared and retryable with surviving heroes.
+Pending wins block team changes/another battle until closed. Request receipts
+and a result fingerprint prevent duplicate HP/counter updates and stale retries
+overwriting a later encounter. Older run files gain defaults without read-time
+writes. Empty artifact/effect/item lists let the native callback and closing
+routine continue; no loot, currencies, season clears or scored rewards are added.
+
+Ten new completion regressions plus the existing suites pass: 147 core/content/
+integration cases in 23.687 seconds, including 68 Kama-ZONE cases. Follow-up
+completion checks also cover omitted nullable close fields and direct loss
+retries. Black (227 files), Ruff and repository/link checks (287 files) pass.
+A coherent actual account/XP copy replays the exact victory and native close,
+checks cleared/chosen flags, HP, battle count, reopen and old retries, and starts
+connected combat node 123. It retains the map seed, party, benefits, remaining
+point budget, effective static responses, main-account/XP tables and all 55
+source reference files. There are zero diagnostic source writes, live run
+edits/resets or gamefile changes. APK result closing and map return are pending.
+Shops, special events, artifact loot/effects, subsequent floors, conclusion,
+season records and rewards remain unsupported.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

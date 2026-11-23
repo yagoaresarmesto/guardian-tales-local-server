@@ -483,13 +483,13 @@ class KamazonePreviewTests(unittest.TestCase):
             with self.assertRaises(PacketError):
                 self.call()
 
-    def test_preview_does_not_enable_battle_results_shops_or_rewards(self):
+    def test_preview_does_not_enable_shops_special_events_or_rewards(self):
         self.fixture.cli("select", "--season-id", "43")
         self.call()
         before = list(self.db.iterdump())
         for route in (
-            "/kamazonland/end-battle",
-            "/kamazonland/close-battle",
+            "/kamazonland/buy-shop-item",
+            "/kamazonland/choice-special-event",
             "/kamazonland/conclude",
             "/kamazonland/gacha",
             "/kamazonland/take-likeability",

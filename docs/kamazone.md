@@ -5,8 +5,10 @@ can show its card in **Events**. Without a local run, entry shows a
 **read-only idle lobby preview**. Events can select and load a mode automatically
 before displaying its drawer, so `/kamazonland/enter` supplies the preview even
 without a card tap. Experimental challenge and combat entry now cover the first
-floor at difficulties 1, 2 and 3. Battle results, loot, shops, special events,
-later floors and rewards remain unimplemented. APK combat entry is pending.
+floor at difficulties 1, 2 and 3, with local battle results, retained HP and
+connected combat-node progression. Loot, shops, special events, later floors
+and rewards remain unimplemented. APK combat entry and a reported victory are
+observed; result closing and map return are pending verification.
 An additional opt-in practice setting can unlock selected seasonal benefits,
 provide a point budget and retain benefit choices outside the saved account.
 
@@ -226,7 +228,8 @@ After updating, close the game and restart only the backend using the usual
 working state, certificate and reference arguments. Keep CDN and bridge open.
 Open Kama-ZONE, select difficulty 3, choose an owned party and try a connected
 normal battle node (the crossed-swords icon). For this probe, verify map and
-combat loading; battle completion and result handling are separate milestones.
+combat loading, then complete the first normal battle and check that its node
+is cleared on return to the map. Reopen the game to check retained node/HP state.
 If another connection error appears, leave it open to identify its request.
 There is no additional enabling command beyond the existing season selection.
 
@@ -261,7 +264,8 @@ recent retries return the current formation without reverting newer positions.
 
 The private `kamazone_run.json` holds the selected difficulty, party, formation,
 seed, current node, encounter/combat flags, node states and the last 64 request
-receipts. Files predating the combat flag remain readable without being rewritten
+receipts, plus reported hero/monster HP, a pending outcome, the last result hash
+and a completed-battle counter. Files predating these fields remain readable without being rewritten
 by entry; their next successful action publishes the added field. It is published
 atomically outside the account database, bound to the content SHA-256, season
 and local user. Reopening retains the same generated map; recent request retries
@@ -273,9 +277,10 @@ algorithm. It uses the original opening-floor connections and probabilities,
 preserved nonhidden monster groups and preset positions, and guarantees one
 reachable opening battle with an originally allowed type. Elite affixes are not
 generated yet. Shop/special nodes can appear from their original probabilities
-but their interactions are still unsupported. Battle results, loot, conclusion,
-currency rewards, rankings, further floors and season progression are also
-unimplemented. No clears or reward balances are fabricated.
+but their interactions are still unsupported. Loot, conclusion, currency rewards,
+scored rankings, further floors and season progression are also unimplemented.
+Only reported wins in an active matching battle clear a local combat node;
+reward balances and season-wide clears are not fabricated.
 
 The reported difficulty-3 challenge request is APK observed. Its APK retry reached
 the generated map, then sent `/kamazonland/start-stage` with `NodeId:111` for a
@@ -288,7 +293,48 @@ formation/connection guards, the actual node-before-party flow, normal/elite/bos
 dispatch, native formation arrays and model responses, legacy run files,
 source/season/user isolation and unchanged account,
 benefit and effective static data. Automated client-contract checks and actual
-APK combat entry are recorded separately in [status](status.md).
+APK combat observations are recorded separately in [status](status.md).
+
+## Local battle results and closing
+
+The APK reports `/kamazonland/end-battle` with `NodeId`, `Result`, `CharacterHps`
+and `MonsterHps`. The native result enum is Victory=1, Draw=2, Defeated=3 and
+Timeout=4. Hero HP is an ID-to-integer map restricted to the selected owned party;
+monster HP is a list in generated encounter order, including repeated monster
+specs. Both use 0..10,000. Monster count must match the entered encounter, and a
+reported victory requires all generated enemies at zero HP. No result is accepted
+for a different node or a battle that was never started.
+
+A victory marks the node Started|Cleared (3), retains the reported HP and
+increments the local completed-battle counter once. The response includes the
+native callback's `ArtifactEffectResults` array, empty while artifact effects
+are unsupported. The client then calls `/kamazonland/close-battle` with `NodeId`
+and nullable `LootArtifactId`/`DiscardArtifactIndex`; omitted null fields are also
+accepted. There is no generated loot to select. Closing marks the node
+Started|Cleared|Chosen (11) and allows the next connected combat node to open.
+Its response supplies empty `ChoiceEffectResults` and `AddedItems` lists so the
+native closing/reward routine can return to the map without awarding anything.
+Party changes and another battle are blocked while a winning result awaits
+closing.
+
+Draw, defeat and timeout retain hero/enemy HP without clearing the node or
+unlocking its successors. The encounter can be retried with surviving heroes,
+directly or after closing; reopening never heals a reported zero-HP hero.
+Recent request receipts and the last result fingerprint prevent double counting
+or reapplying an outcome, including identical reconnects with a new sequence.
+Old retries cannot replace a newer encounter. Legacy run files receive missing
+HP/outcome defaults in memory; the next successful action publishes them
+atomically. Failed publication changes neither HP nor the clear state.
+
+This is separate local run progress. Benefit allocations, main account tables,
+trial XP, gold, gems, season clears/rankings and the preserved game files remain
+unchanged. The ten completion regressions cover victory/closing/advancement,
+losses, dead heroes, malformed/foreign results, retries, old files, authentication
+and failed publication. A coherent actual-account copy replays the captured
+node-111 victory, closes it, reopens it and starts connected node 123 while
+retaining all account/XP tables, effective static responses and 55 live reference
+files. Native combat and the outgoing victory are APK observed; acceptance of
+the new result/closing responses and map return remain pending verification.
 
 ## Local rankings
 
