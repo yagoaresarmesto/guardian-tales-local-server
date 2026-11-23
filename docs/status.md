@@ -60,8 +60,10 @@ zero-level placeholders filled the native selected dictionary beyond its cap.
 The follow-up sends only actual selections, restores original prices, enforces
 the budget and returns the remaining points in a complete idle singleton.
 Strong Body costs 250 and leaves 3,750 from the 4,000 budget. Cached zero-price
-static data is replaced by an advancing overlay revision. Actual APK benefit
-selection and allocation checks are pending.
+static data is replaced by an advancing overlay revision. The owner confirms
+benefit levels can be raised/lowered, points deduct correctly and selections
+survive reopening. Three successful benefit saves appear in fresh counters.
+The next reported unsupported request is `/kamazonland/challenge` (difficulty 3).
 All 290 targeted Windows tests pass, including fifteen practice regressions for
 these behaviors and the existing guards. Black (223 files), Ruff and
 repository/link checks (283 files) pass.

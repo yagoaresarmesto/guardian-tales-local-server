@@ -205,7 +205,10 @@ protection and restoration against the actual pack and native field types,
 retaining all other effective overlays, saved account/XP tables and 54 source
 reference files, including the already enabled practice settings. Diagnostics
 never change those live settings themselves.
-Actual APK benefit selection and the normal allocation display remain pending.
+The owner confirms in the APK that benefit levels can be raised/lowered, points
+are deducted correctly and selections persist after reopening. Fresh counters
+show three successful benefit saves. Combat use remains unverified; the next
+reported request is `/kamazonland/challenge` with difficulty 3.
 
 ## Local rankings
 
