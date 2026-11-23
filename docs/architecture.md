@@ -428,5 +428,7 @@ the mode registry in `routes.py`. Each mode owns its Python adapter, HTML view,
 stylesheet and browser module in one directory. Adapters call the same domain
 functions as the CLI. The shared directory contains the page layout, navigation
 styling and browser helpers. Register a mode once in `MODES` to expose its page,
-navigation link, static files and GET/POST API. Register any external artwork
-explicitly in `MEDIA`.
+navigation link, static files and GET/POST API. Register fixed artwork URLs in
+`MEDIA`. Raid portraits use the frame names in the local monster table. The
+shared artwork reader caches decoded sheets and requested PNGs from the
+imported bosses and UI atlases.

@@ -7,12 +7,13 @@ import unittest
 from importlib.util import find_spec
 from io import BytesIO
 from pathlib import Path
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from guardian_tales import guild_raid, raid_custom, raid_panel, raid_static
 from guardian_tales.reference import ReferenceData
-from guardian_tales.web_panel.dka.sprites import frame_png
+from guardian_tales.web_panel.artwork import BOSSES, UI, frame_png
 from tests.test_guild_raid import synthetic_catalog, synthetic_static
 
 
@@ -26,7 +27,15 @@ class RaidPanelTests(unittest.TestCase):
         for season in catalog["seasons"]:
             for row, name in zip(season["bosses"], names):
                 row["stage_id"] = raid_custom.BOSS_STAGES[name]
-                monsters.append(dict(Id=row["id"], Name=name, ElementalType="Fire", Class=name))
+                monsters.append(
+                    dict(
+                        Id=row["id"],
+                        Name=name,
+                        ElementalType="Fire",
+                        Class=name,
+                        SpriteName={"default": "native_" + name.replace(" ", "_")},
+                    )
+                )
         lines, tables = raid_static.records(raid_static.decode(synthetic_static(catalog)))
         raid = json.loads(tables["guildraid2"][1])
         for row in raid["BossDetails"]:
@@ -136,6 +145,34 @@ class RaidPanelTests(unittest.TestCase):
             self.call("/dka/slimes/space.png")
         self.assertEqual(error.exception.code, 404)
         error.exception.close()
+
+    def test_native_raid_portraits_and_element_icons_use_their_respective_atlases(self):
+        self.assertEqual(self.call()["bossPortraits"], {})
+        with patch.object(type(BOSSES), "available", return_value=True):
+            listing = self.call()
+            self.assertEqual(listing["bossPortraits"]["ancient demon"], "native_ancient_demon")
+            self.assertTrue(listing["hasElementIcons"])
+        stat = self.source.stat()
+        with (
+            patch.object(type(BOSSES), "available", return_value=True),
+            patch.object(type(BOSSES), "path", return_value=self.source),
+            patch("guardian_tales.web_panel.artwork._read_png", return_value=b"png") as read,
+        ):
+            for route, atlas, frame in (
+                ("/raid/bosses/native_ancient_demon.png", BOSSES, "native_ancient_demon"),
+                ("/elements/earth.png", UI, "ic_attribute_ground"),
+                ("/elements/space.png", UI, "ic_attribute_nebula"),
+                ("/dka/slimes/space.png", BOSSES, "punchking_boss_slime.super"),
+            ):
+                self.assertEqual(self.call(route), b"png")
+                read.assert_called_with(
+                    self.source, atlas.sheet, stat.st_mtime_ns, stat.st_size, frame
+                )
+            for path in ("/raid/bosses/subdir/native.png", "/elements/unknown.png"):
+                with self.assertRaises(HTTPError) as error:
+                    self.call(path)
+                self.assertEqual(error.exception.code, 404)
+                error.exception.close()
 
     @unittest.skipUnless(find_spec("PIL"), "requires the panel-art extra")
     def test_atlas_frame_preserves_original_pixels_and_transparent_trim(self):

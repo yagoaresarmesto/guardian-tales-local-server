@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Public panel modes and their explicitly served resources."""
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
@@ -11,6 +12,7 @@ from string import Template
 from ..guild_raid import RaidSelectionChanged
 from ..punchking_static import ArenaSelectionChanged
 from ..reference import ReferenceData
+from .artwork import BOSSES, ELEMENT_FRAMES, UI
 from .dka import adapter as dka
 from .dka import sprites
 from .raid import adapter as raid
@@ -47,10 +49,24 @@ MEDIA = {
     "/map.png": (lambda refs: raid.map_image(refs).read_bytes(), "image/png"),
     "/arena.jpg": (lambda refs: dka.arena_image(refs).read_bytes(), "image/jpeg"),
     **{
-        f"/dka/slimes/{element}.png": (partial(sprites.read, element=element), "image/png")
-        for element in sprites.FRAMES
+        f"/dka/slimes/{element}.png": (partial(BOSSES.read, frame=frame), "image/png")
+        for element, frame in sprites.FRAMES.items()
+    },
+    **{
+        f"/elements/{element}.png": (partial(UI.read, frame=frame), "image/png")
+        for element, frame in ELEMENT_FRAMES.items()
     },
 }
+
+
+def media_resource(path):
+    if path in MEDIA:
+        return MEDIA[path]
+    # Only the frame name varies. The local bosses bundle is fixed.
+    match = re.fullmatch(r"/raid/bosses/([a-z0-9_]{1,100})\.png", path)
+    if match:
+        return partial(BOSSES.read, frame=match[1]), "image/png"
+    return None
 
 
 def render_page(mode, *, show_brand):

@@ -1,4 +1,4 @@
-import { $, feedback } from "/panel.js";
+import { $, elementIcon, feedback, setArtwork } from "/panel.js";
 
 const modes = [...document.querySelectorAll('input[name="mode"]')];
 const number = new Intl.NumberFormat("en-US");
@@ -25,11 +25,23 @@ function slotNumber(index) {
   return String(index + 1).padStart(2, "0");
 }
 
+function portrait(boss) {
+  const image = document.createElement("img");
+  image.alt = "";
+  image.hidden = true;
+  image.className = "boss-portrait";
+  const frame = data.bossPortraits[boss];
+  if (frame) setArtwork(image, "/raid/bosses/" + encodeURIComponent(frame) + ".png");
+  return image;
+}
+
 function markEncounter(index) {
   selectedEncounter = index;
   const slot = data.active.bosses[index];
   $("encounter-detail").hidden = false;
   $("encounter-detail").dataset.element = slot.element || "";
+  $("encounter-art").replaceChildren(portrait(slot.boss));
+  $("encounter-element").replaceChildren(elementIcon(slot.element, data.hasElementIcons));
   $("encounter-name").textContent = bossName(slot);
   $("encounter-meta").textContent = "Encounter " + slotNumber(index) + (slot.element ? " · " + title(slot.element) : "");
   for (const list of [$("map-pins"), $("active-bosses")]) {
@@ -61,17 +73,14 @@ function showBosses(container, bosses, active = false) {
     const order = document.createElement("span");
     order.className = "slot-num";
     order.textContent = slotNumber(index);
-    const sigil = document.createElement("span");
-    sigil.className = "sigil";
-    sigil.setAttribute("aria-hidden", "true");
     const name = document.createElement("strong");
     name.className = "boss-name";
     name.textContent = bossName(slot);
-    card.append(order, sigil, name);
+    card.append(order, portrait(slot.boss), name);
     if (slot.element) {
       const element = document.createElement("span");
       element.className = "element";
-      element.textContent = title(slot.element);
+      element.append(elementIcon(slot.element, data.hasElementIcons), title(slot.element));
       card.append(element);
     }
     row.append(card);
@@ -83,7 +92,7 @@ function showBosses(container, bosses, active = false) {
       pin.title = pin.getAttribute("aria-label");
       const number = document.createElement("span");
       number.textContent = slotNumber(index);
-      pin.append(number);
+      pin.append(portrait(slot.boss), number);
       $("map-pins").append(pin);
     }
   });
@@ -143,10 +152,23 @@ function display(state) {
     order.textContent = slotNumber(index);
     const boss = choice("Boss", data.bossNames, slot.boss, index);
     const element = choice("Element", data.elementNames, slot.element, index);
-    const select = element.querySelector("select");
-    row.dataset.element = select.value;
-    select.addEventListener("change", () => { row.dataset.element = select.value; });
-    row.append(order, boss, element);
+    const bossSelect = boss.querySelector("select");
+    const elementSelect = element.querySelector("select");
+    const thumbnail = document.createElement("span");
+    thumbnail.className = "slot-art";
+    const updatePortrait = () => thumbnail.replaceChildren(portrait(bossSelect.value), order);
+    const iconSlot = document.createElement("span");
+    iconSlot.className = "select-icon";
+    const updateElement = () => {
+      row.dataset.element = elementSelect.value;
+      iconSlot.replaceChildren(elementIcon(elementSelect.value, data.hasElementIcons));
+    };
+    element.append(iconSlot);
+    bossSelect.addEventListener("change", updatePortrait);
+    elementSelect.addEventListener("change", updateElement);
+    updatePortrait();
+    updateElement();
+    row.append(thumbnail, boss, element);
     $("slots").append(row);
   });
   modes[data.custom ? 1 : 0].checked = true;

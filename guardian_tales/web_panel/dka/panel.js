@@ -1,4 +1,4 @@
-import { $, feedback } from "/panel.js";
+import { $, elementIcon, feedback, setArtwork } from "/panel.js";
 
 const elements = {None: "Basic", Darkness: "Dark", Ice: "Water", Nebula: "Space"};
 const weaknesses = {Down: "Downed", Poison: "Injured", Aerial: "Airborne"};
@@ -13,14 +13,8 @@ function weakness(day) {
 }
 
 function showSlime(image, day) {
-  image.hidden = true;
-  if (state.hasSlimeSprites) {
-    image.onload = () => { image.hidden = false; };
-    image.onerror = () => { image.hidden = true; };
-    image.src = "/dka/slimes/" + encodeURIComponent(elementName(day).toLowerCase()) + ".png";
-  } else {
-    image.removeAttribute("src");
-  }
+  const element = elementName(day).toLowerCase();
+  setArtwork(image, state.hasSlimeSprites ? "/dka/slimes/" + encodeURIComponent(element) + ".png" : null);
 }
 
 function renderDays(variant, chosenDay) {
@@ -36,7 +30,7 @@ function renderDays(variant, chosenDay) {
     const card = $("day-card").content.firstElementChild.cloneNode(true);
     card.dataset.element = elementName(day).toLowerCase();
     showSlime(card.querySelector(".slime"), day);
-    card.querySelector(".day-number").textContent = "Day " + (index + 1);
+    card.querySelector(".day-number").append("Day " + (index + 1), elementIcon(card.dataset.element, state.hasElementIcons));
     card.querySelector("strong").textContent = elementName(day) + " Slime";
     card.querySelector("small").textContent = weakness(day);
     label.append(radio, card);
@@ -60,7 +54,7 @@ function display(next) {
     $("saved-status").textContent = "Variant " + active.variant + " · Season " + variant.season_id + " · Day " + active.day;
     $("saved-encounter").dataset.element = elementName(day).toLowerCase();
     showSlime($("saved-encounter").querySelector(".slime"), day);
-    $("saved-slime").textContent = elementName(day) + " Slime";
+    $("saved-slime").replaceChildren(elementIcon($("saved-encounter").dataset.element, state.hasElementIcons), elementName(day) + " Slime");
     $("saved-weakness").textContent = weakness(day);
   } else {
     $("saved-status").textContent = "No practice rotation selected yet.";

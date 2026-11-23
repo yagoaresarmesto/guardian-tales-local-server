@@ -5,7 +5,7 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 
-from .routes import API, FILES, MEDIA, PAGES, render_page
+from .routes import API, FILES, PAGES, media_resource, render_page
 
 
 class WebPanel(ThreadingHTTPServer):
@@ -72,8 +72,8 @@ class PanelHandler(BaseHTTPRequestHandler):
                 self.reply(200, mime, path.read_bytes())
             elif self.path in API:
                 self.json(200, API[self.path].state(self.server.references))
-            elif self.path in MEDIA:
-                reader, mime = MEDIA[self.path]
+            elif resource := media_resource(self.path):
+                reader, mime = resource
                 self.reply(200, mime, reader(self.server.references))
             else:
                 self.json(404, {"error": "Unknown panel resource"})

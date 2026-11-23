@@ -6,18 +6,28 @@ import json
 from functools import lru_cache
 
 from ... import guild_raid, raid_custom, raid_static
+from ..artwork import BOSSES, UI
 
 BOSS_NAMES = {stage: name for name, stage in raid_custom.BOSS_STAGES.items()}
 ELEMENT_NAMES = {values[0]: name for name, values in raid_custom.ELEMENTS.items()}
 
 
 @lru_cache(maxsize=2)
-def encounter_elements(body):
+def encounter_art_and_elements(body):
     tables = raid_static.records(raid_static.decode(body))[1]
     raid = json.loads(tables["guildraid2"][1])
     monsters = json.loads(tables["monsters"][1]) if "monsters" in tables else []
-    elements = {row["Id"]: ELEMENT_NAMES.get(row.get("ElementalType")) for row in monsters}
-    return {row["Id"]: elements.get(row.get("MonsterId")) for row in raid["BossDetails"]}
+    by_id = {row["Id"]: row for row in monsters}
+    elements = {}
+    portraits = {}
+    for detail in raid["BossDetails"]:
+        monster = by_id.get(detail.get("MonsterId"), {})
+        elements[detail["Id"]] = ELEMENT_NAMES.get(monster.get("ElementalType"))
+        boss = BOSS_NAMES.get(detail.get("StageId"))
+        frame = (monster.get("SpriteName") or {}).get("default")
+        if boss and frame:
+            portraits[boss] = frame
+    return elements, portraits
 
 
 def season_view(season, elements):
@@ -45,7 +55,7 @@ def state(references):
     ident = saved.get("season_id", catalog["default_season_id"])
     active = guild_raid.find_season(catalog, ident, saved or None)
     stock = guild_raid.find_season(catalog, ident)
-    elements = encounter_elements(references.read_bytes("static_data_get.bin"))
+    elements, portraits = encounter_art_and_elements(references.read_bytes("static_data_get.bin"))
     active_elements = elements
     custom = "custom_season" in saved
     if custom:
@@ -54,7 +64,7 @@ def state(references):
         body = references.read_bytes(f"guild_raid_static_{digest}.bin")
         if hashlib.sha256(body).hexdigest() != digest:
             raise ValueError("The prepared Raid tables do not match the active selection")
-        active_elements = encounter_elements(body)
+        active_elements, _ = encounter_art_and_elements(body)
     return {
         "active": season_view(active, active_elements),
         "custom": custom,
@@ -67,6 +77,8 @@ def state(references):
         ],
         "bossNames": list(raid_custom.BOSS_STAGES),
         "elementNames": list(raid_custom.ELEMENTS),
+        "bossPortraits": portraits if BOSSES.available(references) else {},
+        "hasElementIcons": UI.available(references),
         "hasMap": map_image(references).is_file(),
     }
 
