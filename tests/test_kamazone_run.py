@@ -70,6 +70,16 @@ class KamazoneRunTests(unittest.TestCase):
             )
             for i, kind in enumerate(run.COMBAT, 1)
         ]
+        node_kind = getattr(self, "node_kind", None)
+        if node_kind in run.COMBAT:
+            for row in mode["FloorPresets"]:
+                if row["Step"] == 1:
+                    for kind in run.PROBABILITIES:
+                        row[kind + "Prob"] = int(kind == node_kind)
+                    if node_kind == "Boss":
+                        row["NextNodeIds"] = None
+            for row in mode["BattlePresets"]:
+                row["Position"] = dict(Normal=12, Elite=3, Boss=19)[row["Difficulty"]]
         self.fixture.write_source()
         self.owner.command("select", "--season-id", "43")
         self.owner.enable()
@@ -188,11 +198,9 @@ class KamazoneRunTests(unittest.TestCase):
         self.assertFalse((self.root / run.STATE).exists())
         self.assert_untouched()
 
-    def test_stage_requires_owned_party_connected_battle_and_matching_formation_handshake(self):
+    def test_battle_requires_owned_party_connected_node_and_matching_formation_handshake(self):
         user = self.challenge()
         node = self.opening(user)["Id"]
-        with self.assertRaises(PacketError):
-            self.call(run.START, {"NodeId": node})
         self.select()
         for route, body in (
             (run.START, {"NodeId": 120}),
@@ -205,7 +213,6 @@ class KamazoneRunTests(unittest.TestCase):
             self.assertEqual((self.root / run.STATE).read_bytes(), previous)
         self.call(run.START, {"NodeId": node})
         for route, body in (
-            (run.SELECT, {"CharacterIds": self.characters}),
             (run.START, {"NodeId": 120}),
             (run.BATTLE, dict(NodeId=120, Formation=dict(Id=0, Positions=[12, 3, 19, 9]))),
             *[
@@ -217,7 +224,77 @@ class KamazoneRunTests(unittest.TestCase):
             with self.assertRaises(PacketError):
                 self.call(route, body)
             self.assertEqual((self.root / run.STATE).read_bytes(), previous)
+        self.call(run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9])))
+        previous = (self.root / run.STATE).read_bytes()
+        with self.assertRaises(PacketError):
+            self.select()
+        self.assertEqual((self.root / run.STATE).read_bytes(), previous)
         self.assert_untouched()
+
+    def test_native_node_then_party_then_battle_order_preserves_selection_and_budget(self):
+        user = self.challenge()
+        node = self.opening(user)["Id"]
+        self.assertEqual(user["Characters"], [])
+        opened = self.call(run.START, {"NodeId": node}, 710)
+        self.assertEqual(opened["Characters"], [])
+        self.assertEqual(opened["Progress"]["CurrentNodeId"], node)
+        state = run.load(self.session.store.references)
+        self.assertTrue(state["stage_started"])
+        self.assertFalse(state["battle_started"])
+        self.assertEqual(self.entry(), opened)
+        with self.assertRaises(PacketError):
+            self.call(run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9])))
+        selected = self.select()
+        self.assertEqual(self.call(run.START, {"NodeId": node}, 710), selected)
+        battle = self.call(
+            run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9]))
+        )
+        self.assertTrue(run.load(self.session.store.references)["battle_started"])
+        self.assertEqual(battle["Characters"], self.characters)
+        self.assertEqual(battle["Benefits"], opened["Benefits"])
+        self.assertEqual(battle["KamazonPoint"], opened["KamazonPoint"])
+        self.assert_untouched()
+
+    def test_existing_run_without_combat_phase_field_can_resume_without_read_writes(self):
+        node = self.opening(self.challenge())["Id"]
+        self.call(run.START, {"NodeId": node})
+        path = self.root / run.STATE
+        legacy = json.loads(path.read_bytes())
+        del legacy["battle_started"]
+        path.write_text(json.dumps(legacy))
+        before = path.read_bytes()
+        self.session = BootstrapSession(self.session.store)
+        self.session.signed_in = True
+        self.session.request_epoch = "reopened-before-party"
+        self.assertEqual(self.entry()["Progress"]["CurrentNodeId"], node)
+        self.assertFalse(run.load(self.session.store.references)["battle_started"])
+        self.assertEqual(path.read_bytes(), before)
+        self.select()
+        self.call(run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9])))
+        self.assertTrue(json.loads(path.read_bytes())["battle_started"])
+        self.assert_untouched()
+
+    def test_normal_elite_and_boss_entry_uses_each_generated_nodes_actual_preset(self):
+        for kind, position in (("Normal", 12), ("Elite", 3), ("Boss", 19)):
+            with self.subTest(kind=kind):
+                case = KamazoneRunTests()
+                self.addCleanup(case.doCleanups)
+                case.node_kind = kind
+                case.setUp()
+                user = case.challenge()
+                target = case.opening(user)
+                self.assertEqual(target["Type"], kind)
+                opened = case.call(run.START, {"NodeId": target["Id"]})
+                expected = next(n for n in opened["Nodes"] if n["Id"] == target["Id"])
+                self.assertEqual(
+                    (expected["Type"], expected["BattleMonsters"][0]["Position"]), (kind, position)
+                )
+                case.select()
+                case.call(
+                    run.BATTLE,
+                    dict(NodeId=target["Id"], Formation=dict(Id=0, Positions=[12, 3, 19, 9])),
+                )
+                case.assert_untouched()
 
     def test_unsigned_incomplete_expired_disabled_and_source_mismatched_entry_stays_closed(self):
         self.session.signed_in = False

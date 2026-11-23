@@ -195,6 +195,10 @@ def load(references):
     if not path.is_file() or path.stat().st_size > 32768:
         raise ValueError("Invalid local Kama-ZONE run file")
     value = references.json(STATE)
+    # Existing v1 files predate the distinction between opening the encounter
+    # panel and loading combat. Reading them must not rewrite their contents.
+    if isinstance(value, dict) and "battle_started" not in value:
+        value = dict(value, battle_started=False)
     if (
         not isinstance(value, dict)
         or set(value)
@@ -207,6 +211,7 @@ def load(references):
             "seed",
             "active",
             "stage_started",
+            "battle_started",
             "current_node_id",
             "characters",
             "formation",
@@ -225,6 +230,7 @@ def load(references):
         or not integer(value["seed"], maximum=0x7FFFFFFFFFFFFFFF)
         or type(value["active"]) is not bool
         or type(value["stage_started"]) is not bool
+        or type(value["battle_started"]) is not bool
         or not isinstance(value["characters"], list)
         or len(value["characters"]) > 4
         or any(not integer(i, minimum=1) for i in value["characters"])
@@ -274,7 +280,9 @@ def matching(account, source, season_id):
         or any(int(k) not in data["nodes"] for k in value["states"])
         or not set(value["characters"]) <= owned
         or value["stage_started"]
-        and (not value["active"] or not value["characters"])
+        and not value["active"]
+        or value["battle_started"]
+        and (not value["stage_started"] or not value["characters"] or value["formation"] is None)
     ):
         raise ValueError("Local Kama-ZONE run no longer matches its owner or content")
     return value
@@ -357,6 +365,7 @@ def handle(account, source, season_id, route, request, operation_id):
             seed=0,
             active=False,
             stage_started=False,
+            battle_started=False,
             current_node_id=data["starting"],
             characters=[],
             formation=None,
@@ -370,22 +379,26 @@ def handle(account, source, season_id, route, request, operation_id):
             seed=secrets.randbits(63),
             active=True,
             stage_started=False,
+            battle_started=False,
             current_node_id=data["starting"],
             states={str(data["starting"]): 8},
         )
         floor_nodes(source, season_id, value["seed"])
     elif route == SELECT:
-        if value["stage_started"]:
+        if value["battle_started"]:
             raise ValueError("Cannot change Kama-ZONE characters during an active stage")
         value["characters"] = list(ids)
     elif route == BATTLE:
         if not value["stage_started"] or request["NodeId"] != value["current_node_id"]:
             raise ValueError("Enter the selected Kama-ZONE node before loading its battle")
+        if not value["characters"]:
+            raise ValueError("Select a Kama-ZONE party before loading combat")
         value["formation"] = copy.deepcopy(request["Formation"])
+        value["battle_started"] = True
     else:
         ident, current = request["NodeId"], value["current_node_id"]
-        if not value["characters"]:
-            raise ValueError("Select a Kama-ZONE party before starting a stage")
+        # The APK opens the node first. EnterStage then initializes PartyInfo,
+        # sends select-characters, and finally calls start-battle from BeforeLoad.
         if value["stage_started"] and ident != current:
             raise ValueError("Finish the active Kama-ZONE stage before moving")
         if not value["stage_started"] and ident not in (

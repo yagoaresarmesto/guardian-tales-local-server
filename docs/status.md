@@ -103,6 +103,29 @@ There are zero diagnostic source writes or gamefile edits. APK map/combat entry
 is still pending. Results, loot, shops, special-event interactions, conclusion,
 later floors, scores and reward routes remain unsupported.
 
+The APK retry reaches the map and sends `/kamazonland/start-stage` for node 111,
+a generated normal encounter, with no party selected yet. The initial server
+guard rejected it before the native encounter panel could initialize its party.
+Native `KamazonLandClient.PartyInfo` falls back to the current party and sends
+`select-characters` during that initialization; `start-battle` follows in the
+stage's `BeforeLoad`. The follow-up therefore separates encounter opening from
+combat loading. An empty selection can open a connected encounter, party changes
+remain available there, and combat still requires owned heroes and locks the
+selection. Existing run files without the extra combat flag remain readable
+without read-time writes.
+
+Thirteen run regressions now include the captured node-before-party order,
+normal/elite/boss preset dispatch and legacy-file resume. All 136 tests in core,
+content and integration pass in 23.898 seconds, including the 57 Kama-ZONE cases
+and loopback TLS checks using isolated test certificates. Black (225 files),
+Ruff and repository/link checks (285 files) pass. A coherent real account/XP
+copy replays the exact pending node-111 request with the existing empty party,
+then saves the party, starts combat and reopens/retries. It retains the map seed,
+benefits, remaining point budget, effective static responses, account/XP tables
+and all 55 source reference files including the owner's current run. Diagnostics
+do not edit/reset that live run or gamefiles. APK combat loading remains pending;
+this correction adds no result, reward or noncombat-node interactions.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

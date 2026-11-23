@@ -231,18 +231,28 @@ If another connection error appears, leave it open to identify its request.
 There is no additional enabling command beyond the existing season selection.
 
 The native request chain is `/kamazonland/challenge` (`Difficulty`),
-`/kamazonland/select-characters` (`CharacterIds`), `/kamazonland/start-stage`
-(`NodeId`), and `/kamazonland/start-battle` (`NodeId`, `Formation`). Responses
+`/kamazonland/start-stage` (`NodeId`),
+`/kamazonland/select-characters` (`CharacterIds`), and `/kamazonland/start-battle`
+(`NodeId`, `Formation`). Responses
 project a complete `UserKamazonLand` singleton, with the preserved mini-season,
-benefits and remaining allocation budget. Party selection may precede the
-challenge. Only owned, distinct heroes and connected battle nodes are accepted;
-the battle handshake must match the entered node and contain a valid formation.
+benefits and remaining allocation budget. The APK opens the encounter panel
+before initializing its party: a node can be opened with an empty selection.
+Its native `PartyInfo` initialization then sends the owned party, and combat
+loading sends the formation handshake. Party selection may also precede the
+challenge. Owned, distinct heroes are required for combat, while node opening
+requires a connected generated battle node. Normal, elite and boss entry use
+each node's actual type and monster preset. Opening an encounter and loading
+combat have separate flags, so the party remains editable on the encounter
+screen and is locked only once combat starts. The battle handshake must match
+the entered node and contain a valid formation.
 HP uses the client's 10,000-unit scale. Native character generation resolves
 each battle monster's ID through the mode's monster table before loading its
 character spec; these IDs are not interchangeable.
 
 The private `kamazone_run.json` holds the selected difficulty, party, formation,
-seed, current node, node states and the last 64 request receipts. It is published
+seed, current node, encounter/combat flags, node states and the last 64 request
+receipts. Files predating the combat flag remain readable without being rewritten
+by entry; their next successful action publishes the added field. It is published
 atomically outside the account database, bound to the content SHA-256, season
 and local user. Reopening retains the same generated map; recent request retries
 do not reroll it or replace newer progress. A new challenge explicitly replaces
@@ -257,11 +267,17 @@ but their interactions are still unsupported. Battle results, loot, conclusion,
 currency rewards, rankings, further floors and season progression are also
 unimplemented. No clears or reward balances are fabricated.
 
-The reported difficulty-3 challenge request is APK observed. Ten new regressions
+The reported difficulty-3 challenge request is APK observed. Its APK retry reached
+the generated map, then sent `/kamazonland/start-stage` with `NodeId:111` for a
+normal encounter while the party was still empty. The initial party guard
+rejected that valid native order. The follow-up moves the party requirement to
+combat loading and keeps party changes available after node opening.
+Thirteen run regressions
 cover all three tiers, deterministic resume, request replay, party ownership,
-formation/connection guards, source/season/user isolation and unchanged account,
+formation/connection guards, the actual node-before-party flow, normal/elite/boss
+dispatch, legacy run files, source/season/user isolation and unchanged account,
 benefit and effective static data. Automated client-contract checks and actual
-APK stage entry are recorded separately in [status](status.md).
+APK combat entry are recorded separately in [status](status.md).
 
 ## Local rankings
 
