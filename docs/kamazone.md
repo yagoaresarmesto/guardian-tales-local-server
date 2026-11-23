@@ -159,7 +159,7 @@ on Android 3.57.0 EU with season 43 selected. Fresh counters show three successf
 entry reads and no new entry rejection; the declared preview banner is served
 by the CDN. This verifies loading and return navigation, not playable challenges,
 rewards or season 41/42 in the APK. The same probe exposed a separate unsupported
-ranking request; the new local empty response is awaiting its own APK check.
+ranking request; its local empty response is now owner verified too.
 
 The initial entry change passed 271 targeted Windows tests, including static
 overlays, CDN, Backroom and Training Room. A coherent file-backed account/XP copy passes selection of all three
@@ -181,5 +181,7 @@ The native `SendKamazonLandGetRankings` sender has no payload;
 `KamazonLandRankingPopup` reads `Rankings` from the JSON resource and accepts an
 empty list. Three new regressions cover its native wire shape, parameter
 rejection, selection/authentication guards and unchanged saved state. All 88
-focused tests pass with Black/Ruff and repository/link checks. The ranking
-popup's actual APK open/close check remains pending.
+focused tests pass with Black/Ruff and repository/link checks. The owner
+confirms that the ranking popup opens and returns to the Kama-ZONE lobby with
+season 43 selected. A fresh successful ranking-read counter increments once,
+with no new rejected or unsupported operation in that verification interval.

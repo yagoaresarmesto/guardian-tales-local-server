@@ -41,8 +41,11 @@ APK retry shows three successful entry reads and the declared banner served by
 the CDN. That probe also exposed `/kamazonland/get-rankings`; a new read returns
 the native JSON `Rankings` list empty, without account deltas, fake users/scores
 or official-server access. It shares the entry authentication, prologue,
-selection and content-binding guards. All 88 focused tests pass; ranking popup
-open/close remains pending in the APK.
+selection and content-binding guards. All 88 focused tests pass. The owner
+confirms that the ranking popup opens and returns to the Kama-ZONE lobby for
+season 43. A fresh successful ranking read appears with no new rejected or
+unsupported operation during that check. Entry and empty ranking navigation
+are APK verified; challenges, scored runs and rewards remain unimplemented.
 All changes remain backend response data; game files are untouched.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
