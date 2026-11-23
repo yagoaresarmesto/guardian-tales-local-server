@@ -233,6 +233,12 @@ arena variants and their seven daily slimes. Choose a variant and day, then
 click **Apply selection** and reopen the game. Both tabs share selections with
 their respective CLI commands below.
 
+For the original DKA slime portraits, install the optional decoder in the
+project environment with `python -m pip install ".[panel-art]"`. The panel reads
+the seven portraits directly from the imported Android bosses atlas. To set the
+header icon for both tabs, place your PNG at `local/panel-art/brand.png`
+(alongside the working state directory when using a custom data path).
+
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales raid-season list --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales raid-season set 46 --reference-dir local/client-data/reference

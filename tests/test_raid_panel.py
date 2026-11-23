@@ -4,12 +4,15 @@
 import json
 import tempfile
 import unittest
+from importlib.util import find_spec
+from io import BytesIO
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from guardian_tales import guild_raid, raid_custom, raid_panel, raid_static
 from guardian_tales.reference import ReferenceData
+from guardian_tales.web_panel.dka.sprites import frame_png
 from tests.test_guild_raid import synthetic_catalog, synthetic_static
 
 
@@ -41,7 +44,8 @@ class RaidPanelTests(unittest.TestCase):
         (self.root / guild_raid.CATALOG).write_text(json.dumps(catalog))
         self.source = self.root / "static_data_get.bin"
         self.source.write_bytes(raid_static.compress("".join(lines).encode()))
-        self.server = raid_panel.RaidPanel(self.refs, 0)
+        self.art_dir = self.root / "panel-art"
+        self.server = raid_panel.RaidPanel(self.refs, 0, art_dir=self.art_dir)
         self.server.start()
         self.addCleanup(self.server.stop)
         self.origin = f"http://127.0.0.1:{self.server.server_port}"
@@ -119,6 +123,36 @@ class RaidPanelTests(unittest.TestCase):
                 self.assertEqual(error.exception.code, status)
                 error.exception.close()
                 self.assertEqual(path.read_bytes(), original)
+
+    def test_optional_brand_is_shared_and_missing_art_does_not_block_the_pages(self):
+        self.assertNotIn(b'src="/brand.png"', self.call("/"))
+        self.art_dir.mkdir()
+        logo = b"local test image"
+        (self.art_dir / "brand.png").write_bytes(logo)
+        for page in ("/", "/dka"):
+            self.assertIn(b'src="/brand.png"', self.call(page))
+        self.assertEqual(self.call("/brand.png"), logo)
+        with self.assertRaises(HTTPError) as error:
+            self.call("/dka/slimes/space.png")
+        self.assertEqual(error.exception.code, 404)
+        error.exception.close()
+
+    @unittest.skipUnless(find_spec("PIL"), "requires the panel-art extra")
+    def test_atlas_frame_preserves_original_pixels_and_transparent_trim(self):
+        from PIL import Image
+
+        atlas = Image.new("RGBA", (8, 7), "red")
+        atlas.putpixel((4, 2), (40, 50, 60, 128))
+        entry = {
+            "frame": {"x": 3, "y": 2, "w": 2, "h": 3},
+            "rotated": False,
+            "sourceSize": {"w": 6, "h": 7},
+            "spriteSourceSize": {"x": 2, "y": 1, "w": 2, "h": 3},
+        }
+        icon = Image.open(BytesIO(frame_png(atlas, entry)))
+        self.assertEqual(icon.size, (6, 7))
+        self.assertEqual(icon.getbbox(), (2, 1, 4, 4))
+        self.assertEqual(icon.getpixel((3, 1)), (40, 50, 60, 128))
 
     def test_page_and_assets_load_without_a_catalog_and_api_reports_missing_data(self):
         (self.root / guild_raid.CATALOG).unlink()

@@ -2,6 +2,7 @@
 """Dungeon Kingdom Arena practice adapter."""
 
 from ... import punchking, punchking_static
+from . import sprites
 
 
 def arena_image(references):
@@ -19,6 +20,7 @@ def state(references):
         "active": {"variant": selection["variant"], "day": selection["day"]} if selection else None,
         "revision": selection["static_data_revision"] if selection else 0,
         "hasArt": arena_image(references).is_file(),
+        "hasSlimeSprites": sprites.available(references),
     }
 
 

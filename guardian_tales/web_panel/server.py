@@ -12,9 +12,10 @@ class WebPanel(ThreadingHTTPServer):
     # Finish any selection being published when the backend exits.
     daemon_threads = False
 
-    def __init__(self, references, port):
+    def __init__(self, references, port, *, art_dir=None):
         super().__init__(("127.0.0.1", port), PanelHandler)
         self.references = references
+        self.brand_image = art_dir / "brand.png" if art_dir is not None else None
 
     def start(self):
         Thread(target=self.serve_forever, name="Local web panel", daemon=True).start()
@@ -59,7 +60,13 @@ class PanelHandler(BaseHTTPRequestHandler):
             return
         try:
             if self.path in PAGES:
-                self.reply(200, "text/html; charset=utf-8", render_page(PAGES[self.path]))
+                brand = self.server.brand_image
+                page = render_page(
+                    PAGES[self.path], show_brand=brand is not None and brand.is_file()
+                )
+                self.reply(200, "text/html; charset=utf-8", page)
+            elif self.path == "/brand.png" and self.server.brand_image is not None:
+                self.reply(200, "image/png", self.server.brand_image.read_bytes())
             elif self.path in FILES:
                 path, mime = FILES[self.path]
                 self.reply(200, mime, path.read_bytes())

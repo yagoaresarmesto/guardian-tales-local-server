@@ -3,6 +3,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from html import escape
 from pathlib import Path
 from string import Template
@@ -11,6 +12,7 @@ from ..guild_raid import RaidSelectionChanged
 from ..punchking_static import ArenaSelectionChanged
 from ..reference import ReferenceData
 from .dka import adapter as dka
+from .dka import sprites
 from .raid import adapter as raid
 
 ROOT = Path(__file__).parent
@@ -44,10 +46,14 @@ for mode in MODES:
 MEDIA = {
     "/map.png": (lambda refs: raid.map_image(refs).read_bytes(), "image/png"),
     "/arena.jpg": (lambda refs: dka.arena_image(refs).read_bytes(), "image/jpeg"),
+    **{
+        f"/dka/slimes/{element}.png": (partial(sprites.read, element=element), "image/png")
+        for element in sprites.FRAMES
+    },
 }
 
 
-def render_page(mode):
+def render_page(mode, *, show_brand):
     links = []
     for entry in MODES:
         current = ' aria-current="page"' if entry == mode else ""
@@ -55,6 +61,7 @@ def render_page(mode):
     layout = Template((ROOT / "shared/layout.html").read_text(encoding="utf-8"))
     return layout.substitute(
         title=escape(mode.title),
+        brand_icon='<img class="brand-icon" src="/brand.png" alt="">' if show_brand else "",
         slug=mode.slug,
         navigation="".join(links),
         body=(ROOT / mode.slug / "view.html").read_text(encoding="utf-8"),

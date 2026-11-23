@@ -12,6 +12,17 @@ function weakness(day) {
   return "Weak to " + (weaknesses[day.weak_point] || day.weak_point);
 }
 
+function showSlime(image, day) {
+  image.hidden = true;
+  if (state.hasSlimeSprites) {
+    image.onload = () => { image.hidden = false; };
+    image.onerror = () => { image.hidden = true; };
+    image.src = "/dka/slimes/" + encodeURIComponent(elementName(day).toLowerCase()) + ".png";
+  } else {
+    image.removeAttribute("src");
+  }
+}
+
 function renderDays(variant, chosenDay) {
   $("days").replaceChildren();
   variant.days.forEach((day, index) => {
@@ -24,6 +35,7 @@ function renderDays(variant, chosenDay) {
     radio.checked = index + 1 === chosenDay;
     const card = $("day-card").content.firstElementChild.cloneNode(true);
     card.dataset.element = elementName(day).toLowerCase();
+    showSlime(card.querySelector(".slime"), day);
     card.querySelector(".day-number").textContent = "Day " + (index + 1);
     card.querySelector("strong").textContent = elementName(day) + " Slime";
     card.querySelector("small").textContent = weakness(day);
@@ -47,6 +59,7 @@ function display(next) {
     const day = variant.days[active.day - 1];
     $("saved-status").textContent = "Variant " + active.variant + " · Season " + variant.season_id + " · Day " + active.day;
     $("saved-encounter").dataset.element = elementName(day).toLowerCase();
+    showSlime($("saved-encounter").querySelector(".slime"), day);
     $("saved-slime").textContent = elementName(day) + " Slime";
     $("saved-weakness").textContent = weakness(day);
   } else {

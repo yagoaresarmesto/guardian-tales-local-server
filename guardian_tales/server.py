@@ -348,7 +348,11 @@ async def run(args):
     await server.start()
     panel = None
     try:
-        panel = WebPanel(server.guests.references, args.raid_panel_port)
+        panel = WebPanel(
+            server.guests.references,
+            args.raid_panel_port,
+            art_dir=args.data_dir.parent / "panel-art",
+        )
         panel.start()
     except OSError as error:
         print(f"Raid panel unavailable ({error}). Choose another --raid-panel-port.", flush=True)

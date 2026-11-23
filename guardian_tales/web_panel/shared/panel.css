@@ -26,12 +26,9 @@ ol { list-style: none; padding: 0; }
 .topbar { background: #101a2bd9; border-bottom: 1px solid #344158; }
 .bar-inner { min-height: 58px; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.12rem; letter-spacing: -.035em; }
-.crest {
-  position: relative; width: 31px; height: 32px;
-  background: linear-gradient(125deg, #fff1af 20%, #ffd261 53%, #d49336 54%);
-  clip-path: polygon(0 15%, 27% 29%, 27% 14%, 42% 23%, 50% 2%, 58% 23%, 73% 14%, 73% 29%, 100% 15%, 88% 49%, 73% 54%, 75% 61%, 50% 99%, 25% 61%, 27% 54%, 12% 49%);
+.brand-icon {
+  width: 58px; height: 48px; object-fit: cover; object-position: 50% 45%; flex: none;
 }
-.crest::after { content: ""; position: absolute; inset: 32% 32% 24%; background: #3c3840; clip-path: polygon(0 0, 50% 25%, 100% 0, 85% 56%, 50% 100%, 15% 56%); }
 .local { display: flex; align-items: center; gap: 9px; color: #c2d0e3; font-size: .875rem; }
 .local::before { content: ""; width: 12px; height: 8px; border: 1.5px solid var(--ice); border-radius: 2px; box-shadow: 0 4px 0 -1.5px #182438, 0 5px 0 -1.5px var(--ice); }
 main { padding-block: 23px 40px; }
