@@ -20,6 +20,7 @@ from . import (
     classic_coop,
     colosseum,
     expedition,
+    kamazone,
     multi_presets,
     story_interactions,
     story_rewards,
@@ -904,9 +905,12 @@ class BootstrapSession:
                         self.store.db, references, name, value, effective
                     )
 
-                seed = head_hunter_bootstrap_seed(
-                    self.store.db, self.store.references, filename, body, pinned
-                )
+                def equipped(references, name, value):
+                    return head_hunter_bootstrap_seed(
+                        self.store.db, references, name, value, pinned
+                    )
+
+                seed = kamazone.bootstrap_seed(self.store.references, filename, body, equipped)
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
             return Packet(

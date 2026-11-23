@@ -1,10 +1,25 @@
 # Verification and remaining work
 
-Status recorded on **2026-11-22**. The public source tree reorganizes the working
+Status recorded on **2026-11-23**. The public source tree reorganizes the working
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
 ## Automated checks
+
+The optional [Kama-ZONE selector](kamazone.md) lists/selects the three preserved
+Global/EU seasons and restores their original calendar. Native inspection locates
+the entry in the Events drawer and its reward-period visibility predicate.
+Eighteen new regressions cover scoped dates, expiry, content binding, no account
+access, revision-safe restoration, atomic publication, Andras composition and
+the optional CDN preview. The pack lacks its historical banner PNGs; the CDN
+can generate an original menu image in memory for the selected declared URL
+when started with `--reference-dir`, without changing preserved files.
+This milestone deliberately leaves `/kamazonland/enter` and gameplay unsupported.
+Actual APK card visibility is pending; no live season is activated by diagnostics.
+All 240 targeted Windows tests pass, together with Black (220 files), Ruff and
+repository/link checks (280 files). A coherent account/XP copy passes all three
+selections and restoration, retaining every main-account table, trial XP,
+existing overlays and 52 original reference files, with zero source writes.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using

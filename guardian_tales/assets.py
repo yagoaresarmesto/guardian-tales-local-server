@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Read-only loopback CDN backed by preservation manifests, never account files."""
+"""Read-only manifest CDN and opt-in generated previews, never account files."""
 
 import argparse
 import hashlib
@@ -10,6 +10,18 @@ import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
+
+
+def resource_path(url):
+    path = unquote(urlsplit(url).path).lstrip("/")
+    if "\\" in path or any(p in (".", "..") for p in path.split("/")):
+        return None
+    for prefix in ("live/global/0491/", "master-global-v3.57.0/", "v3.57.0/", "3.57.0/"):
+        if path.startswith(prefix):
+            path = path[len(prefix) :]
+    if path.startswith("media/staticdata/"):
+        path = "static_data/" + path[len("media/staticdata/") :]
+    return path
 
 
 class ResourceLibrary:
@@ -30,15 +42,7 @@ class ResourceLibrary:
                     self.files[relative] = (path, row["sha256"])
 
     def lookup(self, url):
-        path = unquote(urlsplit(url).path).lstrip("/")
-        if "\\" in path or any(p in (".", "..") for p in path.split("/")):
-            return None
-        for prefix in ("live/global/0491/", "master-global-v3.57.0/", "v3.57.0/", "3.57.0/"):
-            if path.startswith(prefix):
-                path = path[len(prefix) :]
-        if path.startswith("media/staticdata/"):
-            path = "static_data/" + path[len("media/staticdata/") :]
-        return self.files.get(path)
+        return self.files.get(resource_path(url))
 
 
 def handler_for(library, journal=None, reference_dir=None):
@@ -82,16 +86,33 @@ def handler_for(library, journal=None, reference_dir=None):
 
         def serve(self, body):
             entry = library.lookup(self.path)
+            override = None
+            if entry is None and reference_dir is not None:
+                from .kamazone_banner import missing_banner
+
+                try:
+                    override = missing_banner(reference_dir, resource_path(self.path))
+                except (OSError, ValueError):
+                    self.send_error(503, "Optional Kama-ZONE preview is not ready")
+                    return
             if journal:
                 # Paths only, no query strings, headers or cookies. Keep private.
                 with Path(journal).open("a", encoding="utf-8") as out:
                     out.write(
-                        json.dumps({"path": urlsplit(self.path).path, "found": bool(entry)}) + "\n"
+                        json.dumps(
+                            {
+                                "path": urlsplit(self.path).path,
+                                "found": entry is not None or override is not None,
+                            }
+                        )
+                        + "\n"
                     )
-            if entry is None:
+            if entry is None and override is None:
                 self.send_error(404)
                 return
-            path, sha = entry
+            # A generated preview uses this path only for its MIME suffix.
+            # All file reads remain in the original manifest-backed branch.
+            path, sha = entry if entry is not None else (Path(resource_path(self.path)), None)
             # The native name filter splits nonempty lines from these downloaded
             # lists. Serve an empty list with a new ETag, retaining preserved files
             # and all chat word lists. This shared client list also covers guild names.
@@ -100,7 +121,7 @@ def handler_for(library, journal=None, reference_dir=None):
                 and path.parent.parent.name == "media"
                 and re.fullmatch(r"kakao_[A-Za-z0-9-]+_name\.txt", path.name) is not None
             )
-            override = b"\n" if local_name_list else None
+            override = b"\n" if local_name_list else override
             if override is None and reference_dir is not None:
                 from .andras_trial_labels import cdn_override
 
@@ -177,12 +198,14 @@ def handler_for(library, journal=None, reference_dir=None):
 
 def main(argv=None):
     p = argparse.ArgumentParser(
-        description="Read-only local CDN restricted to preservation manifest entries."
+        description="Read-only manifest CDN with optional in-memory preview responses."
     )
     p.add_argument("--resource-root", action="append", type=Path, required=True)
     p.add_argument("--port", type=int, default=18080)
     p.add_argument("--journal", type=Path)
-    p.add_argument("--reference-dir", type=Path, help="Optional Andras title inputs and trial flag")
+    p.add_argument(
+        "--reference-dir", type=Path, help="Optional Andras title inputs and Kama-ZONE selection"
+    )
     p.add_argument("--run-seconds", type=int, default=0)
     args = p.parse_args(argv)
     library = ResourceLibrary(args.resource_root)

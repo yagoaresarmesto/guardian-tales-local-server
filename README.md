@@ -281,6 +281,12 @@ list stages, set one or all stages to a visible level from 1 to 220 for the
 matching pack, and restore original levels. They configure
 external static overlays without editing the saved account.
 
+The optional [Kama-ZONE selector](docs/kamazone.md) activates one preserved Global
+season's calendar for its Events card, with status and restoration commands.
+This milestone covers menu visibility only; mode entry and gameplay remain
+unsupported. Run the CDN with `--reference-dir` to supply an in-memory preview
+image when the selected season's historical banner is missing.
+
 The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
 projects one owned Andras as an experimental Myth variant using her existing
 appearance and combat kit, with Eunha's leader effects, Bianca's leader
