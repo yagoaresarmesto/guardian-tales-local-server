@@ -33,10 +33,27 @@ class KamazoneLootTests(unittest.TestCase):
             SpecialEventChoices=[],
             Constants={"BattleLootWeights" + kind: [1, 2, 3, 1] for kind in run.COMBAT},
         )
+        mode["Constants"]["ShelterHpRecover"] = 0.4
         mode["Artifacts"] = [
             dict(Id=i, Kind="Curse" if i == 16 else "Normal", Rarity=i % 3, Lootable=i != 15)
             for i in range(11, 17)
         ]
+        mode["Artifacts"][0].update(EffectType="CoinBonus", EffectValue=[10])
+        mode["Artifacts"][-1].update(EffectType="LoseCoinNodeClear", EffectValue=[10])
+        mode["Benefits"].append(
+            dict(
+                Id=23,
+                MaxLevel=2,
+                OpenType="None",
+                Points=[50, 50],
+                EffectType="CoinBonusBattle",
+                EffectValue1=[0, 40, 80],
+                EffectValue2=[0, 50, 90],
+            )
+        )
+        for season in mode["Seasons"]:
+            season["Benefits"].append(23)
+            season["ArtifactsCurse"] = [16]
         for row in mode["FloorPresets"]:
             if row["Step"] == 1:
                 for kind in run.PROBABILITIES:
@@ -65,7 +82,8 @@ class KamazoneLootTests(unittest.TestCase):
         packet = request(route, body)
         packet["sequence_id"] = self.sequence if sequence is None else sequence
         reply = self.session.handle(packet)
-        return json.loads(reply.body)["UserKamazonLand"]
+        self.packet = json.loads(reply.body)
+        return self.packet["UserKamazonLand"]
 
     def reopen(self):
         epoch = self.session.request_epoch
@@ -108,8 +126,10 @@ class KamazoneLootTests(unittest.TestCase):
         self.reject(
             battle.CLOSE, dict(NodeId=110, LootArtifactId=choices[0], DiscardArtifactIndex=0)
         )
-        first = self.call(battle.CLOSE, dict(NodeId=110, LootArtifactId=choices[0]))
-        self.assertEqual([a["Id"] for a in first["Artifacts"]], choices[:1])
+        self.assertEqual(user["SilverCoin"], 0)
+        first = self.call(battle.CLOSE, dict(NodeId=110, LootArtifactId=11))
+        self.assertEqual((self.packet["AddedSilverCoin"], first["SilverCoin"]), (10, 10))
+        self.assertEqual([a["Id"] for a in first["Artifacts"]], [11])
         self.assertEqual(next(n for n in first["Nodes"] if n["Id"] == 110)["State"], 11)
         self.assertEqual(self.reopen(), first)
         boss = self.fight(120)
@@ -133,12 +153,13 @@ class KamazoneLootTests(unittest.TestCase):
         self.assertEqual(current["Hps"], first["Hps"])
         self.assertEqual(current["Formation"], first["Formation"])
         self.assertEqual(current["Characters"], first["Characters"])
-        self.assertEqual(
-            [a["Id"] for a in current["Artifacts"]], [choices[0], loot["LootArtifactId"]]
-        )
+        self.assertEqual([a["Id"] for a in current["Artifacts"]], [11, loot["LootArtifactId"]])
         self.assertEqual(self.reopen(), current)
+        self.assertEqual(current["SilverCoin"], 50)
         self.assertEqual(self.call(battle.CLOSE, loot, 701), current)
+        self.assertEqual(self.packet["AddedSilverCoin"], 40)
         self.assertEqual(self.call(battle.CLOSE, loot), current)
+        self.assertEqual(self.packet["AddedSilverCoin"], 40)
         self.reject(battle.CLOSE, dict(NodeId=120))
         self.reject(run.START, dict(NodeId=110))
         self.assertEqual(self.fight(211)["Type"], "Elite")
@@ -148,12 +169,44 @@ class KamazoneLootTests(unittest.TestCase):
             self.references,
         )
 
+    def test_empty_boss_offer_pays_and_advances_even_if_the_client_skips_close(self):
+        self.fight(110)
+        self.call(battle.CLOSE, dict(NodeId=110))
+        with patch("guardian_tales.kamazone_loot.offer", return_value=[]):
+            self.call(run.START, {"NodeId": 120})
+            user = self.call(run.BATTLE, dict(NodeId=120, Formation=[12, 3, 19, 9]))
+            boss = next(row for row in user["Nodes"] if row["Id"] == 120)
+            user = self.call(
+                battle.END,
+                dict(
+                    NodeId=120,
+                    Result=1,
+                    CharacterHps={},
+                    MonsterHps=[0] * len(boss["BattleMonsters"]),
+                ),
+            )
+            self.assertEqual((user["Progress"]["Floor"], user["SilverCoin"]), (2, 40))
+            self.assertEqual(self.call(battle.CLOSE, dict(NodeId=120)), user)
+            self.assertEqual(self.packet["AddedSilverCoin"], 30)
+
+    def test_selected_bounty_level_adds_the_matching_tier_bonus_once(self):
+        self.owner.owner.enable()
+        self.owner.owner.save({"23": 2})
+        self.fight(111)
+        user = self.call(battle.CLOSE, dict(NodeId=111))
+        self.assertEqual((self.packet["AddedSilverCoin"], user["SilverCoin"]), (70, 70))
+        self.fight(120)
+        user = self.call(battle.CLOSE, dict(NodeId=120))
+        self.assertEqual((self.packet["AddedSilverCoin"], user["SilverCoin"]), (120, 190))
+        self.assertEqual(self.reopen(), user)
+
     def test_elite_offer_allows_declining_full_inventory_or_replacing_only_the_selected_slot(self):
         self.fight(111)
         value = json.loads(self.path.read_bytes())
         value["artifacts"] = [
             dict(Id=11, Battle=2, Shelter=0, EliminateArtifact=0) for _ in range(8)
         ]
+        value["curses"] = [16]
         self.path.write_text(json.dumps(value))
         saved = self.path.read_bytes()
         for index in (None, -1, 8, True):
@@ -165,9 +218,11 @@ class KamazoneLootTests(unittest.TestCase):
             battle.CLOSE, dict(NodeId=111, LootArtifactId=13, DiscardArtifactIndex=0)
         )
         self.assertEqual([a["Id"] for a in replaced["Artifacts"]], [13] + [11] * 7)
+        self.assertEqual((self.packet["AddedSilverCoin"], replaced["SilverCoin"]), (100, 90))
         self.path.write_bytes(saved)
         declined = self.call(battle.CLOSE, dict(NodeId=111))
         self.assertEqual(declined["Artifacts"], value["artifacts"])
+        self.assertEqual(declined["SilverCoin"], 90)
         self.reject(battle.CLOSE, dict(NodeId=111, LootArtifactId=11, DiscardArtifactIndex=0))
 
     def test_defeat_and_timeout_offer_nothing_and_cannot_claim_a_victory(self):
@@ -175,7 +230,8 @@ class KamazoneLootTests(unittest.TestCase):
             lost = self.fight(110, result)
             self.assertEqual(lost["LootArtifacts"], [])
             self.reject(battle.CLOSE, dict(NodeId=110, LootArtifactId=11))
-            self.call(battle.CLOSE, dict(NodeId=110))
+            self.assertEqual(self.call(battle.CLOSE, dict(NodeId=110))["SilverCoin"], 0)
+            self.assertNotIn("AddedSilverCoin", self.packet)
             self.reject(run.START, dict(NodeId=120))
         self.assertTrue(self.fight(110)["LootArtifacts"])
 
@@ -186,7 +242,7 @@ class KamazoneLootTests(unittest.TestCase):
         state = json.loads(self.path.read_bytes())
         state.update(stage_started=False, pending_result=None)
         state["states"]["120"] = 11
-        for key in ("floor", "battle_loot", "last_loot_close"):
+        for key in ("floor", "battle_loot", "last_loot_close", "last_battle_silver"):
             state.pop(key)
         self.path.write_text(json.dumps(state))
         before = self.path.read_bytes()

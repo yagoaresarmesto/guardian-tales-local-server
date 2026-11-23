@@ -84,7 +84,9 @@ class KamazoneEventTests(unittest.TestCase):
         ]
         mode["Artifacts"] = [
             dict(Id=i, Kind="Normal", Rarity=i - 901, Lootable=True, Price=40) for i in (901, 902)
-        ] + [dict(Id=801, Kind="Curse")]
+        ] + [dict(Id=801, Kind="Curse", EffectType="LoseCoinNodeClear", EffectValue=[10])]
+        mode["Artifacts"][0].update(EffectType="CoinBonus", EffectValue=[10])
+        mode["Artifacts"][1].update(EffectType="CoinConstant", EffectValue=[0])
         for season in mode["Seasons"]:
             season.update(
                 SpecialEvents=[1, 2, 3, 4],
@@ -204,6 +206,37 @@ class KamazoneEventTests(unittest.TestCase):
         self.assertEqual(self.node(closed)["State"], 11)
         self.assertEqual(closed["SilverCoin"], 50)
         self.open(120)
+        self.untouched()
+
+    def test_tree_and_mimic_apply_once_to_different_steps_of_a_coin_event(self):
+        tree = dict(Id=901, Battle=0, Shelter=0, EliminateArtifact=0)
+        self.seed(artifacts=[tree], curses=[801])
+        self.open()
+        user = self.choose(101)
+        self.assertEqual(user["SilverCoin"], 60)
+        self.assertEqual(self.node(user)["ChoiceEffectResults"][0]["Values"], [60])
+        self.assertEqual(self.choose(101), user)
+        closed = self.close()
+        self.assertEqual(closed["SilverCoin"], 50)
+        self.assertEqual(self.close(), closed)
+        self.assertEqual(self.entry(), closed)
+        self.open(120)
+        self.choose(109, 120)
+        self.assertEqual(self.entry()["SilverCoin"], 30)
+        self.assertEqual(self.close(120)["SilverCoin"], 20)
+        self.untouched()
+
+    def test_fixed_zero_income_takes_priority_over_tree_and_zero_balance_is_valid(self):
+        for inventory in ([901, 902], [902, 901]):
+            self.call(run.CHALLENGE, {"Difficulty": 3})
+            self.seed(
+                artifacts=[dict(Id=i, Battle=0, Shelter=0, EliminateArtifact=0) for i in inventory],
+                curses=[801],
+            )
+            self.open()
+            user = self.choose(101)
+            self.assertEqual(self.node(user)["ChoiceEffectResults"][0]["Values"], [0])
+            self.assertEqual(self.close()["SilverCoin"], 0)
         self.untouched()
 
     def test_artifact_and_curse_grants_are_deferred_to_nullable_native_confirm_lists(self):

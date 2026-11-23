@@ -32,6 +32,10 @@ class KamazoneShelterTests(unittest.TestCase):
         self.owner.owner.practice("disable")
         mode = self.owner.fixture.tables["kamazonland2"]
         mode["Constants"] = {"ShelterHpRecover": 0.4}
+        mode["Artifacts"] = [
+            dict(Id=801, Kind="Curse", EffectType="LoseCoinNodeClear", EffectValue=[10]),
+            dict(Id=802, Kind="Curse"),
+        ]
         for season in mode["Seasons"]:
             season["ArtifactsCurse"] = [801, 802]
         for row in mode["FloorPresets"]:
@@ -159,6 +163,16 @@ class KamazoneShelterTests(unittest.TestCase):
         self.assertEqual(user["Hps"]["1"], 2000)
         self.reject(shelter.TAKE, dict(NodeId=111, ChoiceType=1))
         self.unchanged(user)
+
+    def test_curse_charges_for_skipping_but_purification_removes_the_cost(self):
+        self.seed(silver_coin=7, curses=[801])
+        self.open()
+        pending = self.path.read_bytes()
+        self.assertEqual(self.take(3)["UserKamazonLand"]["SilverCoin"], 7)
+        self.path.write_bytes(pending)
+        self.assertEqual(self.take(1)["UserKamazonLand"]["SilverCoin"], 0)
+        self.path.write_bytes(pending)
+        self.assertEqual(self.call(run.START, {"NodeId": 120})["UserKamazonLand"]["SilverCoin"], 0)
 
     def test_explicit_no_action_closes_the_shelter_without_changing_hp(self):
         self.seed(hps={"1": 2000})

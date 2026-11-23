@@ -7,7 +7,7 @@ import math
 import random
 from functools import lru_cache
 
-from . import kamazone
+from . import kamazone, kamazone_silver
 from .kamazone_battle import HP_SCALE
 from .raid_static import decode, records
 from .village import integer
@@ -77,9 +77,10 @@ def open_shelter(value, source, season_id, node):
     value["stage_started"] = False
 
 
-def skip(value, ident):
+def skip(value, ident, source):
     row = value["shelters"].get(str(ident))
     if row is not None and row["choice"] is None:
+        kamazone_silver.charge_clear(value, source)
         row["choice"] = 0
         value["states"][str(ident)] = 11
         value["stage_started"] = False
@@ -134,6 +135,7 @@ def take(value, source, season_id, request, nodes):
         if not value["curses"]:
             raise ValueError("No Kama-ZONE curse is available to purify")
         value["curses"].pop(rng.randrange(len(value["curses"])))
+    kamazone_silver.charge_clear(value, source)
     row["choice"] = choice
     value["states"][str(ident)] = 11
     value["stage_started"] = False

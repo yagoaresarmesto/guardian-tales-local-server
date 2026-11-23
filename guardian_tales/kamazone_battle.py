@@ -4,8 +4,8 @@
 import hashlib
 import json
 
+from . import kamazone, kamazone_aids, kamazone_loot, kamazone_silver
 from . import kamazone_event_effects as effects
-from . import kamazone_loot
 from .village import integer
 
 END = "/kamazonland/end-battle"
@@ -23,6 +23,7 @@ def defaults():
         battle_count=0,
         battle_loot=[],
         last_loot_close=None,
+        last_battle_silver=0,
     )
 
 
@@ -53,6 +54,7 @@ def valid_state(value):
         and len(set(value["battle_loot"])) == len(value["battle_loot"])
         and (not value["battle_loot"] or value["pending_result"] == 1)
         and (value["last_loot_close"] is None or valid_close_receipt(value["last_loot_close"]))
+        and integer(value["last_battle_silver"])
         and hp_map(value["hps"], 1024)
         and isinstance(value["monster_hps"], dict)
         and len(value["monster_hps"]) <= 128
@@ -159,7 +161,18 @@ def finish_empty_victory(value, node):
         value.update(stage_started=False, pending_result=None)
 
 
-def apply(value, route, request, nodes, pools):
+def settle_victory(value, node, request, source, references):
+    bonuses = kamazone_aids.selected(references, source, value["season_id"])
+    tier = node["Type"]
+    amount = kamazone_silver.BASE_REWARD[tier] + bonuses.get(tier, 0)
+    specs = kamazone.artifact_specs(source) if value["artifacts"] else {}
+    value["last_battle_silver"] = kamazone_silver.collect(value, amount, specs)
+    kamazone_silver.charge_clear(value, source)
+    value["last_loot_close"] = close_receipt(request)
+
+
+def apply(value, route, request, nodes, pools, source, references):
+    """Apply a result or close and report whether this request settled a new victory."""
     ident = request["NodeId"]
     if (
         route == CLOSE
@@ -168,7 +181,7 @@ def apply(value, route, request, nodes, pools):
     ):
         if close_receipt(request) != value["last_loot_close"]:
             raise ValueError("Kama-ZONE battle reward was already confirmed")
-        return
+        return False
     node = next((n for n in nodes if n["Id"] == ident), None)
     if (
         not value["active"]
@@ -183,7 +196,7 @@ def apply(value, route, request, nodes, pools):
         ).hexdigest()
         if not value["battle_started"]:
             if fingerprint == value["last_result_hash"]:
-                return
+                return False
             raise ValueError("Start the Kama-ZONE battle before reporting its result")
         if (
             not {int(i) for i in request["CharacterHps"]} <= set(value["characters"])
@@ -204,6 +217,10 @@ def apply(value, route, request, nodes, pools):
             battle_count=value["battle_count"] + 1,
         )
         finish_empty_victory(value, node)
+        if request["Result"] == 1 and value["pending_result"] is None:
+            settle_victory(value, node, request, source, references)
+            return True
+        return False
     else:
         _, item, index = close_receipt(request)
         if item is not None and item not in value["battle_loot"]:
@@ -212,21 +229,23 @@ def apply(value, route, request, nodes, pools):
             raise ValueError("Finish the Kama-ZONE battle before closing it")
         if value["pending_result"] is None:
             if not value["stage_started"]:
-                return
+                return False
             raise ValueError("No Kama-ZONE battle result is ready to close")
-        if value["pending_result"] == 1:
+        won = value["pending_result"] == 1
+        if won:
             if has_choices(node):
                 raise ValueError("The Kama-ZONE battle still has unresolved loot choices")
+            settle_victory(value, node, request, source, references)
             if value["battle_loot"]:
                 if item is not None:
                     inventory = value["artifacts"]
                     if index is not None and len(inventory) < effects.LIMIT:
                         raise ValueError("Only a full battle inventory requires a replacement")
                     effects.add_reward(inventory, item, index, artifact=True)
-                value["last_loot_close"] = close_receipt(request)
                 value["battle_loot"] = []
             value["states"][str(ident)] |= 8
         value.update(stage_started=False, pending_result=None)
+        return won
 
 
 def project(value, owned, user):
@@ -245,10 +264,13 @@ def project(value, owned, user):
                 monster["Hp"] = hp
 
 
-def response(route):
+def response(route, request, value):
     # Run artifacts are projected in UserKamazonLand, outside account inventory.
     if route == END:
         return {"ArtifactEffectResults": []}
     if route == CLOSE:
-        return {"ChoiceEffectResults": [], "AddedItems": []}
+        reply = {"ChoiceEffectResults": [], "AddedItems": []}
+        if close_receipt(request) == value["last_loot_close"] and value["last_battle_silver"]:
+            reply["AddedSilverCoin"] = value["last_battle_silver"]
+        return reply
     return {}

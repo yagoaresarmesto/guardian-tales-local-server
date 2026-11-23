@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Local special-event effects and native nullable artifact replacement lists."""
 
+from . import kamazone_silver
 from .village import integer
 
 HP_SCALE = 10000
@@ -54,17 +55,14 @@ def apply(value, data, kind, args, owned, rng, visit):
     args = args or []
     if kind == "None":
         return result(kind)
-    if kind in ("GetCoin", "LoseCoin"):
+    if kind == "GetCoin":
+        return result(kind, values=[kamazone_silver.collect(value, args[0], data["artifacts"])])
+    if kind == "LoseCoin":
         amount = args[0]
-        if kind == "LoseCoin":
-            if amount > value["silver_coin"]:
-                raise ValueError("Not enough local Kama-ZONE silver coins")
-            amount = -amount
-        total = value["silver_coin"] + amount
-        if not integer(total, maximum=0x7FFFFFFF):
-            raise ValueError("Local Kama-ZONE silver coins exceed their native range")
-        value["silver_coin"] = total
-        return result(kind, values=[abs(amount)])
+        if not integer(amount) or amount > value["silver_coin"]:
+            raise ValueError("Not enough local Kama-ZONE silver coins")
+        value["silver_coin"] -= amount
+        return result(kind, values=[amount])
     if kind.startswith(("Heal", "Damage")) or kind == "Revive":
         hps = {str(i): value["hps"].get(str(i), HP_SCALE) for i in sorted(owned)}
         targets = [i for i, hp in hps.items() if (hp == 0 if kind == "Revive" else hp > 0)]

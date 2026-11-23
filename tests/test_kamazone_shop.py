@@ -22,6 +22,7 @@ class KamazoneShopTests(unittest.TestCase):
         self.db, self.root, self.session = self.owner.db, self.owner.root, self.owner.session
         self.owner.owner.practice("disable")
         mode = self.owner.fixture.tables["kamazonland2"]
+        mode.setdefault("Constants", {})["ShelterHpRecover"] = 0.4
         for row in mode["FloorPresets"]:
             if row["Id"] in (110, 111):
                 for kind in run.PROBABILITIES:
@@ -38,10 +39,18 @@ class KamazoneShopTests(unittest.TestCase):
             ),
             dict(Id=70, Kind="Normal", Lootable=True, Price=80),
             dict(Id=701, Kind="Effect", Lootable=True, Price=50),
-            dict(Id=801, Kind="Curse", Lootable=True, Price=-50),
+            dict(
+                Id=801,
+                Kind="Curse",
+                Lootable=True,
+                Price=-50,
+                EffectType="LoseCoinNodeClear",
+                EffectValue=[10],
+            ),
         ]
         for season in mode["Seasons"]:
             season["Artifacts"] = [1, 2, 3, 4, 5, 6, 701, 801] if season["Id"] == 43 else [70]
+            season["ArtifactsCurse"] = [801]
             season["ArtifactsException"] = [5] if season["Id"] == 43 else []
         self.owner.fixture.write_source()
         self.owner.owner.command("select", "--season-id", "43")
@@ -117,6 +126,17 @@ class KamazoneShopTests(unittest.TestCase):
         self.assertEqual(self.entry(), opened)
         self.assertEqual(self.open(), opened)
         self.unchanged(opened)
+
+    def test_greedy_mimic_charges_once_on_shop_exit(self):
+        state = json.loads(self.path.read_bytes())
+        state.update(curses=[801], silver_coin=25)
+        self.path.write_text(json.dumps(state))
+        self.assertEqual(self.open()["SilverCoin"], 25)
+        for _ in range(2):
+            self.assertEqual(
+                self.call(shop.CLOSE, {"NodeId": 111})["UserKamazonLand"]["SilverCoin"], 15
+            )
+        self.assertEqual(self.entry()["SilverCoin"], 15)
 
     def test_close_shop_marks_it_complete_and_allows_the_next_connected_battle(self):
         opened = self.open()

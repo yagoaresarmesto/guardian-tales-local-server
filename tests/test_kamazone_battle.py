@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Native Kama-ZONE results retain HP and close a local node without rewards."""
+"""Native Kama-ZONE results retain HP and settle victory silver once."""
 
 import copy
 import json
@@ -72,7 +72,6 @@ class KamazoneBattleTests(unittest.TestCase):
             "Benefits",
             "KamazonPoint",
             "KamazonPointTotal",
-            "SilverCoin",
             "ClearRecords",
             "ClearRecordsInSeason",
         ):
@@ -168,6 +167,13 @@ class KamazoneBattleTests(unittest.TestCase):
                 self.assertEqual(
                     next(n for n in ended["Nodes"] if n["Id"] == case.node["Id"])["State"], 11
                 )
+                amount = {"Normal": 10, "Elite": 20, "Boss": 30}[kind]
+                self.assertEqual(ended["SilverCoin"], case.initial["SilverCoin"] + amount)
+                self.assertEqual(case.reopened(), ended)
+                for _ in range(2):
+                    packet = case.call(battle.CLOSE, case.closing)
+                    self.assertEqual(packet["AddedSilverCoin"], amount)
+                    self.assertEqual(packet["UserKamazonLand"], ended)
                 case.assert_no_account_or_static_changes(ended)
 
     def test_recent_results_and_close_retries_cannot_replace_a_newer_battle(self):
@@ -207,6 +213,7 @@ class KamazoneBattleTests(unittest.TestCase):
                 ended = self.call(battle.END, body)["UserKamazonLand"]
                 node = next(n for n in ended["Nodes"] if n["Id"] == self.node["Id"])
                 self.assertEqual(node["State"], 5)
+                self.assertEqual(ended["SilverCoin"], self.initial["SilverCoin"])
                 self.assertTrue(all(m["Hp"] == 5000 for m in node["BattleMonsters"]))
                 self.reject(run.START, {"NodeId": 120})
                 if result != 3:

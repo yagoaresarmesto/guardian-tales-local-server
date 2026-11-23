@@ -507,7 +507,7 @@ def _handle(account, source, season_id, route, request, operation_id):
     else:
         raise ValueError("Unsupported local Kama-ZONE run operation")
     if previous and operation_id in previous["seen_operations"]:
-        return response_extras(route)
+        return response_extras(route, request, previous)
     value = (
         copy.deepcopy(previous)
         if previous
@@ -558,7 +558,7 @@ def _handle(account, source, season_id, route, request, operation_id):
             floor_nodes(source, season_id, value["seed"], value["floor"])
             kamazone_events.reset(value)
             kamazone_aids.start(
-                value, kamazone_aids.selected(account.references, source, season_id)
+                value, kamazone_aids.selected(account.references, source, season_id), source
             )
     elif route == SELECT:
         if value["battle_started"] or value["pending_result"] == 1:
@@ -591,14 +591,14 @@ def _handle(account, source, season_id, route, request, operation_id):
     elif route in kamazone_battle.ROUTES:
         count = value["battle_count"]
         nodes = floor_nodes(source, season_id, value["seed"], floor)
-        boss_closed = (
-            route == kamazone_battle.CLOSE
-            and value["pending_result"] == 1
-            and request["NodeId"] == value["current_node_id"]
-            and not data["nodes"][request["NodeId"]].get("NextNodeIds")
+        settled_victory = kamazone_battle.apply(
+            value, route, request, nodes, data["loot"], source, account.references
         )
-        kamazone_battle.apply(value, route, request, nodes, data["loot"])
-        if boss_closed and value["difficulty"] in data["next_tiers"]:
+        if (
+            settled_victory
+            and value["difficulty"] in data["next_tiers"]
+            and not data["nodes"][request["NodeId"]].get("NextNodeIds")
+        ):
             next_floor = floor + 1
             starting = catalog(source, season_id, next_floor)["starting"]
             floor_nodes(source, season_id, value["seed"], next_floor)
@@ -660,7 +660,7 @@ def _handle(account, source, season_id, route, request, operation_id):
     else:
         ident, current = request["NodeId"], value["current_node_id"]
         if ident != current and ident in (data["nodes"][current].get("NextNodeIds") or []):
-            kamazone_shelter.skip(value, current)
+            kamazone_shelter.skip(value, current, source)
         # The APK opens the node first. EnterStage then initializes PartyInfo,
         # sends select-characters, and finally calls start-battle from BeforeLoad.
         if value["pending_result"] == 1:
@@ -707,12 +707,12 @@ def _handle(account, source, season_id, route, request, operation_id):
     if not kamazone_events.valid(value) or len(encoded) > 32768:
         raise ValueError("Local Kama-ZONE event state exceeds its bounded format")
     atomic_write(account.references.directory / STATE, encoded)
-    return response_extras(route)
+    return response_extras(route, request, value)
 
 
-def response_extras(route):
+def response_extras(route, request, value):
     return (
-        kamazone_battle.response(route)
+        kamazone_battle.response(route, request, value)
         | kamazone_shop.response(route)
         | kamazone_shelter.response(route)
         | kamazone_events.response(route)

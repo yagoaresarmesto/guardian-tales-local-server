@@ -7,7 +7,7 @@ import json
 import random
 from functools import lru_cache
 
-from . import kamazone
+from . import kamazone, kamazone_silver
 from . import kamazone_event_effects as effects
 from .village import integer
 
@@ -457,6 +457,7 @@ def handle(value, source, season_id, route, request, owned):
             if visit["close_hash"] != fingerprint:
                 raise ValueError("This special-event result was already closed differently")
             return
+        kamazone_silver.charge_clear(value, source)
         effects.grant(value, visit, request)
         visit.update(closed=True, close_hash=fingerprint)
         value["states"][str(ident)] = 11

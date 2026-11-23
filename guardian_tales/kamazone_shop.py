@@ -5,7 +5,7 @@ import hashlib
 import random
 from functools import lru_cache
 
-from . import kamazone
+from . import kamazone, kamazone_silver
 from . import kamazone_event_effects as effects
 from .village import integer
 
@@ -134,6 +134,8 @@ def handle(value, source, season_id, route, request, nodes):
     if not value["stage_started"] and (route != CLOSE or value["states"].get(str(ident)) != 11):
         raise ValueError("No Kama-ZONE shop is open")
     if route == CLOSE:
+        if value["stage_started"]:
+            kamazone_silver.charge_clear(value, source)
         value["states"][str(ident)] = 11
         value["stage_started"] = False
         return

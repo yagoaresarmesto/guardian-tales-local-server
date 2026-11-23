@@ -26,6 +26,7 @@ class KamazoneAidTests(unittest.TestCase):
             dict(Id=i, Kind="Normal", Rarity=rarity, Lootable=i != 14)
             for i, rarity in ((10, 0), (11, 2), (12, 4), (13, 5), (14, 1), (15, 1))
         ] + [dict(Id=801, Kind="Curse", Rarity=3)]
+        mode["Artifacts"][0].update(EffectType="CoinBonus", EffectValue=[10])
         benefits = ("ArtifactKeep", "ArtifactAid", "CurseAid", "SilverCoinAid")
         for i, effect in enumerate(benefits, 101):
             mode["Benefits"].append(
@@ -92,6 +93,7 @@ class KamazoneAidTests(unittest.TestCase):
             fresh["Artifacts"], [dict(Id=10, Shelter=0, Battle=0, EliminateArtifact=0)]
         )
         self.assertEqual(fresh["Curses"], [])
+        self.assertEqual((both["SilverCoin"], fresh["SilverCoin"]), (150, 160))
         self.assertIsNone(fresh["Progress"]["KeepingArtifactId"])
         self.assertEqual(self.game.challenge(1), fresh)
         combined = self.pick(11, 801)

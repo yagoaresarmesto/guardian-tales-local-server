@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Run-local artifact retention and starting benefits for Kama-ZONE challenges."""
 
-from . import kamazone, kamazone_practice
+from . import kamazone, kamazone_practice, kamazone_silver
 from . import kamazone_event_effects as effects
 from .village import integer
 
@@ -20,6 +20,12 @@ def selected(references, source, season_id):
         kind = spec.get("EffectType")
         if kind in ("ArtifactKeep", *AIDS.values()):
             bonuses[kind] = True
+        elif kind == "CoinBonusBattle":
+            amounts = spec.get(f"EffectValue{level}")
+            if not isinstance(amounts, list) or len(amounts) != 3 or not all(map(integer, amounts)):
+                raise ValueError("Invalid Kama-ZONE battle silver benefit")
+            for tier, amount in zip(("Normal", "Elite", "Boss"), amounts):
+                bonuses[tier] = bonuses.get(tier, 0) + amount
         elif kind == "SilverCoinAid":
             amount = spec.get(f"EffectValue{level}")
             if not isinstance(amount, list) or len(amount) != 1 or not integer(amount[0]):
@@ -54,15 +60,16 @@ def keep(value, ident, source, bonuses):
     value["keeping_artifact_id"] = ident
 
 
-def start(value, bonuses):
+def start(value, bonuses, source):
     kept = value["keeping_artifact_id"]
     if kept is not None and "ArtifactKeep" in bonuses:
         effects.add_reward(value["artifacts"], kept, None, artifact=True)
     value.update(
         keeping_artifact_id=None,
         opening_aids={field: 0 for field, benefit in AIDS.items() if benefit in bonuses},
-        silver_coin=bonuses.get("SilverCoinAid", 0),
     )
+    specs = kamazone.artifact_specs(source) if value["artifacts"] else {}
+    kamazone_silver.collect(value, bonuses.get("SilverCoinAid", 0), specs)
 
 
 def validate_pick(request):

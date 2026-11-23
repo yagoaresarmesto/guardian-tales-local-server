@@ -28,9 +28,9 @@ while representative APK runs verify scene loading, action feedback and caching.
 | Type | Implemented host behavior | Remaining work |
 | --- | --- | --- |
 | Starting (1) | Initial challenge position and original connections | No separate encounter action |
-| Normal (2) | Battle, HP, seasonal artifact choice and connected progression | Coins and reactive battle effects |
-| Elite (3) | Same lifecycle with elite enemies and loot weights | Elite affixes and currency |
-| Boss (4) | Boss artifact selection and transition to the next regular floor | Final season clear, infinity and season rewards |
+| Normal (2) | Battle, HP, silver, seasonal artifact choice and connected progression | Other reactive battle effects |
+| Elite (3) | Same lifecycle with elite enemies, silver and loot weights | Elite affixes |
+| Boss (4) | Boss silver, artifact selection and transition to the next regular floor | Final season clear, infinity and season rewards |
 | Shelter (5) | Rest, one random revive, one random curse removal, skip and resume; Rest observed in the APK | Artifact-based recovery modifiers; revive/purify APK verification |
 | Shop (6) | Buy seasonal normal artifacts with silver, apply artifact discounts, replace at capacity, resume and exit | Curse and effect goods, including shop refresh |
 | Special (7) | Weighted seasonal events, conditions, persistent choice/results, local effects, random conclusions and story continuations | Event battles, bottle-cap awards, additional condition/effect kinds and APK validation |
@@ -359,6 +359,33 @@ starting node in the same write. The transition retains HP, formation, run
 artifacts, curses, coins and event story progress. The new map uses its own
 connections and encounter rolls. The first floor keeps its original seed sequence.
 
+### Silver and curses
+
+A confirmed victory pays **10 silver for Normal, 20 for Elite and 30 for Boss**.
+These are provisional local base amounts. The retained client describes payouts
+by encounter tier but does not specify the original amounts. Bounty Hunter adds
+the selected level's Normal/Elite/Boss amount from the seasonal benefit table.
+The credit and artifact decision are saved together, including when the player
+declines the offer. A win with no loot window settles immediately. Reopening or
+retrying cannot award the same victory twice. The native close response reports
+the silver collected before any separate curse deduction.
+
+Tree of Wealth adds the retained flat bonus (+10 per held copy) to a positive
+silver collection, including event income and starting silver with a retained
+tree. A tree won in battle starts contributing at the next collection. Red
+Mimic fixes collection to its configured amount (zero in the EU pack).
+
+Season 43 lists nine curses. Eight have combat option IDs and levels in the
+original tables. The backend returns the held IDs to the client, whose character
+generator reads Kama-ZONE options when building the party. The effect of each
+curse on actual combat stats still needs APK verification. The ninth, **Greedy Mimic**,
+has a separate node-clear cost. Each held copy takes up to 10 available silver
+after a win or when a shop, special event or shelter is completed, including
+skipping a shelter. An event that grants the curse starts charging from the
+next node. Purifying it removes its cost. Reopening the map, retrying and
+losing a battle do not charge it. The host packet tests cover these settlement
+rules. The corresponding APK balance and reward display still need verification.
+
 Reopening an older active run stranded on a defeated first-floor boss presents
 the outstanding offer. Reading the map leaves the run file intact. Confirm the
 reward to continue to floor 2 without restarting the challenge. Previously
@@ -462,9 +489,9 @@ A related exchange operation, `/exchange/kamazon-land`, also lacks a handler
 outside that namespace. A registered route can have partial behavior. Rankings
 return an empty list. The final regular floor has no season scoring or payout. Normal shops do
 not yet offer curses, effect goods or stock refresh. Special-event combat and
-bottle-cap award branches remain unavailable. Combat silver income, elite
-affixes, reactive artifact effects and artifact-based shelter recovery also
-remain incomplete. This audit covers known requests and code paths. A complete
+bottle-cap award branches remain unavailable. Elite affixes, additional reactive
+artifact effects (including percentage-based coin variance) and artifact-based
+shelter recovery remain incomplete. This audit covers known requests and code paths. A complete
 Android playthrough has yet to be verified.
 
 ## Shelters
