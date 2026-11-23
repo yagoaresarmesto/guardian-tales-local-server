@@ -8,9 +8,11 @@ import math
 import random
 import secrets
 from functools import lru_cache
+from threading import Lock
 
 from . import (
     kamazone,
+    kamazone_aids,
     kamazone_battle,
     kamazone_event_effects,
     kamazone_events,
@@ -19,7 +21,6 @@ from . import (
     kamazone_shop,
 )
 from .punchking_static import atomic_write
-from .raid_static import decode, records
 from .village import integer
 
 CHALLENGE = "/kamazonland/challenge"
@@ -33,12 +34,14 @@ ROUTES = (
     START,
     BATTLE,
     CONCLUDE,
+    kamazone_aids.PICK,
     *kamazone_battle.ROUTES,
     *kamazone_events.ROUTES,
     *kamazone_shop.ROUTES,
     kamazone_shelter.TAKE,
 )
 STATE = "kamazone_run.json"
+_run_lock = Lock()
 HP_SCALE = 10000
 COMBAT = ("Normal", "Elite", "Boss")
 NODE_TYPES = ("Starting", *COMBAT, "Shelter", "Shop", "Special")
@@ -68,7 +71,7 @@ def valid_formation(value):
 def catalog(source, season_id, floor=1):
     if season_id not in kamazone.catalog(source):
         raise ValueError("Kama-ZONE challenge requires a preserved Global season")
-    mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
+    mode = kamazone.mode_data(source)
     season = kamazone.one(mode["Seasons"], "Id", season_id)
     maximum = season.get("MaxDifficulty")
     if not integer(maximum, maximum=32, minimum=1):
@@ -247,6 +250,8 @@ def load(references):
         value = dict(value, battle_started=False)
     if isinstance(value, dict):
         value.setdefault("floor", 1)
+        value.setdefault("keeping_artifact_id", None)
+        value.setdefault("opening_aids", {})
     if isinstance(value, dict) and "shops" not in value:
         value = dict(value, shops={})
     if (
@@ -267,6 +272,8 @@ def load(references):
             "characters",
             "formation",
             "states",
+            "keeping_artifact_id",
+            "opening_aids",
             "seen_operations",
             "shops",
             *kamazone_shelter.defaults(),
@@ -306,6 +313,7 @@ def load(references):
         or not kamazone_shop.valid(value["shops"])
         or not kamazone_shelter.valid(value)
         or not kamazone_events.valid(value)
+        or not kamazone_aids.valid(value)
     ):
         raise ValueError("Invalid local Kama-ZONE run state")
     return value
@@ -347,6 +355,12 @@ def matching(account, source, season_id):
         or not kamazone_shop.matches(value, source, season_id, nodes)
         or not kamazone_shelter.matches(value, source, season_id, nodes)
         or not kamazone_events.matches(value, source, season_id, nodes)
+        or value["opening_aids"]
+        and (
+            not value["active"]
+            or value["floor"] != 1
+            or value["current_node_id"] != data["starting"]
+        )
     ):
         raise ValueError("Local Kama-ZONE run no longer matches its owner or content")
     current = next(node for node in nodes if node["Id"] == value["current_node_id"])
@@ -394,6 +408,7 @@ def project(account, source, season_id, response):
                 Floor=value["floor"],
                 CurrentNodeId=value["current_node_id"],
                 Concluded=not value["active"],
+                **kamazone_aids.progress(value),
             ),
         )
         kamazone_battle.project(value, owned, user)
@@ -404,6 +419,13 @@ def project(account, source, season_id, response):
 
 
 def handle(account, source, season_id, route, request, operation_id):
+    # Two connections can operate on the same run. Serialize reading the old
+    # choices, validating the request and atomically publishing its result.
+    with _run_lock:
+        return _handle(account, source, season_id, route, request, operation_id)
+
+
+def _handle(account, source, season_id, route, request, operation_id):
     if not isinstance(operation_id, str) or not 1 <= len(operation_id) <= 160:
         raise ValueError("Invalid Kama-ZONE operation identity")
     previous = matching(account, source, season_id)
@@ -463,17 +485,21 @@ def handle(account, source, season_id, route, request, operation_id):
             raise ValueError("Open a Kama-ZONE shelter before choosing an action")
     elif route == CONCLUDE:
         # Native Finish Challenge sends this nullable, lower-camel-case field.
-        # Artifact keep/loot is not implemented; never accept an invented ID.
         if (
             not isinstance(request, dict)
             or set(request) != {"keepingArtifactId"}
-            or request["keepingArtifactId"] is not None
-        ):
-            raise ValueError(
-                "Kama-ZONE finish requires keepingArtifactId=null; artifact keep is unavailable"
+            or (
+                request["keepingArtifactId"] is not None
+                and not integer(request["keepingArtifactId"], minimum=1)
             )
+        ):
+            raise ValueError("Kama-ZONE finish requires a nullable, positive keepingArtifactId")
         if previous is None or not previous["states"]:
             raise ValueError("Start a Kama-ZONE challenge before finishing it")
+    elif route == kamazone_aids.PICK:
+        kamazone_aids.validate_pick(request)
+        if previous is None:
+            raise ValueError("Start a Kama-ZONE challenge before selecting an aid")
     elif route in kamazone_events.ROUTES:
         kamazone_events.validate(route, request)
         if previous is None:
@@ -500,6 +526,8 @@ def handle(account, source, season_id, route, request, operation_id):
             characters=[],
             formation=None,
             states={},
+            keeping_artifact_id=None,
+            opening_aids={},
             seen_operations=[],
             shops={},
             **kamazone_battle.defaults(),
@@ -508,21 +536,30 @@ def handle(account, source, season_id, route, request, operation_id):
         )
     )
     if route == CHALLENGE:
-        value.update(
-            floor=1,
-            difficulty=request["Difficulty"],
-            seed=secrets.randbits(63),
-            active=True,
-            stage_started=False,
-            battle_started=False,
-            current_node_id=data["starting"],
-            states={str(data["starting"]): 8},
-            shops={},
-            **kamazone_battle.defaults(),
-            **kamazone_shelter.defaults(),
-        )
-        floor_nodes(source, season_id, value["seed"], value["floor"])
-        kamazone_events.reset(value)
+        if not (
+            value["active"]
+            and value["floor"] == 1
+            and value["current_node_id"] == data["starting"]
+            and value["difficulty"] == request["Difficulty"]
+        ):
+            value.update(
+                floor=1,
+                difficulty=request["Difficulty"],
+                seed=secrets.randbits(63),
+                active=True,
+                stage_started=False,
+                battle_started=False,
+                current_node_id=data["starting"],
+                states={str(data["starting"]): 8},
+                shops={},
+                **kamazone_battle.defaults(),
+                **kamazone_shelter.defaults(),
+            )
+            floor_nodes(source, season_id, value["seed"], value["floor"])
+            kamazone_events.reset(value)
+            kamazone_aids.start(
+                value, kamazone_aids.selected(account.references, source, season_id)
+            )
     elif route == SELECT:
         if value["battle_started"] or value["pending_result"] == 1:
             raise ValueError("Cannot change Kama-ZONE characters during an active stage")
@@ -596,7 +633,10 @@ def handle(account, source, season_id, route, request, operation_id):
         )
     elif route in kamazone_events.ROUTES:
         kamazone_events.handle(value, source, season_id, route, request, owned)
+    elif route == kamazone_aids.PICK:
+        kamazone_aids.pick(value, source, season_id, request, data["starting"])
     elif route == CONCLUDE:
+        keep_id = request["keepingArtifactId"]
         if value["active"]:
             if (
                 (value["floor"] == 1 and value["current_node_id"] == data["starting"])
@@ -606,12 +646,17 @@ def handle(account, source, season_id, route, request, operation_id):
                 raise ValueError(
                     "Leave the starting position and resolve combat/loot before finishing"
                 )
-            # Retain the ended run for the native summary and read-only reopen.
-            # This closes a local challenge; it does not clear the season or
-            # grant floor rewards, account currency or artifact keep rights.
+            bonuses = (
+                kamazone_aids.selected(account.references, source, season_id)
+                if keep_id is not None
+                else {}
+            )
+            kamazone_aids.keep(value, keep_id, source, bonuses)
             value.update(
                 active=False, stage_started=False, battle_started=False, pending_result=None
             )
+        elif keep_id != value["keeping_artifact_id"]:
+            raise ValueError("This challenge already ended with a different artifact selection")
     else:
         ident, current = request["NodeId"], value["current_node_id"]
         if ident != current and ident in (data["nodes"][current].get("NextNodeIds") or []):
@@ -645,6 +690,7 @@ def handle(account, source, season_id, route, request, operation_id):
             raise ValueError("This Kama-ZONE node requires an unimplemented special-event handler")
         if node["Type"] == "Shop":
             kamazone_shop.open_shop(value, source, season_id, node)
+        value["opening_aids"] = {}
         value["current_node_id"] = ident
         value["stage_started"] = True
         value["states"][str(ident)] = 1

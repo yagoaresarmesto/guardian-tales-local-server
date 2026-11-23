@@ -131,7 +131,17 @@ class KamazoneRunTests(unittest.TestCase):
         for difficulty in (1, 2, 3):
             user = self.challenge(difficulty)
             self.assertEqual(user["Difficulty"], difficulty)
-            self.assertEqual(user["Progress"], dict(Floor=1, CurrentNodeId=100, Concluded=False))
+            self.assertEqual(
+                user["Progress"],
+                dict(
+                    Floor=1,
+                    CurrentNodeId=100,
+                    Concluded=False,
+                    KeepingArtifactId=None,
+                    CanPickArtifactAid=False,
+                    CanPickCurseAid=False,
+                ),
+            )
             self.assertEqual(len(user["Nodes"]), 4)
             self.assertEqual(self.opening(user)["Step"], 1)
             for node in user["Nodes"]:

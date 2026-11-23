@@ -118,7 +118,16 @@ class KamazoneLootTests(unittest.TestCase):
             self.reject(battle.CLOSE, loot)
         current = self.call(battle.CLOSE, loot, 701)
         self.assertEqual(
-            current["Progress"], dict(Floor=2, CurrentNodeId=200, Concluded=False, Battle=2)
+            current["Progress"],
+            dict(
+                Floor=2,
+                CurrentNodeId=200,
+                Concluded=False,
+                Battle=2,
+                KeepingArtifactId=None,
+                CanPickArtifactAid=False,
+                CanPickCurseAid=False,
+            ),
         )
         self.assertEqual({n["Id"] for n in current["Nodes"]}, {200, 210, 211, 220})
         self.assertEqual(current["Hps"], first["Hps"])

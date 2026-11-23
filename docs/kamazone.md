@@ -313,7 +313,7 @@ preserved nonhidden monster groups and preset positions, and guarantees one
 reachable opening battle with an originally allowed type. Elite affixes are not
 generated yet. Shops and special nodes retain their original probabilities.
 Shop, shelter and supported special-event navigation are implemented.
-Cross-run artifact retention, account currency rewards, scored rankings and
+Account currency rewards, scored rankings and
 season completion remain unimplemented.
 Only reported wins in an active matching battle clear a local combat node;
 reward balances and season-wide clears are not fabricated.
@@ -447,21 +447,19 @@ the insufficient-funds check. Purchase feedback in the APK awaits confirmation.
 
 The [client route inventory](reference/client-api-inventory.json) lists 23 direct
 `/kamazonland/` routes. Adding the separately identified ranking read gives 24.
-The current backend registers 15. The following nine have no handler:
+The current backend registers 16. The following eight have no handler.
 
 | Player action | Missing routes under `/kamazonland/` |
 | --- | --- |
 | Apply a preset or set preset | `apply-preset`, `apply-set-preset` |
-| Look up excluded item specs | `get-except-item-spec-ids` |
-| Choose challenge aids | `pick-aids` |
+| Open the gacha reward list (excluded item specs) | `get-except-item-spec-ids` |
 | Enter infinite mode or sweep | `infinitize`, `sweep` |
 | Buy a random box or gacha draw | `buy-random-box`, `buy-gacha` |
 | Claim a likeability reward | `claim-likeability-reward` |
 
 A related exchange operation, `/exchange/kamazon-land`, also lacks a handler
 outside that namespace. A registered route can have partial behavior. Rankings
-return an empty list, Finish Challenge accepts only a null retained artifact,
-and the final regular floor has no season scoring or payout. Normal shops do
+return an empty list. The final regular floor has no season scoring or payout. Normal shops do
 not yet offer curses, effect goods or stock refresh. Special-event combat and
 bottle-cap award branches remain unavailable. Combat silver income, elite
 affixes, reactive artifact effects and artifact-based shelter recovery also
@@ -593,8 +591,11 @@ singleton with `Progress.Concluded=true`. The ended floor snapshot retains
 its node, map seed, party/formation, HP, counters, shop stock and shelter visits.
 Reads/reopening do not rewrite it. Benefit selections, allocated points, main
 account inventory/balances and trial XP are unchanged. Finishing awards no season
-clear, score, currency or artifact; artifact keep IDs remain unsupported and are
-explicitly rejected rather than accepted without ownership.
+clear, score or currency. With Artifact Keep selected, the same field accepts an
+owned artifact ID. The native picker disables rarities 4 and 5. The ended run
+records the choice in `Progress.KeepingArtifactId`. With the benefit still
+selected at the next start, one copy carries over with fresh counters, even if
+the old run held duplicates. A null choice carries nothing.
 
 Finishing requires a run that has left its starting position. Active combat and
 unresolved victory loot block it; a reported loss or an encounter panel without
@@ -614,6 +615,32 @@ static data or 55 original reference files. Follow-up counters and run state
 show an accepted finish followed by a fresh challenge; a separate owner check
 of popup closing/reopening remains absent. Battle artifact selection and regular floor advancement are described under
 [local battle results and closing](#local-battle-results-and-closing).
+
+## Starting aids and regular-floor checks
+
+Starting a fresh challenge applies the selected seasonal benefits. Artifact Aid
+offers an original lootable normal artifact of rarity 0-2. Curse Aid offers a
+seasonal curse. Both respect seasonal exclusions. Silver Coin Aid grants the
+amount listed for the selected level. A player can take either aid separately
+or both; leaving the starting position expires any outstanding choice.
+Reopening the same start or resending a confirmed pick preserves the existing
+inventory. A conflicting second choice is rejected. Older runs can finish with
+a retained artifact without resetting their current floor.
+
+The optional host regression plays one seeded route through all eight regular
+floors at each difficulty for seasons 41-43, including all seven node types,
+boss loot and a manual finish. It uses a temporary run and a synthetic party.
+From the repository root on Windows, supply the matching external static data:
+
+```powershell
+$env:GT_KAMAZONE_TEST_STATIC = (Resolve-Path '.\local\client-data\reference\static_data_get.bin').Path
+.\.venv\Scripts\python.exe -m unittest tests.test_kamazone_playthrough
+```
+
+This exercises the backend. Retention and starting aids still need an APK
+confirmation. A separate replay on a copy of the owner's floor-two run covered
+a null choice and each of its three distinct owned artifact IDs, a lobby
+reopen, a new difficulty, a starting aid and retries.
 
 ## Response latency
 

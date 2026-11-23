@@ -188,6 +188,7 @@ class KamazoneEventTests(unittest.TestCase):
         self.assertEqual(user["Hps"], {"1": 4000, "2": 0, "3": 8000})
         node = self.node(user)
         self.assertEqual(node["State"], 9)
+        self.assertEqual(self.open(), user)
         self.assertEqual([k for k, v in node["SpecialEventChoices"].items() if v], ["101"])
         self.assertTrue(
             all(set(r) == {"Type", "Targets", "Values"} for r in node["ChoiceEffectResults"])

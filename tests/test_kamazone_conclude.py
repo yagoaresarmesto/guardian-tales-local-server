@@ -130,7 +130,17 @@ class KamazoneConcludeTests(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), saved)
         new = self.owner.challenge(1)
         self.assertFalse(new["Progress"]["Concluded"])
-        self.assertEqual(new["Progress"], dict(Floor=1, CurrentNodeId=100, Concluded=False))
+        self.assertEqual(
+            new["Progress"],
+            dict(
+                Floor=1,
+                CurrentNodeId=100,
+                Concluded=False,
+                KeepingArtifactId=None,
+                CanPickArtifactAid=False,
+                CanPickCurseAid=False,
+            ),
+        )
         self.assertNotIn("Battle", new["Progress"])
         self.assertTrue(all(hp == 10000 for hp in new["Hps"].values()))
         saved = self.path.read_bytes()
