@@ -23,6 +23,7 @@ from . import (
     kamazone,
     kamazone_practice,
     kamazone_preview,
+    kamazone_run,
     multi_presets,
     story_interactions,
     story_rewards,
@@ -91,6 +92,7 @@ BOOTSTRAP_ROUTES = (
     *classic_coop.ROUTES,
     *kamazone_preview.ROUTES,
     kamazone_practice.SAVE,
+    *kamazone_run.ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
@@ -335,6 +337,25 @@ class BootstrapSession:
                 except ValueError as error:
                     raise PacketError(str(error)) from error
                 return json_response(request, preserved)
+        if route in kamazone_run.ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                selected, source = kamazone_preview.selected_source(self.store.account)
+                epoch = self.request_epoch or self.store.request_epoch(True)
+                kamazone_run.handle(
+                    self.store.account,
+                    source,
+                    selected["season_id"],
+                    route,
+                    body,
+                    epoch + ":" + str(request["sequence_id"]),
+                )
+                return json_response(
+                    request, kamazone_preview.enter(self.store.account, {"IsPartial": False})
+                )
+            except (OSError, ValueError) as exc:
+                raise PacketError(str(exc)) from exc
         if route == kamazone_practice.SAVE:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")

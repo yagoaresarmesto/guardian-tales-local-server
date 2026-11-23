@@ -1,12 +1,12 @@
-# Optional Kama-ZONE entry and benefit practice
+# Optional Kama-ZONE entry, benefits and opening-floor practice
 
 `kamazone` selects one preserved Global/EU season so the Android 3.57.0 client
-can show its card in **Events**. This first milestone covers the menu and a
+can show its card in **Events**. Without a local run, entry shows a
 **read-only idle lobby preview**. Events can select and load a mode automatically
 before displaying its drawer, so `/kamazonland/enter` supplies the preview even
-without a card tap. Challenges, battles, shops and rewards are not implemented
-yet. First verify that Events opens, the card appears and you can return to the
-main lobby; do not start a challenge.
+without a card tap. Experimental challenge and combat entry now cover the first
+floor at difficulties 1, 2 and 3. Battle results, loot, shops, special events,
+later floors and rewards remain unimplemented. APK combat entry is pending.
 An additional opt-in practice setting can unlock selected seasonal benefits,
 provide a point budget and retain benefit choices outside the saved account.
 
@@ -52,8 +52,9 @@ After updating the project, restart the CDN with this command too. The bridge ca
 remain running. Reopen the game and inspect **Events** for the Kama-ZONE card.
 When its historical banner is absent, expect a generated **KAMA-ZONE / SEASON 43 /
 MENU PREVIEW** image (with the selected ID). The idle lobby may load automatically.
-You can inspect the entry and return to the main lobby; do not use challenge,
-shop, gift, mission or reward buttons yet.
+You can inspect the entry and return to the main lobby. For the experimental
+challenge probe, follow the opening-floor section below. Shop, gift, mission
+and reward buttons remain unsupported.
 
 Inspect the selection and whether its visibility window is active:
 
@@ -114,13 +115,14 @@ season bound to the matching pack. The response supplies the native
 `UserKamazonLand` singleton and `NewSeason:false`. The mini-season ID comes from
 the selected season's preserved group rather than being invented.
 
-The preview has no party or run, a concluded floor zero, empty collections,
+Without optional local state the preview has no party or run, a concluded floor zero, empty collections,
 nonnull progress/likeability objects and zero preview points/tickets/coins.
 Those are temporary display defaults, not changes to saved balances or any
 historical Kama-ZONE progress. No `User` inventory delta, reward, operation
 receipt or database row is created. Missing/ambiguous mini-season data,
 disabled/expired selection and a changed content pack are rejected. This route
-does not enable any gameplay or reward endpoint.
+itself changes no run or benefit settings. Subsequent challenge requests use
+the separate local run described below.
 
 ## Optional unlocks and a benefit point budget
 
@@ -196,7 +198,7 @@ cached zero-price data from the earlier experiment after a backend/game restart.
 The working account, trial XP, APK, shipped scripts, resource manifest and
 original reference/resource files are untouched. No gold, gems, tickets,
 event rewards or scored runs are added. Combat use of these benefits remains
-unverified while the run backend is not implemented.
+unverified in the APK.
 Fifteen practice regressions cover allocation, original prices, the native slot
 limit and the existing configuration/replay/restoration guards. All 290 targeted
 Windows tests pass, alongside Black/Ruff and repository/link checks. A coherent
@@ -208,7 +210,58 @@ never change those live settings themselves.
 The owner confirms in the APK that benefit levels can be raised/lowered, points
 are deducted correctly and selections persist after reopening. Fresh counters
 show three successful benefit saves. Combat use remains unverified; the next
-reported request is `/kamazonland/challenge` with difficulty 3.
+reported request was `/kamazonland/challenge` with difficulty 3; its entry
+implementation is described next.
+
+## Experimental opening-floor combat entry
+
+The preserved Global season defines exactly **three difficulties**, numbered
+**1, 2 and 3**, each with eight original difficulty/floor rows. The backend accepts
+each retained difficulty, without rewriting their enemy levels. For season 43,
+floor one's normal/elite/boss levels are 59/62/64, 85/88/90 and 116/116/118.
+This implementation generates only the opening floor; it does not claim eight
+playable floors or a complete run.
+
+After updating, close the game and restart only the backend using the usual
+working state, certificate and reference arguments. Keep CDN and bridge open.
+Open Kama-ZONE, select difficulty 3, choose an owned party and try a connected
+normal battle node (the crossed-swords icon). For this probe, verify map and
+combat loading; battle completion and result handling are separate milestones.
+If another connection error appears, leave it open to identify its request.
+There is no additional enabling command beyond the existing season selection.
+
+The native request chain is `/kamazonland/challenge` (`Difficulty`),
+`/kamazonland/select-characters` (`CharacterIds`), `/kamazonland/start-stage`
+(`NodeId`), and `/kamazonland/start-battle` (`NodeId`, `Formation`). Responses
+project a complete `UserKamazonLand` singleton, with the preserved mini-season,
+benefits and remaining allocation budget. Party selection may precede the
+challenge. Only owned, distinct heroes and connected battle nodes are accepted;
+the battle handshake must match the entered node and contain a valid formation.
+HP uses the client's 10,000-unit scale. Native character generation resolves
+each battle monster's ID through the mode's monster table before loading its
+character spec; these IDs are not interchangeable.
+
+The private `kamazone_run.json` holds the selected difficulty, party, formation,
+seed, current node, node states and the last 64 request receipts. It is published
+atomically outside the account database, bound to the content SHA-256, season
+and local user. Reopening retains the same generated map; recent request retries
+do not reroll it or replace newer progress. A new challenge explicitly replaces
+that local run, retaining its party. Selecting another season suspends it.
+
+Map generation is a **local reconstruction**, not a recovered official server
+algorithm. It uses the original opening-floor connections and probabilities,
+preserved nonhidden monster groups and preset positions, and guarantees one
+reachable opening battle with an originally allowed type. Elite affixes are not
+generated yet. Shop/special nodes can appear from their original probabilities
+but their interactions are still unsupported. Battle results, loot, conclusion,
+currency rewards, rankings, further floors and season progression are also
+unimplemented. No clears or reward balances are fabricated.
+
+The reported difficulty-3 challenge request is APK observed. Ten new regressions
+cover all three tiers, deterministic resume, request replay, party ownership,
+formation/connection guards, source/season/user isolation and unchanged account,
+benefit and effective static data. Automated client-contract checks and actual
+APK stage entry are recorded separately in [status](status.md).
 
 ## Local rankings
 

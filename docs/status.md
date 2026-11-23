@@ -19,8 +19,9 @@ The first APK probe failed because Events can automatically load Kamazone before
 showing the drawer. Its pending `/kamazonland/enter` request and native scene
 loader establish the missing read contract. A follow-up supplies a read-only
 idle lobby for the selected season, with a real mini-season ID and no saved
-progress, inventory or balance changes. Challenges and gameplay remain
-unsupported. The owner has now verified that Events loads Kama-ZONE and can
+progress, inventory or balance changes. The initial milestone left challenges
+unsupported; opening-floor entry has since been added as described below.
+The owner has now verified that Events loads Kama-ZONE and can
 return to the main lobby with season 43 selected. Diagnostics never activate a
 live season themselves.
 The initial entry change passed 271 targeted Windows tests, Black (221 files), Ruff and
@@ -45,7 +46,8 @@ selection and content-binding guards. All 88 focused tests pass. The owner
 confirms that the ranking popup opens and returns to the Kama-ZONE lobby for
 season 43. A fresh successful ranking read appears with no new rejected or
 unsupported operation during that check. Entry and empty ranking navigation
-are APK verified; challenges, scored runs and rewards remain unimplemented.
+are APK verified; combat entry is pending the separate probe below, while scored
+runs and rewards remain unimplemented.
 All changes remain backend response data; game files are untouched.
 
 Optional Kama-ZONE benefit practice adds a separate, content/season-bound local
@@ -73,6 +75,33 @@ clearing, recent replay protection and restoration. All other effective static
 tables, main-account tables, trial XP and 54 source reference files (including
 the already enabled practice settings) remain unchanged, with zero diagnostic
 source writes or assistant changes to live practice settings.
+
+The next APK error is `/kamazonland/challenge` with `Difficulty:3`. The preserved
+Global season defines difficulties 1/2/3, each with eight difficulty/floor rows.
+An experimental backend now implements challenge, owned-party selection,
+connected combat-node entry and the native start-battle formation handshake.
+Its opening map is a local reconstruction using the preserved graph, type
+probabilities, nonhidden monster groups and positions, with one reachable opening
+battle guaranteed. Original enemy levels are unchanged: difficulty 3's first
+normal/elite/boss encounter is level 116/116/118. No official generation algorithm
+or full eight-floor playthrough is claimed.
+
+The content/season/user-bound local run file retains the map seed, party,
+formation, node and recent receipts, leaving saved account tables, trial XP and
+benefit settings intact. Native DTO/type checks establish arrays, dictionaries,
+enum fields and the 10,000-unit HP scale; monster IDs resolve through the mode
+table rather than directly naming character specs. Ten new regressions cover
+the three tiers, resume/replay, ownership, adjacency/formation checks and guards.
+All 222 targeted cases pass; the 16 TLS integration cases were rerun with new,
+isolated test certificates after the initial run lacked the default test files.
+Black (225 files), Ruff and test discovery (1,211 cases) pass.
+A coherent file-backed account/XP copy passes all three tiers, 21 original
+opening-floor nodes, party selection, stage/battle handshakes, reopen and replay.
+It retains the owner's benefit choices and remaining budget, every effective
+static response, main-account/XP tables and all 54 source reference files.
+There are zero diagnostic source writes or gamefile edits. APK map/combat entry
+is still pending. Results, loot, shops, special-event interactions, conclusion,
+later floors, scores and reward routes remain unsupported.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using

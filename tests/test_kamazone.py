@@ -282,11 +282,11 @@ class KamazoneTests(unittest.TestCase):
             self.reject("select", "--season-id", "42")
         self.assertEqual({p.name: p.read_bytes() for p in self.root.iterdir()}, before)
 
-    def test_selection_does_not_claim_unsupported_gameplay_or_create_progress(self):
+    def test_selection_does_not_claim_unsupported_rewards_or_create_progress(self):
         self.cli("select", "--season-id", "41")
         before = list(self.db.iterdump())
         with self.assertRaises(PacketError):
-            self.fetch("/kamazonland/challenge", dict(Difficulty=1))
+            self.fetch("/kamazonland/claim-likeability-reward", {})
         self.assertEqual(list(self.db.iterdump()), before)
 
     def test_andras_overlay_composes_without_changing_its_configuration_or_account(self):
@@ -483,13 +483,13 @@ class KamazonePreviewTests(unittest.TestCase):
             with self.assertRaises(PacketError):
                 self.call()
 
-    def test_preview_does_not_enable_challenges_battles_shops_or_rewards(self):
+    def test_preview_does_not_enable_battle_results_shops_or_rewards(self):
         self.fixture.cli("select", "--season-id", "43")
         self.call()
         before = list(self.db.iterdump())
         for route in (
-            "/kamazonland/challenge",
-            "/kamazonland/start-stage",
+            "/kamazonland/end-battle",
+            "/kamazonland/close-battle",
             "/kamazonland/conclude",
             "/kamazonland/gacha",
             "/kamazonland/take-likeability",

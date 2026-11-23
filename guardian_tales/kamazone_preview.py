@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Read-only idle lobby and local rankings for the optional Kama-ZONE preview."""
+"""Read-only Kama-ZONE entry, projecting optional local benefits and run state."""
 
 import hashlib
 import json
 
-from . import kamazone, kamazone_practice
+from . import kamazone, kamazone_practice, kamazone_run
 from .raid_static import decode, records
 from .village import integer
 
@@ -97,4 +97,7 @@ def enter(account, request):
             "Likeability": {"Points": 0, "ClaimedRewardStep": 0},
         },
     }
-    return kamazone_practice.project(account.references, source, selected["season_id"], response)
+    response = kamazone_practice.project(
+        account.references, source, selected["season_id"], response
+    )
+    return kamazone_run.project(account, source, selected["season_id"], response)
