@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Consumables · Guardian Tales</title>
+  <link rel="stylesheet" href="/equipment.css"><link rel="stylesheet" href="/consumables.css">
+  <script type="module" src="/consumables.js"></script>
+</head>
+<body>
+  <header class="top"><div class="top-inner">
+    <div class="brand"><img src="/brand.png" alt="">Guardian Tales</div>
+    <nav class="mode-nav" aria-label="Inventory sections">
+      <a href="/equipment">Equipment</a>
+      <a href="/relics">Relics</a>
+      <a href="/consumables" aria-current="page">Consumables</a>
+    </nav>
+    <span class="context">Save editor</span>
+  </div></header>
+  <main>
+    <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
+    <p class="save-access" id="access" role="status" hidden></p>
+    <div class="workspace">
+      <section class="inspector" aria-labelledby="details-title">
+        <div class="section-bar"><h2 id="details-title">Consumable details</h2><span id="copy-id"></span></div>
+        <div id="placeholder"><img src="/type-icon/inventory.png" alt=""><p>Select a consumable to see its quantity.</p></div>
+        <div id="detail" hidden>
+          <div class="showcase"><div id="portrait" class="hero-art"></div></div>
+          <div class="item-info">
+            <div class="type-line" id="category"></div><h3 id="detail-name"></h3>
+            <dl><div class="fact"><dt>Owned</dt><dd id="owned"></dd></div></dl>
+            <form id="editor">
+              <label for="quantity">Quantity</label>
+              <input type="number" id="quantity" required min="1" step="1" inputmode="numeric">
+              <p id="comparison" aria-live="polite"></p>
+              <button type="submit" id="apply" class="apply-button" disabled>Apply</button>
+            </form>
+            <p id="message" role="status" hidden></p>
+          </div>
+        </div>
+      </section>
+      <section class="collection" aria-labelledby="collection-title">
+        <header class="collection-bar"><h2 id="collection-title">Consumables</h2></header>
+        <div class="rack">
+          <div class="tools">
+            <label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" aria-label="Search consumables by name or ID" placeholder="Search by name or ID"></label>
+            <label class="sort">Type <select id="filter"><option value="">All types</option></select></label>
+          </div>
+          <div id="tiles" role="group" aria-label="Owned consumables"></div>
+          <p id="empty" hidden>No matching consumables.</p>
+          <footer class="pager"><span id="range" role="status">Loading consumables…</span></footer>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

@@ -6,6 +6,7 @@ import importlib
 import sys
 
 COMMANDS = {
+    "inventory-panel": ("inventory_panel.server", "Open the local inventory editor"),
     "serve": ("server", "Run the local game and platform server"),
     "admin": ("admin", "Manage audited local currency grants and optional test pins"),
     "raid-season": ("guild_raid", "List, select or customize local Raid seasons"),

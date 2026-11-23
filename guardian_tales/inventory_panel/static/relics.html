@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Relics · Guardian Tales</title>
+  <link rel="stylesheet" href="/equipment.css"><link rel="stylesheet" href="/relics.css">
+  <script type="module" src="/relics.js"></script>
+</head>
+<body class="relic-page">
+  <header class="top"><div class="top-inner">
+    <div class="brand"><img src="/brand.png" alt="">Guardian Tales</div>
+    <nav class="mode-nav" aria-label="Inventory sections">
+      <a href="/equipment">Equipment</a>
+      <a href="/relics" aria-current="page">Relics</a>
+      <a href="/consumables">Consumables</a>
+    </nav>
+    <span class="context">Save editor</span>
+  </div></header>
+  <main>
+    <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
+    <p class="save-access" id="access" role="status">Checking game save access…</p>
+    <div class="workspace">
+      <section class="inspector" aria-labelledby="details-title">
+        <div class="section-bar"><h2 id="details-title">Relic details</h2><span id="copy-id"></span></div>
+        <p id="none">Select a relic to see its options.</p>
+        <div id="detail" hidden>
+          <div class="relic-head"><div id="portrait"></div><div><span id="family"></span><h3 id="name"></h3><span id="stars"></span></div></div>
+          <div class="relic-sheet">
+            <p id="state"></p>
+            <form id="editor">
+              <h4>Basic options</h4><div id="basic"></div>
+              <h4>Sub-options</h4>
+              <div id="slots"></div><p id="unavailable" hidden></p>
+              <div class="actions" id="actions" hidden>
+                <button id="save" class="apply-button" type="submit" aria-describedby="access" disabled>Apply</button>
+              </div>
+            </form>
+            <p id="message" role="status" aria-live="polite" hidden></p>
+          </div>
+        </div>
+      </section>
+      <section class="collection" aria-labelledby="collection-heading">
+        <header class="collection-bar"><h2 id="collection-heading">Relics</h2></header>
+        <div class="collection-body"><div class="rack">
+          <div class="tools"><label class="search"><span class="search-icon" aria-hidden="true"></span><input type="search" id="search" aria-label="Search relics by name or ID" placeholder="Search by name or ID"></label>
+            <label class="sort">Show <select id="show"><option value="all">All relics</option><option value="imbued">With sub-options</option><option value="empty">Without sub-options</option><option value="equipped">Equipped</option></select></label>
+          </div>
+          <label class="mobile-types">Relic type <select id="mobile-types"></select></label>
+          <div id="tiles" role="group" aria-label="Relic copies"></div>
+          <p id="empty" hidden>No relics match these filters.</p>
+          <footer class="pager"><span id="range" aria-live="polite">Loading relics…</span><button type="button" id="prev" aria-label="Previous page" disabled>‹</button><button type="button" id="next" aria-label="Next page" disabled>›</button></footer>
+        </div><aside class="types"><h3>Relic type</h3><div id="types" role="group" aria-label="Relic type"></div></aside></div>
+        <p id="error" role="alert" hidden></p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

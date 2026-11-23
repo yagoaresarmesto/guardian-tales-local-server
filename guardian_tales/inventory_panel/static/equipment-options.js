@@ -1,0 +1,140 @@
+import { $, el } from "/inventory-dom.js";
+
+const api = "/api/game/equipment";
+
+export function equipmentOptions(reload) {
+  let catalog, item, rules, before = {}, draft = {}, savedLocks = new Set(), locked = new Set();
+  let writable = false, busy = false, check = 0;
+
+  function format(id, level) {
+    if (level == null) return "Not selected";
+    const effect = catalog.effects[id];
+    if (!effect || effect.unit === "level") return "Lv. " + level;
+    return Number((effect.base + effect.step * level).toFixed(5)) + effect.unit;
+  }
+  function name(id) { return catalog.effects[id]?.name ?? "Option #" + id; }
+  function message(text = "", error = false) {
+    $("option-message").textContent = text; $("option-message").hidden = !text;
+    $("option-message").classList.toggle("error",error);
+  }
+  function access(allowed, unavailable = false) {
+    writable = allowed === true;
+    $("equipment-access").hidden = writable;
+    const text = unavailable ? "Cannot check the game save. Apply is locked until the editor reconnects." :
+      "Apply is locked while the game save is in use. Close Guardian Tales and stop the backend to enable it.";
+    if (!writable && $("equipment-access").textContent !== text) $("equipment-access").textContent = text;
+    state();
+  }
+  async function poll() {
+    if (document.hidden || busy) return;
+    const request = ++check;
+    try {
+      const res = await fetch("/api/game/status",{cache:"no-store",signal:AbortSignal.timeout(4000)});
+      if (!res.ok) throw new Error();
+      const status = await res.json();
+      if (request === check) access(status.writable);
+    } catch { if (request === check) access(false,true); }
+  }
+  window.setInterval(poll,2500);
+  document.addEventListener("visibilitychange",poll);
+  window.addEventListener("focus",poll);
+
+  function state() {
+    if (!item) return;
+    const entries = Object.entries(rules?.options ?? {});
+    const required = entries.filter(([,r]) => r.probability === 1).map(([id]) => id);
+    const optional = entries.filter(([,r]) => r.probability < 1).map(([id]) => id);
+    const count = Object.keys(draft).length;
+    const initialized = required.every(id => draft[id] != null);
+    const changed = entries.some(([id]) => draft[id] !== before[id] || locked.has(id) !== savedLocks.has(id));
+    const editable = !!rules && !item.unavailable;
+    const allowed = rules?.counts ?? [];
+    $("basic-options").hidden = !required.length;
+    $("apply-options").disabled = busy || !writable || !editable || !initialized || !allowed.includes(count) || !changed;
+    $("roll-count").textContent = editable && optional.length ? optional.filter(id => draft[id] != null).length + " selected" : "";
+    const subCounts = allowed.map(n => n - required.length);
+    let hint = item.unavailable;
+    if (!hint && !initialized) hint = "Choose a value for each basic option.";
+    else if (!hint && !optional.length) hint = "This item has basic options only.";
+    else if (!hint) hint = "Allowed sub-option count: " + subCounts.join(", ") + ".";
+    $("option-hint").textContent = hint;
+  }
+  function optionRow([id,rule]) {
+    const required = rule.probability === 1;
+    const row = el("div","sub-row"), line = el("div","sub-line"), label = el("label","",name(id)), select = el("select");
+    label.htmlFor = select.id = "equipment-option-" + id;
+    if (!required) select.add(new Option(format(id,null),""));
+    else if (draft[id] == null) {
+      const prompt = new Option("Choose a value","");
+      prompt.disabled = true; select.add(prompt);
+    }
+    for (let level=rule.low;level<=rule.high;level++) select.add(new Option(format(id,level),level));
+    select.value = draft[id] ?? "";
+    const range = el("small","sub-range",format(id,rule.low) + " – " + format(id,rule.high));
+    const lock = el("button","option-lock");
+    lock.type = "button";
+    lock.setAttribute("aria-label","Lock " + name(id));
+    const diff = el("small","sub-diff");
+    function updateRow() {
+      const isLocked = locked.has(id);
+      const disabled = busy || !!item.unavailable;
+      select.disabled = disabled || isLocked || (required && rule.low === rule.high && draft[id] != null);
+      lock.disabled = disabled || draft[id] == null;
+      lock.setAttribute("aria-pressed",String(isLocked));
+      lock.textContent = isLocked ? "🔒" : "🔓";
+      lock.title = draft[id] == null ? "Choose a value to lock this option" : (isLocked ? "Unlock " : "Lock ") + name(id);
+      const changes = [];
+      if (before[id] !== draft[id]) changes.push(format(id,before[id]) + " → " + format(id,draft[id]));
+      if (savedLocks.has(id) !== isLocked) changes.push(isLocked ? "Unlocked → Locked" : "Locked → Unlocked");
+      diff.hidden = !changes.length;
+      diff.textContent = changes.join(" · ");
+    }
+    lock.onclick = () => {
+      if (locked.has(id)) locked.delete(id); else locked.add(id);
+      updateRow(); message(); state();
+    };
+    select.onchange = () => {
+      if (select.value === "") delete draft[id]; else draft[id] = Number(select.value);
+      updateRow(); message(); state();
+    };
+    line.append(label,select,lock); updateRow(); row.append(line,range,diff); return row;
+  }
+  function draw() {
+    if (!item) return;
+    const entries = Object.entries(rules?.options ?? {});
+    $("basic-stats").replaceChildren(...entries.filter(([,r]) => r.probability === 1).map(optionRow));
+    $("sub-stats").replaceChildren(...entries.filter(([,r]) => r.probability < 1).map(optionRow));
+    state();
+  }
+  function select(itemRow) {
+    $("option-editor").hidden = !itemRow;
+    if (!itemRow) { item=null; return; }
+    if (item?.id === itemRow.id && item?.version === itemRow.version && item?.unavailable === itemRow.unavailable) return;
+    item=itemRow; rules=catalog.specs[item.spec];
+    before=Object.fromEntries(item.options.map(o=>[o.OptionId,o.Level])); draft={...before};
+    savedLocks=new Set(item.options.filter(o=>o.Locked).map(o=>String(o.OptionId)));
+    locked=new Set(savedLocks);
+    message(); draw();
+  }
+  async function apply() {
+    if (!item || busy || $("apply-options").disabled) return;
+    busy=true; ++check; $("workspace").inert=true; state();
+    const body={id:item.id,version:item.version,revision:catalog.revision,options:draft};
+    body.lockedValues=Object.fromEntries(Array.from(locked,id=>[id,draft[id]]));
+    try {
+      const res=await fetch(api,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      const result=await res.json();
+      if (res.status===423) access(false);
+      if (res.status===409) await reload();
+      if (!res.ok) throw new Error(result.error || "Could not update equipment options.");
+      try { await reload(); message("Changes saved to equipment #" + body.id + "."); }
+      catch { message("Changes saved to equipment #" + body.id + ". Reload to see its options."); }
+    } catch (error) { message(error.message,true); }
+    finally { busy=false; $("workspace").inert=false; draw(); }
+  }
+  $("apply-options").onclick=apply;
+  return {
+    load(data) { catalog=data; ++check; access(data.writable); },
+    select,
+  };
+}

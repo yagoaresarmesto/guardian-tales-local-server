@@ -211,6 +211,28 @@ read each mode's prerequisites before enabling it. All connections to one
 backend share **one local account**; this is a loopback development server,
 not a public multiplayer service.
 
+## Inventory editor
+
+From the repository root, open the inventory panel in its own terminal:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales inventory-panel --open
+```
+
+The [inventory panel](http://127.0.0.1:17661/) reads your existing
+`local/state/server.sqlite3` and the matching catalog in
+`local/client-data/reference`. Use `--data-dir` and `--reference-dir` if your
+backend uses other directories. Install the optional `panel-art` extra to show
+sprites from your imported resources.
+
+- **Equipment** lets you change basic options, sub-options and their locks on an individual weapon or accessory.
+- **Relics** lets you choose the effect and value for each editable basic or bonus slot.
+- **Consumables** lets you change the quantity of an owned stack. The panel checks each change against the item's catalog limits.
+
+You can browse while playing. To save edits, close the game, stop the backend,
+then click **Apply**. This writes directly to your working save without creating
+a backup. Restart the backend and reopen the game to use your changes.
+
 ## Practice commands
 
 Run selectors against the **same reference directory as the backend**, outside

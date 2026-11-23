@@ -1,0 +1,23 @@
+#preview-link { font-size:.82rem; }
+.live-equipment .showcase { min-height:130px; gap:2px; }
+.live-equipment .hero-art { width:86px; height:86px; }
+.live-equipment .item-info { padding-top:12px; }
+#option-editor { border-top:1px solid var(--line); padding-top:10px; }
+#option-editor summary { cursor:pointer; font-size:.83rem; color:var(--muted); }
+#basic-stats { margin-top:7px; }
+.option-heading { display:flex; gap:8px; align-items:center; justify-content:space-between; }
+.option-heading h4 { margin:12px 0 6px; }
+#roll-count,#option-hint,.sub-range { font-size:.75rem; color:var(--muted); }
+#option-hint { margin:6px 0; }
+.sub-row { padding:7px 0; border-top:1px solid var(--line); }
+.sub-line { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,min(40%,8rem)) 32px; gap:8px; align-items:center; font-size:.83rem; }
+.sub-line label { min-width:0; font-weight:600; }
+.sub-line select { width:100%; height:32px; border:1px solid #72849a; border-radius:4px; padding:4px; }
+.option-lock { height:32px; padding:0; border:1px solid #63758c; border-radius:4px; background:#233247; line-height:1; }
+.option-lock[aria-pressed="true"] { border-color:#ce9e55; background:#453727; }
+.option-lock:hover:enabled { border-color:#9adfff; }
+.sub-range,.sub-diff { display:block; margin-top:3px; }
+.sub-diff { color:#b8e9c3; font-size:.75rem; }
+#apply-options { margin-top:10px; }
+#option-message { margin-top:9px; font-size:.82rem; color:#b8e9c3; }
+#option-message.error { color:#ffc79f; }

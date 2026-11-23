@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Equipment inventory · Guardian Tales</title>
+  <link rel="stylesheet" href="/equipment.css">
+  <link rel="stylesheet" href="/equipment-options.css">
+  <script type="module" src="/equipment.js"></script>
+</head>
+<body>
+  <header class="top"><div class="top-inner">
+    <div class="brand"><img src="/brand.png" alt="">Guardian Tales</div>
+    <nav class="mode-nav" aria-label="Inventory sections">
+      <a href="/equipment" aria-current="page">Equipment</a>
+      <a href="/relics">Relics</a>
+      <a href="/consumables">Consumables</a>
+    </nav>
+    <span class="context">Save editor</span>
+    <a id="preview-link" href="/equipment/preview">Equipment preview</a><button id="end" type="button" hidden>End preview</button>
+  </div></header>
+  <main>
+    <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
+    <p class="save-access" id="equipment-access" role="status" hidden></p>
+    <div class="workspace" id="workspace">
+      <section class="inspector" aria-labelledby="details-heading">
+        <div class="section-bar"><h2 id="details-heading">Equipment details</h2><span id="copy-id"></span></div>
+        <div id="placeholder"><img src="/type-icon/equipment.png" alt=""><p>Select equipment to see its details.</p></div>
+        <div id="detail" hidden>
+          <div class="showcase" id="showcase">
+            <div class="hero-art" id="hero-art"></div>
+            <div id="hero-stars" class="hero-stars"></div>
+          </div>
+          <div class="item-info">
+            <div class="type-line"><span id="detail-type"></span><span id="detail-level"></span></div>
+            <h3 id="detail-name"></h3>
+            <dl id="facts"></dl>
+            <button type="button" id="lock" hidden></button>
+            <section id="option-editor" hidden aria-label="Equipment options">
+              <details id="basic-options" open><summary>Basic options</summary>
+                <div id="basic-stats"></div>
+              </details>
+              <div class="option-heading"><h4>Sub-options</h4><span id="roll-count"></span></div>
+              <div id="sub-stats"></div><p id="option-hint"></p>
+              <button type="button" id="apply-options" class="apply-button" disabled aria-describedby="equipment-access">Apply</button>
+              <p id="option-message" role="status" hidden></p>
+            </section>
+          </div>
+        </div>
+      </section>
+      <section class="collection" aria-labelledby="collection-heading">
+        <header class="collection-bar"><h2 id="collection-heading">Equipment</h2></header>
+        <div class="collection-body">
+          <div class="rack">
+            <div class="tools"><label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" aria-label="Search equipment by name or ID" placeholder="Search by name or ID"></label>
+              <label class="sort">Sort by <select id="sort"><option value="level">Level</option><option value="rating">Stars</option><option value="name">Name</option><option value="id">Copy ID</option></select></label>
+            </div>
+            <label class="mobile-types">Equipment type <select id="mobile-types"></select></label>
+            <div id="tiles" role="group" aria-label="Equipment copies"></div>
+            <p id="empty" hidden>No equipment matches these filters.</p>
+            <footer class="pager"><span id="range" aria-live="polite">Loading equipment…</span><button id="previous" aria-label="Previous page" disabled>‹</button><button id="next" aria-label="Next page" disabled>›</button></footer>
+          </div>
+          <aside class="types"><h3>Type</h3><div id="types" role="group" aria-label="Equipment type"></div></aside>
+        </div>
+      </section>
+    </div>
+    <p id="message" role="status" hidden></p>
+  </main>
+</body>
+</html>
