@@ -228,7 +228,10 @@ parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
 With the backend running, open the [Guild Raid panel](http://127.0.0.1:17658/)
 on the host PC. View the active lineup, select an original season or configure
 four boss/element pairs and the HP per bar. Click **Apply rotation**, then fully
-close and reopen the game. The CLI below uses the same Raid selection.
+close and reopen the game. The [DKA tab](http://127.0.0.1:17658/dka) lists the three
+arena variants and their seven daily slimes. Choose a variant and day, then
+click **Apply selection** and reopen the game. Both tabs share selections with
+their respective CLI commands below.
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales raid-season list --reference-dir local/client-data/reference

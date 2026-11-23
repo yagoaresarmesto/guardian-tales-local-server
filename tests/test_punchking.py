@@ -10,18 +10,21 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timedelta, timezone
+from http.client import HTTPConnection
 from pathlib import Path
 from unittest.mock import patch
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
 from guardian_tales.guild_raid import CATALOG as RAID_CATALOG
-from guardian_tales.guild_raid import select_season
+from guardian_tales.guild_raid import SELECTION_LOCK, select_season
 from guardian_tales.packet_reader import parse_packet
 from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.punchking import CATALOG, END, ENTRY, RANKINGS, START, main
+from guardian_tales.punchking import CATALOG, END, ENTRY, RANKINGS, SELECTION, START, main
 from guardian_tales.punchking_static import bootstrap_override, load_selection, select
+from guardian_tales.raid_panel import RaidPanel
 from guardian_tales.raid_static import compress, decode, digest, records
 from guardian_tales.snapshots import CLIENT, import_snapshot
+from guardian_tales.state_lock import StateLock
 from tests.test_guild_raid import synthetic_catalog, synthetic_static
 from tests.test_snapshots import synthetic_snapshot
 
@@ -185,6 +188,61 @@ class PunchkingTests(unittest.TestCase):
                     self.assertEqual(reply["GuildRaid"]["PunchKingSeasonId"], variant)
                     self.assertFalse(reply["IsRenew"])
                     self.assertEqual(load_selection(self.refs), selection)
+        self.assertEqual(self.source.read_bytes(), self.original)
+        self.assertEqual(self.store.account.profile(), self.profile)
+
+    def test_panel_lists_days_and_applies_the_cli_selection_independently_of_raid(self):
+        (self.root / SELECTION).unlink()
+        (self.root / RAID_CATALOG).unlink()
+        panel = RaidPanel(self.refs, 0)
+        panel.start()
+        self.addCleanup(panel.stop)
+        origin = f"http://127.0.0.1:{panel.server_port}"
+
+        def request(method, body=None, source=origin):
+            connection = HTTPConnection("127.0.0.1", panel.server_port, timeout=5)
+            try:
+                connection.request(
+                    method,
+                    "/api/dka",
+                    json.dumps(body) if body else None,
+                    {"Origin": source, "Content-Type": "application/json"},
+                )
+                response = connection.getresponse()
+                return response.status, json.loads(response.read())
+            finally:
+                connection.close()
+
+        code, initial = request("GET")
+        self.assertEqual(code, 200)
+        self.assertEqual(initial["variants"], self.catalog["variants"])
+        self.assertIsNone(initial["active"])
+        self.assertFalse((self.root / SELECTION).exists())
+        choice = dict(variant=3, day=7, revision=initial["revision"])
+        self.assertEqual(request("POST", choice, "https://example.invalid")[0], 403)
+        for invalid in (
+            dict(day=0),
+            dict(day=8),
+            dict(variant=True),
+            dict(variant=4),
+            dict(revision=False),
+            dict(extra=1),
+        ):
+            with self.subTest(invalid=invalid):
+                self.assertEqual(request("POST", choice | invalid)[0], 400)
+        self.assertFalse((self.root / SELECTION).exists())
+        with StateLock(self.root, filename=SELECTION_LOCK):
+            self.assertEqual(request("POST", choice)[0], 409)
+        self.assertFalse((self.root / SELECTION).exists())
+        self.assertEqual(request("POST", choice), (200, {"applied": True}))
+        saved = load_selection(self.refs)
+        self.assertEqual((saved["variant"], saved["day"]), (3, 7))
+        self.assertEqual(request("GET")[1]["revision"], saved["static_data_revision"])
+        select(self.refs, 2, 4)
+        self.assertEqual(
+            request("POST", choice | {"revision": saved["static_data_revision"]})[0], 409
+        )
+        self.assertEqual(request("GET")[1]["active"], {"variant": 2, "day": 4})
         self.assertEqual(self.source.read_bytes(), self.original)
         self.assertEqual(self.store.account.profile(), self.profile)
 

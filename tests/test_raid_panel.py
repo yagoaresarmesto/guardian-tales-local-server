@@ -125,6 +125,12 @@ class RaidPanelTests(unittest.TestCase):
         self.assertIn(b"Guild Raid", self.call("/"))
         self.assertIn(b"fetch(", self.call("/raid.js"))
         self.assertIn(b".banner", self.call("/raid.css"))
+        self.assertIn(b"Dungeon Kingdom Arena", self.call("/dka"))
+        self.assertIn(b"/api/dka", self.call("/dka.js"))
+        with self.assertRaises(HTTPError) as arena_error:
+            self.call("/api/dka")
+        self.assertEqual(arena_error.exception.code, 503)
+        arena_error.exception.close()
         with self.assertRaises(HTTPError) as error:
             self.call()
         self.assertEqual(error.exception.code, 503)

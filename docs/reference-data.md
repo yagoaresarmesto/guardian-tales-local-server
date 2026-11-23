@@ -2240,6 +2240,11 @@ and 35; the historical beta rows remain unchanged.
 .\.venv\Scripts\python.exe -m guardian_tales dka-season set 3 --day 7
 ```
 
+In the local web panel, open **DKA** to see the saved practice selection and
+inspect the seven slimes and their weaknesses for each variant. Choosing a day
+previews it. **Apply selection** runs the same selector as the CLI using the
+backend's reference directory. Reopen the game to load the change.
+
 The default reference directory for this command is `local/client-data/reference`;
 override it with `--reference-dir`. Days 1–7 are the basic, light, dark, fire,
 water, earth and space slimes. Native weakness names rotate through `Down`,

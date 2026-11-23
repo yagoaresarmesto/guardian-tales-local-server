@@ -6,8 +6,10 @@ import json
 import os
 import tempfile
 import time
+from contextlib import contextmanager
 from datetime import datetime
 
+from .guild_raid import SELECTION_LOCK
 from .guild_raid import load_selection as raid_selection
 from .packet_reader import MAX_PACKET
 from .punchking import SELECTION, integer, load_catalog, utc_now, window
@@ -22,6 +24,7 @@ from .raid_static import (
 )
 from .raid_static import bootstrap_override as raid_override
 from .snapshots import CLIENT
+from .state_lock import StateLock
 
 
 def atomic_write(path, data):
@@ -75,14 +78,42 @@ def load_selection(references):
     return value
 
 
-def select(references, variant_id, day, now=None):
-    now = now or utc_now()
+class ArenaSelectionChanged(ValueError):
+    """The requested arena selection can no longer be applied to this revision."""
+
+
+@contextmanager
+def selection_lock(references):
+    # Raid and arena publish related calendars; keep the parent digest and body paired.
+    lock = StateLock(references.directory, filename=SELECTION_LOCK)
+    try:
+        lock.acquire()
+    except RuntimeError as error:
+        raise ArenaSelectionChanged(
+            "Another calendar change is in progress. Reload and retry."
+        ) from error
+    try:
+        yield
+    finally:
+        lock.release()
+
+
+def select(references, variant_id, day, now=None, *, expected_revision=None):
+    with selection_lock(references):
+        previous = load_selection(references)
+        if expected_revision is not None and expected_revision != (previous or {}).get(
+            "static_data_revision", 0
+        ):
+            raise ArenaSelectionChanged("The arena selection changed. Reload before applying.")
+        return publish_selection(references, variant_id, day, now or utc_now(), previous)
+
+
+def publish_selection(references, variant_id, day, now, previous):
     variants = load_catalog(references)["variants"]
     if not integer(variant_id, 1, 3):
         raise ValueError("Choose an arena variant from 1 to 3")
     variant = next(v for v in variants if v["id"] == variant_id)
     content_date, period = window(day, now)
-    previous = load_selection(references)
     source = raid_override(references, "static_data_get.bin", None)
     if source is None:
         source = references.read_bytes("static_data_get.bin")
@@ -174,6 +205,12 @@ def select(references, variant_id, day, now=None):
     return value
 
 
+def needs_refresh(references, selection):
+    return selection["content_date"] != utc_now().date().isoformat() or selection[
+        "raid_sha256"
+    ] != raid_digest(references)
+
+
 def bootstrap_override(references, filename, request):
     if filename not in ("static_data_get.bin", "static_data_check.bin"):
         return None
@@ -181,10 +218,15 @@ def bootstrap_override(references, filename, request):
     if selection is None:
         return None
     # Keep the requested day fixed on a later login and compose later raid changes.
-    if selection["content_date"] != utc_now().date().isoformat() or selection[
-        "raid_sha256"
-    ] != raid_digest(references):
-        selection = select(references, selection["variant"], selection["day"])
+    if needs_refresh(references, selection):
+        with selection_lock(references):
+            selection = load_selection(references)
+            if selection is None:
+                return None
+            if needs_refresh(references, selection):
+                selection = publish_selection(
+                    references, selection["variant"], selection["day"], utc_now(), selection
+                )
     if filename == "static_data_check.bin":
         current = request.get("Checksum") if isinstance(request, dict) else None
         return json.dumps(

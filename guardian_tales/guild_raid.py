@@ -27,6 +27,7 @@ MEMBER_RECORDS = "/guild-raid2/get-battle-records/member"
 MENU_READ_ROUTES = (UPDATE_STATUS, BATTLE_STATUS, LATEST_RECORDS, BOSS_RECORDS, MEMBER_RECORDS)
 CATALOG = "guild_raid_entry_catalog.json"
 SELECTION = "guild_raid_selection.json"
+SELECTION_LOCK = ".raid_season.lock"
 
 
 def integer(value, minimum=1):
@@ -176,7 +177,7 @@ def select_season(
         season = find_season(catalog, season_id)
     else:
         season = min(catalog["seasons"], key=lambda s: s["season_id"])
-    with StateLock(references.directory, filename=".raid_season.lock"):
+    with StateLock(references.directory, filename=SELECTION_LOCK):
         previous = load_selection(references) or {}
         if expected_revision is not None and expected_revision != previous.get(
             "static_data_revision", 0

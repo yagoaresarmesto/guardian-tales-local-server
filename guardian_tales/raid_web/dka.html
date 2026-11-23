@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Dungeon Kingdom Arena · Guardian Tales</title>
+  <link rel="stylesheet" href="/raid.css">
+  <script src="/dka.js" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="bar-inner">
+    <div class="brand"><span class="crest" aria-hidden="true"></span>Guardian Tales</div>
+    <nav class="mode-nav" aria-label="Game mode">
+      <a href="/">Raid</a><a href="/dka" aria-current="page">DKA</a>
+    </nav>
+    <span class="local">Local server</span>
+  </div>
+</header>
+<main>
+  <section class="banner arena-banner" aria-labelledby="page-title">
+    <img id="arena-art" alt="" hidden>
+    <div class="banner-copy">
+      <p class="season-status">Practice · No rewards</p>
+      <h1 id="page-title">Dungeon Kingdom <em>Arena</em></h1>
+    </div>
+  </section>
+  <div class="workspace arena-work">
+    <section class="surface" aria-labelledby="editor-title">
+      <header class="panel-heading">
+        <span class="section-icon sliders" aria-hidden="true"></span><h2 id="editor-title">Practice rotation</h2>
+      </header>
+      <form id="editor">
+        <fieldset id="controls" disabled>
+          <legend class="sr">Arena settings</legend>
+          <label class="label" for="variant">Variant</label>
+          <select id="variant" required></select>
+          <fieldset class="arena-days">
+            <legend class="label">Day and slime</legend>
+            <div id="days"></div>
+          </fieldset>
+          <div class="actions">
+            <button id="apply" type="submit">Apply selection</button>
+            <span>Reopen the game after applying.</span>
+          </div>
+        </fieldset>
+      </form>
+      <p id="feedback" role="status" hidden></p>
+    </section>
+    <aside class="surface" aria-labelledby="active-title">
+      <header class="panel-heading">
+        <span class="section-icon stack" aria-hidden="true"></span><h2 id="active-title">Saved selection</h2>
+        <button type="button" id="reload" aria-label="Reload saved selection" title="Reload saved selection">↻</button>
+      </header>
+      <div class="arena-saved">
+        <p id="saved-status">Loading selection…</p>
+        <div id="saved-encounter" hidden>
+          <span class="slime" aria-hidden="true"></span>
+          <div><strong id="saved-slime"></strong><p id="saved-weakness"></p></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+<template id="day-card">
+  <span class="day-card">
+    <span class="day-number"></span>
+    <span class="slime" aria-hidden="true"></span>
+    <strong></strong>
+    <small></small>
+  </span>
+</template>
+</body>
+</html>
