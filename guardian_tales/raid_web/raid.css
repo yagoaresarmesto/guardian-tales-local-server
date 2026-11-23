@@ -22,7 +22,7 @@ button:disabled, :disabled { cursor: default; }
 :focus-visible { outline: 3px solid var(--ice); outline-offset: 3px; }
 h1, h2, p, ol { margin: 0; }
 ol { list-style: none; padding: 0; }
-.bar-inner, main { margin-inline: clamp(8px, 1.25vw, 24px); }
+.bar-inner, main { margin-inline: clamp(8px, 3.125vw - 12px, 48px); }
 .topbar { background: #101a2bd9; border-bottom: 1px solid #344158; }
 .bar-inner { min-height: 58px; display: flex; align-items: center; justify-content: space-between; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.12rem; letter-spacing: -.035em; }
