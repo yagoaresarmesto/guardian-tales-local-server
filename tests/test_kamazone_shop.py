@@ -20,7 +20,6 @@ class KamazoneShopTests(unittest.TestCase):
         self.addCleanup(self.owner.doCleanups)
         self.owner.setUp()
         self.db, self.root, self.session = self.owner.db, self.owner.root, self.owner.session
-        self.owner.owner.practice("disable")
         mode = self.owner.fixture.tables["kamazonland2"]
         mode.setdefault("Constants", {})["ShelterHpRecover"] = 0.4
         for row in mode["FloorPresets"]:
@@ -54,7 +53,6 @@ class KamazoneShopTests(unittest.TestCase):
             season["ArtifactsException"] = [5] if season["Id"] == 43 else []
         self.owner.fixture.write_source()
         self.owner.owner.command("select", "--season-id", "43")
-        self.owner.owner.enable()
         self.owner.owner.save({"174": 1}, 950)
         self.sequence = 7000
         self.before = list(self.db.iterdump()), self.db.total_changes

@@ -29,7 +29,6 @@ class KamazoneShelterTests(unittest.TestCase):
             profile["User"]["Characters"].append(hero)
         with self.db:
             self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
-        self.owner.owner.practice("disable")
         mode = self.owner.fixture.tables["kamazonland2"]
         mode["Constants"] = {"ShelterHpRecover": 0.4}
         mode["Artifacts"] = [
@@ -46,7 +45,6 @@ class KamazoneShelterTests(unittest.TestCase):
                     )
         self.owner.fixture.write_source()
         self.owner.owner.command("select", "--season-id", "43")
-        self.owner.owner.enable()
         self.owner.owner.save({"174": 1}, 951)
         self.sequence = 8000
         self.before = list(self.db.iterdump()), self.db.total_changes

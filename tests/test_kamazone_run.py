@@ -82,7 +82,6 @@ class KamazoneRunTests(unittest.TestCase):
                 row["Position"] = dict(Normal=12, Elite=3, Boss=19)[row["Difficulty"]]
         self.fixture.write_source()
         self.owner.command("select", "--season-id", "43")
-        self.owner.enable()
         self.owner.save({"174": 1}, 900)
         self.characters = [
             r["Id"] for r in self.session.store.account.profile()["User"]["Characters"]

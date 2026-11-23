@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Read-only Kama-ZONE entry, projecting optional local benefits and run state."""
+"""Read-only Kama-ZONE entry, projecting seasonal menu benefits and local run state."""
 
 import hashlib
 import json

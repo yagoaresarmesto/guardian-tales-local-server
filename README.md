@@ -288,10 +288,10 @@ selection after victories. Confirming a regular floor boss's loot opens the
 next floor when the selected difficulty has a matching layout and level row.
 Shops sell seasonal artifacts for the challenge's silver coins. Run the CDN with `--reference-dir` to supply an
 in-memory preview image when the selected season's historical banner is missing.
-Its separate opt-in benefit practice can unlock Strong Body for season 43 and
-provide a 4,000-point allocation budget at the original benefit prices, with
-choices stored outside the working account. Original resource files are never
-edited.
+Selecting a season automatically unlocks its full menu of benefits and gives
+it a 4,000-point budget. Upgrading costs the original prices and removing a
+level refunds its cost. Each season keeps its own selections outside the working
+account.
 
 Shelters support resting, reviving one hero, purifying one curse and leaving
 without an action. See the [complete node coverage](docs/kamazone.md#node-coverage)

@@ -243,7 +243,7 @@ def main(argv=None):
         return practice_main(arguments[1:])
     parser = argparse.ArgumentParser(
         description=__doc__,
-        epilog="Optional benefits/points: kamazone practice enable|disable|status",
+        epilog="All seasonal menu benefits and 4,000 points are available automatically.",
     )
     parser.add_argument("action", choices=("list", "select", "status", "disable"))
     parser.add_argument("--season-id", type=int)

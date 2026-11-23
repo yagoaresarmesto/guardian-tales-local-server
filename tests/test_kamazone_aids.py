@@ -19,7 +19,6 @@ class KamazoneAidTests(unittest.TestCase):
         self.game = fixtures.KamazoneRunTests()
         self.addCleanup(self.game.doCleanups)
         self.game.setUp()
-        self.game.owner.practice("disable")
         mode = self.game.fixture.tables["kamazonland2"]
         mode.setdefault("Constants", {})["ShelterHpRecover"] = 0.3
         mode["Artifacts"] = [
@@ -46,7 +45,6 @@ class KamazoneAidTests(unittest.TestCase):
             season["Benefits"].extend(range(101, 105))
         self.game.fixture.write_source()
         self.game.owner.command("select", "--season-id", "43")
-        self.game.owner.enable()
         self.game.owner.save({str(i): 1 for i in range(101, 105)}, 555)
         self.path = self.game.root / run.STATE
         self.call = self.game.call

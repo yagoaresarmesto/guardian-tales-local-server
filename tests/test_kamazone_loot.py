@@ -18,7 +18,6 @@ class KamazoneLootTests(unittest.TestCase):
         self.owner = fixtures.KamazoneRunTests()
         self.addCleanup(self.owner.doCleanups)
         self.owner.setUp()
-        self.owner.owner.practice("disable")
         self.session = self.owner.session
         mode = self.owner.fixture.tables["kamazonland2"]
         for season in mode["Seasons"]:
@@ -190,7 +189,6 @@ class KamazoneLootTests(unittest.TestCase):
             self.assertEqual(self.packet["AddedSilverCoin"], 30)
 
     def test_selected_bounty_level_adds_the_matching_tier_bonus_once(self):
-        self.owner.owner.enable()
         self.owner.owner.save({"23": 2})
         self.fight(111)
         user = self.call(battle.CLOSE, dict(NodeId=111))

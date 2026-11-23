@@ -69,31 +69,14 @@ are APK verified; combat entry is pending the separate probe below, while scored
 runs and rewards remain unimplemented.
 All changes remain backend response data; game files are untouched.
 
-Optional Kama-ZONE benefit practice adds a separate, content/season-bound local
-settings file. Season 43's Strong Body (174) can be unlocked in outgoing data;
-the 4,000 points are an allocation budget with the original benefit prices.
-Native inspection confirms the Id-to-level save map, Id/Level response list,
-local point subtraction and eight-benefit limit. Choosing, clearing and
-recent retry handling write no account/trial-XP data. Default previews remain
-unchanged; disabling restores the parent static mode with a newer revision.
-The first APK probe could not upgrade benefits: the previous response's
-zero-level placeholders filled the native selected dictionary beyond its cap.
-The follow-up sends only actual selections, restores original prices, enforces
-the budget and returns the remaining points in a complete idle singleton.
-Strong Body costs 250 and leaves 3,750 from the 4,000 budget. Cached zero-price
-static data is replaced by an advancing overlay revision. The owner confirms
-benefit levels can be raised/lowered, points deduct correctly and selections
-survive reopening. Three successful benefit saves appear in fresh counters.
-The next reported unsupported request is `/kamazonland/challenge` (difficulty 3).
-All 290 targeted Windows tests pass, including fifteen practice regressions for
-these behaviors and the existing guards. Black (223 files), Ruff and
-repository/link checks (283 files) pass.
-A coherent account/XP copy verifies the real seasonal definitions, original prices,
-Strong Body's unchanged effects, native request/response types, saved selection,
-clearing, recent replay protection and restoration. All other effective static
-tables, main-account tables, trial XP and 54 source reference files (including
-the already enabled practice settings) remain unchanged, with zero diagnostic
-source writes or assistant changes to live practice settings.
+Kama-ZONE now opens each selected season with all its menu benefits available
+and a 4,000-point allocation budget. The backend preserves the original level
+prices and eight-benefit limit, saves positive levels separately by season and
+content pack, and recognizes previous practice selections on upgrade. Refunds,
+recent retries and season switches are covered by host tests. The earlier
+season 43 APK check confirmed that changing levels spent or refunded points
+and that the selection survived reopening. UI verification of the automatic
+defaults in seasons 41 and 42 is pending.
 
 The next APK error is `/kamazonland/challenge` with `Difficulty:3`. The preserved
 Global season defines difficulties 1/2/3, each with eight difficulty/floor rows.

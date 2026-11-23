@@ -14,8 +14,8 @@ accepted victory results, map return, further normal/elite encounters and shop
 entry/exit, shelter Rest and the following boss battle are observed. Finish
 Challenge can conclude the local run; an accepted finish followed by a fresh
 challenge is observed, without separate reopen confirmation.
-An additional opt-in practice setting can unlock selected seasonal benefits,
-provide a point budget and retain benefit choices outside the saved account.
+Selecting a season unlocks all its menu benefits. Each season has 4,000 points
+and retains its own benefit choices outside the saved account.
 
 ## Node coverage
 
@@ -57,7 +57,7 @@ The matching external pack retains three Global/EU event seasons:
 
 Four additional records belong to another service and are excluded from this
 selector. The older permanent Kama-ZONE data and Tetis/RogueChess are separate
-systems. Installing or updating the code alone activates nothing.
+systems. The Events card requires a selected season.
 
 ## Commands
 
@@ -153,7 +153,7 @@ season bound to the matching pack. The response supplies the native
 the selected season's preserved group rather than being invented.
 
 Without optional local state the preview has no party or run, a concluded floor zero, empty collections,
-nonnull progress/likeability objects and zero preview points/tickets/coins.
+nonnull progress/likeability objects, the full benefit budget and zero tickets or silver.
 Those are temporary display defaults, not changes to saved balances or any
 historical Kama-ZONE progress. No `User` inventory delta, reward, operation
 receipt or database row is created. Missing/ambiguous mini-season data,
@@ -161,94 +161,40 @@ disabled/expired selection and a changed content pack are rejected. This route
 itself changes no run or benefit settings. Subsequent challenge requests use
 the separate local run described below.
 
-## Optional unlocks and a benefit point budget
+## Seasonal menu benefits
 
-For the preserved season 43, **Strong Body** is benefit **174**. It is already
-listed by that season, but its normal unlock requires a special-event choice.
-Practice can remove that condition in the backend's outgoing static response.
-It does not fabricate completed events or change the benefit's effect/levels.
+Select a season and open **Events > Kama-ZONE > Benefits**. Every benefit in
+that season's menu is available automatically. The EU 3.57.0 pack includes 22
+benefits in season 41, 23 in season 42 and 23 in season 43. Season 43 includes
+Strong Body (ID 174). Artifacts and curses are still acquired during challenges.
 
-Close Guardian Tales and stop the backend before changing practice settings.
-Keep the CDN and bridge running. With season 43 selected, enable the requested
-unlock and 4,000 points:
+Each season has **4,000 total points** and up to eight equipped benefits.
+Upgrading spends the original price of each level. Lowering or removing a
+level refunds those points. For example, selecting Strong Body for 250 leaves
+3,750 available. Saving an empty selection restores all 4,000 available points.
 
-```powershell
-.\.venv\Scripts\python.exe -m guardian_tales kamazone practice enable --unlock-benefit 174 --points 4000
-```
+Returning to a season restores its saved levels and available balance. On
+upgrade, the backend reads the previous practice selection for the matching
+season and content pack, including recent save receipts. Subsequent changes
+are written atomically to a private allocation file per season and pack in the
+reference directory. Opening the menu only reads this state. The challenge run
+uses a separate, shared run file: starting a challenge in a different season
+replaces the previous run record, including its local event history.
 
-Restart the backend using the same state, certificate and reference arguments
-as usual. Reopen Events and the Kama-ZONE benefits screen. Strong Body should
-be selectable; choose benefits, save, remove one and reopen the game to verify
-the choices and the available/total point display. These checks do not require a run.
-
-Inspect the private practice settings:
+Restart the backend and reopen the game after updating. The backend updates
+the outgoing benefit conditions and the cached static revision. Prices, effects,
+maximum levels and original game resources are preserved. The old
+`kamazone practice enable` command is redundant. To inspect the current
+season's budget, available benefit IDs and saved levels from PowerShell:
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales kamazone practice status
 ```
 
-To return to the ordinary preview, close the game, stop the backend and run:
-
-```powershell
-.\.venv\Scripts\python.exe -m guardian_tales kamazone practice disable
-```
-
-Restart the backend and game afterward. The selected season remains visible;
-use `kamazone disable` separately to restore its original calendar. Re-enabling
-the same practice settings retains its saved test choices.
-
-Practice writes only `kamazone_practice.json` in the external reference directory.
-It is bound to the original pack and the selected season. Selecting another
-season suspends these settings; an unlock cannot add an absent benefit to that
-season. A changed pack is rejected until practice is disabled or explicitly
-configured again. Installing the code alone activates nothing.
-
-The configured points are the **total allocation budget**, not a balance that
-stays unspent after assigning benefits. `KamazonPointTotal` is 4,000 and
-`KamazonPoint` is the remaining budget after the original costs of the selected
-levels. Strong Body costs its original 250 points and leaves 3,750 available.
-Native `LevelUp` charges `Points[current level]` at each upgrade: a benefit with
-prices `[250,500,750]` costs 750 in total to reach level two, and 1,500 to reach
-level three. Lowering/removing selections refunds those allocations.
-
-All original prices, effects, maximum levels and the eight-benefit selection
-limit remain intact. Only the requested benefits' unlock conditions change in
-outgoing static data; unrelated definitions and other effective tables stay
-intact. The configured budget must be positive and no higher than the
-mini-season's preserved limit (4,000 in this pack).
-
-`/kamazonland/save-benefits` accepts the native `Benefits` dictionary of IDs to
-levels. It validates membership, locks, levels, the budget and the eight-benefit
-limit, then writes test choices to the optional file. The response returns a
-complete idle singleton with an exact list of positive-level selections and the
-remaining/total points. Clearing all selections returns an empty benefit list
-and the full available budget. Zero-level placeholders must not be supplied:
-`Membership.Load` inserts every row into its temporary selected dictionary, and
-the native plus button counts its keys toward the eight-benefit cap. The former
-all-zero placeholder list incorrectly filled those slots and blocked upgrades.
-The last 64 operation IDs prevent recent retries from replacing newer choices.
-Saves leave static revisions unchanged; enabling/disabling advances them to
-reload the unlock overlay or restore the exact parent mode content. The updated
-overlay also advances its revision with an existing configuration, replacing
-cached zero-price data from the earlier experiment after a backend/game restart.
-
-The working account, trial XP, APK, shipped scripts, resource manifest and
-original reference/resource files are untouched. No gold, gems, tickets,
-event rewards or scored runs are added. Combat use of these benefits remains
-unverified in the APK.
-Fifteen practice regressions cover allocation, original prices, the native slot
-limit and the existing configuration/replay/restoration guards. All 290 targeted
-Windows tests pass, alongside Black/Ruff and repository/link checks. A coherent
-account/XP copy also verifies activation, saving/reopening, clearing, replay
-protection and restoration against the actual pack and native field types,
-retaining all other effective overlays, saved account/XP tables and 54 source
-reference files, including the already enabled practice settings. Diagnostics
-never change those live settings themselves.
-The owner confirms in the APK that benefit levels can be raised/lowered, points
-are deducted correctly and selections persist after reopening. Fresh counters
-show three successful benefit saves. Combat use remains unverified; the next
-reported request was `/kamazonland/challenge` with difficulty 3; its entry
-implementation is described next.
+Host tests cover fresh defaults, original costs, refunds, upgrade from an older
+practice configuration, season switching and retries. The owner previously
+verified adjusting and reopening the season 43 selection in the game. The new
+automatic defaults across all three seasons still need an Android UI check.
 
 ## Experimental opening-floor combat entry
 

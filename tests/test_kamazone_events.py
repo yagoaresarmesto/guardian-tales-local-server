@@ -28,7 +28,6 @@ class KamazoneEventTests(unittest.TestCase):
         self.owner = fixtures.KamazoneRunTests()
         self.addCleanup(self.owner.doCleanups)
         self.owner.setUp()
-        self.owner.owner.practice("disable")
         self.session, self.db, self.root = self.owner.session, self.owner.db, self.owner.root
         profile = self.session.store.account.profile()
         for ident in (2, 3):

@@ -45,6 +45,7 @@ class KamazoneTests(unittest.TestCase):
                         SeasonName="mall_season_name_" + str(i + 1),
                         SeasonDateId=7000101 + i,
                         MiniSeasonGroupId=1,
+                        Benefits=[1],
                         Banner=json.dumps(
                             {
                                 "enUS": f"media/kamazon_land/v3.{(18,30,47)[i]}_kamazon_land_event_banner_enUS.png"
@@ -55,7 +56,8 @@ class KamazoneTests(unittest.TestCase):
                 ]
                 + [dict(Id=2041, SeasonName="mall_season_name_1", SeasonDateId=7100033)],
                 "Artifacts": [{"Id": 900, "Keep": True}],
-                "MiniSeasons": [{"Id": 101, "MiniSeasonGroupId": 1}],
+                "Benefits": [dict(Id=1, OpenType="None", MaxLevel=1, Points=[250])],
+                "MiniSeasons": [{"Id": 101, "MiniSeasonGroupId": 1, "KamazonPointLimit": 4000}],
             },
             "seasondate": {
                 "EventPeriod": [
@@ -134,7 +136,8 @@ class KamazoneTests(unittest.TestCase):
         for key, date in value["local_period"].items():
             expected["EventPeriod"][0][key][REGION] = date
         self.assertEqual(calendar, expected)
-        for name in self.tables.keys() - {"seasondate", "__checksum__"}:
+        self.assertEqual(json.loads(tables["kamazonland2"][1]), self.tables["kamazonland2"])
+        for name in self.tables.keys() - {"kamazonland2", "seasondate", "__checksum__"}:
             self.assertEqual(tables[name], records(decode(self.source))[1][name])
         self.assertEqual((self.root / "static_data_get.bin").read_bytes(), self.source)
         self.assertEqual(list(self.db.iterdump()), before)
@@ -304,7 +307,8 @@ class KamazoneTests(unittest.TestCase):
         self.cli("select", "--season-id", "43", reference_dir=f.refs)
         after = f.session.handle(request("/static-data/get", {})).body
         old, new = records(decode(before))[1], records(decode(after))[1]
-        for name in old.keys() - {"seasondate", "__checksum__"}:
+        self.assertEqual(json.loads(new["kamazonland2"][1]), json.loads(old["kamazonland2"][1]))
+        for name in old.keys() - {"kamazonland2", "seasondate", "__checksum__"}:
             self.assertEqual(new[name], old[name])
         self.assertEqual(list(f.db.iterdump()), saved)
         self.assertTrue(all((f.refs / name).read_bytes() == raw for name, raw in config.items()))
@@ -355,13 +359,12 @@ class KamazonePreviewTests(unittest.TestCase):
             self.assertEqual(user["Likeability"], {"Points": 0, "ClaimedRewardStep": 0})
             self.assertEqual(user["Characters"], [])
             self.assertEqual(user["Nodes"], [])
+            self.assertEqual((user["KamazonPoint"], user["KamazonPointTotal"]), (4000, 4000))
             self.assertTrue(
                 all(
                     user[key] == 0
                     for key in (
                         "SilverCoin",
-                        "KamazonPoint",
-                        "KamazonPointTotal",
                         "KamazonTicket",
                         "KamazonEventPoint",
                     )
@@ -452,7 +455,7 @@ class KamazonePreviewTests(unittest.TestCase):
         self.fixture.cli("select", "--season-id", "43")
         self.assertEqual(self.call()["UserKamazonLand"]["MiniSeasonId"], 101)
         mode = self.fixture.tables["kamazonland2"]
-        mode["MiniSeasons"].append({"Id": 202, "MiniSeasonGroupId": 2})
+        mode["MiniSeasons"].append({"Id": 202, "MiniSeasonGroupId": 2, "KamazonPointLimit": 4000})
         next(s for s in mode["Seasons"] if s["Id"] == 43)["MiniSeasonGroupId"] = 2
         self.fixture.write_source()
         with self.assertRaises(PacketError):

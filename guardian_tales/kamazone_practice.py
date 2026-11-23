@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Optional seasonal unlocks and a benefit budget, outside the saved account."""
+"""Seasonal menu benefits, a shared budget policy and separate local allocations."""
 
 import argparse
 import hashlib
 import json
 from functools import lru_cache
+from threading import Lock
 
 from . import kamazone
 from .punchking_static import atomic_write
@@ -15,14 +16,19 @@ from .village import integer
 CONFIG = "kamazone_practice.json"
 SAVE = "/kamazonland/save-benefits"
 MAX_BENEFITS = 8
+BUDGET = 4000
+_save_lock = Lock()
 
 
 @lru_cache(maxsize=2)
 def catalog(source, season_id):
     if season_id not in kamazone.catalog(source):
         raise ValueError("Kama-ZONE practice requires a preserved Global season")
-    mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
-    season = kamazone.one(mode["Seasons"], "Id", season_id)
+    mode = kamazone.mode_data(source)
+    return seasonal_benefits(mode, kamazone.one(mode["Seasons"], "Id", season_id))
+
+
+def seasonal_benefits(mode, season):
     ids = season.get("Benefits")
     rows = mode.get("Benefits")
     if (
@@ -51,10 +57,10 @@ def catalog(source, season_id):
     limit = mini.get("KamazonPointLimit")
     if not integer(limit, minimum=1):
         raise ValueError("Invalid Kama-ZONE mini-season point limit")
-    return benefits, limit
+    return benefits
 
 
-def load(references):
+def legacy_config(references):
     path = references.directory / CONFIG
     if not path.exists():
         return None
@@ -109,139 +115,127 @@ def load(references):
     return value
 
 
-def validate(value, source):
-    if value["source_sha256"] != hashlib.sha256(source).hexdigest():
-        raise ValueError("Kama-ZONE practice belongs to another content pack; disable it first")
-    benefits, limit = catalog(source, value["season_id"])
-    if (
-        not integer(value["points"], minimum=1)
-        or value["points"] > limit
-        or not set(value["unlock_benefits"]) <= benefits.keys()
-    ):
-        raise ValueError("Practice points/unlocks exceed the selected season's definitions")
-    if any(
-        int(key) not in benefits
-        or level > benefits[int(key)]["MaxLevel"]
-        or benefits[int(key)]["OpenType"] != "None"
-        and int(key) not in value["unlock_benefits"]
-        for key, level in value["benefits"].items()
-    ):
-        raise ValueError("Invalid saved practice benefit selection")
-    if (
-        len(value["benefits"]) > MAX_BENEFITS
-        or allocated_points(benefits, value["benefits"]) > value["points"]
-    ):
-        raise ValueError(
-            "Saved practice benefits exceed the original selection limit or point budget"
-        )
-    return benefits
-
-
 def allocated_points(benefits, levels):
     # The native plus button charges Points[current level] at each upgrade;
     # reaching level N therefore spends the first N listed prices, not just N's.
     return sum(sum(benefits[int(key)]["Points"][:level]) for key, level in levels.items())
 
 
+@lru_cache(maxsize=3)
+def source_hash(source):
+    return hashlib.sha256(source).hexdigest()
+
+
+def allocation_file(source, season_id):
+    return f"kamazone_benefits_{season_id}_{source_hash(source)}.json"
+
+
+def selection(benefits, levels):
+    if not isinstance(levels, dict) or len(levels) > len(benefits):
+        raise ValueError("Expected a seasonal benefit ID-to-level map")
+    chosen = {}
+    for key, level in levels.items():
+        if (
+            not isinstance(key, str)
+            or not key.isascii()
+            or not key.isdecimal()
+            or len(key) > 10
+            or str(int(key)) != key
+            or int(key) not in benefits
+            or not integer(level, maximum=benefits[int(key)]["MaxLevel"])
+        ):
+            raise ValueError("Invalid or out-of-season Kama-ZONE benefit or level")
+        if level:
+            chosen[key] = level
+    if len(chosen) > MAX_BENEFITS or allocated_points(benefits, chosen) > BUDGET:
+        raise ValueError("Benefit selection exceeds eight benefits or 4,000 points")
+    return chosen
+
+
 def effective(references, source, season_id):
-    value = load(references)
-    if value is None or not value["enabled"]:
-        return None
-    validate(value, source)
-    return value if value["season_id"] == season_id else None
-
-
-def delta(value, source):
-    benefits = validate(value, source)
-    return {
-        "UserKamazonLand": {
-            "KamazonPoint": value["points"] - allocated_points(benefits, value["benefits"]),
-            "KamazonPointTotal": value["points"],
-            # Membership.Load copies every supplied row into its selected map.
-            # Zero-level placeholders count toward the native eight-benefit cap.
-            "Benefits": [
-                {"Id": i, "Level": value["benefits"][str(i)]}
-                for i in benefits
-                if str(i) in value["benefits"]
-            ],
-        }
-    }
+    benefits = catalog(source, season_id)
+    name = allocation_file(source, season_id)
+    path = references.directory / name
+    if path.exists():
+        if not path.is_file() or path.stat().st_size > 16384:
+            raise ValueError("Invalid Kama-ZONE benefit allocation file")
+        value = references.json(name)
+        if not isinstance(value, dict) or set(value) != {"benefits", "seen_operations"}:
+            raise ValueError("Invalid Kama-ZONE benefit allocation")
+    else:
+        legacy = legacy_config(references)
+        if legacy and (legacy["source_sha256"], legacy["season_id"]) == (
+            source_hash(source),
+            season_id,
+        ):
+            value = {key: legacy[key] for key in ("benefits", "seen_operations")}
+        else:
+            return {"benefits": {}, "seen_operations": []}
+    operations = value["seen_operations"]
+    if (
+        selection(benefits, value["benefits"]) != value["benefits"]
+        or not isinstance(operations, list)
+        or len(operations) > 64
+        or any(not isinstance(op, str) or not 1 <= len(op) <= 160 for op in operations)
+        or len(set(operations)) != len(operations)
+    ):
+        raise ValueError("Invalid saved Kama-ZONE benefit allocation or receipts")
+    return value
 
 
 def project(references, source, season_id, response):
-    value = effective(references, source, season_id)
-    if value is not None:
-        response["UserKamazonLand"].update(delta(value, source)["UserKamazonLand"])
+    benefits = catalog(source, season_id)
+    levels = effective(references, source, season_id)["benefits"]
+    # The native eight-slot limit counts every returned row, even at level zero.
+    response["UserKamazonLand"].update(
+        KamazonPoint=BUDGET - allocated_points(benefits, levels),
+        KamazonPointTotal=BUDGET,
+        Benefits=[{"Id": i, "Level": levels[str(i)]} for i in benefits if str(i) in levels],
+    )
     return response
 
 
-def publish(references, value):
-    atomic_write(references.directory / CONFIG, json.dumps(value, indent=2).encode() + b"\n")
-
-
 def save(references, source, season_id, request, operation_id):
-    value = effective(references, source, season_id)
-    if value is None:
-        raise ValueError("Enable Kama-ZONE practice before saving test benefits")
-    benefits = validate(value, source)
     if (
         not isinstance(request, dict)
         or set(request) != {"Benefits"}
-        or not isinstance(request["Benefits"], dict)
-        or len(request["Benefits"]) > len(benefits)
         or not isinstance(operation_id, str)
         or not 1 <= len(operation_id) <= 160
     ):
-        raise ValueError("Kama-ZONE save-benefits requires an Id-to-level map")
-    chosen = {}
-    for key, level in request["Benefits"].items():
-        if (
-            not key.isascii()
-            or not key.isdecimal()
-            or str(int(key)) != key
-            or int(key) not in benefits
-            or not integer(level)
-            or level > benefits[int(key)]["MaxLevel"]
-            or level > 0
-            and benefits[int(key)]["OpenType"] != "None"
-            and int(key) not in value["unlock_benefits"]
-        ):
-            raise ValueError("Invalid, locked or out-of-season Kama-ZONE benefit")
-        if level:
-            chosen[key] = level
-    if len(chosen) > MAX_BENEFITS or allocated_points(benefits, chosen) > value["points"]:
-        raise ValueError(
-            "Benefit selection exceeds the original eight-benefit limit or point budget"
-        )
-    if operation_id not in value["seen_operations"]:
-        value = dict(
-            value,
-            benefits=chosen,
-            seen_operations=(value["seen_operations"] + [operation_id])[-64:],
-        )
-        publish(references, value)
-    return delta(value, source)
+        raise ValueError("Invalid Kama-ZONE save-benefits request")
+    chosen = selection(catalog(source, season_id), request["Benefits"])
+    with _save_lock:
+        value = effective(references, source, season_id)
+        if operation_id not in value["seen_operations"]:
+            value = dict(
+                benefits=chosen, seen_operations=(value["seen_operations"] + [operation_id])[-64:]
+            )
+            encoded = json.dumps(value, indent=2).encode() + b"\n"
+            if len(encoded) > 16384:
+                raise ValueError("Kama-ZONE benefit allocation exceeds its file size limit")
+            atomic_write(references.directory / allocation_file(source, season_id), encoded)
 
 
 @lru_cache(maxsize=2)
-def prepare(body, generation, season_id, unlocks):
+def prepare(body, generation, season_id):
     lines, tables = records(decode(body))
     content = tables["kamazonland2"][1]
     if season_id is not None:
-        catalog(body, season_id)
         mode = json.loads(content)
-        for row in mode["Benefits"]:
-            if row["Id"] in unlocks:
+        season = kamazone.one(mode["Seasons"], "Id", season_id)
+        for row in seasonal_benefits(mode, season).values():
+            if row["OpenType"] != "None":
                 row.update(OpenType="None", OpenValue=0, OpenValues=None)
+        mini = kamazone.one(mode["MiniSeasons"], "MiniSeasonGroupId", season["MiniSeasonGroupId"])
+        mini["KamazonPointLimit"] = BUDGET
         content = json.dumps(mode, ensure_ascii=False, separators=(",", ":"))
-    # The extra revision step also replaces cached zero-price data from v1
-    # when an existing enabled configuration keeps the same generation.
-    revision = max(tables["kamazonland2"][2], tables["__checksum__"][2]) + generation + 2
+    # Advance beyond the old practice overlay even for an unchanged season.
+    revision = max(tables["kamazonland2"][2], tables["__checksum__"][2]) + generation + 3
     if revision > 0x7FFFFFFF:
         raise ValueError("Kama-ZONE practice revision exceeds the native integer range")
     checksum = digest(
         (
-            "local-kamazone-practice-v2" + tables["__checksum__"][1] + str(generation) + content
+            "local-kamazone-benefits-v3" + tables["__checksum__"][1] + str(generation) + content
         ).encode()
     )
     for name, text in (("kamazonland2", content), ("__checksum__", checksum)):
@@ -258,18 +252,15 @@ def prepare(body, generation, season_id, unlocks):
 def bootstrap_seed(references, filename, request, parent):
     if filename not in ("static_data_get.bin", "static_data_check.bin"):
         return parent(references, filename, request)
-    value = load(references)
-    if value is None:
-        return parent(references, filename, request)
     selected = kamazone.load(references)
-    active = value["enabled"] and selected and selected["season_id"] == value["season_id"]
-    if value["enabled"]:
-        validate(value, references.read_bytes("static_data_get.bin"))
+    legacy = legacy_config(references)
+    if selected is None and legacy is None:
+        return parent(references, filename, request)
+    generation = (selected or {}).get("generation", 0) + (legacy or {}).get("generation", 0)
     body, checksum = prepare(
         parent(references, "static_data_get.bin", request),
-        value["generation"],
-        value["season_id"] if active else None,
-        tuple(value["unlock_benefits"]) if active else (),
+        generation,
+        selected["season_id"] if selected else None,
     )
     if filename == "static_data_get.bin":
         return body
@@ -284,65 +275,41 @@ def bootstrap_seed(references, filename, request, parent):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("enable", "disable", "status"))
-    parser.add_argument("--unlock-benefit", action="append", type=int, default=[])
-    parser.add_argument("--points", type=int)
+    parser.add_argument("action", choices=("status", "enable", "disable"))
+    parser.add_argument(
+        "--unlock-benefit", action="append", type=int, default=[], help=argparse.SUPPRESS
+    )
+    parser.add_argument("--points", type=int, help=argparse.SUPPRESS)
     parser.add_argument("--reference-dir", default="local/client-data/reference")
     args = parser.parse_args(argv)
     refs = ReferenceData(args.reference_dir)
     try:
+        if args.action == "disable" or args.points not in (None, BUDGET):
+            raise ValueError("Menu benefits are automatic with a fixed 4,000-point budget")
         if args.action != "enable" and (args.unlock_benefit or args.points is not None):
-            raise ValueError("Only practice enable accepts point/unlock options")
-        previous = load(refs)
-        candidate = previous
-        if args.action == "enable":
-            selection = kamazone.load(refs)
-            if selection is None or selection["season_id"] is None:
-                raise ValueError("Select a Kama-ZONE season before enabling practice")
+            raise ValueError("Status takes no point or unlock options")
+        selected = kamazone.load(refs)
+        season_id = selected["season_id"] if selected else None
+        levels = {}
+        ids = []
+        if season_id is not None:
             source = refs.read_bytes("static_data_get.bin")
-            sha = hashlib.sha256(source).hexdigest()
-            if selection["source_sha256"] != sha:
+            if selected["source_sha256"] != source_hash(source):
                 raise ValueError("Select the season again for the current content pack")
-            same = (
-                previous
-                and previous["source_sha256"] == sha
-                and previous["season_id"] == selection["season_id"]
-            )
-            candidate = dict(
-                version=1,
-                generation=(previous or {}).get("generation", 0),
-                enabled=True,
-                source_sha256=sha,
-                season_id=selection["season_id"],
-                points=args.points if args.points is not None else 4000,
-                unlock_benefits=sorted(set(args.unlock_benefit)),
-                benefits=previous["benefits"] if same else {},
-                seen_operations=previous["seen_operations"] if same else [],
-            )
-            candidate["generation"] = (previous or {}).get("generation", 0) or 1
-            validate(candidate, source)
-            if candidate != previous:
-                candidate["generation"] = (previous or {}).get("generation", 0) + 1
-        elif args.action == "disable" and previous and previous["enabled"]:
-            candidate = dict(previous, enabled=False, generation=previous["generation"] + 1)
-        changed = candidate != previous
-        if changed:
-            source = refs.read_bytes("static_data_get.bin")
-            prepare(
-                source,
-                candidate["generation"],
-                candidate["season_id"] if candidate["enabled"] else None,
-                tuple(candidate["unlock_benefits"]) if candidate["enabled"] else (),
-            )
-            publish(refs, candidate)
+            ids = list(catalog(source, season_id))
+            levels = effective(refs, source, season_id)["benefits"]
+        if not set(args.unlock_benefit) <= set(ids):
+            raise ValueError("Requested benefit is outside the selected season")
         print(
             json.dumps(
                 dict(
-                    configuration=candidate,
-                    changed=changed,
-                    saved_account_modified=False,
-                    scope="Seasonal unlocks and a benefit point budget at original costs; no scored runs or rewards",
-                    restart_backend_and_game_required=changed,
+                    automatic=True,
+                    selected_season_id=season_id,
+                    points=BUDGET,
+                    unlocked_benefits=ids,
+                    benefits=levels,
+                    changed=False,
+                    message="All menu benefits unlock when a season is selected. No practice command is required.",
                 ),
                 indent=2,
             )

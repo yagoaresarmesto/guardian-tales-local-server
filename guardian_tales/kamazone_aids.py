@@ -11,9 +11,9 @@ AIDS = {"ArtifactId": "ArtifactAid", "CurseId": "CurseAid"}
 
 def selected(references, source, season_id):
     practice = kamazone_practice.effective(references, source, season_id)
-    if not practice:
+    if not practice["benefits"]:
         return {}
-    specs, _ = kamazone_practice.catalog(source, season_id)
+    specs = kamazone_practice.catalog(source, season_id)
     bonuses = {}
     for key, level in practice["benefits"].items():
         spec = specs[int(key)]
