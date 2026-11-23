@@ -249,6 +249,16 @@ HP uses the client's 10,000-unit scale. Native character generation resolves
 each battle monster's ID through the mode's monster table before loading its
 character spec; these IDs are not interchangeable.
 
+The observed battle request sends positions directly, for example
+`{"NodeId":111,"Formation":[12,3,19,9]}`. This input is a four-position array even
+with a two-hero party. It must contain distinct integer cells from 0 through 24.
+`BeforeLoad` passes the current formation's `Positions` to the sender, not its
+complete model. The server wraps the accepted list in the response/local-state
+model `{"Id":0,"Positions":[12,3,19,9]}`, retaining an existing formation ID.
+Object-shaped inputs, wrong lengths, duplicate/out-of-range cells and noninteger
+positions are rejected without changing the run. Reopening restores the model;
+recent retries return the current formation without reverting newer positions.
+
 The private `kamazone_run.json` holds the selected difficulty, party, formation,
 seed, current node, encounter/combat flags, node states and the last 64 request
 receipts. Files predating the combat flag remain readable without being rewritten
@@ -272,10 +282,11 @@ the generated map, then sent `/kamazonland/start-stage` with `NodeId:111` for a
 normal encounter while the party was still empty. The initial party guard
 rejected that valid native order. The follow-up moves the party requirement to
 combat loading and keeps party changes available after node opening.
-Thirteen run regressions
+Fourteen run regressions
 cover all three tiers, deterministic resume, request replay, party ownership,
 formation/connection guards, the actual node-before-party flow, normal/elite/boss
-dispatch, legacy run files, source/season/user isolation and unchanged account,
+dispatch, native formation arrays and model responses, legacy run files,
+source/season/user isolation and unchanged account,
 benefit and effective static data. Automated client-contract checks and actual
 APK combat entry are recorded separately in [status](status.md).
 

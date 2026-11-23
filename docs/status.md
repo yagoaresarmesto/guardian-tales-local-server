@@ -126,6 +126,27 @@ and all 55 source reference files including the owner's current run. Diagnostics
 do not edit/reset that live run or gamefiles. APK combat loading remains pending;
 this correction adds no result, reward or noncombat-node interactions.
 
+The next APK probe passes node opening and party selection: fresh counters show
+one successful `start-stage` and two successful `select-characters` requests.
+It then rejects `start-battle` for node 111. The captured request carries
+`Formation:[12,3,19,9]`, whereas the initial validator expected the response model
+`{Id,Positions}`. Native `BeforeLoad` loads that model's positions before calling
+the sender, independently confirming the array contract. The follow-up validates
+four distinct integer cells in 0..24 and wraps them in the existing model for
+responses/persistence, preserving its ID and the current two-hero party.
+
+All 137 core/content/integration tests pass in 23.259 seconds, including 58
+Kama-ZONE cases and fourteen run regressions. They cover native arrays, malformed
+inputs, model restoration, preserved formation identity and recent replay
+protection without reverting newer positions. Black (225 files), Ruff and
+repository/link checks (285 files) pass. A coherent real account/XP copy replays
+the exact pending request with the owner's existing entered node and two-hero
+party, then verifies the combat flag, model response, reopen/replay and atomic
+rejection. The map seed, node states, party, benefits, point budget, effective
+static responses, account/XP tables and all 55 source reference files remain
+intact. Diagnostics make no live run edit/reset or gamefile changes. Actual APK
+combat loading is still pending; results and rewards remain unsupported.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

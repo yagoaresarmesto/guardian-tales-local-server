@@ -159,7 +159,7 @@ class KamazoneRunTests(unittest.TestCase):
         entered = self.call(run.START, {"NodeId": node})
         self.assertEqual(entered["Progress"]["CurrentNodeId"], node)
         formation = dict(Id=0, Positions=[12, 3, 19, 9])
-        battle = self.call(run.BATTLE, dict(NodeId=node, Formation=formation))
+        battle = self.call(run.BATTLE, dict(NodeId=node, Formation=formation["Positions"]))
         self.assertEqual(battle["Formation"], formation)
         self.assertEqual(next(n for n in battle["Nodes"] if n["Id"] == node)["State"], 1)
         self.session = BootstrapSession(self.session.store)
@@ -191,7 +191,7 @@ class KamazoneRunTests(unittest.TestCase):
             (run.SELECT, {"CharacterIds": [999999]}),
             (run.SELECT, {"CharacterIds": [True]}),
             (run.START, {"NodeId": 110}),
-            (run.BATTLE, {"NodeId": 110, "Formation": dict(Id=0, Positions=[12, 3, 19, 9])}),
+            (run.BATTLE, {"NodeId": 110, "Formation": [12, 3, 19, 9]}),
         ]:
             with self.subTest(route=route, body=body), self.assertRaises(PacketError):
                 self.call(route, body)
@@ -205,7 +205,7 @@ class KamazoneRunTests(unittest.TestCase):
         for route, body in (
             (run.START, {"NodeId": 120}),
             (run.START, {"NodeId": 999}),
-            (run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9]))),
+            (run.BATTLE, dict(NodeId=node, Formation=[12, 3, 19, 9])),
         ):
             previous = (self.root / run.STATE).read_bytes()
             with self.assertRaises(PacketError):
@@ -214,21 +214,58 @@ class KamazoneRunTests(unittest.TestCase):
         self.call(run.START, {"NodeId": node})
         for route, body in (
             (run.START, {"NodeId": 120}),
-            (run.BATTLE, dict(NodeId=120, Formation=dict(Id=0, Positions=[12, 3, 19, 9]))),
+            (run.BATTLE, dict(NodeId=120, Formation=[12, 3, 19, 9])),
             *[
-                (run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=p)))
-                for p in ([12, 3, 19, 19], [12, 3, 19], [25, 3, 19, 9], [True, 3, 19, 9])
+                (run.BATTLE, dict(NodeId=node, Formation=p))
+                for p in (
+                    None,
+                    {},
+                    [],
+                    {"Id": 0, "Positions": [12, 3, 19, 9]},
+                    [12, 3, 19, 19],
+                    [12, 3, 19],
+                    [12, 3, 19, 9, 1],
+                    [-1, 3, 19, 9],
+                    [25, 3, 19, 9],
+                    [True, 3, 19, 9],
+                    [12.0, 3, 19, 9],
+                    ["12", 3, 19, 9],
+                )
             ],
         ):
             previous = (self.root / run.STATE).read_bytes()
             with self.assertRaises(PacketError):
                 self.call(route, body)
             self.assertEqual((self.root / run.STATE).read_bytes(), previous)
-        self.call(run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9])))
+        self.call(run.BATTLE, dict(NodeId=node, Formation=[12, 3, 19, 9]))
         previous = (self.root / run.STATE).read_bytes()
         with self.assertRaises(PacketError):
             self.select()
         self.assertEqual((self.root / run.STATE).read_bytes(), previous)
+        self.assert_untouched()
+
+    def test_native_position_array_returns_a_formation_model_and_preserves_newer_retries(self):
+        node = self.opening(self.challenge())["Id"]
+        self.call(run.START, {"NodeId": node})
+        self.select()
+        path = self.root / run.STATE
+        value = json.loads(path.read_bytes())
+        value["formation"] = dict(Id=9, Positions=[12, 3, 19, 9])
+        path.write_text(json.dumps(value))
+        positions = [0, 7, 14, 24]
+        battle = self.call(run.BATTLE, dict(NodeId=node, Formation=positions), 310)
+        expected = dict(Id=9, Positions=positions)
+        self.assertEqual(battle["Formation"], expected)
+        self.assertEqual(run.load(self.session.store.references)["formation"], expected)
+        self.assertTrue(run.load(self.session.store.references)["battle_started"])
+        self.assertEqual(battle["Characters"], self.characters)
+        newer = self.call(run.BATTLE, dict(NodeId=node, Formation=[24, 19, 9, 0]), 311)
+        saved = path.read_bytes()
+        self.assertEqual(self.call(run.BATTLE, dict(NodeId=node, Formation=positions), 310), newer)
+        self.assertEqual(path.read_bytes(), saved)
+        self.session = BootstrapSession(self.session.store)
+        self.session.signed_in = True
+        self.assertEqual(self.entry(), newer)
         self.assert_untouched()
 
     def test_native_node_then_party_then_battle_order_preserves_selection_and_budget(self):
@@ -243,12 +280,10 @@ class KamazoneRunTests(unittest.TestCase):
         self.assertFalse(state["battle_started"])
         self.assertEqual(self.entry(), opened)
         with self.assertRaises(PacketError):
-            self.call(run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9])))
+            self.call(run.BATTLE, dict(NodeId=node, Formation=[12, 3, 19, 9]))
         selected = self.select()
         self.assertEqual(self.call(run.START, {"NodeId": node}, 710), selected)
-        battle = self.call(
-            run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9]))
-        )
+        battle = self.call(run.BATTLE, dict(NodeId=node, Formation=[12, 3, 19, 9]))
         self.assertTrue(run.load(self.session.store.references)["battle_started"])
         self.assertEqual(battle["Characters"], self.characters)
         self.assertEqual(battle["Benefits"], opened["Benefits"])
@@ -270,7 +305,7 @@ class KamazoneRunTests(unittest.TestCase):
         self.assertFalse(run.load(self.session.store.references)["battle_started"])
         self.assertEqual(path.read_bytes(), before)
         self.select()
-        self.call(run.BATTLE, dict(NodeId=node, Formation=dict(Id=0, Positions=[12, 3, 19, 9])))
+        self.call(run.BATTLE, dict(NodeId=node, Formation=[12, 3, 19, 9]))
         self.assertTrue(json.loads(path.read_bytes())["battle_started"])
         self.assert_untouched()
 
@@ -292,7 +327,7 @@ class KamazoneRunTests(unittest.TestCase):
                 case.select()
                 case.call(
                     run.BATTLE,
-                    dict(NodeId=target["Id"], Formation=dict(Id=0, Positions=[12, 3, 19, 9])),
+                    dict(NodeId=target["Id"], Formation=[12, 3, 19, 9]),
                 )
                 case.assert_untouched()
 

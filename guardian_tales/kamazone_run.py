@@ -25,15 +25,21 @@ COMBAT = ("Normal", "Elite", "Boss")
 PROBABILITIES = ("Normal", "Elite", "Shelter", "Shop", "Special")
 
 
+def valid_positions(value):
+    return (
+        isinstance(value, list)
+        and len(value) == 4
+        and all(integer(i, maximum=24) for i in value)
+        and len(set(value)) == 4
+    )
+
+
 def valid_formation(value):
     return (
         isinstance(value, dict)
         and set(value) == {"Id", "Positions"}
         and integer(value["Id"])
-        and isinstance(value["Positions"], list)
-        and len(value["Positions"]) == 4
-        and all(integer(i, maximum=24) for i in value["Positions"])
-        and len(set(value["Positions"])) == 4
+        and valid_positions(value["Positions"])
     )
 
 
@@ -344,9 +350,13 @@ def handle(account, source, season_id, route, request, operation_id):
             or set(request) != ({"NodeId"} if route == START else {"NodeId", "Formation"})
             or not integer(request["NodeId"], minimum=1)
             or route == BATTLE
-            and not valid_formation(request["Formation"])
+            and not valid_positions(request["Formation"])
         ):
-            raise ValueError("Kama-ZONE stage entry requires a node ID")
+            raise ValueError(
+                "Kama-ZONE battle entry requires a node ID and four formation positions"
+                if route == BATTLE
+                else "Kama-ZONE stage entry requires a node ID"
+            )
         if previous is None or not previous["active"]:
             raise ValueError("Start a Kama-ZONE challenge before entering a node")
     else:
@@ -393,7 +403,11 @@ def handle(account, source, season_id, route, request, operation_id):
             raise ValueError("Enter the selected Kama-ZONE node before loading its battle")
         if not value["characters"]:
             raise ValueError("Select a Kama-ZONE party before loading combat")
-        value["formation"] = copy.deepcopy(request["Formation"])
+        # BeforeLoad sends Formation.Positions, not the Formation model itself.
+        # The shared singleton and local state still require the model object.
+        value["formation"] = dict(
+            Id=(value["formation"] or {}).get("Id", 0), Positions=list(request["Formation"])
+        )
         value["battle_started"] = True
     else:
         ident, current = request["NodeId"], value["current_node_id"]
