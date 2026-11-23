@@ -10,7 +10,8 @@ connected combat-node progression. Shop entry/exit displays preserved seasonal
 artifacts. Shelters support resting, reviving and purification. Purchases, loot,
 special events, later floors and rewards remain unimplemented. APK combat entry,
 accepted victory results, map return, further normal/elite encounters and shop
-entry/exit are observed; shelter actions are pending verification.
+entry/exit, shelter Rest and the following boss battle are observed. Finish
+Challenge can conclude the local run; its APK return flow is pending verification.
 An additional opt-in practice setting can unlock selected seasonal benefits,
 provide a point budget and retain benefit choices outside the saved account.
 
@@ -28,7 +29,7 @@ while representative APK runs verify scene loading, action feedback and caching.
 | Normal (2) | Battle entry/results, HP, retry and connected progression | Loot, coins and other battle rewards |
 | Elite (3) | Same lifecycle using its actual monsters and level | Elite affixes, loot and rewards |
 | Boss (4) | Same combat lifecycle using its boss preset/level | Following floor, final season clear and infinity |
-| Shelter (5) | Rest, one random revive, one random curse removal, skip and resume | Artifact-based recovery modifiers; APK action verification |
+| Shelter (5) | Rest, one random revive, one random curse removal, skip and resume; Rest observed in the APK | Artifact-based recovery modifiers; revive/purify APK verification |
 | Shop (6) | Seasonal stock, entry, resume and exit | Purchases, currency income and curse/effect goods |
 | Special (7) | Type, native requests and data inventory identified; unsupported actions reject without progress changes | Event conditions, choices, effects, random conclusions and nested encounters |
 
@@ -308,7 +309,7 @@ preserved nonhidden monster groups and preset positions, and guarantees one
 reachable opening battle with an originally allowed type. Elite affixes are not
 generated yet. Shops and special nodes retain their original probabilities.
 Shop and shelter navigation are implemented, while special events remain
-unsupported. Loot, conclusion, currency rewards,
+unsupported. Loot, artifact retention, currency rewards,
 scored rankings, further floors and season progression are also unimplemented.
 Only reported wins in an active matching battle clear a local combat node;
 reward balances and season-wide clears are not fabricated.
@@ -467,7 +468,43 @@ native Rest request: HP 7,650/9,121 becomes 10,000/10,000, with three battles an
 one shelter visit. It reopens/retries and loads connected boss node 160 while
 retaining the complete original map, party, benefits, budget, shop stock,
 effective static data, account/XP tables and 55 source reference files. APK
-shelter entry, Rest feedback and return navigation remain pending verification.
+shelter entry, Rest and return navigation are now observed: the stored visit
+records choice 1, followed by a successfully entered and completed boss node 160.
+Reopening persistence and revive/purify actions lack separate owner confirmation.
+
+## Finish Challenge
+
+The captured button sends `/kamazonland/conclude` with
+`{"keepingArtifactId":null}`. The field uses lower camel case, as independently
+confirmed by the native sender. Its success coroutine checks the response,
+closes the popup and returns to the idle Kama-ZONE lobby. It does not itself
+request the next floor or select a battle reward.
+
+The backend marks the separate local run inactive and returns its complete
+singleton with `Progress.Concluded=true`. The ended first-floor snapshot retains
+its node, map seed, party/formation, HP, counters, shop stock and shelter visits.
+Reads/reopening do not rewrite it. Benefit selections, allocated points, main
+account inventory/balances and trial XP are unchanged. Finishing awards no season
+clear, score, currency or artifact; artifact keep IDs remain unsupported and are
+explicitly rejected rather than accepted without ownership.
+
+Finishing requires a run that has left its starting position. Active combat and
+unresolved victory loot block it; a reported loss or an encounter panel without
+active combat can be concluded. Repeating a completed finish is harmless.
+Recent request receipts also prevent a stale finish from closing a subsequent
+challenge. New stage/battle/result requests reject a concluded run until an
+explicit new challenge starts; the new challenge retains the party and benefits
+and resets only local run HP/map/counters.
+
+Eight finish regressions cover open encounters, defeated/boss-completed runs,
+reopen/retry, a subsequent challenge, malformed/artifact IDs, phase guards,
+authentication, source/season/owner isolation and failed atomic publication.
+The coherent actual-account copy replays the captured null-keep request from
+cleared boss 160, retaining four battles and one shelter visit, and verifies
+reopen/retry and a fresh challenge without changing account/XP tables, effective
+static data or 55 original reference files. Host checks pass; APK popup closing
+and idle return remain pending. Floor advancement and artifact rewards are
+separate unimplemented work.
 
 ## Local rankings
 

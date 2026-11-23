@@ -298,6 +298,9 @@ Shelters support resting, reviving one hero, purifying one curse and leaving
 without an action. See the [complete node coverage](docs/kamazone.md#node-coverage)
 for each known node type and the remaining mechanics; APK probes validate
 representative flows rather than discovering types one at a time.
+Finish Challenge can also conclude the separate local run and return to the
+idle lobby. Artifact retention/rewards and progression to another floor remain
+unimplemented.
 
 The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
 projects one owned Andras as an experimental Myth variant using her existing

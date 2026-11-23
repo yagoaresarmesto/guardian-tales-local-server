@@ -283,6 +283,37 @@ Shelter entry, Rest feedback and return navigation still need the APK probe.
 Purchases, special-event execution, artifact loot/effects, currency income,
 subsequent floors and season completion/rewards remain unsupported.
 
+The next run records Rest at shelter 152, successful return to the map and a
+completed boss at node 160. Four battles and one shelter visit are retained.
+This observes the shelter entry/action/navigation flow, without a separate owner
+confirmation of reopen persistence or revive/purify. The first-floor transition
+and missing artifact rewards remain separate unfinished mechanics; the owner
+asked to fix Finish Challenge first.
+
+Its captured `/kamazonland/conclude` body is `{"keepingArtifactId":null}`.
+Native sender/coroutine inspection confirms that field's spelling and the
+success flow back to the idle Kama-ZONE lobby. The new handler atomically ends
+only the separate local run, projecting its retained snapshot with
+`Progress.Concluded=true`. HP, party/formation, map seed, cleared nodes, counters,
+shops, shelter visits, benefits, budget and account balances remain intact.
+Active combat, unresolved victory loot and the initial starting position block
+finishing. Repeating a finish is harmless; recent old receipts cannot conclude
+a subsequent challenge. A new challenge explicitly resets only local run state.
+Artifact keep IDs, season clears, scores and currency/reward grants remain
+unsupported rather than being fabricated by this close operation.
+
+All 173 core/content/integration tests pass in 27.733 seconds, including 94
+Kama-ZONE cases and eight finish regressions. Black (232 files), Ruff and
+repository/link checks (292 files) pass. The coherent actual-account copy
+replays the exact captured null-keep request from cleared boss 160, retaining
+four battles, one shelter visit and every other run field apart from closing
+flags/receipts. Reopen, repeated finish and a new challenge with an old-finish
+retry pass. Every main-account/XP table, effective static response and 55
+original reference files is preserved; diagnostics make no source writes,
+live run edits/resets or gamefile changes. APK popup closing and idle return
+are pending the backend-only restart/probe. Floor advancement and artifact
+loot/effects remain separate pending work.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

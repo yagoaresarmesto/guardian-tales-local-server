@@ -393,7 +393,7 @@ class KamazoneRunTests(unittest.TestCase):
             "choice-special-event",
             "buy-gacha",
             "buy-shop-item",
-            "conclude",
+            "infinitize",
             "claim-likeability-reward",
         ):
             with self.assertRaises(PacketError):

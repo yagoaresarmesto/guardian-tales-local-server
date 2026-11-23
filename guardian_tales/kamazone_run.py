@@ -18,11 +18,13 @@ CHALLENGE = "/kamazonland/challenge"
 SELECT = "/kamazonland/select-characters"
 START = "/kamazonland/start-stage"
 BATTLE = "/kamazonland/start-battle"
+CONCLUDE = "/kamazonland/conclude"
 ROUTES = (
     CHALLENGE,
     SELECT,
     START,
     BATTLE,
+    CONCLUDE,
     *kamazone_battle.ROUTES,
     kamazone_shop.CLOSE,
     kamazone_shelter.TAKE,
@@ -328,14 +330,16 @@ def project(account, source, season_id, response):
     user.update(Characters=list(value["characters"]), Hps={str(i): HP_SCALE for i in sorted(owned)})
     if value["formation"] is not None:
         user["Formation"] = copy.deepcopy(value["formation"])
-    if value["active"]:
+    if value["active"] or value["states"]:
         nodes = copy.deepcopy(floor_nodes(source, season_id, value["seed"]))
         for node in nodes:
             node["State"] = value["states"].get(str(node["Id"]), 0)
         user.update(
             Difficulty=value["difficulty"],
             Nodes=nodes,
-            Progress=dict(Floor=1, CurrentNodeId=value["current_node_id"], Concluded=False),
+            Progress=dict(
+                Floor=1, CurrentNodeId=value["current_node_id"], Concluded=not value["active"]
+            ),
         )
         kamazone_battle.project(value, owned, user)
         kamazone_shop.project(value, user)
@@ -400,6 +404,19 @@ def handle(account, source, season_id, route, request, operation_id):
         kamazone_shelter.validate(request)
         if previous is None:
             raise ValueError("Open a Kama-ZONE shelter before choosing an action")
+    elif route == CONCLUDE:
+        # Native Finish Challenge sends this nullable, lower-camel-case field.
+        # Artifact keep/loot is not implemented; never accept an invented ID.
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"keepingArtifactId"}
+            or request["keepingArtifactId"] is not None
+        ):
+            raise ValueError(
+                "Kama-ZONE finish requires keepingArtifactId=null; artifact keep is unavailable"
+            )
+        if previous is None or not previous["states"]:
+            raise ValueError("Start a Kama-ZONE challenge before finishing it")
     else:
         raise ValueError("Unsupported local Kama-ZONE run operation")
     if previous and operation_id in previous["seen_operations"]:
@@ -475,6 +492,22 @@ def handle(account, source, season_id, route, request, operation_id):
         kamazone_shelter.take(
             value, source, season_id, request, floor_nodes(source, season_id, value["seed"])
         )
+    elif route == CONCLUDE:
+        if value["active"]:
+            if (
+                value["current_node_id"] == data["starting"]
+                or value["battle_started"]
+                or value["pending_result"] == 1
+            ):
+                raise ValueError(
+                    "Leave the starting position and resolve combat/loot before finishing"
+                )
+            # Retain the ended run for the native summary and read-only reopen.
+            # This closes a local challenge; it does not clear the season or
+            # grant floor rewards, account currency or artifact keep rights.
+            value.update(
+                active=False, stage_started=False, battle_started=False, pending_result=None
+            )
     else:
         ident, current = request["NodeId"], value["current_node_id"]
         if ident != current and ident in (data["nodes"][current].get("NextNodeIds") or []):
