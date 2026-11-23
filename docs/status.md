@@ -204,6 +204,41 @@ main-account/XP tables and all 55 source reference files remain unchanged by
 diagnostics. APK retry of the next quadrant remains pending; no live run edit,
 reset or gamefile change is made by diagnostics.
 
+The APK has now advanced through further normal and elite battles. The live run
+retains cleared nodes 111, 123 and 132 with three completed battles. The next
+rejected request is `start-stage` for connected node 143, whose generated type
+is Shop. This exposes the missing noncombat-node entry path, rather than another
+combat result or map-connection failure.
+
+Shop entry now opens the native shop view with up to three distinct normal,
+lootable, positive-price artifacts from the selected season, excluding its
+exception list. Native rendering takes the stock's Boolean value directly as
+sold-out; false means available. A separate deterministic sampler preserves all
+existing map types and monster rolls, and the external run retains each shop's
+stock. The client keeps its original names, icons, descriptions, base prices and
+benefit price calculations. This is local stock generation, not recovered
+official shop randomness.
+
+`close-shop` accepts the native NodeId request, marks the shop chosen/complete,
+and enables connected progression. Empty effect/item lists satisfy its finish
+routine without rewards. Combat requests reject shop nodes; entry, closure and
+old retries retain the shared authentication, source/owner, phase and adjacency
+guards. Older files default the new shops map without read-time writes.
+
+All 157 core/content/integration tests pass in 20.963 seconds, including 78
+Kama-ZONE cases and eight new shop regressions. Black (229 files), Ruff and
+repository/link checks (289 files) pass. A coherent real account/XP copy replays
+the exact node-143 request, opens/reopens the shop and closes/retries it. The
+selected source artifacts are 32/51/91, each with original base price 40; no
+static definition changes. All map/enemy rolls, HP, party, benefits, points,
+balances, completed-battle count, main-account/XP tables and 55 source reference
+files remain unchanged by diagnostics. The actual next nodes in that branch
+are noncombat; a connected combat transition is covered by synthetic tests.
+APK shop opening/exit remains pending. This milestone adds no purchases,
+curse/effect goods, currency income, shelter/special events, later floors or
+season rewards. Shop silver coins stay at zero and are separate from the
+4,000-point benefit allocation.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

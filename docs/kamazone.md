@@ -6,9 +6,11 @@ can show its card in **Events**. Without a local run, entry shows a
 before displaying its drawer, so `/kamazonland/enter` supplies the preview even
 without a card tap. Experimental challenge and combat entry now cover the first
 floor at difficulties 1, 2 and 3, with local battle results, retained HP and
-connected combat-node progression. Loot, shops, special events, later floors
-and rewards remain unimplemented. APK combat entry, accepted victory results and
-map return are observed; the next-node retry is pending verification.
+connected combat-node progression. Shop entry/exit displays preserved seasonal
+artifacts. Purchases, loot, shelter/special-event interactions, later floors and
+rewards remain unimplemented. APK combat entry, accepted victory results, map
+return and further normal/elite encounters are observed; shop navigation is
+pending verification.
 An additional opt-in practice setting can unlock selected seasonal benefits,
 provide a point budget and retain benefit choices outside the saved account.
 
@@ -55,8 +57,9 @@ remain running. Reopen the game and inspect **Events** for the Kama-ZONE card.
 When its historical banner is absent, expect a generated **KAMA-ZONE / SEASON 43 /
 MENU PREVIEW** image (with the selected ID). The idle lobby may load automatically.
 You can inspect the entry and return to the main lobby. For the experimental
-challenge probe, follow the opening-floor section below. Shop, gift, mission
-and reward buttons remain unsupported.
+challenge probe, follow the opening-floor section below. Shop entry and exit
+have a separate probe below; purchases, gifts, missions and rewards remain
+unsupported.
 
 Inspect the selection and whether its visibility window is active:
 
@@ -276,8 +279,9 @@ Map generation is a **local reconstruction**, not a recovered official server
 algorithm. It uses the original opening-floor connections and probabilities,
 preserved nonhidden monster groups and preset positions, and guarantees one
 reachable opening battle with an originally allowed type. Elite affixes are not
-generated yet. Shop/special nodes can appear from their original probabilities
-but their interactions are still unsupported. Loot, conclusion, currency rewards,
+generated yet. Shops and special nodes retain their original probabilities.
+Shop navigation is implemented, while shelter/special-event interactions remain
+unsupported. Loot, conclusion, currency rewards,
 scored rankings, further floors and season progression are also unimplemented.
 Only reported wins in an active matching battle clear a local combat node;
 reward balances and season-wide clears are not fabricated.
@@ -348,6 +352,49 @@ run. It enters the second battle and immediately finalizes another empty victory
 The APK has accepted the first result and returned to the map, exposing this
 missing transition. The next-node retry after automatic finalization remains
 pending verification.
+
+## Shop entry and exit
+
+The reported `/kamazonland/start-stage` request for node 143 targets a **Shop**,
+following already completed normal and elite encounters. Shop entry now uses
+the generated node type and original map connections, with the same source,
+season, owner and replay guards as combat entry. It opens the shop rather than
+loading a battle. Combat-only requests are rejected for a shop node.
+
+On first entry, a separate deterministic sampler chooses up to three distinct
+normal, lootable, positive-price artifacts from the selected season's `Artifacts`,
+excluding its `ArtifactsException` IDs. `ShopArtifacts` is an ID-to-Boolean map:
+false means available and is passed directly to the native sold-out widget.
+`ShopCurses` and `ShopEffectArtifacts` remain empty. Names, icons, descriptions
+and prices come from the preserved client tables; original definitions and
+benefit-based price calculations are unchanged. This is local stock generation,
+not a recovered official shop algorithm.
+
+The separate sampler does not consume the map/monster random stream. Existing
+node types, enemy IDs/positions and map seed stay intact. Stock is saved per
+node in the external run's `shops` map; entry retries and reopening preserve it.
+Older run files default that map in memory without read-time writes.
+
+The native Exit button sends `/kamazonland/close-shop` with `NodeId`. Closing
+marks the shop complete/chosen (11), clears its open flag and allows a connected
+next node. The response supplies empty `ChoiceEffectResults` and `AddedItems`
+lists for the native finish routine. A shop cannot be left for another node
+while still open. Recent retries do not reopen stock or overwrite a later battle.
+
+For this probe, restart only the backend, then enter the shop, inspect its list
+and press Exit. Reopen the game to check that its completed state persists.
+**Do not buy during this probe:** purchases, curse/effect goods and shop effects
+are not implemented. The current local `SilverCoin` balance remains zero; this
+entry/exit milestone grants no currency. The benefit allocation's 4,000 Kamazon
+Points are separate from shop silver coins.
+
+Eight shop regressions cover seasonal/exclusion rules, native Boolean stock,
+entry/resume/exit, adjacency and combat guards, legacy files, invalid saved stock,
+authentication, failed publication and unchanged account/static data. The actual
+pack copy replays node 143, populates three seasonal artifacts at original base prices, closes
+it and checks reopen/retry without changing the existing combat map, HP, party,
+benefits, balances, battle count, account/XP tables or 55 source reference files.
+APK shop opening and exit remain pending verification.
 
 ## Local rankings
 

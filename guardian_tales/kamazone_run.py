@@ -9,7 +9,7 @@ import random
 import secrets
 from functools import lru_cache
 
-from . import kamazone, kamazone_battle
+from . import kamazone, kamazone_battle, kamazone_shop
 from .punchking_static import atomic_write
 from .raid_static import decode, records
 from .village import integer
@@ -18,7 +18,7 @@ CHALLENGE = "/kamazonland/challenge"
 SELECT = "/kamazonland/select-characters"
 START = "/kamazonland/start-stage"
 BATTLE = "/kamazonland/start-battle"
-ROUTES = (CHALLENGE, SELECT, START, BATTLE, *kamazone_battle.ROUTES)
+ROUTES = (CHALLENGE, SELECT, START, BATTLE, *kamazone_battle.ROUTES, kamazone_shop.CLOSE)
 STATE = "kamazone_run.json"
 HP_SCALE = 10000
 COMBAT = ("Normal", "Elite", "Boss")
@@ -205,6 +205,8 @@ def load(references):
     # panel and loading combat. Reading them must not rewrite their contents.
     if isinstance(value, dict) and "battle_started" not in value:
         value = dict(value, battle_started=False)
+    if isinstance(value, dict) and "shops" not in value:
+        value = dict(value, shops={})
     if (
         not isinstance(value, dict)
         or set(value)
@@ -223,6 +225,7 @@ def load(references):
             "formation",
             "states",
             "seen_operations",
+            "shops",
             *kamazone_battle.defaults(),
         }
         or type(value["version"]) is not int
@@ -255,6 +258,7 @@ def load(references):
         or any(not isinstance(i, str) or not 1 <= len(i) <= 160 for i in value["seen_operations"])
         or len(set(value["seen_operations"])) != len(value["seen_operations"])
         or not kamazone_battle.valid_state(value)
+        or not kamazone_shop.valid(value["shops"])
     ):
         raise ValueError("Invalid local Kama-ZONE run state")
     return value
@@ -293,6 +297,7 @@ def matching(account, source, season_id):
         or value["battle_started"]
         and (not value["stage_started"] or not value["characters"] or value["formation"] is None)
         or not kamazone_battle.matches(value, owned, nodes)
+        or not kamazone_shop.matches(value, source, season_id, nodes)
     ):
         raise ValueError("Local Kama-ZONE run no longer matches its owner or content")
     kamazone_battle.finish_empty_victory(
@@ -320,6 +325,7 @@ def project(account, source, season_id, response):
             Progress=dict(Floor=1, CurrentNodeId=value["current_node_id"], Concluded=False),
         )
         kamazone_battle.project(value, owned, user)
+        kamazone_shop.project(value, user)
     return response
 
 
@@ -371,10 +377,15 @@ def handle(account, source, season_id, route, request, operation_id):
         kamazone_battle.validate(route, request)
         if previous is None or not previous["active"]:
             raise ValueError("Start a Kama-ZONE challenge before reporting combat")
+    elif route == kamazone_shop.CLOSE:
+        if previous is None:
+            raise ValueError("Open a Kama-ZONE shop before closing it")
+        # Validate before checking receipts as with the other native operations.
+        kamazone_shop.validate(request)
     else:
         raise ValueError("Unsupported local Kama-ZONE run operation")
     if previous and operation_id in previous["seen_operations"]:
-        return kamazone_battle.response(route)
+        return kamazone_battle.response(route) | kamazone_shop.response(route)
     value = (
         copy.deepcopy(previous)
         if previous
@@ -393,6 +404,7 @@ def handle(account, source, season_id, route, request, operation_id):
             formation=None,
             states={},
             seen_operations=[],
+            shops={},
             **kamazone_battle.defaults(),
         )
     )
@@ -405,6 +417,7 @@ def handle(account, source, season_id, route, request, operation_id):
             battle_started=False,
             current_node_id=data["starting"],
             states={str(data["starting"]): 8},
+            shops={},
             **kamazone_battle.defaults(),
         )
         floor_nodes(source, season_id, value["seed"])
@@ -417,6 +430,11 @@ def handle(account, source, season_id, route, request, operation_id):
             raise ValueError("Enter the selected Kama-ZONE node before loading its battle")
         if not value["characters"]:
             raise ValueError("Select a Kama-ZONE party before loading combat")
+        node = next(
+            n for n in floor_nodes(source, season_id, value["seed"]) if n["Id"] == request["NodeId"]
+        )
+        if node["Type"] not in COMBAT or not node["BattleMonsters"]:
+            raise ValueError("Only a Kama-ZONE combat node can load a battle")
         if value["pending_result"] == 1 or any(
             value["hps"].get(str(i), HP_SCALE) == 0 for i in value["characters"]
         ):
@@ -431,6 +449,8 @@ def handle(account, source, season_id, route, request, operation_id):
         value.update(pending_result=None, last_result_hash=None)
     elif route in kamazone_battle.ROUTES:
         kamazone_battle.apply(value, route, request, floor_nodes(source, season_id, value["seed"]))
+    elif route == kamazone_shop.CLOSE:
+        kamazone_shop.close(value, request, floor_nodes(source, season_id, value["seed"]))
     else:
         ident, current = request["NodeId"], value["current_node_id"]
         # The APK opens the node first. EnterStage then initializes PartyInfo,
@@ -448,12 +468,19 @@ def handle(account, source, season_id, route, request, operation_id):
                 raise ValueError("The Kama-ZONE node is not connected to a cleared position")
         nodes = floor_nodes(source, season_id, value["seed"])
         node = next((r for r in nodes if r["Id"] == ident), None)
-        if node is None or node["Type"] not in COMBAT or not node["BattleMonsters"]:
-            raise ValueError("Only preserved Kama-ZONE battle-node entry is implemented")
+        if (
+            node is None
+            or node["Type"] not in (*COMBAT, "Shop")
+            or node["Type"] in COMBAT
+            and not node["BattleMonsters"]
+        ):
+            raise ValueError("Only preserved Kama-ZONE combat and shop entry is implemented")
+        if node["Type"] == "Shop":
+            kamazone_shop.open_shop(value, source, season_id, node)
         value["current_node_id"] = ident
         value["stage_started"] = True
         value["states"][str(ident)] = 1
         value.update(pending_result=None, last_result_hash=None)
     value["seen_operations"] = (value["seen_operations"] + [operation_id])[-64:]
     atomic_write(account.references.directory / STATE, json.dumps(value, indent=2).encode() + b"\n")
-    return kamazone_battle.response(route)
+    return kamazone_battle.response(route) | kamazone_shop.response(route)

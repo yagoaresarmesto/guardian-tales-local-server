@@ -285,8 +285,9 @@ The optional [Kama-ZONE selector](docs/kamazone.md) activates one preserved Glob
 season's calendar for its Events card, with status and restoration commands.
 This milestone covers the menu, benefit allocation and experimental opening-floor
 combat at the three preserved difficulties, including local results, HP retention
-and movement between connected combat nodes. Loot, shops, events, later floors
-and rewards remain unsupported. Run the CDN with `--reference-dir` to supply an
+and movement between connected combat nodes. Shop entry/exit displays a stable
+seasonal artifact catalog. Purchases, loot, special events, later floors and
+rewards remain unsupported. Run the CDN with `--reference-dir` to supply an
 in-memory preview image when the selected season's historical banner is missing.
 Its separate opt-in benefit practice can unlock Strong Body for season 43 and
 provide a 4,000-point allocation budget at the original benefit prices, with
