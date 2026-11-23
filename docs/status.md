@@ -234,10 +234,54 @@ static definition changes. All map/enemy rolls, HP, party, benefits, points,
 balances, completed-battle count, main-account/XP tables and 55 source reference
 files remain unchanged by diagnostics. The actual next nodes in that branch
 are noncombat; a connected combat transition is covered by synthetic tests.
-APK shop opening/exit remains pending. This milestone adds no purchases,
+The next APK request reaches connected shelter node 152 after shop node 143
+was completed, establishing shop entry/exit and further map navigation. This
+milestone adds no purchases,
 curse/effect goods, currency income, shelter/special events, later floors or
 season rewards. Shop silver coins stay at zero and are separate from the
 4,000-point benefit allocation.
+
+The healing-node error is the missing Shelter entry handler, not a new combat
+variant. Native type registration identifies all seven real types: Starting,
+Normal, Elite, Boss, Shelter, Shop and Special; None is only a sentinel. The
+[node coverage table](kamazone.md#node-coverage) distinguishes implemented
+lifecycles from their remaining mechanics. The retained pack contains 328
+special events, 779 choices and 135 random conclusions. Season 43 references
+68 events and 163 choices with twenty nontrivial effect kinds. Those conditions,
+effects and nested encounters still need a generic engine; identifying every
+type does not imply that the entire mode is implemented. Users need not discover
+the catalog through one connection error per type, while representative APK
+checks remain necessary to verify scenes and feedback.
+
+Shelter entry and the native take-shelter request now support all four enum
+values: None, Rest, Revive and Purify. Preserved constants and native conversion
+establish 40% maximum-HP recovery for living heroes; defeated heroes stay at
+zero. Original descriptions specify one random defeated hero for revival and
+one random curse for purification. The revival amount is not recovered from
+these inputs: full HP is an explicit local trial policy. Artifact recovery
+modifiers remain unsupported. A separate deterministic target sampler preserves
+existing map and monster rolls.
+
+Back/Confirm closes the native overlay without another API. Opening the shelter
+therefore permits connected movement; leaving without an action consumes the
+unused visit without healing. One successful choice marks the visit chosen,
+and identical retries cannot apply it twice. Unavailable revival/purification,
+invalid targets and failed publication leave the stored run unchanged. Missing
+legacy fields default in memory without read-time writes. All HP, curse and
+visit changes remain in the separate run file, with no account or balance delta.
+
+All 165 core/content/integration tests pass in 23.519 seconds, including 86
+Kama-ZONE cases and eight shelter regressions. Black (231 files), Ruff and
+repository/link checks (291 files) pass. A coherent actual account/XP copy
+replays the captured node-152 entry and metadata-derived Rest request. HP
+7,650/9,121 becomes 10,000/10,000, the shelter count becomes one and the battle
+count remains three. Reopen/retry and connected boss-160 loading pass. Every
+map/enemy roll, party, benefit, point budget, shop stock, effective static
+response, main-account/XP table and 55 source reference files is retained.
+Diagnostics make zero source writes, live run edits/resets or gamefile changes.
+Shelter entry, Rest feedback and return navigation still need the APK probe.
+Purchases, special-event execution, artifact loot/effects, currency income,
+subsequent floors and season completion/rewards remain unsupported.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using

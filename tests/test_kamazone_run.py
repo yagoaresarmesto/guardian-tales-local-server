@@ -391,7 +391,7 @@ class KamazoneRunTests(unittest.TestCase):
         previous = (self.root / run.STATE).read_bytes()
         for route in (
             "choice-special-event",
-            "take-shelter",
+            "buy-gacha",
             "buy-shop-item",
             "conclude",
             "claim-likeability-reward",

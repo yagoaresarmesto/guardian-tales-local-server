@@ -294,6 +294,11 @@ provide a 4,000-point allocation budget at the original benefit prices, with
 choices stored outside the working account. Original resource files are never
 edited.
 
+Shelters support resting, reviving one hero, purifying one curse and leaving
+without an action. See the [complete node coverage](docs/kamazone.md#node-coverage)
+for each known node type and the remaining mechanics; APK probes validate
+representative flows rather than discovering types one at a time.
+
 The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
 projects one owned Andras as an experimental Myth variant using her existing
 appearance and combat kit, with Eunha's leader effects, Bianca's leader

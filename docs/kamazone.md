@@ -7,12 +7,39 @@ before displaying its drawer, so `/kamazonland/enter` supplies the preview even
 without a card tap. Experimental challenge and combat entry now cover the first
 floor at difficulties 1, 2 and 3, with local battle results, retained HP and
 connected combat-node progression. Shop entry/exit displays preserved seasonal
-artifacts. Purchases, loot, shelter/special-event interactions, later floors and
-rewards remain unimplemented. APK combat entry, accepted victory results, map
-return and further normal/elite encounters are observed; shop navigation is
-pending verification.
+artifacts. Shelters support resting, reviving and purification. Purchases, loot,
+special events, later floors and rewards remain unimplemented. APK combat entry,
+accepted victory results, map return, further normal/elite encounters and shop
+entry/exit are observed; shelter actions are pending verification.
 An additional opt-in practice setting can unlock selected seasonal benefits,
 provide a point budget and retain benefit choices outside the saved account.
+
+## Node coverage
+
+Native 3.57.0 type registration identifies all seven real map types below.
+`None` (0) is a sentinel, not another encounter. This inventory comes from the
+client and retained tables; users do not need to find each type by provoking a
+connection error. Packet/model inspection and host tests establish contracts,
+while representative APK runs verify scene loading, action feedback and caching.
+
+| Type | Implemented host behavior | Remaining work |
+| --- | --- | --- |
+| Starting (1) | Initial challenge position and original connections | No separate encounter action |
+| Normal (2) | Battle entry/results, HP, retry and connected progression | Loot, coins and other battle rewards |
+| Elite (3) | Same lifecycle using its actual monsters and level | Elite affixes, loot and rewards |
+| Boss (4) | Same combat lifecycle using its boss preset/level | Following floor, final season clear and infinity |
+| Shelter (5) | Rest, one random revive, one random curse removal, skip and resume | Artifact-based recovery modifiers; APK action verification |
+| Shop (6) | Seasonal stock, entry, resume and exit | Purchases, currency income and curse/effect goods |
+| Special (7) | Type, native requests and data inventory identified; unsupported actions reject without progress changes | Event conditions, choices, effects, random conclusions and nested encounters |
+
+The retained pack contains 328 special events, 779 choices and 135 random
+conclusions across its seasons/services. Season 43 references 68 events and
+163 choices with twenty nontrivial effect kinds, plus `None`. Its declared
+availability does not mean every event can appear on every floor. Effects include
+HP changes, artifacts/curses, local coins, conditional progress and battles.
+Across all retained choices there are eight condition kinds. Building their
+generic condition/effect engine is distinct from merely opening a Special node;
+the current backend does not claim those branches work or silently skip them.
 
 The matching external pack retains three Global/EU event seasons:
 
@@ -280,7 +307,7 @@ algorithm. It uses the original opening-floor connections and probabilities,
 preserved nonhidden monster groups and preset positions, and guarantees one
 reachable opening battle with an originally allowed type. Elite affixes are not
 generated yet. Shops and special nodes retain their original probabilities.
-Shop navigation is implemented, while shelter/special-event interactions remain
+Shop and shelter navigation are implemented, while special events remain
 unsupported. Loot, conclusion, currency rewards,
 scored rankings, further floors and season progression are also unimplemented.
 Only reported wins in an active matching battle clear a local combat node;
@@ -394,7 +421,53 @@ authentication, failed publication and unchanged account/static data. The actual
 pack copy replays node 143, populates three seasonal artifacts at original base prices, closes
 it and checks reopen/retry without changing the existing combat map, HP, party,
 benefits, balances, battle count, account/XP tables or 55 source reference files.
-APK shop opening and exit remain pending verification.
+The observed follow-up reaches a Shelter from the completed shop, establishing
+shop entry/exit and retained progression in the APK. Purchases remain pending.
+
+## Shelters
+
+The captured `start-stage` for node 152 targets Shelter (5). The same type-based
+entry works for any connected shelter, preserving the existing seed and monster
+rolls. A visit is marked cleared (3), with one unused choice. Back/Confirm closes
+the native overlay without a dedicated close API; leaving for a connected node
+forfeits an unused action without healing. The next successful action stores its
+chosen state (11). Retrying an unused entry does not create another visit.
+
+`/kamazonland/take-shelter` accepts `NodeId` and the native integer `ChoiceType`:
+
+| ChoiceType | Action | Local result |
+| --- | --- | --- |
+| 0 | None | Leave without changing HP or curses |
+| 1 | Rest | Add the original recovery percentage to living heroes, capped at full HP; do not revive defeated heroes |
+| 2 | Revive | Restore exactly one random defeated hero |
+| 3 | Purify | Remove exactly one random seasonal curse |
+
+The preserved `ShelterHpRecover` is 0.4. Native `ShelterHpRecover` converts that
+fraction to an integer percentage; rest therefore adds 4,000 to the 10,000-unit
+HP scale before clamping. Original English descriptions independently establish
+living-hero recovery, one random revival and one random curse removal. The
+revival amount itself is not specified in those retained inputs: this local
+trial uses full HP, an explicit local policy rather than a recovered server rule.
+No artifact recovery modifier is claimed while earned artifacts remain
+unimplemented.
+
+One action consumes the visit. Identical retries return the current state
+without another heal, revival or purification; a different second choice is
+rejected. No-dead-hero and no-curse actions reject without consuming it. Separate
+deterministic targeting leaves the original map/combat random stream untouched.
+The external run records visits, HP and curses; the shared singleton supplies
+those values and its shelter counter. Older files default missing fields in
+memory without read-time writes. There are no account, XP, inventory or balance
+changes and no gamefile edits.
+
+Eight regressions cover all four choices, living/dead HP, limits, single-use
+retries, skipping without an API, legacy data, invalid curses, authentication
+and failed publication. A coherent actual-account copy replays node 152 and the
+native Rest request: HP 7,650/9,121 becomes 10,000/10,000, with three battles and
+one shelter visit. It reopens/retries and loads connected boss node 160 while
+retaining the complete original map, party, benefits, budget, shop stock,
+effective static data, account/XP tables and 55 source reference files. APK
+shelter entry, Rest feedback and return navigation remain pending verification.
 
 ## Local rankings
 
