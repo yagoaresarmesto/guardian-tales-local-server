@@ -84,6 +84,13 @@ account progress.
 
 ## Guild War commands
 
+On the host PC, the [Guild Wars panel](http://127.0.0.1:17658/guild-war) shares
+the selection used by the three commands below. Open the tab or use its reload
+button to read the current settings. The editor lists the native castles and
+grades for season 1. The two practice presets fill the editor for review before
+applying. In fortress defense, choosing **No owned castle** clears the local
+ownership setting. Choose a specific castle to practice its defense.
+
 Use the same reference directory as the backend:
 
 ```powershell

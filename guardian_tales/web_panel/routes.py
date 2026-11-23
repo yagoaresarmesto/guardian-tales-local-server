@@ -10,11 +10,13 @@ from pathlib import Path
 from string import Template
 
 from ..guild_raid import RaidSelectionChanged
+from ..guild_war_static import WarSelectionChanged
 from ..punchking_static import ArenaSelectionChanged
 from ..reference import ReferenceData
-from .artwork import BOSSES, ELEMENT_FRAMES, UI
+from .artwork import BOSSES, ELEMENT_FRAMES, UI, WAR
 from .dka import adapter as dka
 from .dka import sprites
+from .guild_war import adapter as guild_war
 from .raid import adapter as raid
 
 ROOT = Path(__file__).parent
@@ -32,11 +34,24 @@ class Mode:
     apply: Callable[[ReferenceData, dict], None]
     conflict: type[ValueError]
 
+    @property
+    def directory(self):
+        return ROOT / self.slug.replace("-", "_")
+
 
 MODES = (
     Mode("raid", "/", "Raid", "Guild Raid", raid.state, raid.apply, RaidSelectionChanged),
     Mode(
         "dka", "/dka", "DKA", "Dungeon Kingdom Arena", dka.state, dka.apply, ArenaSelectionChanged
+    ),
+    Mode(
+        "guild-war",
+        "/guild-war",
+        "Guild Wars",
+        "Guild Wars",
+        guild_war.state,
+        guild_war.apply,
+        WarSelectionChanged,
     ),
 )
 PAGES = {mode.path: mode for mode in MODES}
@@ -44,9 +59,10 @@ API = {f"/api/{mode.slug}": mode for mode in MODES}
 FILES = {"/panel.css": (ROOT / "shared/panel.css", CSS), "/panel.js": (ROOT / "shared/ui.js", JS)}
 for mode in MODES:
     for suffix, mime in (("css", CSS), ("js", JS)):
-        FILES[f"/{mode.slug}.{suffix}"] = (ROOT / mode.slug / f"panel.{suffix}", mime)
+        FILES[f"/{mode.slug}.{suffix}"] = (mode.directory / f"panel.{suffix}", mime)
 MEDIA = {
     "/map.png": (lambda refs: raid.map_image(refs).read_bytes(), "image/png"),
+    "/guild-war/fortress.png": (partial(WAR.read, frame="gvg_multi_castle_03.png"), "image/png"),
     "/arena.jpg": (lambda refs: dka.arena_image(refs).read_bytes(), "image/jpeg"),
     **{
         f"/dka/slimes/{element}.png": (partial(BOSSES.read, frame=frame), "image/png")
@@ -80,5 +96,5 @@ def render_page(mode, *, show_brand):
         brand_icon='<img class="brand-icon" src="/brand.png" alt="">' if show_brand else "",
         slug=mode.slug,
         navigation="".join(links),
-        body=(ROOT / mode.slug / "view.html").read_text(encoding="utf-8"),
+        body=(mode.directory / "view.html").read_text(encoding="utf-8"),
     ).encode()

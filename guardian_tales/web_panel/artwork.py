@@ -15,11 +15,7 @@ class Atlas:
     sheet: str
 
     def path(self, references):
-        return (
-            references.directory.parent
-            / "resources/files/AssetBundles/Android/spritesheets"
-            / self.bundle
-        )
+        return references.directory.parent / "resources/files/AssetBundles/Android" / self.bundle
 
     def available(self, references):
         return self.path(references).is_file() and find_spec("UnityPy") is not None
@@ -34,8 +30,9 @@ class Atlas:
             return _read_png(path, self.sheet, stat.st_mtime_ns, stat.st_size, frame)
 
 
-BOSSES = Atlas("bosses", "bosses")
-UI = Atlas("ui/main_s3", "MainUiS3")
+BOSSES = Atlas("spritesheets/bosses", "bosses")
+UI = Atlas("spritesheets/ui/main_s3", "MainUiS3")
+WAR = Atlas("ondemand/guild_war/ui", "guildWar")
 ELEMENT_FRAMES = {
     "basic": "ic_attribute_no",
     "dark": "ic_attribute_dark",
@@ -75,7 +72,7 @@ def frame_png(sheet, entry):
     return output.getvalue()
 
 
-@lru_cache(maxsize=2)
+@lru_cache(maxsize=3)
 def _read_sheet(path, sheet, mtime_ns, size):
     import UnityPy
 

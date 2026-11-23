@@ -257,6 +257,13 @@ for catalog requirements, composition and limits.
 
 ### Guild War: recommended siege practice
 
+The [Guild Wars tab](http://127.0.0.1:17658/guild-war) shows the saved season-1
+settings. Choose a cooperative or fortress phase, set the basic-course option
+and, for fortress phases, choose the round and a castle from the deployment.
+**Siege attack** and **Castle 21 defense** fill in the practice commands below.
+Click **Enable Guild Wars** or **Apply settings** to save. **Disable Guild Wars**
+restores the parent calendars. Fully close and reopen the game after saving.
+
 > [!IMPORTANT]
 > **Recommended attack practice:** Prep Round with no marked target allows
 > practice entry across the castle map without marking each castle by command.

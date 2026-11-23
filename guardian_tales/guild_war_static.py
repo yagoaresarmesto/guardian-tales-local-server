@@ -3,7 +3,9 @@
 
 import hashlib
 import json
+import stat
 import time
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
@@ -22,6 +24,7 @@ from .raid_static import (
 )
 from .raid_static import bootstrap_override as raid_override
 from .snapshots import CLIENT
+from .state_lock import StateLock
 
 SELECTION = "guild_war_selection.json"
 FEATURE_ID = 126
@@ -45,11 +48,16 @@ def base_body(references):
 
 def load_selection(references):
     path = references.directory / SELECTION
-    if not path.exists():
+    try:
+        if not stat.S_ISREG(path.stat().st_mode):
+            raise ValueError("Invalid Guild War selection file")
+        with path.open("rb") as stream:
+            raw = stream.read(4097)
+    except FileNotFoundError:
         return None
-    if not path.is_file() or path.stat().st_size > 4096:
+    if len(raw) > 4096:
         raise ValueError("Invalid Guild War selection file")
-    value = references.json(SELECTION)
+    value = json.loads(raw)
     if (
         not isinstance(value, dict)
         or set(value)
@@ -99,6 +107,53 @@ def load_selection(references):
     return value
 
 
+class WarSelectionChanged(ValueError):
+    """A client tried to publish over a different Guild War configuration."""
+
+
+def selection_revision(selection):
+    if selection is None:
+        return "disabled"
+    # Phase and castle choices can differ even with identical prepared tables.
+    return hashlib.sha256(json.dumps(selection, sort_keys=True).encode()).hexdigest()
+
+
+def check_revision(selection, expected_revision):
+    if expected_revision is not None and selection_revision(selection) != expected_revision:
+        raise WarSelectionChanged("Guild Wars settings changed. Reload before applying.")
+
+
+@contextmanager
+def war_lock(references, *, wait=False):
+    # Preparing the parent can itself acquire the independent Raid/DKA lock.
+    lock = StateLock(references.directory, filename=".guild_war.lock")
+    deadline = time.monotonic() + 8 if wait else 0
+    while True:
+        try:
+            lock.acquire()
+            break
+        except RuntimeError as error:
+            if time.monotonic() >= deadline:
+                raise WarSelectionChanged(
+                    "Guild Wars is being updated. Reload and retry."
+                ) from error
+            time.sleep(0.05)
+    try:
+        yield
+    finally:
+        lock.release()
+
+
+def disable(references, *, expected_revision=None):
+    if not references.directory.exists():
+        check_revision(None, expected_revision)
+        return
+    with war_lock(references):
+        if expected_revision is not None:
+            check_revision(load_selection(references), expected_revision)
+        (references.directory / SELECTION).unlink(missing_ok=True)
+
+
 def enable(
     references,
     source=None,
@@ -107,8 +162,36 @@ def enable(
     defend_castle=None,
     attack_castle=None,
     round_mode=None,
+    *,
+    expected_revision=None,
 ):
-    source = base_body(references) if source is None else source
+    with war_lock(references):
+        previous = load_selection(references)
+        check_revision(previous, expected_revision)
+        source = base_body(references) if source is None else source
+        return _publish(
+            references,
+            source,
+            previous,
+            skip_basic=skip_basic,
+            phase=phase,
+            defend_castle=defend_castle,
+            attack_castle=attack_castle,
+            round_mode=round_mode,
+        )
+
+
+def _publish(
+    references,
+    source,
+    previous,
+    *,
+    skip_basic=None,
+    phase=None,
+    defend_castle=None,
+    attack_castle=None,
+    round_mode=None,
+):
     lines, items = records(decode(source))
     if (
         not {"guildwar", "guildraid2", "seasondate", "unlockfeature", "__checksum__"}
@@ -144,7 +227,6 @@ def enable(
     war_id = 5500001
     if war_id in raid_ids:
         raise ValueError("Guild War and Raid cannot share a calendar")
-    previous = load_selection(references)
     phase = (previous or {}).get("phase", 1) if phase is None else phase
     if type(phase) is not int or phase not in PHASES.values():
         raise ValueError("Select a native Guild War phase from 1 to 4")
@@ -427,7 +509,11 @@ def _cooperative_stage_ids(body, season_id):
 
 def castle_specs(references, selection):
     """Read only the enabled season's native castle deployment catalog."""
-    rows = _castle_specs(prepared_body(references, selection), selection["season_id"])
+    return deployment_castles(prepared_body(references, selection), selection["season_id"])
+
+
+def deployment_castles(body, season_id):
+    rows = _castle_specs(body, season_id)
     return {
         value: {"Id": value, "GroupId": group, "Grade": grade, "SpotId": spot}
         for value, group, grade, spot in rows
@@ -573,6 +659,15 @@ def _castle_specs(body, season_id):
     )
 
 
+def needs_refresh(selection, source):
+    start, end = (datetime.fromisoformat(selection["period"][key]) for key in ("from", "to"))
+    return (
+        selection.get("overlay_policy") != OVERLAY_POLICY
+        or selection["base_sha256"] != hashlib.sha256(source).hexdigest()
+        or not start <= utc_now() < end
+    )
+
+
 def bootstrap_override(references, filename, request):
     if filename not in ("static_data_get.bin", "static_data_check.bin"):
         return None
@@ -580,13 +675,14 @@ def bootstrap_override(references, filename, request):
     if selection is None:
         return None
     source = base_body(references)
-    start, end = (datetime.fromisoformat(selection["period"][key]) for key in ("from", "to"))
-    if (
-        selection.get("overlay_policy") != OVERLAY_POLICY
-        or selection["base_sha256"] != hashlib.sha256(source).hexdigest()
-        or not start <= utc_now() < end
-    ):
-        selection = enable(references, source)
+    if needs_refresh(selection, source):
+        with war_lock(references, wait=True):
+            selection = load_selection(references)
+            if selection is None:
+                return None
+            source = base_body(references)
+            if needs_refresh(selection, source):
+                selection = _publish(references, source, selection)
     if filename == "static_data_check.bin":
         current = request.get("Checksum") if isinstance(request, dict) else None
         return json.dumps(

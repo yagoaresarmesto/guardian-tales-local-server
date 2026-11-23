@@ -11,10 +11,10 @@ from .guild_war_static import (
     FEATURE_ID,
     PHASES,
     ROUND_MODES,
-    SELECTION,
     castle_specs,
     cooperative_stage_ids,
     defense_stage_ids,
+    disable,
     enable,
     load_selection,
     offense_stage_ids,
@@ -359,6 +359,24 @@ def end_multi(account, request):
     return {"Cancelled": False, "GuildWarInfo": view["GuildWarInfo"], "AddedItems": []}
 
 
+def selection_status(selection):
+    return {
+        "enabled": selection is not None,
+        "season_id": selection["season_id"] if selection else None,
+        "skip_basic_requirement": (selection.get("skip_basic", False) if selection else False),
+        "period": selection["period"] if selection else None,
+        "phase": selection.get("phase", 1) if selection else None,
+        "phase_name": (
+            next(name for name, value in PHASES.items() if value == selection.get("phase", 1))
+            if selection
+            else None
+        ),
+        "local_defense_castle": selection.get("defend_castle", 0) if selection else 0,
+        "local_attack_castle": selection.get("attack_castle", 0) if selection else 0,
+        "round_mode": selection.get("round_mode", "auto") if selection else None,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(
         description="Enable/disable the local Guild War season-1 menu trial"
@@ -404,37 +422,19 @@ def main(argv=None):
                 round_mode=args.round_mode,
             )
         elif args.action == "disable":
-            (references.directory / SELECTION).unlink(missing_ok=True)
+            disable(references)
             selection = None
         else:
             selection = load_selection(references)
         print(
             json.dumps(
                 {
-                    "enabled": selection is not None,
-                    "season_id": selection["season_id"] if selection else None,
-                    "skip_basic_requirement": (
-                        selection.get("skip_basic", False) if selection else False
-                    ),
-                    "period": selection["period"] if selection else None,
-                    "phase": selection.get("phase", 1) if selection else None,
-                    "phase_name": (
-                        next(
-                            name
-                            for name, value in PHASES.items()
-                            if value == selection.get("phase", 1)
-                        )
-                        if selection
-                        else None
-                    ),
-                    "local_defense_castle": selection.get("defend_castle", 0) if selection else 0,
-                    "local_attack_castle": selection.get("attack_castle", 0) if selection else 0,
-                    "round_mode": selection.get("round_mode", "auto") if selection else None,
+                    **selection_status(selection),
                     "scope": "Experimental menus; free cooperative and Fortress siege/selected-castle defense entry/exit; persistent progression, score and rewards are not implemented",
                     "apply": "Fully close and reopen the game after enable/disable; Raid selection and saved account are retained",
                 },
                 indent=2,
             )
         )
-    except (ValueError, OSError) as error:
+    except (ValueError, OSError, RuntimeError) as error:
         raise SystemExit(str(error)) from error
