@@ -9,9 +9,10 @@ attachments. Test results and original-client observations have different scopes
 The optional [Kama-ZONE selector](kamazone.md) lists/selects the three preserved
 Global/EU seasons and restores their original calendar. Native inspection locates
 the entry in the Events drawer and its reward-period visibility predicate.
-Twenty-five regressions cover scoped dates, expiry, content binding, no account
+Twenty-six regressions cover scoped dates, expiry, content binding, no account
 access, revision-safe restoration, atomic publication, Andras composition,
-the optional CDN preview and read-only automatic entry. The pack lacks its historical banner PNGs; the CDN
+the optional CDN preview and read-only automatic entry. The pack lacks its
+historical banner PNGs; the CDN
 can generate an original menu image in memory for the selected declared URL
 when started with `--reference-dir`, without changing preserved files.
 The first APK probe failed because Events can automatically load Kamazone before
@@ -21,13 +22,21 @@ idle lobby for the selected season, with a real mini-season ID and no saved
 progress, inventory or balance changes. Challenges and gameplay remain
 unsupported. Actual APK entry/card visibility is pending a retry; no live season
 is activated by diagnostics.
-All 271 targeted Windows tests pass, together with Black (221 files), Ruff and
+The initial entry change passed 271 targeted Windows tests, Black (221 files), Ruff and
 repository/link checks (281 files). A coherent account/XP copy passes all three
 selections and restoration, retaining every main-account table, trial XP,
 existing overlays and 52 original reference files, with zero source writes.
 A follow-up coherent copy passes the captured entry request and both partial
 flags for every Global season with zero database writes during entry, unchanged
 trial XP and all 53 reference files (including the local selection) retained.
+The entry response now reaches the APK, but its first load stalled on a
+`JsonSerializationException`: `Benefits` must be an array. Resolving all native
+field signatures also identifies `Nodes` as a list. The follow-up corrects both
+JSON shapes and adds a complete outgoing field-type regression; 85 focused tests
+pass alongside Black/Ruff and repository/link checks. A coherent account/XP copy
+matches all outgoing fields to those signatures for six entry requests, with
+zero entry/source writes and 53 unchanged source reference files. APK loading is
+pending a retry. All changes remain backend response data; game files are untouched.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using

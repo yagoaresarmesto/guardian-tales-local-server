@@ -130,6 +130,13 @@ The preserved Global calendars have all expired, explaining their absence.
 `KamazonLandLobby.Load` sends `/kamazonland/enter` before setting the drawer.
 The first APK probe reached that request and exposed the missing read response.
 The pending request and a fresh unsupported-operation counter delta confirm it.
+The next APK probe reached a successful entry response but stalled while loading.
+Android's Unity log identifies `JsonSerializationException` at
+`UserKamazonLand.Benefits`: the native `List<KamazonLandBenefit>` requires a JSON
+array. Read-only native type registration also identifies `Nodes` as
+`List<KamazonLandFloorNode>`. Both empty fields are arrays; `Hps` and the two
+progress dictionaries remain objects. A field-signature regression checks every
+transmitted singleton field and the nested formation/progress/likeability types.
 
 Automated checks cover Global-only selection, calendar restoration/revisions,
 get/check consistency, default compatibility, no database access, source
@@ -138,8 +145,8 @@ composition with Andras and scoped CDN preview GET/HEAD/range/ETag responses.
 The actual APK card-visibility check remains pending.
 Seeing a card does not establish a playable Kama-ZONE mode.
 
-All 271 targeted Windows tests pass, including existing static-overlay, CDN,
-Backroom and Training Room tests. A coherent file-backed account/XP copy passes selection of all three
+The initial entry change passed 271 targeted Windows tests, including static
+overlays, CDN, Backroom and Training Room. A coherent file-backed account/XP copy passes selection of all three
 seasons and restoration. It retains every main-account table, trial XP, the
 other effective overlays and all 52 original reference files. Each missing
 historical banner yields a valid generated preview; the source account and
@@ -148,3 +155,8 @@ A follow-up coherent copy replays the captured automatic entry and both Boolean
 partial flags for all three seasons. It records zero database writes during
 entry, retains trial XP and all 53 source reference files including the local
 selection, and sends no shared account/inventory delta.
+The collection-type correction passes 85 focused tests, Black (221 files), Ruff
+and repository/link checks. Its coherent copy also validates every transmitted
+field against the read-only native type signatures for both partial flags and
+all three seasons, retaining all account/XP tables and 53 source reference files
+with zero diagnostic source writes. Actual APK loading remains pending a retry.

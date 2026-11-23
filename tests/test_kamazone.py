@@ -352,7 +352,7 @@ class KamazonePreviewTests(unittest.TestCase):
             self.assertEqual(user["Progress"], {"Floor": 0, "CurrentNodeId": 0, "Concluded": True})
             self.assertEqual(user["Likeability"], {"Points": 0, "ClaimedRewardStep": 0})
             self.assertEqual(user["Characters"], [])
-            self.assertEqual(user["Nodes"], {})
+            self.assertEqual(user["Nodes"], [])
             self.assertTrue(
                 all(
                     user[key] == 0
@@ -367,6 +367,59 @@ class KamazonePreviewTests(unittest.TestCase):
             )
         self.assertEqual((list(self.db.iterdump()), self.db.total_changes), (before, changes))
         self.assertEqual({p.name: p.read_bytes() for p in self.fixture.root.iterdir()}, files)
+
+    def test_preview_fields_match_native_json_collection_and_model_types(self):
+        self.fixture.cli("select", "--season-id", "43")
+        user = self.call()["UserKamazonLand"]
+        # 3.57 UserKamazonLand field signatures, independently resolved from
+        # native type registration: List/HashSet use arrays, Dictionary/model
+        # fields use objects. The APK rejects Benefits:{} before finishing Load.
+        signatures = {
+            int: (
+                "SeasonId",
+                "MiniSeasonId",
+                "Difficulty",
+                "InfinityRecordInSeason",
+                "SilverCoin",
+                "KamazonPoint",
+                "KamazonPointTotal",
+                "KamazonEventPoint",
+                "KamazonTicket",
+            ),
+            list: (
+                "ClearRecords",
+                "ClearRecordsInSeason",
+                "Characters",
+                "Benefits",
+                "Trials",
+                "Artifacts",
+                "Curses",
+                "Nodes",
+                "KnownEvents",
+                "KnownChoices",
+                "KnownRandomConclusions",
+                "KnownHiddenBattlePresets",
+            ),
+            dict: (
+                "Formation",
+                "Progress",
+                "Likeability",
+                "Hps",
+                "ProgressInSeason",
+                "ProgressInChallenge",
+            ),
+        }
+        self.assertEqual(set(user), {key for fields in signatures.values() for key in fields})
+        for kind, fields in signatures.items():
+            for key in fields:
+                self.assertIs(type(user[key]), kind, key)
+        self.assertIs(type(user["Formation"]["Positions"]), list)
+        self.assertIs(type(user["Formation"]["Id"]), int)
+        self.assertIs(type(user["Progress"]["Floor"]), int)
+        self.assertIs(type(user["Progress"]["CurrentNodeId"]), int)
+        self.assertIs(type(user["Progress"]["Concluded"]), bool)
+        for key in ("Points", "ClaimedRewardStep"):
+            self.assertIs(type(user["Likeability"][key]), int)
 
     def test_switching_selected_season_refreshes_the_view_without_creating_saved_progress(self):
         for ident in (41, 42, 43):
