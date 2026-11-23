@@ -314,6 +314,33 @@ live run edits/resets or gamefile changes. APK popup closing and idle return
 are pending the backend-only restart/probe. Floor advancement and artifact
 loot/effects remain separate pending work.
 
+The follow-up has one accepted conclusion and a new difficulty-3 challenge with
+a first-node victory. The owner initially described an infinite loading screen,
+then confirmed it eventually loaded and reported general sluggishness. The
+diagnostic snapshot has no queued Kama-ZONE request or new API rejection, and
+the victory is stored. This establishes completed loading, not the cause of
+its longest delay. Finish/new-challenge navigation is observed in counters/state;
+there is no separate owner confirmation of reopen persistence.
+
+An isolated actual-account profile identifies repeated full-static-pack LZ4
+decode/checking in the mini-season lookup as the dominant warm Kama-ZONE response
+cost. Every run action invokes this projection. The lookup now caches only its
+validated integer, bounded to two complete-source/season keys. Selection/auth,
+expiry and source checks still execute for each request, and all run, party, HP
+and benefit values are projected fresh. No saved-user response is cached.
+
+On identical clone inputs, median warm response generation falls from 922.65 ms
+(three baseline reads) to 29.28 ms (five optimized reads), 31.5x for this host
+path. All 10,750 response bytes match exactly. Account/XP tables, clone reference
+files and all 55 original source files stay unchanged, with zero diagnostic
+source writes or gamefile edits. The first lookup after restart still needs
+preparation; this timing does not measure full scene loading or emulator FPS.
+All 175 core/content/integration cases pass in 25.908 seconds, including 96
+Kama-ZONE cases and two cache regressions. These verify decode reuse, independent
+responses and source/season invalidation; existing stateful suites cover fresh
+benefit/run changes. Black (232 files), Ruff and repository/link checks (292
+files) pass. APK latency after the backend-only restart remains unverified.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

@@ -3,6 +3,7 @@
 
 import hashlib
 import json
+from functools import lru_cache
 
 from . import kamazone, kamazone_practice, kamazone_run
 from .raid_static import decode, records
@@ -44,6 +45,23 @@ def rankings(account, request):
     return {"Rankings": []}
 
 
+@lru_cache(maxsize=2)
+def mini_season_id(source, season_id):
+    # Cache only an immutable static identity, keyed by the complete source and
+    # season. Every action still validates selection and reads live local state.
+    # Avoid decompressing and checking the complete pack on every run response.
+    mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
+    season = kamazone.one(mode["Seasons"], "Id", season_id)
+    group = season.get("MiniSeasonGroupId")
+    minis = mode.get("MiniSeasons")
+    if not integer(group, minimum=1) or not isinstance(minis, list):
+        raise ValueError("Kama-ZONE preview requires the season's mini-season group")
+    mini = kamazone.one(minis, "MiniSeasonGroupId", group)
+    if not integer(mini.get("Id"), minimum=1):
+        raise ValueError("Invalid Kama-ZONE preview mini-season")
+    return mini["Id"]
+
+
 def enter(account, request):
     if (
         not isinstance(request, dict)
@@ -52,15 +70,7 @@ def enter(account, request):
     ):
         raise ValueError("Kama-ZONE preview requires Boolean IsPartial")
     selected, source = selected_source(account)
-    mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
-    season = kamazone.one(mode["Seasons"], "Id", selected["season_id"])
-    group = season.get("MiniSeasonGroupId")
-    minis = mode.get("MiniSeasons")
-    if not integer(group, minimum=1) or not isinstance(minis, list):
-        raise ValueError("Kama-ZONE preview requires the season's mini-season group")
-    mini = kamazone.one(minis, "MiniSeasonGroupId", group)
-    if not integer(mini.get("Id"), minimum=1):
-        raise ValueError("Invalid Kama-ZONE preview mini-season")
+    mini_id = mini_season_id(source, selected["season_id"])
     # Events may open this scene before showing the drawer. Its loader needs the
     # separate UserKamazonLand singleton, nonnull Progress/Likeability and lists.
     # An idle, concluded floor zero prevents the native Challenging predicate
@@ -69,7 +79,7 @@ def enter(account, request):
         "NewSeason": False,
         "UserKamazonLand": {
             "SeasonId": selected["season_id"],
-            "MiniSeasonId": mini["Id"],
+            "MiniSeasonId": mini_id,
             "Difficulty": -1,
             "ClearRecords": [],
             "ClearRecordsInSeason": [],

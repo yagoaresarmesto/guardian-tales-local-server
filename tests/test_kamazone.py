@@ -16,6 +16,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from guardian_tales import kamazone_preview
 from guardian_tales.__main__ import main
 from guardian_tales.assets import ResourceLibrary, handler_for
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
@@ -427,6 +428,39 @@ class KamazonePreviewTests(unittest.TestCase):
             self.fixture.cli("select", "--season-id", str(ident))
             self.assertEqual(self.call()["UserKamazonLand"]["SeasonId"], ident)
         self.assertEqual(self.session.store.account.profile()["UserKamazonLand"]["SeasonId"], 7)
+
+    def test_repeated_entries_decode_static_identity_once_and_never_share_mutable_responses(self):
+        self.fixture.cli("select", "--season-id", "43")
+        kamazone_preview.mini_season_id.cache_clear()
+        self.addCleanup(kamazone_preview.mini_season_id.cache_clear)
+        before = list(self.db.iterdump()), self.db.total_changes
+        files = {p.name: p.read_bytes() for p in self.fixture.root.iterdir()}
+        with patch("guardian_tales.kamazone_preview.decode", wraps=decode) as decoding:
+            first = self.call()
+            original = copy.deepcopy(first)
+            first["UserKamazonLand"]["Nodes"].append({"Id": 999})
+            first["UserKamazonLand"]["Progress"]["Floor"] = 999
+            self.assertEqual(self.call({"IsPartial": True}), original)
+            self.assertEqual(self.call(), original)
+            self.assertEqual(decoding.call_count, 1)
+        self.assertEqual((list(self.db.iterdump()), self.db.total_changes), before)
+        self.assertEqual({p.name: p.read_bytes() for p in self.fixture.root.iterdir()}, files)
+
+    def test_warm_static_identity_changes_with_source_and_season_without_bypassing_content_guards(
+        self,
+    ):
+        self.fixture.cli("select", "--season-id", "43")
+        self.assertEqual(self.call()["UserKamazonLand"]["MiniSeasonId"], 101)
+        mode = self.fixture.tables["kamazonland2"]
+        mode["MiniSeasons"].append({"Id": 202, "MiniSeasonGroupId": 2})
+        next(s for s in mode["Seasons"] if s["Id"] == 43)["MiniSeasonGroupId"] = 2
+        self.fixture.write_source()
+        with self.assertRaises(PacketError):
+            self.call()
+        for season_id, mini_id in ((43, 202), (41, 101), (43, 202)):
+            self.fixture.cli("select", "--season-id", str(season_id))
+            user = self.call()["UserKamazonLand"]
+            self.assertEqual((user["SeasonId"], user["MiniSeasonId"]), (season_id, mini_id))
 
     def test_entry_requires_authentication_and_completed_prologue(self):
         self.fixture.cli("select", "--season-id", "43")

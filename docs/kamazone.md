@@ -11,7 +11,8 @@ artifacts. Shelters support resting, reviving and purification. Purchases, loot,
 special events, later floors and rewards remain unimplemented. APK combat entry,
 accepted victory results, map return, further normal/elite encounters and shop
 entry/exit, shelter Rest and the following boss battle are observed. Finish
-Challenge can conclude the local run; its APK return flow is pending verification.
+Challenge can conclude the local run; an accepted finish followed by a fresh
+challenge is observed, without separate reopen confirmation.
 An additional opt-in practice setting can unlock selected seasonal benefits,
 provide a point budget and retain benefit choices outside the saved account.
 
@@ -502,9 +503,39 @@ authentication, source/season/owner isolation and failed atomic publication.
 The coherent actual-account copy replays the captured null-keep request from
 cleared boss 160, retaining four battles and one shelter visit, and verifies
 reopen/retry and a fresh challenge without changing account/XP tables, effective
-static data or 55 original reference files. Host checks pass; APK popup closing
-and idle return remain pending. Floor advancement and artifact rewards are
+static data or 55 original reference files. Follow-up counters and run state
+show an accepted finish followed by a fresh challenge; a separate owner check
+of popup closing/reopening remains absent. Floor advancement and artifact rewards are
 separate unimplemented work.
+
+## Response latency
+
+Every run action projects a complete Kama-ZONE singleton. Previously its
+mini-season lookup decompressed and verified the entire static pack again on
+every response, even after the run and benefit catalogs were warm. An isolated
+actual-account profile identified that decode as the dominant repeated work.
+
+The lookup now retains only the validated mini-season integer in a bounded
+two-entry in-memory cache, keyed by the complete original source bytes and
+selected season. Authentication, expiry and content-binding checks still run on
+each request. Benefits, HP, party, nodes and run state are read/projected afresh;
+no account snapshot, mutable response or game resource is cached by this lookup.
+A changed pack/season requires a new lookup, and a backend restart clears it.
+
+On the same Windows account copy and inputs, three warm baseline reads had a
+median of 922.65 ms; five optimized reads had a median of 29.28 ms (31.5x for
+this host response path). All 10,750 response bytes matched exactly, with
+unchanged account/XP tables and all 55 original reference files. Two regressions
+verify one static decode for repeated entries, independent mutable responses,
+source/season invalidation and unchanged content guards. Existing run/benefit
+tests verify that warmed responses still reflect changes.
+
+These measurements cover server response generation, not complete scene loading
+or emulator FPS. The first request after restart still prepares the static
+lookup. The reported apparent infinite loading eventually completed; no queued
+request or new API rejection was observed at the diagnostic snapshot. The
+longest scene delay has not been attributed to this single bottleneck, and its
+APK timing after the optimization remains unverified.
 
 ## Local rankings
 
