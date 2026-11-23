@@ -111,6 +111,24 @@ def validate(route, request):
         raise ValueError("Kama-ZONE artifact selection is not implemented")
 
 
+def has_choices(node):
+    return any(node.get(key) for key in ("LootArtifacts", "LootCurses", "ChoiceEffectResults"))
+
+
+def finish_empty_victory(value, node):
+    # The native map can advance without close-battle when no loot UI opens.
+    # Also normalize earlier pending empty victories in memory; only a later
+    # successful request publishes that migration to the separate run file.
+    if (
+        value["pending_result"] == 1
+        and node["BattleMonsters"]
+        and value["states"].get(str(node["Id"]), 0) & 2
+        and not has_choices(node)
+    ):
+        value["states"][str(node["Id"])] |= 8
+        value.update(stage_started=False, pending_result=None)
+
+
 def apply(value, route, request, nodes):
     ident = request["NodeId"]
     node = next((n for n in nodes if n["Id"] == ident), None)
@@ -146,6 +164,7 @@ def apply(value, route, request, nodes):
             last_result_hash=fingerprint,
             battle_count=value["battle_count"] + 1,
         )
+        finish_empty_victory(value, node)
     else:
         if value["battle_started"] or value["last_result_hash"] is None:
             raise ValueError("Finish the Kama-ZONE battle before closing it")
@@ -154,6 +173,8 @@ def apply(value, route, request, nodes):
                 return
             raise ValueError("No Kama-ZONE battle result is ready to close")
         if value["pending_result"] == 1:
+            if has_choices(node):
+                raise ValueError("The Kama-ZONE battle still has unresolved loot choices")
             value["states"][str(ident)] |= 8
         value.update(stage_started=False, pending_result=None)
 

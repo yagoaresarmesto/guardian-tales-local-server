@@ -7,8 +7,8 @@ before displaying its drawer, so `/kamazonland/enter` supplies the preview even
 without a card tap. Experimental challenge and combat entry now cover the first
 floor at difficulties 1, 2 and 3, with local battle results, retained HP and
 connected combat-node progression. Loot, shops, special events, later floors
-and rewards remain unimplemented. APK combat entry and a reported victory are
-observed; result closing and map return are pending verification.
+and rewards remain unimplemented. APK combat entry, accepted victory results and
+map return are observed; the next-node retry is pending verification.
 An additional opt-in practice setting can unlock selected seasonal benefits,
 provide a point budget and retain benefit choices outside the saved account.
 
@@ -308,14 +308,19 @@ for a different node or a battle that was never started.
 A victory marks the node Started|Cleared (3), retains the reported HP and
 increments the local completed-battle counter once. The response includes the
 native callback's `ArtifactEffectResults` array, empty while artifact effects
-are unsupported. The client then calls `/kamazonland/close-battle` with `NodeId`
-and nullable `LootArtifactId`/`DiscardArtifactIndex`; omitted null fields are also
-accepted. There is no generated loot to select. Closing marks the node
-Started|Cleared|Chosen (11) and allows the next connected combat node to open.
-Its response supplies empty `ChoiceEffectResults` and `AddedItems` lists so the
-native closing/reward routine can return to the map without awarding anything.
-Party changes and another battle are blocked while a winning result awaits
-closing.
+are unsupported. When the node has no artifact, curse or effect choices, the
+same result transaction finalizes it as Started|Cleared|Chosen (11). The observed
+client can return to the map and request the next node without `close-battle`;
+requiring that extra request left a valid victory stuck in a pending state.
+Finalization uses the actual generated node and applies to normal, elite and
+boss encounters. The next entry must still follow the original map connections.
+
+An optional `/kamazonland/close-battle` with `NodeId` and nullable
+`LootArtifactId`/`DiscardArtifactIndex` remains compatible and idempotent;
+omitted null fields are also accepted. Its response supplies empty
+`ChoiceEffectResults` and `AddedItems` lists. Genuine unresolved choices retain
+the pending win and block party changes/another battle; they are not discarded
+by automatic finalization. Artifact choice handling is still unimplemented.
 
 Draw, defeat and timeout retain hero/enemy HP without clearing the node or
 unlocking its successors. The encounter can be retried with surviving heroes,
@@ -325,16 +330,24 @@ or reapplying an outcome, including identical reconnects with a new sequence.
 Old retries cannot replace a newer encounter. Legacy run files receive missing
 HP/outcome defaults in memory; the next successful action publishes them
 atomically. Failed publication changes neither HP nor the clear state.
+Earlier pending victories without choices are normalized in the read-only view,
+retaining their seed, HP, party, benefits and battle count. The next successful
+action publishes that correction with its ordinary run update; invalid requests
+and reads alone leave the stored file untouched. No run reset is required.
 
 This is separate local run progress. Benefit allocations, main account tables,
 trial XP, gold, gems, season clears/rankings and the preserved game files remain
-unchanged. The ten completion regressions cover victory/closing/advancement,
+unchanged. The twelve completion regressions cover victory/closing/advancement,
 losses, dead heroes, malformed/foreign results, retries, old files, authentication
 and failed publication. A coherent actual-account copy replays the captured
 node-111 victory, closes it, reopens it and starts connected node 123 while
 retaining all account/XP tables, effective static responses and 55 live reference
-files. Native combat and the outgoing victory are APK observed; acceptance of
-the new result/closing responses and map return remain pending verification.
+files. An additional coherent copy replays the actual next-node-123 request from
+the owner's stuck pending win, without issuing a close request or resetting the
+run. It enters the second battle and immediately finalizes another empty victory.
+The APK has accepted the first result and returned to the map, exposing this
+missing transition. The next-node retry after automatic finalization remains
+pending verification.
 
 ## Local rankings
 

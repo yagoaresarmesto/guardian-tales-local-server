@@ -177,6 +177,33 @@ edits/resets or gamefile changes. APK result closing and map return are pending.
 Shops, special events, artifact loot/effects, subsequent floors, conclusion,
 season records and rewards remain unsupported.
 
+The next APK request is `start-stage` for connected normal node 123. The previous
+node 111 has a saved victory, hero/enemy HP and battle count, but remains in
+pending state 3. Fresh counters show one accepted end-battle and the rejected
+next entry, with no close-battle request. This confirms accepted result/map
+return and exposes an incorrect requirement: with no loot choices, the client
+can advance without explicitly closing the prior encounter.
+
+Empty victories now finalize as chosen state 11 in the result transaction,
+independently of the node ID or normal/elite/boss type. Existing pending empty
+wins normalize in the read-only view and are persisted with the next successful
+action; reads, invalid targets and failed publication do not rewrite the run.
+Real loot/curse/effect choices stay pending and continue to block advancement.
+Optional explicit close requests remain compatible. Map adjacency, completed
+node requirements, source binding, HP and replay guards remain enforced.
+
+All 149 core/content/integration cases pass in 22.916 seconds, including 70
+Kama-ZONE cases and twelve completion regressions. They cover direct advance
+without close, existing pending wins, all three combat types and unresolved
+choice guards. Black (227 files), Ruff and repository/link checks (287 files)
+pass. A coherent real account/XP copy starts from the actual stuck node-111 win,
+replays the exact node-123 request without a close/reset, loads that battle and
+immediately finalizes its second victory. Reopen/retry and optional-close checks
+pass. The seed, HP, party, benefits, point budget, effective static data,
+main-account/XP tables and all 55 source reference files remain unchanged by
+diagnostics. APK retry of the next quadrant remains pending; no live run edit,
+reset or gamefile change is made by diagnostics.
+
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using
 simulated stage and checkpoint requests. Separate runs covered the 224 named

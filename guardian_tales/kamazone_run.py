@@ -282,6 +282,7 @@ def matching(account, source, season_id):
     ):
         return None
     data = catalog(source, season_id)
+    nodes = floor_nodes(source, season_id, value["seed"])
     if (
         value["difficulty"] not in data["tiers"]
         or value["current_node_id"] not in data["nodes"]
@@ -291,9 +292,12 @@ def matching(account, source, season_id):
         and not value["active"]
         or value["battle_started"]
         and (not value["stage_started"] or not value["characters"] or value["formation"] is None)
-        or not kamazone_battle.matches(value, owned, floor_nodes(source, season_id, value["seed"]))
+        or not kamazone_battle.matches(value, owned, nodes)
     ):
         raise ValueError("Local Kama-ZONE run no longer matches its owner or content")
+    kamazone_battle.finish_empty_victory(
+        value, next(node for node in nodes if node["Id"] == value["current_node_id"])
+    )
     return value
 
 

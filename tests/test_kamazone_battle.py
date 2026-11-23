@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Native Kama-ZONE results retain HP and close a local node without rewards."""
 
+import copy
 import json
 import unittest
 from unittest.mock import patch
@@ -16,6 +17,7 @@ from tests.test_snapshots import request
 class KamazoneBattleTests(unittest.TestCase):
     def setUp(self):
         self.owner = fixtures.KamazoneRunTests()
+        self.owner.node_kind = getattr(self, "node_kind", None)
         self.addCleanup(self.owner.doCleanups)
         self.owner.setUp()
         self.session, self.db, self.root = self.owner.session, self.owner.db, self.owner.root
@@ -77,13 +79,13 @@ class KamazoneBattleTests(unittest.TestCase):
             self.assertEqual(user[key], self.initial[key], key)
         self.owner.assert_untouched()
 
-    def test_victory_hp_and_two_phase_close_persist_and_allow_the_next_connected_battle(self):
+    def test_empty_victory_persists_and_allows_the_next_battle_without_a_close_request(self):
         response = self.finish()
         self.assertEqual(set(response), {"NewSeason", "UserKamazonLand", "ArtifactEffectResults"})
         self.assertEqual(response["ArtifactEffectResults"], [])
         ended = response["UserKamazonLand"]
         self.assertEqual(ended["Progress"]["Battle"], 1)
-        self.assertEqual(next(n for n in ended["Nodes"] if n["Id"] == self.node["Id"])["State"], 3)
+        self.assertEqual(next(n for n in ended["Nodes"] if n["Id"] == self.node["Id"])["State"], 11)
         self.assertEqual(
             [
                 m["Hp"]
@@ -96,24 +98,16 @@ class KamazoneBattleTests(unittest.TestCase):
         for key, hp in self.result["CharacterHps"].items():
             self.assertEqual(ended["Hps"][key], hp)
         self.assertEqual(self.reopened(), ended)
-        closed = self.call(battle.CLOSE, self.closing)
-        self.assertEqual(
-            set(closed), {"NewSeason", "UserKamazonLand", "ChoiceEffectResults", "AddedItems"}
-        )
-        self.assertEqual((closed["ChoiceEffectResults"], closed["AddedItems"]), ([], []))
-        user = closed["UserKamazonLand"]
-        self.assertEqual(next(n for n in user["Nodes"] if n["Id"] == self.node["Id"])["State"], 11)
-        self.assertEqual(self.reopened(), user)
         state = run.load(self.session.store.references)
         self.assertFalse(state["stage_started"] or state["battle_started"])
         self.assertIsNone(state["pending_result"])
-        self.assert_no_account_or_static_changes(user)
+        self.assert_no_account_or_static_changes(ended)
         self.call(run.START, {"NodeId": 120})
         next_battle = self.call(run.BATTLE, dict(NodeId=120, Formation=[12, 3, 19, 9]))[
             "UserKamazonLand"
         ]
         self.assertEqual(next_battle["Progress"]["CurrentNodeId"], 120)
-        self.assertEqual(next_battle["Hps"], user["Hps"])
+        self.assertEqual(next_battle["Hps"], ended["Hps"])
         self.assertTrue(
             all(
                 m["Hp"] == 10000
@@ -122,12 +116,59 @@ class KamazoneBattleTests(unittest.TestCase):
         )
         self.assert_no_account_or_static_changes(next_battle)
 
-    def test_pending_victory_must_close_before_party_changes_or_another_stage(self):
+    def test_unresolved_loot_choices_still_block_automatic_closing_and_advancement(self):
+        value = run.load(self.session.store.references)
+        source = self.session.store.references.read_bytes("static_data_get.bin")
+        nodes = copy.deepcopy(run.floor_nodes(source, value["season_id"], value["seed"]))
+        next(n for n in nodes if n["Id"] == self.node["Id"])["LootArtifacts"] = [[900]]
+        with patch("guardian_tales.kamazone_run.floor_nodes", return_value=nodes):
+            ended = self.finish()["UserKamazonLand"]
+            self.assertEqual(
+                next(n for n in ended["Nodes"] if n["Id"] == self.node["Id"])["State"], 3
+            )
+            self.reject(run.START, {"NodeId": 120})
+            self.reject(run.SELECT, {"CharacterIds": self.owner.characters})
+            self.reject(run.BATTLE, dict(NodeId=self.node["Id"], Formation=[12, 3, 19, 9]))
+            self.reject(battle.CLOSE, self.closing)
+            self.assert_no_account_or_static_changes(self.entry())
+
+    def test_existing_pending_empty_victory_resumes_without_read_writes_or_a_reset(self):
         self.finish()
-        self.reject(run.START, {"NodeId": 120})
-        self.reject(run.SELECT, {"CharacterIds": self.owner.characters})
-        self.reject(run.BATTLE, dict(NodeId=self.node["Id"], Formation=[12, 3, 19, 9]))
+        legacy = json.loads(self.path.read_bytes())
+        legacy.update(pending_result=1, stage_started=True)
+        legacy["states"][str(self.node["Id"])] = 3
+        self.path.write_text(json.dumps(legacy))
+        old = self.path.read_bytes()
+        view = self.reopened()
+        self.assertEqual(next(n for n in view["Nodes"] if n["Id"] == self.node["Id"])["State"], 11)
+        self.assertEqual(self.path.read_bytes(), old)
+        self.reject(run.START, {"NodeId": 100})
+        self.reject(run.START, {"NodeId": 999})
+        self.assertEqual(self.path.read_bytes(), old)
+        self.call(run.SELECT, {"CharacterIds": self.owner.characters})
+        self.call(run.START, {"NodeId": 120})
+        current = run.load(self.session.store.references)
+        self.assertEqual(current["states"][str(self.node["Id"])], 11)
+        self.assertIsNone(current["pending_result"])
+        self.assertEqual(
+            (current["seed"], current["hps"], current["battle_count"]),
+            (legacy["seed"], legacy["hps"], 1),
+        )
         self.assert_no_account_or_static_changes(self.entry())
+
+    def test_empty_victories_finalize_for_normal_elite_and_boss_node_types(self):
+        for kind in run.COMBAT:
+            with self.subTest(kind=kind):
+                case = KamazoneBattleTests()
+                self.addCleanup(case.doCleanups)
+                case.node_kind = kind
+                case.setUp()
+                self.assertEqual(case.node["Type"], kind)
+                ended = case.finish()["UserKamazonLand"]
+                self.assertEqual(
+                    next(n for n in ended["Nodes"] if n["Id"] == case.node["Id"])["State"], 11
+                )
+                case.assert_no_account_or_static_changes(ended)
 
     def test_recent_results_and_close_retries_cannot_replace_a_newer_battle(self):
         self.call(battle.END, self.result, 401)
