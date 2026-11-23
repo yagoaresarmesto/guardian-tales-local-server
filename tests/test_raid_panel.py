@@ -124,7 +124,9 @@ class RaidPanelTests(unittest.TestCase):
         (self.root / guild_raid.CATALOG).unlink()
         self.assertIn(b"Guild Raid", self.call("/"))
         self.assertIn(b"fetch(", self.call("/raid.js"))
-        self.assertIn(b".banner", self.call("/raid.css"))
+        self.assertIn(b".banner", self.call("/panel.css"))
+        self.assertIn(b".battlefield", self.call("/raid.css"))
+        self.assertIn(b".day-card", self.call("/dka.css"))
         self.assertIn(b"Dungeon Kingdom Arena", self.call("/dka"))
         self.assertIn(b"/api/dka", self.call("/dka.js"))
         with self.assertRaises(HTTPError) as arena_error:

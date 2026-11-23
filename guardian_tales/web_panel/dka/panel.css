@@ -1,0 +1,44 @@
+.arena-banner { display: flex; min-height: clamp(180px, 18vw, 260px); }
+.arena-banner img { position: absolute; inset: 0 0 0 auto; width: 68%; height: 100%; object-fit: cover; object-position: 50% 55%; z-index: -1; mask-image: linear-gradient(90deg, transparent, #000 38%); }
+.arena-banner .banner-copy { max-width: 65%; padding-block: 26px; }
+.arena-banner h1 { margin: 8px 0 0; font-size: clamp(2.25rem, 4.3vw, 4.25rem); }
+.arena-banner h1 em { display: block; }
+.arena-work { grid-template-columns: minmax(0, 2.3fr) minmax(240px, 1fr); }
+.arena-days { margin-top: 20px; }
+#days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr)); gap: 8px; }
+#days label { position: relative; min-width: 0; }
+.day-card {
+  display: grid; align-content: start; gap: 5px; height: 100%; padding: 13px 11px;
+  cursor: pointer; border: 1px solid var(--line); border-radius: 6px;
+  background: radial-gradient(ellipse at 20% 30%, color-mix(in srgb, var(--tone) 12%, transparent), transparent 80%), var(--field);
+}
+.day-card .day-number { color: var(--muted); font-size: .85rem; font-weight: 650; }
+.day-card .slime { margin-block: 6px; }
+.day-card strong { font-size: 1rem; }
+.day-card small { margin: 0; }
+#days input:checked + .day-card { border-color: var(--gold); box-shadow: inset 0 -3px var(--gold); }
+#days input:checked + .day-card .day-number { color: var(--gold); }
+#days input:focus-visible + .day-card { outline: 2px solid var(--ice); outline-offset: 2px; }
+.day-card:hover { border-color: var(--tone); }
+[data-element="space"] { --tone: #d9b7ff; }
+.slime { width: 38px; height: 29px; display: inline-block; position: relative; flex: none; }
+.slime::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(155deg, #fff 0 12%, var(--tone) 29% 73%, color-mix(in srgb, var(--tone) 65%, #17273e) 74%);
+  clip-path: polygon(0 67%, 9% 67%, 9% 44%, 19% 44%, 19% 27%, 31% 27%, 31% 13%, 44% 13%, 50% 0, 62% 15%, 74% 15%, 74% 29%, 84% 29%, 84% 43%, 92% 43%, 92% 66%, 100% 66%, 100% 88%, 88% 88%, 88% 100%, 13% 100%, 13% 90%, 0 90%);
+}
+.slime::after { content: ""; position: absolute; top: 54%; left: 29%; width: 3px; height: 5px; background: #1b293a; box-shadow: 11px 0 #1b293a; }
+.arena-saved { padding: 20px 22px; }
+#saved-status, #saved-weakness { color: var(--muted); font-size: .94rem; }
+#saved-encounter { display: flex; align-items: center; gap: 15px; padding-top: 16px; margin-top: 14px; border-top: 1px solid var(--line); }
+#saved-slime { display: block; color: var(--tone); font-size: 1.3rem; margin-bottom: 3px; }
+@media (min-width: 1360px) {
+  #days { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .arena-work { grid-template-columns: 1fr; }
+}
+@media (max-width: 540px) {
+  .arena-banner .banner-copy { max-width: 80%; }
+  .arena-banner img { width: 80%; mask-image: linear-gradient(90deg, transparent 2%, #000b 70%); }
+}

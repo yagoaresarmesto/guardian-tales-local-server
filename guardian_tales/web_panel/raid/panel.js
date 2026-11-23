@@ -1,6 +1,5 @@
-"use strict";
+import { $, feedback } from "/panel.js";
 
-const $ = id => document.getElementById(id);
 const modes = [...document.querySelectorAll('input[name="mode"]')];
 const number = new Intl.NumberFormat("en-US");
 let data;
@@ -9,13 +8,6 @@ let selectedEncounter = 0;
 
 function title(name) {
   return name.replace(/\b\w/g, char => char.toUpperCase());
-}
-
-function feedback(message, error = false) {
-  const node = $("feedback");
-  node.textContent = message;
-  node.dataset.error = String(error);
-  node.hidden = !message;
 }
 
 async function readState() {

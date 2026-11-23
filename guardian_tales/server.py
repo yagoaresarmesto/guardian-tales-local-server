@@ -16,10 +16,10 @@ from .bootstrap import BOOTSTRAP_ROUTES, BootstrapSession, GuestStore
 from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
 from .protocol import PacketError, decode_frame, encode_wire, frame_length, make_pong
-from .raid_panel import RaidPanel
 from .reference import default_cert_dir
 from .snapshots import IMPORTED_MUTATIONS, is_imported
 from .state_lock import StateLock
+from .web_panel.server import WebPanel
 
 
 class LocalServer:
@@ -348,7 +348,7 @@ async def run(args):
     await server.start()
     panel = None
     try:
-        panel = RaidPanel(server.guests.references, args.raid_panel_port)
+        panel = WebPanel(server.guests.references, args.raid_panel_port)
         panel.start()
     except OSError as error:
         print(f"Raid panel unavailable ({error}). Choose another --raid-panel-port.", flush=True)

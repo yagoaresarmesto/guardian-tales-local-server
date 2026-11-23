@@ -419,3 +419,14 @@ Private emulator routing, rootfs provisioning and SDK cache restoration are
 installation-specific tooling outside this repository. See
 [client integration](client-integration.md) for how the prepared test differed
 from simply starting this Python backend.
+
+## Local web panel
+
+The loopback HTTP transport in `guardian_tales/web_panel/server.py` checks
+the local origin for writes, validates the request size and dispatches through
+the mode registry in `routes.py`. Each mode owns its Python adapter, HTML view,
+stylesheet and browser module in one directory. Adapters call the same domain
+functions as the CLI. The shared directory contains the page layout, navigation
+styling and browser helpers. Register a mode once in `MODES` to expose its page,
+navigation link, static files and GET/POST API. Register any external artwork
+explicitly in `MEDIA`.

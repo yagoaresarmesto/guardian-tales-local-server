@@ -1,6 +1,5 @@
-"use strict";
+import { $, feedback } from "/panel.js";
 
-const $ = id => document.getElementById(id);
 const elements = {None: "Basic", Darkness: "Dark", Ice: "Water", Nebula: "Space"};
 const weaknesses = {Down: "Downed", Poison: "Injured", Aerial: "Airborne"};
 let state;
@@ -11,12 +10,6 @@ function elementName(day) {
 
 function weakness(day) {
   return "Weak to " + (weaknesses[day.weak_point] || day.weak_point);
-}
-
-function feedback(message, error = false) {
-  $("feedback").textContent = message;
-  $("feedback").dataset.error = String(error);
-  $("feedback").hidden = !message;
 }
 
 function renderDays(variant, chosenDay) {

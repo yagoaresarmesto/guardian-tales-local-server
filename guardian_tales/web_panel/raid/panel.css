@@ -1,0 +1,100 @@
+.encounter-detail { display: flex; align-items: center; gap: 12px; }
+.encounter-detail p { color: #c5d3e5; font-size: .78rem; font-weight: 600; letter-spacing: .065em; text-transform: uppercase; }
+.encounter-detail strong { display: block; margin-top: 2px; font-size: clamp(1.1rem, 1.8vw, 1.44rem); line-height: 1.2; }
+.battlefield {
+  position: relative; width: min(100%, 472px); aspect-ratio: 512/334; justify-self: center; align-self: center;
+  margin-block: -16px; isolation: isolate; background-image: radial-gradient(#97c6f43a 1px, transparent 1px); background-size: 14px 14px;
+}
+.battlefield img {
+  display: block; width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; z-index: -1;
+  image-rendering: pixelated; mask-image: linear-gradient(90deg, transparent, #000 13% 87%, transparent);
+}
+#map-pins { position: absolute; inset: 0; }
+.map-pin {
+  position: absolute; display: grid; place-items: center; width: 44px; height: 46px; padding: 0;
+  transform: translate(-50%, -90%); color: var(--tone); border: 0; background: none;
+  filter: drop-shadow(0 3px 2px #061027c9);
+}
+.map-pin:nth-child(1) { left: 23%; top: 63%; }
+.map-pin:nth-child(2) { left: 47%; top: 43%; }
+.map-pin:nth-child(3) { left: 75%; top: 48%; }
+.map-pin:nth-child(4) { left: 47%; top: 77%; }
+.map-pin::before, .map-pin::after {
+  content: ""; position: absolute; inset: 2px 4px;
+  clip-path: polygon(50% 0, 97% 19%, 97% 63%, 50% 100%, 3% 63%, 3% 19%);
+  background: currentColor;
+}
+.map-pin::after { inset: 5px 7px 6px; background: #172238; }
+.map-pin span { position: relative; z-index: 1; padding-bottom: 5px; font: 800 1.02rem/1 "Barlow", "Segoe UI", sans-serif; }
+.map-pin[aria-pressed="true"] { color: var(--gold); filter: drop-shadow(0 0 6px #ffbf54ac); }
+.map-pin[aria-pressed="true"]::after { background: var(--gold); }
+.map-pin[aria-pressed="true"] span { color: #342314; }
+.map-pin:hover { translate: 0 -2px; }
+.mode { display: flex; gap: 4px; margin-bottom: 18px; padding: 3px; background: #0f1a2c; border: 1px solid #3c4c65; border-radius: 6px; }
+.mode label { flex: 1; position: relative; text-align: center; cursor: pointer; }
+.mode span { display: block; padding: 8px 4px; border: 1px solid transparent; border-radius: 4px; font-size: .94rem; font-weight: 700; color: var(--muted); }
+.mode input:checked + span { color: #def6ff; border-color: #527992; background: linear-gradient(180deg, #35546a, #2c435a); box-shadow: inset 0 -2px #76d5f2; }
+.mode input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: -2px; }
+.encounters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.boss-card {
+  display: grid; width: 100%; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; text-align: left;
+  column-gap: 10px; border: 1px solid #3f4f67; border-radius: 5px; background: #182538; color: var(--ink);
+}
+.slot-num { color: #a4b5cc; font: 650 .76rem/1.2 "IBM Plex Mono", Consolas, monospace; }
+.sigil {
+  display: grid; place-items: center; position: relative; width: 39px; height: 42px; flex: none;
+  background: var(--tone); clip-path: polygon(50% 0, 96% 24%, 96% 76%, 50% 100%, 4% 76%, 4% 24%);
+}
+.sigil::before { content: ""; position: absolute; inset: 1.5px; background: linear-gradient(150deg, #36465a, #131f31 85%); clip-path: inherit; }
+.sigil::after { content: ""; width: 53%; height: 57%; background: var(--tone); clip-path: var(--shape); }
+.boss-name { font-size: 1rem; font-weight: 650; line-height: 1.25; overflow-wrap: anywhere; }
+.element { color: var(--tone); font-size: .79rem; font-weight: 600; line-height: 1.25; }
+.encounters .boss-card { grid-template-columns: auto minmax(0, 1fr) auto; padding: 9px 10px; min-height: 57px; height: 100%; column-gap: 8px; }
+.encounters .sigil { grid-row: 1 / 3; grid-column: 1; width: 29px; height: 31px; }
+.encounters .boss-name { grid-column: 2; grid-row: 1; font-size: .9rem; align-self: end; }
+.encounters .element { grid-column: 2; grid-row: 2; align-self: start; }
+.encounters .slot-num { grid-column: 3; grid-row: 1 / 3; font-size: .72rem; }
+.active-meta { color: var(--muted); font-size: .875rem; margin: 14px 20px 11px; }
+.active-bosses { display: grid; gap: 6px; margin: 0 19px; }
+.active-bosses .boss-card { grid-template-columns: 20px auto minmax(0, 1fr) auto; min-height: 52px; padding: 6px 12px; }
+.active-bosses .sigil { width: 31px; height: 34px; }
+.active-bosses .boss-card[aria-pressed="true"] {
+  border-color: #b89958; box-shadow: inset 3px 0 var(--gold);
+  background: linear-gradient(90deg, #3a3940, #253145 83%);
+}
+.active-bosses .boss-card[aria-pressed="true"] .slot-num { color: var(--gold); }
+.active-bosses .boss-card:hover { border-color: var(--tone); }
+.active-hp { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 17px; padding: 13px 21px; font-size: .9rem; background: #132034; border-top: 1px solid var(--line); }
+.active-hp strong { font: 750 1.15rem/1 "IBM Plex Mono", Consolas, monospace; letter-spacing: -.045em; color: #a5e7ff; }
+.mode-note { margin: -3px 0 13px; color: var(--muted); font-size: .875rem; }
+.slot-list { display: grid; gap: 7px; }
+.slot-row { display: grid; grid-template-columns: 26px minmax(0, 1.7fr) minmax(0, 1fr); align-items: end; gap: 10px; }
+.slot-row label { min-width: 0; }
+.slot-row .slot-num { display: grid; place-items: center; align-self: end; margin-bottom: 8px; height: 25px; color: var(--tone); border: 1px solid currentColor; border-radius: 4px; background: #19263b; }
+.slot-row:not(:first-child) label span { position: absolute; clip-path: inset(50%); width: 1px; height: 1px; overflow: hidden; }
+.hp-field { margin-top: 16px; }
+@media (max-width: 850px) {
+  .encounters { grid-template-columns: 1fr; }
+  .active-bosses .boss-card { grid-template-columns: auto auto minmax(0,1fr); column-gap: 8px; }
+  .active-bosses .slot-num, .active-bosses .sigil { grid-row: 1 / 3; }
+  .active-bosses .element { grid-column: 3; }
+}
+@media (max-width: 690px) {
+  .encounters { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .active-bosses .boss-card { grid-template-columns: 20px auto minmax(0,1fr) auto; }
+  .active-bosses .slot-num, .active-bosses .sigil { grid-row: auto; }
+  .active-bosses .element { grid-column: auto; }
+}
+@media (max-width: 480px) {
+  .battlefield { width: 85%; max-width: 300px; margin: 0; }
+  .slot-row { grid-template-columns: 22px minmax(0,1.45fr) minmax(0,1fr); gap: 5px; }
+  .slot-row select { padding-left: 6px; }
+  .encounters { gap: 5px; }
+  .encounters .boss-card { padding: 8px 7px; column-gap: 5px; }
+  .encounters .sigil { width: 24px; height: 27px; }
+  .active-bosses { margin-inline: 14px; }
+}
+@media (max-width: 355px) {
+  .encounters { grid-template-columns: 1fr; }
+  .active-bosses .boss-card { gap: 6px; padding-inline: 8px; }
+}
