@@ -120,6 +120,18 @@ receipt or database row is created. Missing/ambiguous mini-season data,
 disabled/expired selection and a changed content pack are rejected. This route
 does not enable any gameplay or reward endpoint.
 
+## Local rankings
+
+`/kamazonland/get-rankings` accepts a native request with no body, JSON null or
+an empty object. The signed-in guest, prologue, active selection and content-pack
+checks are shared with entry. Its JSON response is `{"Rankings":[]}`, matching
+the popup callback's named list. Additional parameters are rejected.
+
+The classification is intentionally empty while there are no local scored runs.
+No official rankings are requested, and no players, ranks or scores are invented.
+Opening it changes no saved state and sends no account or mode-resource delta.
+This read does not enable scored runs or ranking rewards.
+
 ## Evidence
 
 Native inspection finds Kama-ZONE in `UIEventDrawer.RefreshEventList`, which
@@ -146,7 +158,8 @@ The owner confirms that Events loads Kama-ZONE and can return to the main lobby
 on Android 3.57.0 EU with season 43 selected. Fresh counters show three successful
 entry reads and no new entry rejection; the declared preview banner is served
 by the CDN. This verifies loading and return navigation, not playable challenges,
-rewards or season 41/42 in the APK. A separate ranking request remains unsupported.
+rewards or season 41/42 in the APK. The same probe exposed a separate unsupported
+ranking request; the new local empty response is awaiting its own APK check.
 
 The initial entry change passed 271 targeted Windows tests, including static
 overlays, CDN, Backroom and Training Room. A coherent file-backed account/XP copy passes selection of all three
@@ -164,3 +177,9 @@ field against the read-only native type signatures for both partial flags and
 all three seasons, retaining all account/XP tables and 53 source reference files
 with zero diagnostic source writes. APK loading and return navigation are now
 owner verified for season 43.
+The native `SendKamazonLandGetRankings` sender has no payload;
+`KamazonLandRankingPopup` reads `Rankings` from the JSON resource and accepts an
+empty list. Three new regressions cover its native wire shape, parameter
+rejection, selection/authentication guards and unchanged saved state. All 88
+focused tests pass with Black/Ruff and repository/link checks. The ranking
+popup's actual APK open/close check remains pending.

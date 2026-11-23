@@ -279,7 +279,7 @@ def main(argv=None):
                         < timestamp(candidate["period"]["RewardUntil"])
                     ),
                     seasons=list(seasons.values()),
-                    scope="Events menu and read-only idle lobby; challenges and gameplay are not implemented",
+                    scope="Events menu, idle lobby and empty local rankings; gameplay is not implemented",
                     saved_account_modified=False,
                     restart_backend_and_game_required=changed,
                 ),

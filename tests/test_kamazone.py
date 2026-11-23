@@ -20,7 +20,8 @@ from guardian_tales.__main__ import main
 from guardian_tales.assets import ResourceLibrary, handler_for
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
 from guardian_tales.kamazone import FIELDS, INACTIVE, REGION, SELECTION, load
-from guardian_tales.protocol import PacketError
+from guardian_tales.packet_reader import parse_packet
+from guardian_tales.protocol import Packet, PacketError, encode_packet
 from guardian_tales.raid_static import compress, decode, digest, records
 from tests import test_andras_trial as andras_fixture
 from tests.test_snapshots import request, synthetic_snapshot
@@ -495,6 +496,64 @@ class KamazonePreviewTests(unittest.TestCase):
         ):
             with self.assertRaises(PacketError):
                 self.session.handle(request(route, {}))
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def ranking_packet(self, body=None, no_body=False):
+        packet = (
+            parse_packet(encode_packet(Packet(0, api="/kamazonland/get-rankings", sequence_id=713)))
+            if no_body
+            else request("/kamazonland/get-rankings", body)
+        )
+        return self.session.handle(packet)
+
+    def test_native_ranking_request_without_body_returns_a_json_list_wrapper_without_writes(self):
+        self.fixture.cli("select", "--season-id", "43")
+        before, changes = list(self.db.iterdump()), self.db.total_changes
+        files = {p.name: p.read_bytes() for p in self.fixture.root.iterdir()}
+        for no_body, body in ((True, None), (False, None), (False, {})):
+            packet = self.ranking_packet(body, no_body)
+            self.assertEqual((packet.packet_type, packet.body_type), (1, 1))
+            self.assertEqual(packet.sequence_id, 713 if no_body else 12)
+            # SetRanking's native callback reads Resource["Rankings"], not a
+            # top-level array or shared User/UserKamazonLand resource delta.
+            self.assertEqual(json.loads(packet.body), {"Rankings": []})
+        self.assertEqual((list(self.db.iterdump()), self.db.total_changes), (before, changes))
+        self.assertEqual({p.name: p.read_bytes() for p in self.fixture.root.iterdir()}, files)
+
+    def test_ranking_request_rejects_parameters_without_writes(self):
+        self.fixture.cli("select", "--season-id", "43")
+        before = list(self.db.iterdump())
+        for body in ([], False, 0, "", {"SeasonId": 43}, {"Difficulty": 1}):
+            with self.assertRaises(PacketError):
+                self.ranking_packet(body)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_ranking_read_requires_sign_in_completed_prologue_and_active_matching_selection(self):
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.ranking_packet(no_body=True)
+        self.fixture.cli("select", "--season-id", "43")
+        self.session.signed_in = False
+        with self.assertRaises(PacketError):
+            self.ranking_packet(no_body=True)
+        self.session.signed_in = True
+        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=22)):
+            with self.assertRaises(PacketError):
+                self.ranking_packet(no_body=True)
+        self.fixture.tables["untouched"]["value"].append(4)
+        self.fixture.write_source()
+        with self.assertRaises(PacketError):
+            self.ranking_packet(no_body=True)
+        self.fixture.cli("disable")
+        with self.assertRaises(PacketError):
+            self.ranking_packet(no_body=True)
+        self.fixture.cli("select", "--season-id", "43")
+        self.assertEqual(list(self.db.iterdump()), before)
+        with self.db:
+            self.db.execute("DELETE FROM imported_account")
+        before = list(self.db.iterdump())
+        with self.assertRaises(PacketError):
+            self.ranking_packet(no_body=True)
         self.assertEqual(list(self.db.iterdump()), before)
 
 

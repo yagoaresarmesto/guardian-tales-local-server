@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Read-only idle lobby needed when Events automatically selects Kama-ZONE."""
+"""Read-only idle lobby and local rankings for the optional Kama-ZONE preview."""
 
 import hashlib
 import json
@@ -9,16 +9,13 @@ from .raid_static import decode, records
 from .village import integer
 
 ROUTE = "/kamazonland/enter"
+RANKINGS = "/kamazonland/get-rankings"
+ROUTES = (ROUTE, RANKINGS)
 
 
-def enter(account, request):
-    if (
-        not isinstance(request, dict)
-        or set(request) != {"IsPartial"}
-        or type(request["IsPartial"]) is not bool
-        or account.needs_prologue()
-    ):
-        raise ValueError("Kama-ZONE preview requires Boolean IsPartial and a completed prologue")
+def selected_source(account):
+    if account.needs_prologue():
+        raise ValueError("Complete the prologue before opening the Kama-ZONE preview")
     references = account.references
     selected = kamazone.load(references)
     if selected is None or selected["season_id"] is None:
@@ -35,6 +32,26 @@ def enter(account, request):
         raise ValueError("Kama-ZONE preview window has expired; select the season again")
     if selected["season_id"] not in kamazone.catalog(source):
         raise ValueError("Kama-ZONE preview requires a preserved Global season")
+    return selected, source
+
+
+def rankings(account, request):
+    if request is not None and (not isinstance(request, dict) or request):
+        raise ValueError("Kama-ZONE rankings accept no parameters")
+    selected_source(account)
+    # The native popup reads a Rankings list from its JSON resource. There is
+    # no local scored run yet, and official rankings are never queried/copied.
+    return {"Rankings": []}
+
+
+def enter(account, request):
+    if (
+        not isinstance(request, dict)
+        or set(request) != {"IsPartial"}
+        or type(request["IsPartial"]) is not bool
+    ):
+        raise ValueError("Kama-ZONE preview requires Boolean IsPartial")
+    selected, source = selected_source(account)
     mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
     season = kamazone.one(mode["Seasons"], "Id", selected["season_id"])
     group = season.get("MiniSeasonGroupId")

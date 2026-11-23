@@ -9,9 +9,9 @@ attachments. Test results and original-client observations have different scopes
 The optional [Kama-ZONE selector](kamazone.md) lists/selects the three preserved
 Global/EU seasons and restores their original calendar. Native inspection locates
 the entry in the Events drawer and its reward-period visibility predicate.
-Twenty-six regressions cover scoped dates, expiry, content binding, no account
+Twenty-nine regressions cover scoped dates, expiry, content binding, no account
 access, revision-safe restoration, atomic publication, Andras composition,
-the optional CDN preview and read-only automatic entry. The pack lacks its
+the optional CDN preview, read-only automatic entry and empty local rankings. The pack lacks its
 historical banner PNGs; the CDN
 can generate an original menu image in memory for the selected declared URL
 when started with `--reference-dir`, without changing preserved files.
@@ -38,7 +38,11 @@ pass alongside Black/Ruff and repository/link checks. A coherent account/XP copy
 matches all outgoing fields to those signatures for six entry requests, with
 zero entry/source writes and 53 unchanged source reference files. The successful
 APK retry shows three successful entry reads and the declared banner served by
-the CDN. A separate `/kamazonland/get-rankings` request remains unsupported.
+the CDN. That probe also exposed `/kamazonland/get-rankings`; a new read returns
+the native JSON `Rankings` list empty, without account deltas, fake users/scores
+or official-server access. It shares the entry authentication, prologue,
+selection and content-binding guards. All 88 focused tests pass; ranking popup
+open/close remains pending in the APK.
 All changes remain backend response data; game files are untouched.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.

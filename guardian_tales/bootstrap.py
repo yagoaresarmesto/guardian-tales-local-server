@@ -88,7 +88,7 @@ BOOTSTRAP_ROUTES = (
     *expedition.ROUTES,
     *multi_presets.ROUTES,
     *classic_coop.ROUTES,
-    kamazone_preview.ROUTE,
+    *kamazone_preview.ROUTES,
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
@@ -333,11 +333,16 @@ class BootstrapSession:
                 except ValueError as error:
                     raise PacketError(str(error)) from error
                 return json_response(request, preserved)
-        if route == kamazone_preview.ROUTE:
+        if route in kamazone_preview.ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
             try:
-                return json_response(request, kamazone_preview.enter(self.store.account, body))
+                operation = (
+                    kamazone_preview.enter
+                    if route == kamazone_preview.ROUTE
+                    else kamazone_preview.rankings
+                )
+                return json_response(request, operation(self.store.account, body))
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
         if route == ORBITAL_ENTRY_ROUTE:
