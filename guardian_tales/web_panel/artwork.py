@@ -35,6 +35,7 @@ BOSSES = Atlas("spritesheets/bosses", "bosses")
 UI = Atlas("spritesheets/ui/main_s3", "MainUiS3")
 WAR = Atlas("ondemand/guild_war/ui", "guildWar")
 KAMAZONE = Atlas("ondemand/ancientmall/ui", "roguelike_mall_bg")
+EXPEDITION = Atlas("ondemand/expedition/ui", "expedition_bg_forest_night")
 ELEMENT_FRAMES = {
     "basic": "ic_attribute_no",
     "dark": "ic_attribute_dark",

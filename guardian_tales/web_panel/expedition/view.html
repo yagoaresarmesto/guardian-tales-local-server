@@ -1,0 +1,58 @@
+<main>
+  <section class="banner expedition-banner" aria-labelledby="page-title">
+    <div id="forest" aria-hidden="true" hidden></div>
+    <div class="banner-copy">
+      <p class="season-status">Solo Expedition</p>
+      <h1 id="page-title">Enemy <em>levels</em></h1>
+      <p id="trial" role="status"></p>
+    </div>
+  </section>
+  <div class="workspace">
+    <section class="surface" aria-labelledby="editor-title">
+      <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="editor-title">Level settings</h2></header>
+      <form id="editor">
+        <fieldset id="controls" disabled>
+          <legend class="sr">Edit enemy levels</legend>
+          <fieldset class="scope">
+            <legend class="sr">Apply changes to</legend>
+            <label><input type="radio" name="scope" value="stage" checked>One stage</label>
+            <label><input type="radio" name="scope" value="all">All stages</label>
+          </fieldset>
+          <label id="stage-field" class="subsection">
+            <span class="label">Stage</span>
+            <select id="stage"></select>
+          </label>
+          <dl class="levels">
+            <div><dt>Original</dt><dd id="original">—</dd></div>
+            <div><dt>Configured</dt><dd id="current">—</dd></div>
+          </dl>
+          <label for="level" class="label">New enemy level <small id="bounds"></small></label>
+          <input type="number" id="level" min="1" step="1" required>
+          <div class="actions">
+            <button type="submit" id="apply">Apply to stage</button>
+            <button type="button" id="restore">Restore original level</button>
+          </div>
+        </fieldset>
+        <p class="hint">Close the game before changing levels. Restart the backend and reopen the game afterward.</p>
+      </form>
+      <p id="feedback" role="status" hidden></p>
+    </section>
+    <section class="surface" aria-labelledby="catalog-title">
+      <header class="panel-heading">
+        <span class="section-icon stack" aria-hidden="true"></span><h2 id="catalog-title">Stage levels</h2>
+        <button type="button" id="reload" title="Reload stage levels" aria-label="Reload stage levels">↻</button>
+      </header>
+      <div class="catalog">
+        <label for="search" class="sr">Find a stage by name or ID</label>
+        <input type="search" id="search" placeholder="Find a stage by name or ID">
+        <div class="stage-list" tabindex="0" role="region" aria-label="Stage level list">
+          <table><thead><tr><th scope="col">Stage</th><th scope="col">Original</th><th scope="col">Configured</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table>
+          <p id="empty" hidden>No matching stages.</p>
+        </div>
+        <p id="count" role="status"></p>
+      </div>
+    </section>
+  </div>
+</main>

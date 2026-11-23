@@ -298,10 +298,11 @@ The optional [Head Hunter command](docs/head-hunter.md) clones one owned origina
 into a separate level-150 Myth weapon, with a 25% four-crystal bonus selected only
 by that copy. It includes private receipts, backups and targeted removal.
 
-The optional [Expedition enemy-level commands](docs/reference-data.md#per-stage-enemy-levels)
-list stages, set one or all stages to a visible level from 1 to 220 for the
-matching pack, and restore original levels. They configure
-external static overlays without editing the saved account.
+The [Expedition tab](http://127.0.0.1:17658/expedition) and
+[enemy-level commands](docs/reference-data.md#per-stage-enemy-levels) list
+original and configured enemy levels. Set a single stage or all stages to a
+visible level from 1 to 220 in the matching pack, or restore their original
+levels. Changes apply through external static overlays and preserve the saved account.
 
 The optional [Kama-ZONE selector](docs/kamazone.md) activates one preserved Global
 season's calendar for its Events card. The [Kama-ZONE tab](http://127.0.0.1:17658/kamazone)

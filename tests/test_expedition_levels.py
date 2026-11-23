@@ -10,6 +10,8 @@ import unittest
 from contextlib import closing, redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
+from urllib.error import HTTPError
+from urllib.request import Request, urlopen
 
 from guardian_tales.__main__ import main
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
@@ -23,6 +25,7 @@ from guardian_tales.expedition_levels import (
 )
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.web_panel.server import WebPanel
 from tests.test_snapshots import request
 
 STAGE = 250011001
@@ -93,6 +96,81 @@ class ExpeditionLevelTests(unittest.TestCase):
 
     def stage_rows(self, body):
         return json.loads(records(decode(body))[1]["stages"][1])
+
+    def open_panel(self):
+        panel = WebPanel(self.refs, 0)
+        panel.start()
+        self.addCleanup(panel.stop)
+        origin = f"http://127.0.0.1:{panel.server_port}"
+
+        def api(body=None):
+            req = Request(
+                origin + "/api/expedition",
+                data=None if body is None else json.dumps(body).encode(),
+                headers={"Content-Type": "application/json", "Origin": origin},
+            )
+            with urlopen(req, timeout=5) as reply:
+                return json.load(reply)
+
+        return api
+
+    def test_panel_and_cli_share_levels_revisions_and_distinct_originals(self):
+        api = self.open_panel()
+        files = {p.name: p.read_bytes() for p in self.root.iterdir()}
+        initial = api()
+        self.assertEqual(initial["stages"], self.cli("list")["stages"])
+        self.assertEqual(initial["max_enemy_level"], 220)
+        self.assertEqual({p.name: p.read_bytes() for p in self.root.iterdir()}, files)
+        edit = dict(action="set-level", scope="all", level=220, revision=initial["revision"])
+        api(edit)
+        self.assertEqual([r["enemy_level"] for r in self.cli("list")["stages"]], [220, 220])
+        edit["revision"] = api()["revision"]
+        api(edit)
+        self.assertEqual(api()["revision"], edit["revision"])
+        self.cli("set-level", "--stage", str(STAGE), "--level", "1")
+        restore = dict(
+            action="restore-level", scope="stage", stage=OTHER, revision=edit["revision"]
+        )
+        with self.assertRaises(HTTPError) as stale:
+            api(restore)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        api(dict(restore, revision=api()["revision"]))
+        partial = api()
+        self.assertEqual([r["enemy_level"] for r in partial["stages"]], [1, 111])
+        api(dict(action="restore-level", scope="all", revision=partial["revision"]))
+        self.assertEqual(api()["stages"], initial["stages"])
+        self.assertEqual(self.stage_rows(self.get()), self.tables["stages"])
+        self.assertEqual((self.root / "static_data_get.bin").read_bytes(), self.source)
+
+    def test_panel_rejects_invalid_scopes_levels_and_setting_when_trial_is_disabled(self):
+        api = self.open_panel()
+        edit = dict(scope="stage", action="set-level", stage=STAGE, level=1, revision=0)
+        for changes in (
+            dict(scope="all"),
+            dict(stage=None),
+            dict(stage=True),
+            dict(stage=123),
+            dict(level=None),
+            dict(level=True),
+            dict(level=0),
+            dict(level=221),
+            dict(action="list"),
+        ):
+            with self.subTest(changes=changes), self.assertRaises(HTTPError) as error:
+                api(dict(edit, **changes))
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
+        api(edit)
+        (self.root / TRIAL).unlink()
+        state = api()
+        self.assertFalse(state["trial_enabled"])
+        with self.assertRaises(HTTPError) as disabled:
+            api(dict(edit, revision=state["revision"]))
+        self.assertEqual(disabled.exception.code, 400)
+        disabled.exception.close()
+        api(dict(action="restore-level", scope="stage", stage=STAGE, revision=state["revision"]))
+        self.assertFalse(any(row["overridden"] for row in api()["stages"]))
 
     def test_list_uses_original_global_levels_without_creating_configuration_or_save(self):
         files = {p.name: p.read_bytes() for p in self.root.iterdir()}

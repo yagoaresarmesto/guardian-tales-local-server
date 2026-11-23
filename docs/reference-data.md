@@ -372,6 +372,15 @@ progression are written. See the
 
 ### Per-stage enemy levels
 
+Open the [Expedition tab](http://127.0.0.1:17658/expedition) to see each stage's
+original and configured enemy levels. Choose **One stage** and select the stage
+by name and ID, or choose **All stages**. Enter the visible level and click
+**Apply** for that scope. **Restore original level** restores the selected stage.
+**Restore all original levels** restores each stage to its own original value.
+Setting levels requires the Expedition trial. Viewing and restoring settings
+also work with the trial disabled. Close the game before saving changes, then
+restart the backend and reopen the game.
+
 The optional `expedition` CLI overrides the visible enemy level of one or all
 listed solo Expedition stages for KakaoGlobal. It requires the matching external
 static data and the existing `expedition_trial.enabled` marker. Run these
@@ -415,9 +424,9 @@ first test, change one stage and verify entry, enemies, results and map return.
 This setting does not unlock stages or implement missing entry handlers;
 the existing saved-progression and practice-entry restrictions still apply.
 
-The command writes only `expedition_levels.json` in the external reference
-directory. It never opens the account database or overwrites preserved static
-files. At bootstrap, an overlay replaces only the selected stages'
+The CLI and panel share `expedition_levels.json` in the external reference
+directory and use a local lock to coordinate writes. The panel detects edits
+made since it loaded and asks for a reload. At bootstrap, an overlay replaces only the selected stages'
 `StandardLevel.KakaoGlobal`; other regions, unselected stages, enemy definitions, waves,
 Exorcism requirements, scoring and the practice reward policy remain unchanged.
 Get/check responses share the effective checksum, composed with existing mode,

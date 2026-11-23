@@ -5,14 +5,18 @@ import argparse
 import json
 import os
 import tempfile
+from contextlib import nullcontext
 from functools import lru_cache
 
+from .expedition import enabled
 from .raid_static import atomic_replace, compress, decode, digest, records
 from .reference import ReferenceData
+from .state_lock import StateLock
 from .village import integer
 
 SELECTION = "expedition_levels.json"
 MAX_CONFIG_BYTES = 32768
+MAX_OVERRIDES = 256
 
 
 @lru_cache(maxsize=2)
@@ -91,7 +95,7 @@ def load_levels(references):
         or value["version"] != 1
         or not integer(value["generation"], minimum=1)
         or not isinstance(value["stages"], dict)
-        or len(value["stages"]) > 256
+        or len(value["stages"]) > MAX_OVERRIDES
         or any(
             not key.isascii()
             or not key.isdecimal()
@@ -182,6 +186,77 @@ def write_levels(references, generation, overrides):
             os.unlink(temporary)
 
 
+class LevelSelectionChanged(ValueError):
+    """A newer level selection must be reloaded before saving."""
+
+
+def level_settings(
+    references, action="list", *, stage=None, all_stages=False, level=None, expected_revision=None
+):
+    editing = action in ("set-level", "restore-level")
+    if (
+        action not in ("list", "set-level", "restore-level")
+        or (action == "set-level") != (level is not None)
+        or (editing and (stage is not None) == all_stages)
+        or (not editing and all_stages)
+    ):
+        raise ValueError(
+            "Use list [--stage ID], set-level --stage ID/--all --level N, or restore-level --stage ID/--all"
+        )
+    body = references.read_bytes("static_data_get.bin")
+    lock = (
+        StateLock(references.directory, filename=".expedition_levels.lock")
+        if editing
+        else nullcontext()
+    )
+    with lock:
+        generation, overrides = load_levels(references) or (0, ())
+        if expected_revision is not None and expected_revision != generation:
+            raise LevelSelectionChanged(
+                "Enemy levels changed. Reload the stage list before saving."
+            )
+        stages, maximum = validate_levels(body, overrides)
+        if stage is not None and (not integer(stage, minimum=1) or stage not in stages):
+            raise ValueError("Choose an Expedition stage ID from expedition list")
+        trial_enabled = enabled(references)
+        chosen = dict(overrides)
+        targets = stages if all_stages else (stage,)
+        if action == "set-level":
+            if not trial_enabled:
+                raise ValueError("Enable the Expedition trial before setting enemy levels")
+            if not integer(level, minimum=1, maximum=maximum):
+                raise ValueError(f"Choose a visible enemy level from 1 to {maximum}")
+            chosen.update(dict.fromkeys(targets, level - 1))
+        elif action == "restore-level":
+            for ident in targets:
+                chosen.pop(ident, None)
+        updated = tuple(sorted(chosen.items()))
+        if updated != overrides:
+            if len(updated) > MAX_OVERRIDES:
+                raise ValueError(f"Expedition supports up to {MAX_OVERRIDES} configured stages")
+            generation += 1
+            prepare(body, generation, updated)
+            write_levels(references, generation, updated)
+
+    return {
+        "revision": generation,
+        "trial_enabled": trial_enabled,
+        "max_enemy_level": maximum,
+        "stages": [
+            dict(
+                stage_id=ident,
+                name=row["name"],
+                original_level=visible_level(row["original_level"], maximum),
+                enemy_level=visible_level(chosen.get(ident, row["original_level"]), maximum),
+                overridden=ident in chosen,
+            )
+            for ident, row in sorted(stages.items())
+            if stage in (None, ident)
+        ],
+        "restart_backend_and_game_required": editing,
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Configure optional Expedition enemy levels")
     parser.add_argument("action", choices=("list", "set-level", "restore-level"))
@@ -196,65 +271,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
     references = ReferenceData(args.reference_dir)
     try:
-        if (
-            args.action == "list"
-            and (args.level is not None or args.all)
-            or args.action == "set-level"
-            and (args.level is None or (args.stage is not None) == args.all)
-            or args.action == "restore-level"
-            and (args.level is not None or (args.stage is not None) == args.all)
-        ):
-            raise ValueError(
-                "Use list [--stage ID], set-level --stage ID/--all --level N, or restore-level --stage ID/--all"
-            )
-        body = references.read_bytes("static_data_get.bin")
-        selection = load_levels(references)
-        generation, overrides = selection or (0, ())
-        stages, maximum = validate_levels(body, overrides)
-        if args.stage is not None and args.stage not in stages:
-            raise ValueError("Choose an Expedition stage ID from expedition list")
-        chosen = dict(overrides)
-        if args.action == "set-level":
-            from .expedition import enabled
-
-            if not enabled(references):
-                raise ValueError("Enable the Expedition trial before setting enemy levels")
-            if not integer(args.level, minimum=1, maximum=maximum):
-                raise ValueError(f"Choose a visible enemy level from 1 to {maximum}")
-            targets = stages if args.all else (args.stage,)
-            for ident in targets:
-                chosen[ident] = args.level - 1
-            validate_levels(body, tuple(chosen.items()))
-        elif args.action == "restore-level":
-            if args.all:
-                chosen.clear()
-            else:
-                chosen.pop(args.stage, None)
-        if args.action != "list" and chosen != dict(overrides):
-            # Check the complete candidate before atomically publishing it.
-            prepare(body, generation + 1, tuple(sorted(chosen.items())))
-            write_levels(references, generation + 1, tuple(sorted(chosen.items())))
-        print(
-            json.dumps(
-                {
-                    "max_enemy_level": maximum,
-                    "stages": [
-                        dict(
-                            stage_id=ident,
-                            name=row["name"],
-                            original_level=visible_level(row["original_level"], maximum),
-                            enemy_level=visible_level(
-                                chosen.get(ident, row["original_level"]), maximum
-                            ),
-                            overridden=ident in chosen,
-                        )
-                        for ident, row in sorted(stages.items())
-                        if args.stage in (None, ident)
-                    ],
-                    "restart_backend_and_game_required": args.action != "list",
-                },
-                indent=2,
-            )
+        result = level_settings(
+            references, args.action, stage=args.stage, all_stages=args.all, level=args.level
         )
-    except (OSError, ValueError, KeyError, TypeError) as error:
+        print(json.dumps(result, indent=2))
+    except (OSError, ValueError, KeyError, TypeError, RuntimeError) as error:
         parser.error(str(error))

@@ -1,0 +1,39 @@
+.expedition-banner { min-height: clamp(175px, 16vw, 235px); }
+#forest {
+  position: absolute; inset: 0 0 0 auto; width: 70%; z-index: -1;
+  background: url("/expedition/forest.jpg") 50% 65% / cover no-repeat;
+  mask-image: linear-gradient(90deg, transparent, #000 40%);
+}
+.expedition-banner h1 { margin-bottom: 6px; }
+#trial, .hint, #count, #empty { color: var(--muted); font-size: .86rem; }
+.scope { display: flex; flex-wrap: wrap; gap: 8px; }
+.scope label { display: flex; align-items: center; gap: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); border-radius: 5px; background: var(--field); }
+.scope label:has(:checked) { color: var(--gold); border-color: var(--gold); }
+.scope input { margin: 0; accent-color: var(--gold); }
+#stage-field { display: block; }
+.levels { display: flex; flex-wrap: wrap; gap: 12px 36px; padding-block: 12px; margin-block: 12px; border-block: 1px solid var(--line); }
+.levels dt { color: var(--muted); font-size: .83rem; }
+.levels dd { margin: 2px 0 0; font-size: 1.25rem; font-weight: 700; }
+#current { color: var(--gold); }
+#search, #level { padding: 9px 12px; border: 1px solid #526580; border-radius: 4px; background: var(--field); color: var(--ink); }
+#level { width: 8rem; }
+#restore { padding: 9px 12px; border: 1px solid #526580; border-radius: 5px; color: var(--ink); background: var(--field); }
+#restore:hover { border-color: var(--ice); }
+.actions button:disabled { opacity: .55; }
+.hint { margin-top: 13px; }
+.catalog { padding: 15px 18px; }
+#search { width: 100%; }
+.stage-list { max-height: 21rem; overflow: auto; margin-top: 12px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px; border-bottom: 1px solid var(--line); }
+th { position: sticky; top: 0; background: #233249; color: var(--muted); font-size: .8rem; }
+th:first-child, td:first-child { text-align: left; }
+td small { display: block; margin: 2px 0 0; }
+td button { padding: 0; text-align: left; border: 0; color: var(--ice); background: none; }
+td button:hover { text-decoration: underline; }
+tr[data-custom] td:last-child { color: var(--gold); }
+#count, #empty { margin-top: 10px; }
+@media (max-width: 480px) {
+  .catalog { padding: 12px; }
+  #forest { width: 90%; }
+}

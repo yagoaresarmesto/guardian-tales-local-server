@@ -9,14 +9,16 @@ from html import escape
 from pathlib import Path
 from string import Template
 
+from ..expedition_levels import LevelSelectionChanged
 from ..guild_raid import RaidSelectionChanged
 from ..guild_war_static import WarSelectionChanged
 from ..kamazone import SeasonSelectionChanged
 from ..punchking_static import ArenaSelectionChanged
 from ..reference import ReferenceData
-from .artwork import BOSSES, ELEMENT_FRAMES, KAMAZONE, UI, WAR
+from .artwork import BOSSES, ELEMENT_FRAMES, EXPEDITION, KAMAZONE, UI, WAR
 from .dka import adapter as dka
 from .dka import sprites
+from .expedition import adapter as expedition
 from .guild_war import adapter as guild_war
 from .kamazone import adapter as kamazone
 from .raid import adapter as raid
@@ -64,6 +66,15 @@ MODES = (
         kamazone.apply,
         SeasonSelectionChanged,
     ),
+    Mode(
+        "expedition",
+        "/expedition",
+        "Expedition",
+        "Expedition",
+        expedition.state,
+        expedition.apply,
+        LevelSelectionChanged,
+    ),
 )
 PAGES = {mode.path: mode for mode in MODES}
 API = {f"/api/{mode.slug}": mode for mode in MODES}
@@ -75,6 +86,7 @@ MEDIA = {
     "/map.png": (lambda refs: raid.map_image(refs).read_bytes(), "image/png"),
     "/guild-war/fortress.png": (partial(WAR.read, frame="gvg_multi_castle_03.png"), "image/png"),
     "/kamazone/lobby.jpg": (KAMAZONE.read, "image/jpeg"),
+    "/expedition/forest.jpg": (EXPEDITION.read, "image/jpeg"),
     "/arena.jpg": (lambda refs: dka.arena_image(refs).read_bytes(), "image/jpeg"),
     **{
         f"/dka/slimes/{element}.png": (partial(BOSSES.read, frame=frame), "image/png")
