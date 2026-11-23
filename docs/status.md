@@ -50,18 +50,27 @@ All changes remain backend response data; game files are untouched.
 
 Optional Kama-ZONE benefit practice adds a separate, content/season-bound local
 settings file. Season 43's Strong Body (174) can be unlocked in outgoing data;
-seasonal benefit prices become zero and points stay pinned at 4,000, including
-during client-side edits. Native inspection confirms the Id-to-level save map,
-Id/Level response list and local point subtraction. Choosing, clearing and
+the 4,000 points are an allocation budget with the original benefit prices.
+Native inspection confirms the Id-to-level save map, Id/Level response list,
+local point subtraction and eight-benefit limit. Choosing, clearing and
 recent retry handling write no account/trial-XP data. Default previews remain
 unchanged; disabling restores the parent static mode with a newer revision.
-Actual APK benefit selection and pinned-point checks are pending.
-All 287 targeted Windows tests pass, including twelve new practice regressions.
-A coherent account/XP copy verifies the real seasonal definitions, free prices,
+The first APK probe could not upgrade benefits: the previous response's
+zero-level placeholders filled the native selected dictionary beyond its cap.
+The follow-up sends only actual selections, restores original prices, enforces
+the budget and returns the remaining points in a complete idle singleton.
+Strong Body costs 250 and leaves 3,750 from the 4,000 budget. Cached zero-price
+static data is replaced by an advancing overlay revision. Actual APK benefit
+selection and allocation checks are pending.
+All 290 targeted Windows tests pass, including fifteen practice regressions for
+these behaviors and the existing guards. Black (223 files), Ruff and
+repository/link checks (283 files) pass.
+A coherent account/XP copy verifies the real seasonal definitions, original prices,
 Strong Body's unchanged effects, native request/response types, saved selection,
 clearing, recent replay protection and restoration. All other effective static
-tables, main-account tables, trial XP and 53 original reference files remain
-unchanged, with zero diagnostic source writes or live practice activation.
+tables, main-account tables, trial XP and 54 source reference files (including
+the already enabled practice settings) remain unchanged, with zero diagnostic
+source writes or assistant changes to live practice settings.
 
 The main campaign backend was exercised against the preserved 3.57.0 tables.
 A test guest reached all 412 stages and completed all 463 campaign quests using

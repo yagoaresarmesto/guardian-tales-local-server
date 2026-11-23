@@ -8,7 +8,7 @@ without a card tap. Challenges, battles, shops and rewards are not implemented
 yet. First verify that Events opens, the card appears and you can return to the
 main lobby; do not start a challenge.
 An additional opt-in practice setting can unlock selected seasonal benefits,
-keep test points fixed and retain benefit choices outside the saved account.
+provide a point budget and retain benefit choices outside the saved account.
 
 The matching external pack retains three Global/EU event seasons:
 
@@ -122,7 +122,7 @@ receipt or database row is created. Missing/ambiguous mini-season data,
 disabled/expired selection and a changed content pack are rejected. This route
 does not enable any gameplay or reward endpoint.
 
-## Optional free benefits and pinned points
+## Optional unlocks and a benefit point budget
 
 For the preserved season 43, **Strong Body** is benefit **174**. It is already
 listed by that season, but its normal unlock requires a special-event choice.
@@ -140,7 +140,7 @@ unlock and 4,000 points:
 Restart the backend using the same state, certificate and reference arguments
 as usual. Reopen Events and the Kama-ZONE benefits screen. Strong Body should
 be selectable; choose benefits, save, remove one and reopen the game to verify
-the choices and the pinned point display. These checks do not require a run.
+the choices and the available/total point display. These checks do not require a run.
 
 Inspect the private practice settings:
 
@@ -164,34 +164,48 @@ season suspends these settings; an unlock cannot add an absent benefit to that
 season. A changed pack is rejected until practice is disabled or explicitly
 configured again. Installing the code alone activates nothing.
 
-The server supplies the configured `KamazonPoint` and `KamazonPointTotal` on
-entry and after saving. To keep the client's temporary point counter from
-dropping while editing, **all benefit prices for that practice season become
-zero in the outgoing static table**. Native `LevelUp` subtracts that price
-locally, so restoring points only after a server request would be insufficient.
-Only the requested benefits' unlock conditions change; effects, maximum levels,
-unrelated definitions and other effective static tables stay intact. The point
-setting must be positive and no higher than the mini-season's preserved limit
-(4,000 in this pack).
+The configured points are the **total allocation budget**, not a balance that
+stays unspent after assigning benefits. `KamazonPointTotal` is 4,000 and
+`KamazonPoint` is the remaining budget after the original costs of the selected
+levels. Strong Body costs its original 250 points and leaves 3,750 available.
+Native `LevelUp` charges `Points[current level]` at each upgrade: a benefit with
+prices `[250,500,750]` costs 750 in total to reach level two, and 1,500 to reach
+level three. Lowering/removing selections refunds those allocations.
+
+All original prices, effects, maximum levels and the eight-benefit selection
+limit remain intact. Only the requested benefits' unlock conditions change in
+outgoing static data; unrelated definitions and other effective tables stay
+intact. The configured budget must be positive and no higher than the
+mini-season's preserved limit (4,000 in this pack).
 
 `/kamazonland/save-benefits` accepts the native `Benefits` dictionary of IDs to
-levels. It validates membership, locks and level bounds, writes test choices to
-the optional file, and returns the native benefit list with pinned points.
-Zero-level rows explicitly clear previous choices in the client's list delta.
+levels. It validates membership, locks, levels, the budget and the eight-benefit
+limit, then writes test choices to the optional file. The response returns a
+complete idle singleton with an exact list of positive-level selections and the
+remaining/total points. Clearing all selections returns an empty benefit list
+and the full available budget. Zero-level placeholders must not be supplied:
+`Membership.Load` inserts every row into its temporary selected dictionary, and
+the native plus button counts its keys toward the eight-benefit cap. The former
+all-zero placeholder list incorrectly filled those slots and blocked upgrades.
 The last 64 operation IDs prevent recent retries from replacing newer choices.
 Saves leave static revisions unchanged; enabling/disabling advances them to
-reload the price/unlock overlay or restore the exact parent mode content.
+reload the unlock overlay or restore the exact parent mode content. The updated
+overlay also advances its revision with an existing configuration, replacing
+cached zero-price data from the earlier experiment after a backend/game restart.
 
 The working account, trial XP, APK, shipped scripts, resource manifest and
 original reference/resource files are untouched. No gold, gems, tickets,
 event rewards or scored runs are added. Combat use of these benefits remains
 unverified while the run backend is not implemented.
-Twelve practice regressions and all 287 targeted Windows tests pass. A coherent
+Fifteen practice regressions cover allocation, original prices, the native slot
+limit and the existing configuration/replay/restoration guards. All 290 targeted
+Windows tests pass, alongside Black/Ruff and repository/link checks. A coherent
 account/XP copy also verifies activation, saving/reopening, clearing, replay
 protection and restoration against the actual pack and native field types,
-retaining all other effective overlays, saved account/XP tables and 53 source
-reference files. Diagnostics never enable practice on the live installation.
-Actual APK benefit selection and the pinned point display remain pending.
+retaining all other effective overlays, saved account/XP tables and 54 source
+reference files, including the already enabled practice settings. Diagnostics
+never change those live settings themselves.
+Actual APK benefit selection and the normal allocation display remain pending.
 
 ## Local rankings
 

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Opt-in benefits persist separately, keep points fixed and preserve game files."""
+"""Opt-in benefits use the original costs and a separate saved point budget."""
 
 import copy
 import io
@@ -110,7 +110,7 @@ class KamazonePracticeTests(unittest.TestCase):
         self.assertEqual((self.static(), self.entry()), (static, entry))
         self.assertEqual((list(self.db.iterdump()), self.files()), (before, files))
 
-    def test_enable_opens_only_requested_benefit_and_zeroes_only_seasonal_prices_in_responses(self):
+    def test_enable_changes_only_requested_unlock_and_preserves_all_original_prices(self):
         before, files = list(self.db.iterdump()), self.files()
         original = records(decode(self.static()))[1]
         with patch("sqlite3.connect", side_effect=AssertionError("CLI must not open databases")):
@@ -118,8 +118,6 @@ class KamazonePracticeTests(unittest.TestCase):
         current = records(decode(self.static()))[1]
         expected = copy.deepcopy(self.fixture.tables["kamazonland2"])
         for row in expected["Benefits"]:
-            if row["Id"] in (1, 42, 174):
-                row["Points"] = [0] * row["MaxLevel"]
             if row["Id"] == 174:
                 row.update(OpenType="None", OpenValue=0, OpenValues=None)
         self.assertEqual(json.loads(current["kamazonland2"][1]), expected)
@@ -131,18 +129,26 @@ class KamazonePracticeTests(unittest.TestCase):
         )
         self.assertTrue(check["UpToDate"])
         self.assertEqual(check["Checksum"], checksum)
+        # An existing v1 configuration must replace its cached zero-price mode
+        # even when the operator only restarts the updated backend.
+        generation = self.practice("status")["configuration"]["generation"]
+        old_revision = (
+            max(original["kamazonland2"][2], original["__checksum__"][2]) + generation + 1
+        )
+        self.assertGreater(current["kamazonland2"][2], old_revision)
         self.assertEqual((list(self.db.iterdump()), self.files()), (before, files))
 
     def test_points_and_saved_benefits_survive_new_session_without_account_writes(self):
         self.enable()
         before, files, changes = list(self.db.iterdump()), self.files(), self.db.total_changes
         response = self.save({"174": 1, "1": 2, "42": 0})
-        self.assertEqual(set(response), {"UserKamazonLand"})
+        self.assertEqual(set(response), {"UserKamazonLand", "NewSeason"})
+        self.assertFalse(response["NewSeason"])
         user = response["UserKamazonLand"]
-        self.assertEqual((user["KamazonPoint"], user["KamazonPointTotal"]), (4000, 4000))
+        self.assertEqual((user["KamazonPoint"], user["KamazonPointTotal"]), (3000, 4000))
         self.assertEqual(
             user["Benefits"],
-            [{"Id": 1, "Level": 2}, {"Id": 174, "Level": 1}, {"Id": 42, "Level": 0}],
+            [{"Id": 1, "Level": 2}, {"Id": 174, "Level": 1}],
         )
         self.session = BootstrapSession(self.session.store)
         self.session.signed_in = True
@@ -157,15 +163,61 @@ class KamazonePracticeTests(unittest.TestCase):
             (before, files, changes),
         )
 
-    def test_clearing_and_replay_send_zero_levels_and_never_restore_an_old_selection(self):
+    def test_clearing_and_replay_return_an_exact_empty_selection_and_refund_the_budget(self):
         self.enable()
         self.save({"174": 1}, 701)
         cleared = self.save({}, 702)
-        self.assertTrue(all(r["Level"] == 0 for r in cleared["UserKamazonLand"]["Benefits"]))
+        self.assertEqual(cleared["UserKamazonLand"]["Benefits"], [])
         previous = (self.root / CONFIG).read_bytes()
         self.assertEqual(self.save({"174": 1}, 701), cleared)
         self.assertEqual((self.root / CONFIG).read_bytes(), previous)
         self.assertEqual(cleared["UserKamazonLand"]["KamazonPoint"], 4000)
+
+    def test_empty_entry_does_not_fill_the_native_eight_selected_benefit_slots(self):
+        self.enable()
+        user = self.entry()["UserKamazonLand"]
+        self.assertEqual(user["Benefits"], [])
+        self.assertEqual((user["KamazonPoint"], user["KamazonPointTotal"]), (4000, 4000))
+        self.save({"174": 1})
+        user = self.entry()["UserKamazonLand"]
+        # Native Membership.Load inserts every row into TempBenefitLevelDict;
+        # OnPlusButtonClick limits that dictionary's count, including zero rows.
+        selected = {r["Id"]: r["Level"] for r in user["Benefits"]}
+        self.assertEqual(selected, {174: 1})
+        self.assertLess(len(selected), 8)
+
+    def test_original_incremental_upgrade_costs_and_point_budget_are_enforced(self):
+        self.practice("enable", "--unlock-benefit", "174", "--points", "500")
+        user = self.save({"1": 1, "174": 1}, 710)["UserKamazonLand"]
+        self.assertEqual((user["KamazonPoint"], user["KamazonPointTotal"]), (0, 500))
+        config = (self.root / CONFIG).read_bytes()
+        with self.assertRaises(PacketError):
+            self.save({"1": 2}, 711)  # Level two costs 250 + 500, not just 500.
+        self.assertEqual((self.root / CONFIG).read_bytes(), config)
+        self.assertEqual(self.save({}, 712)["UserKamazonLand"]["KamazonPoint"], 500)
+        self.enable()
+        for sequence, level, available in ((720, 1, 3750), (721, 2, 3250), (722, 3, 2500)):
+            user = self.save({"1": level}, sequence)["UserKamazonLand"]
+            self.assertEqual((user["KamazonPoint"], user["KamazonPointTotal"]), (available, 4000))
+
+    def test_eight_benefit_limit_allows_upgrading_selected_rows_but_rejects_a_ninth(self):
+        mode = self.fixture.tables["kamazonland2"]
+        mode["Benefits"] = [
+            dict(Id=i, Name=str(i), OpenType="None", MaxLevel=2, Points=[10, 20])
+            for i in range(1, 10)
+        ]
+        next(r for r in mode["Seasons"] if r["Id"] == 43)["Benefits"] = list(range(1, 10))
+        self.fixture.write_source()
+        self.command("select", "--season-id", "43")
+        self.practice("enable", "--points", "4000")
+        selected = {str(i): 1 for i in range(1, 9)}
+        self.assertEqual(len(self.save(selected, 730)["UserKamazonLand"]["Benefits"]), 8)
+        selected["1"] = 2
+        self.save(selected, 731)
+        config = (self.root / CONFIG).read_bytes()
+        with self.assertRaises(PacketError):
+            self.save(dict(selected, **{"9": 1}), 732)
+        self.assertEqual((self.root / CONFIG).read_bytes(), config)
 
     def test_saving_choices_does_not_change_static_revisions_or_price_overlay(self):
         self.enable()

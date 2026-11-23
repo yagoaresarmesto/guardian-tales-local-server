@@ -341,15 +341,18 @@ class BootstrapSession:
             try:
                 selected, source = kamazone_preview.selected_source(self.store.account)
                 epoch = self.request_epoch or self.store.request_epoch(True)
+                kamazone_practice.save(
+                    self.store.references,
+                    source,
+                    selected["season_id"],
+                    body,
+                    epoch + ":" + str(request["sequence_id"]),
+                )
+                # Return a complete idle singleton, including an exact positive-
+                # level Benefits array, so cleared selections do not linger and
+                # partial model defaults cannot erase the preview's other fields.
                 return json_response(
-                    request,
-                    kamazone_practice.save(
-                        self.store.references,
-                        source,
-                        selected["season_id"],
-                        body,
-                        epoch + ":" + str(request["sequence_id"]),
-                    ),
+                    request, kamazone_preview.enter(self.store.account, {"IsPartial": False})
                 )
             except (OSError, ValueError) as exc:
                 raise PacketError(str(exc)) from exc

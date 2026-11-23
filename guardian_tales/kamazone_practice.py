@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Optional free benefits and pinned points, stored outside the saved account."""
+"""Optional seasonal unlocks and a benefit budget, outside the saved account."""
 
 import argparse
 import hashlib
@@ -14,6 +14,7 @@ from .village import integer
 
 CONFIG = "kamazone_practice.json"
 SAVE = "/kamazonland/save-benefits"
+MAX_BENEFITS = 8
 
 
 @lru_cache(maxsize=2)
@@ -126,7 +127,20 @@ def validate(value, source):
         for key, level in value["benefits"].items()
     ):
         raise ValueError("Invalid saved practice benefit selection")
+    if (
+        len(value["benefits"]) > MAX_BENEFITS
+        or allocated_points(benefits, value["benefits"]) > value["points"]
+    ):
+        raise ValueError(
+            "Saved practice benefits exceed the original selection limit or point budget"
+        )
     return benefits
+
+
+def allocated_points(benefits, levels):
+    # The native plus button charges Points[current level] at each upgrade;
+    # reaching level N therefore spends the first N listed prices, not just N's.
+    return sum(sum(benefits[int(key)]["Points"][:level]) for key, level in levels.items())
 
 
 def effective(references, source, season_id):
@@ -141,11 +155,15 @@ def delta(value, source):
     benefits = validate(value, source)
     return {
         "UserKamazonLand": {
-            "KamazonPoint": value["points"],
+            "KamazonPoint": value["points"] - allocated_points(benefits, value["benefits"]),
             "KamazonPointTotal": value["points"],
-            # Send zero-level rows too: the native list delta merges by Id, so an
-            # omitted previous selection would otherwise remain active in memory.
-            "Benefits": [{"Id": i, "Level": value["benefits"].get(str(i), 0)} for i in benefits],
+            # Membership.Load copies every supplied row into its selected map.
+            # Zero-level placeholders count toward the native eight-benefit cap.
+            "Benefits": [
+                {"Id": i, "Level": value["benefits"][str(i)]}
+                for i in benefits
+                if str(i) in value["benefits"]
+            ],
         }
     }
 
@@ -191,6 +209,10 @@ def save(references, source, season_id, request, operation_id):
             raise ValueError("Invalid, locked or out-of-season Kama-ZONE benefit")
         if level:
             chosen[key] = level
+    if len(chosen) > MAX_BENEFITS or allocated_points(benefits, chosen) > value["points"]:
+        raise ValueError(
+            "Benefit selection exceeds the original eight-benefit limit or point budget"
+        )
     if operation_id not in value["seen_operations"]:
         value = dict(
             value,
@@ -206,20 +228,20 @@ def prepare(body, generation, season_id, unlocks):
     lines, tables = records(decode(body))
     content = tables["kamazonland2"][1]
     if season_id is not None:
-        benefits, _ = catalog(body, season_id)
+        catalog(body, season_id)
         mode = json.loads(content)
         for row in mode["Benefits"]:
-            if row["Id"] in benefits:
-                row["Points"] = [0] * row["MaxLevel"]
             if row["Id"] in unlocks:
                 row.update(OpenType="None", OpenValue=0, OpenValues=None)
         content = json.dumps(mode, ensure_ascii=False, separators=(",", ":"))
-    revision = max(tables["kamazonland2"][2], tables["__checksum__"][2]) + generation + 1
+    # The extra revision step also replaces cached zero-price data from v1
+    # when an existing enabled configuration keeps the same generation.
+    revision = max(tables["kamazonland2"][2], tables["__checksum__"][2]) + generation + 2
     if revision > 0x7FFFFFFF:
         raise ValueError("Kama-ZONE practice revision exceeds the native integer range")
     checksum = digest(
         (
-            "local-kamazone-practice-v1" + tables["__checksum__"][1] + str(generation) + content
+            "local-kamazone-practice-v2" + tables["__checksum__"][1] + str(generation) + content
         ).encode()
     )
     for name, text in (("kamazonland2", content), ("__checksum__", checksum)):
@@ -319,7 +341,7 @@ def main(argv=None):
                     configuration=candidate,
                     changed=changed,
                     saved_account_modified=False,
-                    scope="Free seasonal benefits and pinned test points; no scored runs or rewards",
+                    scope="Seasonal unlocks and a benefit point budget at original costs; no scored runs or rewards",
                     restart_backend_and_game_required=changed,
                 ),
                 indent=2,

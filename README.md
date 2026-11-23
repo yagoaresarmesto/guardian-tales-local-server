@@ -286,9 +286,10 @@ season's calendar for its Events card, with status and restoration commands.
 This milestone covers the menu and a read-only idle lobby; challenges and
 gameplay remain unsupported. Run the CDN with `--reference-dir` to supply an
 in-memory preview image when the selected season's historical banner is missing.
-Its separate opt-in benefit practice can unlock Strong Body for season 43,
-provide free benefit selection and keep 4,000 test points, with choices stored
-outside the working account. Original resource files are never edited.
+Its separate opt-in benefit practice can unlock Strong Body for season 43 and
+provide a 4,000-point allocation budget at the original benefit prices, with
+choices stored outside the working account. Original resource files are never
+edited.
 
 The optional [Andras Myth trial](docs/reference-data.md#experimental-andras-myth-view)
 projects one owned Andras as an experimental Myth variant using her existing
