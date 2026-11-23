@@ -557,7 +557,13 @@ Silver coins are run currency, separate from the 4,000 benefit allocation.
 
 Random conclusions use their original group, conditions, highest eligible
 priority and weights, and retain the selected conclusion ID for native text.
-Story links keep a root, next event and choice history. Challenge links reset on
+Story links keep a root, all declared continuations and the choice history.
+For example, season 42 choice 32001 unlocks both 312 and 333. Each still
+requires its own floor, weight and item conditions. Older files with a single
+stored ID can recover the other branches on read when their last choice
+directly identifies the transition. Event and random-conclusion conditions
+use the local history of seen IDs. An `Any` condition needs one match; a
+nonempty list on a regular history condition requires all listed IDs. Challenge links reset on
 an explicit new challenge; season links and learned events/choices/conclusions
 survive it. A link can migrate from challenge to season scope without losing its
 history. The outgoing native progress dictionaries contain the recorded choices.

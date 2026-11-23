@@ -61,6 +61,7 @@ class KamazoneEventTests(unittest.TestCase):
             choice(104, 1, ("GetArtifactById", [901])),
             choice(105, 1, ("GetCurseById", [801])),
             choice(106, 1, ("ConcludeByWeight", [1001])),
+            choice(110, 1, ("ProgressInSeason", [2, 3])),
             choice(107, 1, ("Battle", [1])),
             choice(108, 1, ("GetCap", [20])),
             choice(
@@ -473,4 +474,40 @@ class KamazoneEventTests(unittest.TestCase):
         first = self.call("/kamazonland/end-battle", body)["UserKamazonLand"]
         self.assertEqual(first["Artifacts"][0]["Battle"], 1)
         self.assertEqual(self.call("/kamazonland/end-battle", body)["UserKamazonLand"], first)
+        self.untouched()
+
+    def test_branching_season_story_persists_all_weighted_continuations_and_upgrades_legacy_reads(
+        self,
+    ):
+        self.open()
+        self.choose(110)
+        self.close()
+        self.call(run.CHALLENGE, {"Difficulty": 3})
+        data = events.catalog(self.source, 43)
+        state = run.load(self.session.store.references)
+        thread = state["event_progress"]["season"]["1"]
+        self.assertEqual(thread, dict(next=[2, 3], choices=[110]))
+        for target in ([2, 3], 2):
+            thread["next"] = target
+            self.path.write_text(json.dumps(state))
+            saved = self.path.read_bytes()
+            self.assertEqual(self.entry()["ProgressInSeason"], {"1": [110]})
+            pool = events.available(data, run.load(self.session.store.references), {1, 2, 3})
+            self.assertEqual({(event, root) for event, root, _, _ in pool}, {(2, 1), (3, 1)})
+            self.assertEqual(self.path.read_bytes(), saved)
+        thread["next"] = [2, 999]
+        self.path.write_text(json.dumps(state))
+        self.reject("/kamazonland/enter", {"IsPartial": True})
+        self.untouched()
+
+    def test_history_conditions_use_observed_event_choice_and_conclusion_ids(self):
+        self.open()
+        self.choose(106)
+        value = run.load(self.session.store.references)
+        for kind, key in (("EventProgress", "known_events"), ("RandomConclusion", "known_random")):
+            seen = value[key]
+            self.assertTrue(events.condition(kind, seen, value, set()))
+            self.assertFalse(events.condition(kind, [*seen, 999], value, set()))
+        self.assertTrue(events.condition("EventProgressAny", [1, 999], value, set()))
+        self.assertFalse(events.condition("EventProgressAny", [999], value, set()))
         self.untouched()

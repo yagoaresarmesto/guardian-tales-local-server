@@ -49,6 +49,28 @@ def sequence(items, maximum=1024, nullable=False):
     )
 
 
+def valid_targets(ids):
+    return sequence(ids, 128) and bool(ids) and len(ids) == len(set(ids))
+
+
+def continuations(row, data, scope):
+    target = row["next"]
+    if isinstance(target, list):
+        return target
+    if not target:
+        return []
+    # Older files stored only the first target. Recover the other targets if
+    # the last recorded choice directly identifies the same transition.
+    if row["choices"]:
+        choice = data["choices"].get(row["choices"][-1], {})
+        effect = "ProgressInSeason" if scope == "season" else "ProgressInChallenge"
+        for i in range(3, 0, -1):
+            args = choice.get(f"EffectValue{i}")
+            if choice.get(f"EffectType{i}") == effect and valid_targets(args) and args[0] == target:
+                return args
+    return [target]
+
+
 def identifier(key):
     return (
         key.isascii() and key.isdecimal() and str(int(key)) == key and integer(int(key), minimum=1)
@@ -88,7 +110,7 @@ def valid(value):
                 not identifier(key)
                 or not isinstance(row, dict)
                 or set(row) != {"next", "choices"}
-                or not integer(row["next"])
+                or (not integer(row["next"]) and not valid_targets(row["next"]))
                 or not sequence(row["choices"], 512)
             ):
                 return False
@@ -198,11 +220,10 @@ def matches(value, source, season_id, nodes):
         or not set(value["known_random"]) <= data["randoms"].keys()
     ):
         return False
-    for progress in value["event_progress"].values():
+    for scope, progress in value["event_progress"].items():
         if any(
             int(k) not in data["events"]
-            or r["next"]
-            and r["next"] not in data["events"]
+            or not set(continuations(r, data, scope)) <= data["events"].keys()
             or not set(r["choices"]) <= data["choices"].keys()
             for k, r in progress.items()
         ):
@@ -237,15 +258,17 @@ def condition(kind, args, value, owned):
         return (
             bool(args) and len(inventory if kind == "ArtifactCount" else value["curses"]) >= args[0]
         )
-    if kind in ("Artifact", "Curse", "EventChoiceProgress"):
-        present = (
-            inventory
-            if kind == "Artifact"
-            else (value["curses"] if kind == "Curse" else value["known_choices"])
-        )
-        return bool(args) and set(args) <= set(present)
-    if kind in ("ArtifactAny", "EventChoiceProgressAny"):
-        return bool(set(args) & set(inventory if kind == "ArtifactAny" else value["known_choices"]))
+    histories = {
+        "Artifact": inventory,
+        "Curse": value["curses"],
+        "EventChoiceProgress": value["known_choices"],
+        "EventProgress": value["known_events"],
+        "RandomConclusion": value["known_random"],
+    }
+    if kind in histories:
+        return bool(args) and set(args) <= set(histories[kind])
+    if kind in ("ArtifactAny", "EventChoiceProgressAny", "EventProgressAny"):
+        return bool(set(args).intersection(histories[kind.removesuffix("Any")]))
     return False
 
 
@@ -290,7 +313,11 @@ def supported(row, data, value, owned, depth=0):
             return False
         if kind == "GetCurse" and not data["curses"]:
             return False
-        if kind.startswith("Progress") and args[0] and args[0] not in data["events"]:
+        if (
+            kind.startswith("Progress")
+            and args != [0]
+            and (not valid_targets(args) or not set(args) <= data["events"].keys())
+        ):
             return False
     return cost <= value["silver_coin"]
 
@@ -305,10 +332,10 @@ def rng_for(value, ident, purpose):
 
 def available(data, value, owned):
     next_ids = {
-        r["next"]: int(k)
-        for progress in value["event_progress"].values()
+        target: int(k)
+        for scope, progress in value["event_progress"].items()
         for k, r in progress.items()
-        if r["next"]
+        for target in continuations(r, data, scope)
     }
     active = {
         int(k)
@@ -469,7 +496,9 @@ def handle(value, source, season_id, route, request, owned):
                 history.extend(progress.pop(key, {}).get("choices", []))
             history = list(dict.fromkeys([*history, choice_id]))
             scope = "season" if kind == "ProgressInSeason" else "challenge"
-            value["event_progress"][scope][key] = dict(next=args[0], choices=history)
+            value["event_progress"][scope][key] = dict(
+                next=args[0] if len(args) == 1 else list(args), choices=history
+            )
         else:
             visit["results"].append(effects.apply(value, data, kind, args, owned, rng, visit))
     value["states"][str(ident)] = 9
