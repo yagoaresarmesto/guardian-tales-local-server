@@ -9,6 +9,8 @@ import secrets
 import sqlite3
 import ssl
 import struct
+import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -347,11 +349,14 @@ async def run(args):
     )
     await server.start()
     panel = None
+    restart = asyncio.Event()
+    loop = asyncio.get_running_loop()
     try:
         panel = WebPanel(
             server.guests.references,
             args.raid_panel_port,
             art_dir=args.data_dir.parent / "panel-art",
+            restart=lambda: loop.call_soon_threadsafe(restart.set),
         )
         panel.start()
     except OSError as error:
@@ -369,10 +374,12 @@ async def run(args):
         print(f"Raid panel: http://127.0.0.1:{panel.server_port}/", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     try:
-        if args.run_seconds:
-            await asyncio.sleep(args.run_seconds)
-        else:
-            await asyncio.Event().wait()
+        try:
+            await asyncio.wait_for(restart.wait(), timeout=args.run_seconds or None)
+        except asyncio.TimeoutError:
+            pass
+        if restart.is_set() and panel is not None:
+            return {**server.ports, "raid-panel": panel.server_port}
     finally:
         try:
             if panel is not None:
@@ -404,7 +411,9 @@ def main(argv=None):
         help="External bootstrap data and attendance catalog directory",
     )
     p.add_argument("--run-seconds", type=float, default=0)
-    args = p.parse_args(argv)
+    p.add_argument("--restart-worker", action="store_true", help=argparse.SUPPRESS)
+    launch_args = list(sys.argv[1:] if argv is None else argv)
+    args = p.parse_args(launch_args)
     if not 0 <= args.raid_panel_port <= 65535:
         p.error("--raid-panel-port must be in the range 0..65535")
     certificates = args.cert_dir or default_cert_dir()
@@ -417,7 +426,39 @@ def main(argv=None):
     if args.run_seconds < 0:
         p.error("--run-seconds must be zero or positive")
     try:
-        asyncio.run(run(args))
+        ports = asyncio.run(run(args))
+        if ports:
+            # Keep the original terminal attached across restarts on Windows. Each worker
+            # imports the current source in a new interpreter after the old one has closed.
+            again = 75
+            if args.restart_worker:
+                raise SystemExit(again)
+            command = [
+                sys.executable,
+                "-m",
+                "guardian_tales",
+                "serve",
+                *launch_args,
+                "--restart-worker",
+            ]
+            for name, port in ports.items():
+                command.extend([f"--{name}-port", str(port)])
+            while True:
+                worker = subprocess.Popen(command)
+                try:
+                    code = worker.wait()
+                except KeyboardInterrupt:
+                    # Ctrl+C is delivered to the entire foreground console group.
+                    try:
+                        worker.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        worker.terminate()
+                        worker.wait()
+                    raise
+                if code != again:
+                    if code:
+                        raise SystemExit(code)
+                    break
     except KeyboardInterrupt:
         print("Server stopped.")
 

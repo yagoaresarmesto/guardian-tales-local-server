@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/panel.css">
   <link rel="stylesheet" href="/${slug}.css">
   <script type="module" src="/${slug}.js"></script>
+  <script type="module" src="/backend.js"></script>
 </head>
 <body>
 <header class="topbar">
@@ -16,7 +17,7 @@
     <nav class="mode-nav" aria-label="Game mode">
       $navigation
     </nav>
-    <span class="local">Local server</span>
+    <div class="backend-control"><button type="button" id="restart-backend" hidden>Restart backend</button><span id="restart-status" role="status"></span></div>
   </div>
 </header>
 $body

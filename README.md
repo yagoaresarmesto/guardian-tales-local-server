@@ -268,6 +268,11 @@ database; restoring the save alone does not activate them. Guild War overrides
 the guild calendars while enabled. Disable its trial before returning to the
 parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
 
+Use **Restart backend** at the top of any game-mode tab to reload server code.
+When the dashboard shows **Backend restarted**, reconnect or reopen Guardian Tales.
+The backend uses the same ports, save and PyCharm terminal. The CDN and Android
+bridge run separately.
+
 The backend panel uses the inventory editor's two-column layout. Raid, DKA,
 Guild Wars and Kama-ZONE show the saved selection beside the editor. In
 Expedition, select a stage from the table to open its level settings.

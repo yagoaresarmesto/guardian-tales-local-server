@@ -2,6 +2,7 @@
 """Loopback HTTP transport for registered panel modes."""
 
 import json
+import uuid
 from http.server import ThreadingHTTPServer
 from threading import Thread
 
@@ -15,9 +16,11 @@ class WebPanel(ThreadingHTTPServer):
     # Finish any selection being published when the backend exits.
     daemon_threads = False
 
-    def __init__(self, references, port, *, art_dir=None):
+    def __init__(self, references, port, *, art_dir=None, restart=None):
         super().__init__(("127.0.0.1", port), PanelHandler)
         self.references = references
+        self.restart = restart
+        self.instance = uuid.uuid4().hex
         self.brand_image = art_dir / "brand.png" if art_dir is not None else None
 
     def start(self):
@@ -36,7 +39,15 @@ class PanelHandler(LocalPanelHandler):
             )
             return
         try:
-            if self.path in PAGES:
+            if self.path == "/api/backend":
+                self.json(
+                    200,
+                    {
+                        "instance": self.server.instance,
+                        "canRestart": self.server.restart is not None,
+                    },
+                )
+            elif self.path in PAGES:
                 brand = self.server.brand_image
                 page = render_page(
                     PAGES[self.path], show_brand=brand is not None and brand.is_file()
@@ -61,7 +72,8 @@ class PanelHandler(LocalPanelHandler):
 
     def do_POST(self):
         mode = API.get(self.path)
-        if mode is None:
+        restarting = self.path == "/api/backend/restart"
+        if mode is None and not restarting:
             self.json(404, {"error": "Unknown panel action"})
             return
         try:
@@ -77,6 +89,19 @@ class PanelHandler(LocalPanelHandler):
             return
         try:
             body = json.loads(raw.decode("utf-8"))
+        except (ValueError, RecursionError):
+            self.json(400, {"error": "Invalid JSON body"})
+            return
+        if restarting:
+            if self.server.restart is None or body != {"instance": self.server.instance}:
+                self.json(
+                    409, {"error": "Reload the game-mode panel before restarting the backend."}
+                )
+                return
+            self.json(202, {"restarting": True})
+            self.server.restart()
+            return
+        try:
             mode.apply(self.server.references, body)
         except mode.conflict as error:
             self.json(409, {"error": str(error)})

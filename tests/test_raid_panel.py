@@ -7,6 +7,7 @@ import unittest
 from importlib.util import find_spec
 from io import BytesIO
 from pathlib import Path
+from threading import Event
 from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -132,6 +133,37 @@ class RaidPanelTests(unittest.TestCase):
                 self.assertEqual(error.exception.code, status)
                 error.exception.close()
                 self.assertEqual(path.read_bytes(), original)
+
+    def test_restart_requires_matching_instance_and_local_origin(self):
+        status = json.loads(self.call("/api/backend"))
+        restart = "/api/backend/restart"
+        body = {"instance": status["instance"]}
+        self.assertFalse(status["canRestart"])
+        with self.assertRaises(HTTPError) as disabled:
+            self.call(restart, body)
+        self.assertEqual(disabled.exception.code, 409)
+        disabled.exception.close()
+        called = Event()
+        self.server.restart = called.set
+        self.assertTrue(json.loads(self.call("/api/backend"))["canRestart"])
+        for payload, headers, code in (
+            ({"instance": "previous-backend"}, {}, 409),
+            (body, {"Origin": "https://example.invalid"}, 403),
+        ):
+            with self.subTest(headers=headers), self.assertRaises(HTTPError) as rejected:
+                self.call(restart, payload, **headers)
+            self.assertEqual(rejected.exception.code, code)
+            rejected.exception.close()
+            self.assertFalse(called.is_set())
+        request = Request(
+            self.origin + restart,
+            data=json.dumps(body).encode(),
+            headers={"Origin": self.origin, "Content-Type": "application/json"},
+        )
+        with urlopen(request, timeout=5) as response:
+            self.assertEqual(response.status, 202)
+            self.assertEqual(json.load(response), {"restarting": True})
+        self.assertTrue(called.wait(1))
 
     def test_optional_brand_is_shared_and_missing_art_does_not_block_the_pages(self):
         self.assertNotIn(b'src="/brand.png"', self.call("/"))

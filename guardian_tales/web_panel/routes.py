@@ -78,6 +78,7 @@ MODES = (
 PAGES = {mode.path: mode for mode in MODES}
 API = {f"/api/{mode.slug}": mode for mode in MODES}
 FILES = {"/panel.css": (ROOT / "shared/panel.css", CSS), "/panel.js": (ROOT / "shared/ui.js", JS)}
+FILES["/backend.js"] = (ROOT / "shared/backend.js", JS)
 for mode in MODES:
     for suffix, mime in (("css", CSS), ("js", JS)):
         FILES[f"/{mode.slug}.{suffix}"] = (mode.directory / f"panel.{suffix}", mime)
