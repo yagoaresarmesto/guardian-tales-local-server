@@ -420,11 +420,16 @@ installation-specific tooling outside this repository. See
 [client integration](client-integration.md) for how the prepared test differed
 from simply starting this Python backend.
 
-## Local web panel
+## Local browser panels
 
-The loopback HTTP transport in `guardian_tales/web_panel/server.py` checks
-the local origin for writes, validates the request size and dispatches through
-the mode registry in `routes.py`. Each mode owns its Python adapter, HTML view,
+Both panels use `guardian_tales/panel_common/` for loopback HTTP checks,
+response headers, HTML layout rendering and sprite decoding. Each server
+registers its own pages, APIs and permitted asset URLs.
+
+### Game modes
+
+The backend serves the mode registry in `guardian_tales/web_panel/routes.py`.
+Each mode owns its Python adapter, HTML view,
 stylesheet and browser module in one directory. Adapters call the same domain
 functions as the CLI. The shared directory contains the page layout, navigation
 styling and browser helpers. Register a mode once in `MODES` to expose its page,
@@ -432,3 +437,17 @@ navigation link, static files and GET/POST API. Register fixed artwork URLs in
 `MEDIA`. Raid portraits use the frame names in the local monster table. The
 shared artwork reader caches decoded sheets and requested PNGs from the
 imported bosses and UI atlases.
+
+### Inventory
+
+Each tab has a folder under `guardian_tales/inventory_panel/static/` containing
+its `view.html`, `panel.css` and `panel.js`. Equipment also owns its option
+controls. The `shared/` folder holds the page layout, inventory stylesheet,
+tile helpers and quantity editor. Register a tab in `inventory_panel/routes.py`
+to add the page, navigation link and browser assets. This registry maps public
+URLs to files, so bookmarks and browser imports are independent of disk paths.
+
+`inventory_panel/server.py` connects the read and edit endpoints to the Python
+editors. `catalog.py` loads item definitions, names and icons. The editors
+use `game_save.py` for access to the working save. `preview.py` handles the
+separate in-memory inventory preview.

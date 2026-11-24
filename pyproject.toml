@@ -35,7 +35,7 @@ include = ["guardian_tales*"]
 
 [tool.setuptools.package-data]
 guardian_tales = ["templates/*.json", "templates/*.lua"]
-"guardian_tales.inventory_panel" = ["static/*.html", "static/*.css", "static/*.js"]
+"guardian_tales.inventory_panel" = ["static/*/*.html", "static/*/*.css", "static/*/*.js"]
 "guardian_tales.web_panel" = ["*/*.html", "*/*.css", "*/*.js"]
 
 [tool.black]

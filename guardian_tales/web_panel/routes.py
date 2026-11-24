@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from functools import partial
 from html import escape
 from pathlib import Path
-from string import Template
+
+from guardian_tales.panel_common.views import CSS, JS, render_layout
 
 from ..expedition_levels import LevelSelectionChanged
 from ..guild_raid import RaidSelectionChanged
@@ -24,8 +25,6 @@ from .kamazone import adapter as kamazone
 from .raid import adapter as raid
 
 ROOT = Path(__file__).parent
-CSS = "text/css; charset=utf-8"
-JS = "text/javascript; charset=utf-8"
 
 
 @dataclass(frozen=True)
@@ -110,15 +109,12 @@ def media_resource(path):
 
 
 def render_page(mode, *, show_brand):
-    links = []
-    for entry in MODES:
-        current = ' aria-current="page"' if entry == mode else ""
-        links.append(f'<a href="{escape(entry.path)}"{current}>{escape(entry.label)}</a>')
-    layout = Template((ROOT / "shared/layout.html").read_text(encoding="utf-8"))
-    return layout.substitute(
+    return render_layout(
+        ROOT / "shared/layout.html",
+        mode.directory / "view.html",
+        tabs=((entry.path, entry.label) for entry in MODES),
+        active_path=mode.path,
         title=escape(mode.title),
         brand_icon='<img class="brand-icon" src="/brand.png" alt="">' if show_brand else "",
         slug=mode.slug,
-        navigation="".join(links),
-        body=(mode.directory / "view.html").read_text(encoding="utf-8"),
-    ).encode()
+    )

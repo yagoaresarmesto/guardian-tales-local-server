@@ -156,7 +156,7 @@ class RaidPanelTests(unittest.TestCase):
         with (
             patch.object(type(BOSSES), "available", return_value=True),
             patch.object(type(BOSSES), "path", return_value=self.source),
-            patch("guardian_tales.web_panel.artwork._read_image", return_value=b"png") as read,
+            patch("guardian_tales.panel_common.artwork._read_image", return_value=b"png") as read,
         ):
             for route, atlas, frame in (
                 ("/raid/bosses/native_ancient_demon.png", BOSSES, "native_ancient_demon"),

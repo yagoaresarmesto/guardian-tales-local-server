@@ -191,8 +191,14 @@ class InventoryPanelTests(unittest.TestCase):
             page = self.call("/" + section)
             self.assertIn(b'lang="en"', page)
             self.assertIn(b'href="/account"', page)
+            self.assertIn(f'href="/{section}" aria-current="page"'.encode(), page)
+            self.assertEqual(page.count(b'aria-current="page"'), 1)
+            self.assertEqual(b'id="preview-link"' in page, section == "equipment")
             for asset in re.findall(rb'(?:href|src)="(/[^"]+\.(?:css|js))"', page):
                 self.assertTrue(self.call(asset.decode()))
+        equipment = self.call("/equipment")
+        for alias in ("/", "/equipment/preview", "/items", "/necklaces"):
+            self.assertEqual(self.call(alias), equipment)
         with self.assertRaises(HTTPError) as missing_art:
             self.call("/mastery-training.png")
         self.assertEqual(missing_art.exception.code, 404)

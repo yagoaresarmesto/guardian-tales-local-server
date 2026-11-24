@@ -2,8 +2,11 @@
 """Loopback HTTP transport for registered panel modes."""
 
 import json
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import ThreadingHTTPServer
 from threading import Thread
+
+from guardian_tales.panel_common.http import LocalPanelHandler
+from guardian_tales.panel_common.views import HTML
 
 from .routes import API, FILES, PAGES, media_resource, render_page
 
@@ -25,33 +28,7 @@ class WebPanel(ThreadingHTTPServer):
         self.server_close()
 
 
-class PanelHandler(BaseHTTPRequestHandler):
-    timeout = 8
-
-    def reply(self, status, mime, data):
-        self.send_response(status)
-        self.send_header("Content-Type", mime)
-        self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header(
-            "Content-Security-Policy",
-            "default-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'",
-        )
-        self.end_headers()
-        self.wfile.write(data)
-
-    def json(self, status, value):
-        self.reply(status, "application/json; charset=utf-8", json.dumps(value).encode())
-
-    def allowed_host(self):
-        port = self.server.server_port
-        hosts = self.headers.get_all("Host", [])
-        valid = {f"127.0.0.1:{port}", f"localhost:{port}"}
-        if port == 80:
-            valid.update(("127.0.0.1", "localhost"))
-        return len(hosts) == 1 and hosts[0] in valid
-
+class PanelHandler(LocalPanelHandler):
     def do_GET(self):
         if not self.allowed_host():
             self.json(
@@ -64,7 +41,7 @@ class PanelHandler(BaseHTTPRequestHandler):
                 page = render_page(
                     PAGES[self.path], show_brand=brand is not None and brand.is_file()
                 )
-                self.reply(200, "text/html; charset=utf-8", page)
+                self.reply(200, HTML, page)
             elif self.path == "/brand.png" and self.server.brand_image is not None:
                 self.reply(200, "image/png", self.server.brand_image.read_bytes())
             elif self.path in FILES:
@@ -88,20 +65,11 @@ class PanelHandler(BaseHTTPRequestHandler):
             self.json(404, {"error": "Unknown panel action"})
             return
         try:
-            lengths = self.headers.get_all("Content-Length", [])
-            if (
-                len(lengths) != 1
-                or "Transfer-Encoding" in self.headers
-                or not 0 < int(lengths[0]) <= 4096
-            ):
-                raise ValueError("Invalid selection size")
-            raw = self.rfile.read(int(lengths[0]))
+            raw = self.read_body(4096, "Invalid selection size")
         except (ValueError, OSError) as error:
             self.json(400, {"error": str(error)})
             return
-        if not self.allowed_host() or self.headers.get_all("Origin") != [
-            "http://" + self.headers["Host"].removesuffix(":80")
-        ]:
+        if not self.allowed_origin():
             self.json(403, {"error": "Apply changes from the local panel."})
             return
         if self.headers.get_content_type() != "application/json":
@@ -122,6 +90,3 @@ class PanelHandler(BaseHTTPRequestHandler):
             self.json(503, {"error": f"Could not save the selection: {error}"})
         else:
             self.json(200, {"applied": True})
-
-    def log_message(self, format, *args):
-        pass
