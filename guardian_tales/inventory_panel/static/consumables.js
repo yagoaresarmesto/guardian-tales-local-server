@@ -1,4 +1,4 @@
-import { $, el, image } from "/inventory-dom.js";
+import { $, el, image, inventoryTile } from "/inventory-dom.js";
 
 const api = "/api/game/consumables";
 const format = new Intl.NumberFormat("en-GB");
@@ -74,17 +74,10 @@ function draw() {
     [item.name, item.id, item.spec].join(" ").toLowerCase().includes(search));
   if (selected && !visible.includes(selected)) showItem(null);
   const buttons = visible.map(item => {
-    const button = el("button", "tile");
-    button.type = "button";
-    button.setAttribute("aria-pressed", String(item === selected));
-    button.title = item.name + " · " + format.format(item.amount);
-    button.setAttribute("aria-label",button.title);
     const wrap = el("span", "tile-art");
     art(item, wrap);
-    const quantity = format.format(item.amount);
-    const count = el("span", "stack-size", quantity);
-    count.classList.toggle("long", quantity.length > 8);
-    button.append(wrap, count);
+    const button = inventoryTile({ id: item.id, name: item.name, art: wrap,
+      selected: item === selected, quantity: format.format(item.amount) });
     button.onclick = () => {
       if (item !== selected) {
         $("tiles").querySelector('[aria-pressed="true"]')?.setAttribute("aria-pressed","false");

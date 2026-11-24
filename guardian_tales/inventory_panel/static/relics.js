@@ -1,4 +1,4 @@
-import { $, el, image, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, watchGridPageSize } from "/inventory-dom.js";
 
 let size = 24;
 const groups = {
@@ -51,18 +51,14 @@ function drawFamilies() {
   }
 }
 function tile(r) {
-  const spec = data.specs[r.spec], btn = el("button","tile");
-  btn.type = "button"; btn.dataset.id = r.id; btn.dataset.stars = spec.stars;
-  const label = [spec.name, spec.stars + " stars", "Copy #" + r.id, r.equipped && "Equipped", r.locked && "Locked"].filter(Boolean).join(" · ");
-  btn.title = label; btn.setAttribute("aria-label",label);
-  btn.setAttribute("aria-pressed", String(selected === r.id));
+  const spec = data.specs[r.spec];
   const art = el("span", "tile-art"), icon = image("/icon/" + r.spec + ".png");
   icon.onerror = () => art.replaceChildren(el("span","fallback",spec.family.slice(0,2)));
-  art.append(icon); btn.append(art, el("span","tile-stars","★".repeat(spec.stars)));
-  if (r.locked) { const lock = image("/type-icon/lock.png"); lock.className = "tile-lock"; btn.append(lock); }
-  if (r.equipped) btn.append(el("span","tile-e","E"));
-  if (r.jewels) { const socket = el("span","socket","◆"); socket.title = "Socketed jewel"; btn.append(socket); }
-  return btn;
+  art.append(icon);
+  const button = inventoryTile({ ...r, name: spec.name, stars: spec.stars, art,
+    socketed: r.jewels > 0, selected: selected === r.id });
+  button.dataset.stars = spec.stars;
+  return button;
 }
 function drawGrid() {
   const start = page * size;

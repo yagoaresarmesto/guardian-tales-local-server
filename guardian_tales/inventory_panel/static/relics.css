@@ -17,10 +17,8 @@
 .comparison { color:#b1ecb8; line-height:1.35; }
 .actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:11px; }
 #unavailable { color:#d9e2ec; background:#24354a; border-radius:4px; padding:8px; font-size:.82rem; }
-.relic-page .tile { --top:#2c3557; --bottom:#24523e; --band:#76984a; }
-.relic-page .tile[data-stars="5"] { --band:#74ab43; --bottom:#22593f; }
-.relic-page .tile[data-stars="3"] { --band:#ba954e; }
+.relic-page .tile { --shade:#233c37; --edge:#4b6b59; }
+.relic-page .tile[data-stars="5"] { --edge:#648157; }
+.relic-page .tile[data-stars="3"] { --edge:#89764c; }
 .relic-page .tile-stars { color:#d4ec95; }
-.relic-page .tile-lock { top:5%; }
-.socket { position:absolute; top:5%; right:3%; width:12%; height:15%; display:grid; place-items:center; color:#c5adff; text-shadow:0 1px 2px black; font-size:min(.84rem,12cqi); line-height:1; }
 .relic-page .type-button img { image-rendering:pixelated; }

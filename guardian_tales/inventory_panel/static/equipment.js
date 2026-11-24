@@ -1,4 +1,4 @@
-import { $, el, image, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, watchGridPageSize } from "/inventory-dom.js";
 import { equipmentOptions } from "/equipment-options.js";
 const preview = location.pathname === "/equipment/preview";
 const editor = preview ? null : equipmentOptions(load);
@@ -83,23 +83,9 @@ function stars(item) {
   return item.stars >= 1 && item.stars <= 6 ? "★".repeat(item.stars) : "";
 }
 function tile(item) {
-  const btn = el("button", "tile");
-  const label = [item.name, item.level != null && "Level " + item.level,
-    item.locked && "Locked", item.equipped && "Equipped", "Copy #" + item.id].filter(Boolean).join(" · ");
-  btn.type = "button"; btn.dataset.id = item.id; btn.dataset.grade = item.grade ?? "";
-  btn.setAttribute("aria-label", label); btn.title = label;
-  btn.setAttribute("aria-pressed", String(item.id === selected));
-  btn.append(art(item, "tile-art"));
-  if (item.level != null) btn.append(el("span", "tile-level", item.level));
-  if (item.locked) {
-    const lock = image("/type-icon/lock.png");
-    lock.className = "tile-lock"; lock.onerror = () => lock.remove();
-    btn.append(lock);
-  }
-  if (item.training) btn.append(el("span", "tile-training", "Training"));
-  btn.append(el("span", "tile-stars", stars(item)));
-  if (item.equipped) btn.append(el("span", "tile-e", "E"));
-  return btn;
+  const button = inventoryTile({ ...item, art: art(item, "tile-art"), selected: item.id === selected });
+  button.dataset.grade = item.grade ?? "";
+  return button;
 }
 function fact(label, value) {
   const row = el("div", "fact");

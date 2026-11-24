@@ -12,6 +12,54 @@ export function image(url) {
   return img;
 }
 
+// The header, artwork, name and footer occupy the same tracks on every card.
+export function inventoryTile({ id, name, art, selected, level, stars, quantity,
+  locked, equipped, training, socketed }) {
+  const button = el("button", "tile");
+  button.type = "button";
+  button.dataset.id = id;
+  button.setAttribute("aria-pressed", String(selected));
+  const description = [name];
+  const header = el("span", "tile-header");
+  if (level != null) {
+    header.append(el("span", "tile-level", "Lv. " + level));
+    description.push("Level " + level);
+  }
+  const badges = el("span", "tile-badges");
+  if (locked) {
+    const lock = image("/type-icon/lock.png");
+    lock.className = "tile-lock";
+    lock.title = "Locked";
+    lock.onerror = () => lock.replaceWith(el("span", "tile-badge", "L"));
+    badges.append(lock);
+    description.push("Locked");
+  }
+  for (const [visible, mark, label] of [
+    [equipped, "E", "Equipped"], [training, "T", "Training Room"], [socketed, "◆", "Socketed jewel"],
+  ]) {
+    if (visible) {
+      const badge = el("span", "tile-badge", mark);
+      badge.title = label;
+      badges.append(badge);
+      description.push(label);
+    }
+  }
+  header.append(badges);
+  const caption = el("span", "tile-caption");
+  caption.append(el("span", "tile-name", name));
+  const rating = Number.isInteger(stars) && stars >= 1 && stars <= 6;
+  const footer = quantity != null
+    ? el("span", "stack-size", quantity)
+    : el("span", "tile-stars", rating ? "★".repeat(stars) : "");
+  if (quantity != null) description.push("Quantity " + quantity);
+  if (rating) description.push(stars + " stars");
+  description.push("Copy #" + id);
+  button.title = description.join(" · ");
+  button.setAttribute("aria-label", button.title);
+  button.append(header, art, caption, footer);
+  return button;
+}
+
 // Page through four complete rows at the current grid width.
 export function watchGridPageSize(grid, resizePage) {
   let lastColumns = 0;

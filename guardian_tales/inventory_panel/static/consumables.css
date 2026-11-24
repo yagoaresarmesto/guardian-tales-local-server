@@ -1,8 +1,7 @@
 .showcase { min-height:160px; }
 #tiles { max-height:65vh; overflow:auto; padding:3px; scrollbar-color:#7389a9 #293751; }
-.tile { --top:#4b5e99; --bottom:#596fac; --band:#42568d; }
-.stack-size { position:absolute; inset:auto 0 0; display:grid; place-items:center; height:17%; color:white; background:#18254291; font-size:min(1rem,13cqi); font-variant-numeric:tabular-nums; font-weight:700; line-height:1; }
-.stack-size.long { font-size:min(.87rem,10cqi); }
+.tile { --shade: #273755; --edge: #50688c; }
+.stack-size { color: #abdffa; font-size: clamp(.67rem, 9cqi, .8rem); font-variant-numeric: tabular-nums; font-weight: 700; }
 #editor { display:grid; gap:7px; justify-items:start; }
 #editor label { font-size:.85rem; color:var(--muted); }
 #quantity { width:100%; color:inherit; border:1px solid #788aa2; border-radius:4px; background:#17243a; padding:8px; font:inherit; }
