@@ -3,9 +3,13 @@
 
 import json
 import sqlite3
+import subprocess
+import sys
 import tempfile
+import tomllib
 import unittest
-from contextlib import closing
+from contextlib import closing, redirect_stderr, redirect_stdout
+from io import StringIO
 from pathlib import Path
 from threading import Thread
 from unittest.mock import patch
@@ -13,6 +17,7 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from guardian_tales.basecamp import MASTERY_POINTS
+from guardian_tales.inventory_panel import server
 from guardian_tales.inventory_panel.server import InventoryServer
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
@@ -176,6 +181,39 @@ def prepare_inventory(root):
         )
         db.execute("INSERT INTO local_account VALUES(1, 3, ?)", (json.dumps(profile),))
     return database
+
+
+class InventoryStartupTests(unittest.TestCase):
+    def test_first_launch_installs_panel_art_and_next_launch_skips_pip(self):
+        with (Path(__file__).resolve().parents[1] / "pyproject.toml").open("rb") as config:
+            requirements = tomllib.load(config)["project"]["optional-dependencies"]["panel-art"]
+        with (
+            patch.object(server, "decoder_available", side_effect=[False, True, True]),
+            patch.object(subprocess, "run") as install,
+            redirect_stderr(StringIO()),
+        ):
+            server.ensure_artwork_decoder()
+            server.ensure_artwork_decoder()
+        (args,), kwargs = install.call_args
+        install.assert_called_once()
+        self.assertEqual(args[:3], [sys.executable, "-m", "pip"])
+        self.assertEqual(args[args.index("--no-input") + 1 :], requirements)
+        self.assertTrue(kwargs["check"])
+
+    def test_failed_install_still_serves_panel_and_explains_retry(self):
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.object(server, "decoder_available", return_value=False),
+            patch.object(subprocess, "run", side_effect=subprocess.CalledProcessError(1, "pip")),
+            patch.object(server, "InventoryServer") as panel,
+            redirect_stdout(StringIO()),
+            redirect_stderr(StringIO()) as errors,
+        ):
+            Path(directory, "server.sqlite3").touch()
+            server.main(["--data-dir", directory])
+        panel.return_value.serve_forever.assert_called_once()
+        self.assertIn("placeholders", errors.getvalue())
+        self.assertIn("retry", errors.getvalue())
 
 
 class InventoryPanelTests(unittest.TestCase):

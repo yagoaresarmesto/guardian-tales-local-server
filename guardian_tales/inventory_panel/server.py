@@ -5,16 +5,20 @@ import argparse
 import gzip
 import json
 import re
+import site
 import sqlite3
+import subprocess
+import sys
 import webbrowser
 from contextlib import closing
 from functools import partial
 from http.server import ThreadingHTTPServer
+from importlib import invalidate_caches
 from pathlib import Path
 from threading import Lock
 from urllib.parse import urlsplit
 
-from guardian_tales.panel_common.artwork import UI
+from guardian_tales.panel_common.artwork import UI, decoder_available
 from guardian_tales.panel_common.http import LocalPanelHandler
 from guardian_tales.panel_common.views import HTML
 from guardian_tales.raid_static import decode, records
@@ -31,6 +35,9 @@ from .relics import RelicEditor
 from .routes import FILES, PAGES, render_page
 from .stack_quantities import CONSUMABLES, StackQuantityEditor
 from .weapon_progression import WeaponProgression
+
+# Also declared by the panel-art extra. Bare checkouts lack installed package metadata.
+PANEL_ART_REQUIREMENT = "UnityPy>=1.25.4,<2"
 
 
 class Handler(LocalPanelHandler):
@@ -195,6 +202,40 @@ class InventoryServer(ThreadingHTTPServer):
             self._sandbox.db.close()
 
 
+def ensure_artwork_decoder():
+    if decoder_available():
+        return
+    print("Installing the inventory artwork reader in this Python environment.", file=sys.stderr)
+    try:
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pip",
+                "--disable-pip-version-check",
+                "install",
+                "--no-input",
+                PANEL_ART_REQUIREMENT,
+            ],
+            check=True,
+        )
+        # A first user-site install can create a directory missing from the startup path.
+        if site.ENABLE_USER_SITE:
+            user_site = site.getusersitepackages()
+            if user_site not in sys.path and Path(user_site).is_dir():
+                site.addsitedir(user_site)
+        invalidate_caches()
+        if decoder_available():
+            return
+    except (OSError, subprocess.CalledProcessError) as error:
+        print(f"Artwork setup failed: {error}", file=sys.stderr)
+    print(
+        "Opening the inventory panel with placeholders. "
+        "Run the same command again to retry artwork setup.",
+        file=sys.stderr,
+    )
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -222,6 +263,7 @@ def main(argv=None):
         parser.error(
             f"Working save not found: {database}. Set --data-dir to your existing save directory."
         )
+    ensure_artwork_decoder()
     try:
         server = InventoryServer(
             args.port,

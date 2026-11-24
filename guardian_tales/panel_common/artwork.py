@@ -4,9 +4,18 @@
 import json
 from dataclasses import dataclass
 from functools import lru_cache
-from importlib.util import find_spec
+from importlib import import_module
 from io import BytesIO
 from threading import Lock
+
+
+def decoder_available():
+    try:
+        import_module("PIL.Image")
+        import_module("UnityPy")
+    except (ImportError, OSError):
+        return False
+    return True
 
 
 @dataclass(frozen=True)
@@ -18,7 +27,7 @@ class Atlas:
         return references.directory.parent / "resources/files/AssetBundles/Android" / self.bundle
 
     def available(self, references):
-        return self.path(references).is_file() and find_spec("UnityPy") is not None
+        return self.path(references).is_file() and decoder_available()
 
     def read(self, references, *, frame=None):
         """Return a transparent sprite PNG, or the full background as a JPEG."""

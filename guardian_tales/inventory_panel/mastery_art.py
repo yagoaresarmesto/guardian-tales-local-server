@@ -2,8 +2,9 @@
 """Render a still of the mastery training room from the installed 3.57.0 artwork."""
 
 from functools import lru_cache
-from importlib.util import find_spec
 from io import BytesIO
+
+from guardian_tales.panel_common.artwork import decoder_available
 
 _BASE_POSE = (
     "[base]legL",
@@ -70,7 +71,7 @@ def sprite_pose(objects, sheet, layers):
 def training_banner(references):
     root = references.directory.parent / "resources/files/AssetBundles/Android"
     lobby = root / "ui/lobby"
-    if not lobby.is_file() or find_spec("UnityPy") is None:
+    if not lobby.is_file() or not decoder_available():
         raise FileNotFoundError("The imported training room artwork is unavailable.")
     bundles = (root / "characters" / name for name in _ACTORS)
     actors = tuple((path, path.stat().st_mtime_ns) for path in bundles if path.is_file())
