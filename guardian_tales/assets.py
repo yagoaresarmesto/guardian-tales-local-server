@@ -11,6 +11,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
+from .recommended_art import missing_recommended
+from .tetis_art import missing_tetis_media
+
 
 def resource_path(url):
     path = unquote(urlsplit(url).path).lstrip("/")
@@ -85,13 +88,18 @@ def handler_for(library, journal=None, reference_dir=None):
             self.serve(True)
 
         def serve(self, body):
+            relative = resource_path(self.path)
             entry = library.lookup(self.path)
             override = None
-            if entry is None and reference_dir is not None:
+            if entry is None:
+                entry, override = missing_recommended(library, relative)
+            if entry is None and override is None:
+                override = missing_tetis_media(library, relative)
+            if entry is None and override is None and reference_dir is not None:
                 from .kamazone_banner import missing_banner
 
                 try:
-                    override = missing_banner(reference_dir, resource_path(self.path))
+                    override = missing_banner(reference_dir, relative)
                 except (OSError, ValueError):
                     self.send_error(503, "Optional Kama-ZONE preview is not ready")
                     return

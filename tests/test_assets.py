@@ -7,9 +7,13 @@ import tempfile
 import threading
 import unittest
 from http.server import ThreadingHTTPServer
+from importlib.util import find_spec
+from io import BytesIO
 from pathlib import Path
+from unittest.mock import patch
 
 from guardian_tales.assets import ResourceLibrary, handler_for
+from guardian_tales.recommended_art import PREFIX, STORY_SCENERY
 
 
 class AssetTests(unittest.TestCase):
@@ -111,6 +115,57 @@ class AssetTests(unittest.TestCase):
         ):
             with self.subTest(path=path):
                 self.assertEqual(self.get(path)[0], 404)
+
+    def test_recommended_cards_prefer_exact_then_mode_art_then_pack_scenery(self):
+        scenery = self.library.lookup("/media/demo.jpg")
+        bundle = self.library.lookup("/media/large.bin")
+        self.library.files[STORY_SCENERY] = scenery
+        self.library.files["AssetBundles/Android/ui/backgrounds/rogue_chess"] = bundle
+        short = "/" + PREFIX + "story_short_00.png"
+        tetis = "/" + PREFIX + "rogue_chess_02.png"
+        with patch("guardian_tales.recommended_art._card", return_value=b"native-mode-art") as card:
+            self.assertEqual(self.get(tetis)[2], b"native-mode-art")
+            card.assert_called_once_with(*bundle, "bg_rogue_chess_perks_00")
+            self.assertEqual(self.get(short)[2], b"supplement")
+            chapter = "/live/global/0491/" + PREFIX + "ch21_00.png"
+            self.assertEqual(self.get(chapter)[2], b"supplement")
+            self.assertEqual(self.get("/" + PREFIX + "ch23_00.png")[0], 404)
+            self.library.files[short[1:]] = bundle
+            self.assertEqual(self.get(short)[2], self.large_payload)
+            self.assertEqual(self.get("/" + PREFIX + "unknown.png")[0], 404)
+        with patch("guardian_tales.recommended_art._card", side_effect=ImportError()):
+            self.assertEqual(self.get(tetis)[2], b"supplement")
+
+    @unittest.skipUnless(find_spec("PIL"), "requires the panel-art extra")
+    def test_tetis_archive_serves_transparent_titles_and_the_matching_episode_scene(self):
+        from PIL import Image
+
+        prefix = "/live/global/0491/media/roguechess/"
+        titles = []
+        for name in (
+            "v2.93_rc_1_title_enUS.png",
+            "v3.09_rc_2_title_en.png",
+            "v3.25_rc_3_title_enUS.png",
+        ):
+            code, headers, body = self.get(prefix + name)
+            self.assertEqual((code, headers["Content-Type"]), (200, "image/png"))
+            with Image.open(BytesIO(body)) as title:
+                self.assertEqual(title.mode, "RGBA")
+                self.assertEqual(title.getchannel("A").getextrema(), (0, 255))
+            titles.append(body)
+        self.assertEqual(len(set(titles)), 3)
+        scene = Image.new("RGB", (24, 18), (25, 180, 197))
+        bundle = self.library.lookup("/media/large.bin")
+        self.library.files["AssetBundles/Android/ondemand/roguechess/narrative/ep2"] = bundle
+        with patch("guardian_tales.tetis_art.bundle_texture", return_value=scene) as read:
+            code, headers, body = self.get(prefix + "bg_rogue_chess_s2_00.png")
+            self.assertEqual((code, headers["Content-Type"]), (200, "image/png"))
+            with Image.open(BytesIO(body)) as replacement:
+                self.assertEqual(replacement.getpixel((0, 0)), (25, 180, 197))
+            read.assert_called_once_with(bundle[0], "Roguechess_main_S02")
+        self.library.files["media/roguechess/bg_rogue_chess_s2_00.png"] = bundle
+        self.assertEqual(self.get(prefix + "bg_rogue_chess_s2_00.png")[2], self.large_payload)
+        self.assertEqual(self.get(prefix + "unknown_title.png")[0], 404)
 
     def test_name_word_lists_refresh_cached_content_without_changing_preserved_files(self):
         for name in ("kakao_en-US_name.txt", "kakao_es-ES_name.txt", "kakao_ko-KR_name.txt"):

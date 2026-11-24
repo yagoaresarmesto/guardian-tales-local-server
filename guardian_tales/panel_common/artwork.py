@@ -44,6 +44,14 @@ UI = Atlas("spritesheets/ui/main_s3", "MainUiS3")
 _lock = Lock()
 
 
+def bundle_texture(path, name):
+    """Read a native texture from a manifest-selected bundle for image conversion."""
+    stat = path.stat()
+    with _lock:
+        pixels, _ = _read_sheet(path, name, stat.st_mtime_ns, stat.st_size)
+        return pixels
+
+
 def frame_png(sheet, entry):
     from PIL import Image
 

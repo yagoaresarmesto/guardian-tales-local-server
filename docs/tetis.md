@@ -4,6 +4,12 @@ Open **Book of Contents → Recommended → The Tale of the Tetis Hero Beta** wi
 
 ## Chapters in Android 3.57.0
 
+The CDN uses the original season images when the resource pack contains them.
+With the `panel-art` extra installed, it can also recover the factory, train
+and fortress backgrounds from the matching Tetis episode bundles and render
+the three English chapter titles on transparent backgrounds. Restart the CDN
+in its usual terminal after updating the artwork code.
+
 | Season | Adela Kingdom chapter | Playable floors | Guardian Tactic training |
 | --- | --- | --- | --- |
 | 1 | Elf of the Abandoned Factory | 1–20 | None |

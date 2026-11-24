@@ -151,6 +151,13 @@ intended backup. The CDN should also serve the
 [Android resource index](http://127.0.0.1:18081/master-global-v3.57.0/Android.index).
 A healthy backend alone does not verify resource downloads or Android routing.
 
+In the Book of Contents, the Recommended tab uses each card's original PNG from
+the installed resource manifest when available. For missing Tetis, Co-op
+Expedition and main story cards the CDN can render the corresponding local game
+texture with the optional `panel-art` reader. The generic Short Story card
+uses Invader Journalist scenery from the pack. This scenery also provides a
+fallback when the texture reader is unavailable.
+
 **Terminal 3 — Android bridge:** first follow the
 [short setup/restoration check](docs/mumu-client.md#4-run-a-short-routing-check-then-the-play-session)
 with the game closed. For the regular session, replace the example index/name
