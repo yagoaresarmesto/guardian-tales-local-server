@@ -24,30 +24,43 @@
         <div class="section-bar"><h2 id="details-title">Consumable details</h2><span id="copy-id"></span></div>
         <div id="placeholder"><img src="/type-icon/inventory.png" alt=""><p>Select a consumable to see its quantity.</p></div>
         <div id="detail" hidden>
-          <div class="showcase"><div id="portrait" class="hero-art"></div></div>
-          <div class="item-info">
-            <div class="type-line" id="category"></div><h3 id="detail-name"></h3>
-            <dl><div class="fact"><dt>Owned</dt><dd id="owned"></dd></div></dl>
-            <form id="editor">
-              <label for="quantity">Quantity</label>
-              <input type="number" id="quantity" required min="1" step="1" inputmode="numeric">
-              <p id="comparison" aria-live="polite"></p>
-              <button type="submit" id="apply" class="apply-button" disabled>Apply</button>
-            </form>
-            <p id="message" role="status" hidden></p>
+          <div class="item-identity">
+            <div id="portrait" class="hero-art"></div>
+            <div><div class="identity-meta" id="category"></div><h3 id="detail-name"></h3></div>
           </div>
+          <dl class="inspector-facts">
+            <div class="fact"><dt>Catalog ID</dt><dd id="catalog-id"></dd></div>
+            <div class="fact"><dt>Owned</dt><dd id="owned"></dd></div>
+          </dl>
+          <form class="inspector-editor" id="editor">
+            <section aria-labelledby="quantity-heading">
+              <h4 id="quantity-heading"><label for="quantity">Quantity</label></h4>
+              <div class="option-group stack-editor">
+                <input type="number" id="quantity" required min="1" step="1" inputmode="numeric" aria-describedby="quantity-range">
+                <p id="quantity-range" class="editor-note"></p>
+                <p id="comparison" class="edit-diff" aria-live="polite"></p>
+              </div>
+            </section>
+            <footer class="inspector-actions">
+              <button type="submit" id="apply" class="apply-button" disabled aria-describedby="access">Apply</button>
+              <p id="message" role="status" hidden></p>
+            </footer>
+          </form>
         </div>
       </section>
       <section class="collection" aria-labelledby="collection-title">
         <header class="collection-bar"><h2 id="collection-title">Consumables</h2></header>
-        <div class="rack">
-          <div class="tools">
-            <label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" aria-label="Search consumables by name or ID" placeholder="Search by name or ID"></label>
-            <label class="sort">Type <select id="filter"><option value="">All types</option></select></label>
+        <div class="collection-body">
+          <div class="rack">
+            <div class="tools">
+              <label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" aria-label="Search consumables by name or ID" placeholder="Search by name or ID"></label>
+            </div>
+            <label class="mobile-types">Consumable type <select id="filter"></select></label>
+            <div id="tiles" role="group" aria-label="Owned consumables"></div>
+            <p id="empty" hidden>No matching consumables.</p>
+            <footer class="pager"><span id="range" role="status">Loading consumables…</span><button type="button" id="prev" aria-label="Previous page" disabled>‹</button><button type="button" id="next" aria-label="Next page" disabled>›</button></footer>
           </div>
-          <div id="tiles" role="group" aria-label="Owned consumables"></div>
-          <p id="empty" hidden>No matching consumables.</p>
-          <footer class="pager"><span id="range" role="status">Loading consumables…</span></footer>
+          <aside class="types"><h3 id="types-heading">Consumable type</h3><div id="types" role="group" aria-labelledby="types-heading"></div></aside>
         </div>
       </section>
     </div>

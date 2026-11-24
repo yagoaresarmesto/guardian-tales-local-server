@@ -23,11 +23,11 @@
     <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
     <p class="save-access" id="equipment-access" role="status" hidden></p>
     <div class="workspace" id="workspace">
-      <section class="inspector equipment-inspector" aria-labelledby="details-heading">
+      <section class="inspector" aria-labelledby="details-heading">
         <div class="section-bar"><h2 id="details-heading">Equipment details</h2><span id="copy-id"></span></div>
         <div id="placeholder"><img src="/type-icon/equipment.png" alt=""><p>Select equipment to see its details.</p></div>
         <div id="detail" hidden>
-          <div class="equipment-identity">
+          <div class="item-identity">
             <div class="hero-art" id="hero-art"></div>
             <div class="identity-text">
               <div class="identity-meta"><span id="detail-type"></span><span id="detail-level"></span></div>
@@ -36,9 +36,9 @@
             </div>
           </div>
           <div class="item-info">
-            <dl id="facts"></dl>
+            <dl id="facts" class="inspector-facts"></dl>
             <button type="button" id="lock" hidden></button>
-            <section id="option-editor" hidden aria-label="Equipment options">
+            <section id="option-editor" class="inspector-editor" hidden aria-label="Equipment options">
               <section id="weapon-progression" aria-labelledby="upgrades-heading" hidden>
                 <h4 id="upgrades-heading">Weapon upgrades</h4>
                 <div class="upgrade-fields">
@@ -51,14 +51,14 @@
                 <p id="engrave-hint" class="editor-note" hidden></p>
               </section>
               <details id="basic-options" open><summary>Basic options</summary>
-                <div id="basic-stats"></div>
+                <div class="option-group" id="basic-stats"></div>
               </details>
               <section id="sub-options" aria-labelledby="sub-heading">
                 <div class="option-heading"><h4 id="sub-heading">Sub-options</h4><span id="roll-count"></span></div>
-                <div id="sub-stats"></div>
+                <div class="option-group" id="sub-stats"></div>
               </section>
               <p id="option-hint" class="editor-note" hidden></p>
-              <footer class="equipment-actions">
+              <footer class="inspector-actions">
                 <button type="button" id="apply-options" class="apply-button" disabled aria-describedby="equipment-access">Apply</button>
                 <p id="option-message" role="status" hidden></p>
               </footer>
@@ -66,7 +66,7 @@
           </div>
         </div>
       </section>
-      <section class="collection equipment-collection" aria-labelledby="collection-heading">
+      <section class="collection" aria-labelledby="collection-heading">
         <header class="collection-bar"><h2 id="collection-heading">Equipment</h2></header>
         <div class="collection-body">
           <div class="rack">
@@ -78,7 +78,7 @@
             <p id="empty" hidden>No equipment matches these filters.</p>
             <footer class="pager"><span id="range" aria-live="polite">Loading equipment…</span><button id="previous" aria-label="Previous page" disabled>‹</button><button id="next" aria-label="Next page" disabled>›</button></footer>
           </div>
-          <aside class="types equipment-types">
+          <aside class="types">
             <h3 id="equipment-types-heading">Equipment type</h3>
             <div id="types" role="group" aria-labelledby="equipment-types-heading"></div>
           </aside>

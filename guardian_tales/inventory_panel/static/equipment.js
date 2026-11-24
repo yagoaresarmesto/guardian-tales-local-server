@@ -1,4 +1,4 @@
-import { $, el, image, inventoryTile, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 import { equipmentOptions } from "/equipment-options.js";
 const preview = location.pathname === "/equipment/preview";
 const editor = preview ? null : equipmentOptions(load);
@@ -66,18 +66,11 @@ function drawTypes() {
   const keys = ["all", ...Array.from(types.keys()).filter(key => counts.has(key)),
     ...Array.from(counts.keys()).filter(key => !types.has(key))];
   if (!keys.includes(kind)) kind = "all";
-  $("types").replaceChildren(); $("mobile-types").replaceChildren();
-  for (const key of keys) {
-    const label = key === "all" ? "All types" : typeName(key), count = key === "all" ? items.length : counts.get(key);
-    const btn = el("button", "type-button");
-    const icon = image("/type-icon/" + (types.has(key) ? key : "all") + ".png");
-    icon.onerror = () => { icon.hidden = true; };
-    btn.type = "button"; btn.dataset.kind = key; btn.setAttribute("aria-pressed", String(key === kind));
-    btn.append(icon, el("span", "", label), el("small", "", String(count)));
-    $("types").append(btn);
-    $("mobile-types").add(new Option(label + " (" + count + ")", key));
-  }
-  $("mobile-types").value = kind;
+  renderTypeFilters($("types"), $("mobile-types"), keys.map(key => ({
+    key, name: key === "all" ? "All types" : typeName(key),
+    count: key === "all" ? items.length : counts.get(key),
+    iconUrl: "/type-icon/" + (types.has(key) ? key : "all") + ".png",
+  })));
 }
 function stars(item) {
   return item.stars >= 1 && item.stars <= 6 ? "★".repeat(item.stars) : "";
@@ -124,8 +117,7 @@ function draw() {
     ? (start + 1) + "–" + Math.min(start + pageSize, visible.length) + " of " + visible.length + " items"
     : "0 items";
   $("previous").disabled = page === 0; $("next").disabled = start + pageSize >= visible.length;
-  for (const btn of $("types").children) btn.setAttribute("aria-pressed", String(btn.dataset.kind === kind));
-  $("mobile-types").value = kind;
+  selectTypeFilter($("types"), $("mobile-types"), kind);
   drawDetails(); updateUrl();
 }
 function filter() {
@@ -171,8 +163,8 @@ window.addEventListener("hashchange", () => {
   if (items.length) { drawTypes(); filter(); }
 });
 $("types").onclick = e => {
-  const btn = e.target.closest("button[data-kind]");
-  if (btn) applyType(btn.dataset.kind);
+  const btn = e.target.closest("button[data-type]");
+  if (btn) applyType(btn.dataset.type);
 };
 $("mobile-types").onchange = e => applyType(e.target.value);
 $("tiles").onclick = e => {

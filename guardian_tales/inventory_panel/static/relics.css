@@ -1,24 +1,14 @@
-.relic-head { display:flex; align-items:center; gap:15px; padding:16px; background:linear-gradient(115deg,#335958,#2b3e54); border-bottom:1px solid var(--line); }
-#portrait { width:68px; height:68px; flex:none; display:grid; place-items:center; background:linear-gradient(155deg,#34465e,#245346); border:1px solid #9bbbae75; border-radius:5px; }
-#portrait img { width:80%; height:80%; min-width:0; min-height:0; object-fit:contain; image-rendering:pixelated; }
-#family, #state { color:var(--muted); font-size:.8rem; }
-#name { margin:3px 0; font-size:1.4rem; line-height:1.2; }
-#stars { color:#c8ed8e; letter-spacing:1px; }
-.relic-sheet { padding:12px 16px 16px; }
-.relic-sheet h4 { margin:15px 0 7px; font-size:.96rem; }
-#none, #error { padding:16px; } #error { color:#ffcbb6; }
-.relic-page .fact { font-size:.82rem; padding:4px 0; }
-.relic-slot { padding:9px; margin:0 0 7px; border:1px solid #ffffff27; border-radius:5px; background:#25364b; min-width:0; }
-.relic-slot legend { font-size:.74rem; color:#c7d4e7; padding:0 4px; }
-.slot-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px; }
-.slot-controls select { width:100%; max-width:100%; border:1px solid #63788e; border-radius:4px; font-size:.8rem; padding:6px 3px; }
-.slot-controls select:disabled { color:#d9e0ec; opacity:1; cursor:default; }
-.slot-range,.comparison { display:block; margin:6px 0 0; font-size:.76rem; color:#bdccdc; }
-.comparison { color:#b1ecb8; line-height:1.35; }
-.actions { display:flex; gap:7px; flex-wrap:wrap; margin-top:11px; }
-#unavailable { color:#d9e2ec; background:#24354a; border-radius:4px; padding:8px; font-size:.82rem; }
-.relic-page .tile { --shade:#233c37; --edge:#4b6b59; }
-.relic-page .tile[data-stars="5"] { --edge:#648157; }
-.relic-page .tile[data-stars="3"] { --edge:#89764c; }
-.relic-page .tile-stars { color:#d4ec95; }
-.relic-page .type-button img { image-rendering:pixelated; }
+.relic-slot { display: grid; gap: 5px; padding: 9px; }
+.relic-slot + .relic-slot { border-top: 1px solid var(--divider); }
+.slot-label { font-size: .75rem; font-weight: 600; color: #c2d6e7; }
+.slot-controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(60px, 24%); gap: 6px; }
+.slot-summary { font-size: .83rem; }
+#unavailable { margin-top: 8px; }
+#error { padding: 12px 16px; color: #ffcbb6; }
+.relic-page .tile { --shade: #233c37; --edge: #4b6b59; }
+.relic-page .tile[data-stars="5"] { --edge: #648157; }
+.relic-page .tile[data-stars="3"] { --edge: #89764c; }
+.relic-page .tile-stars { color: #d4ec95; }
+@container (max-width: 275px) {
+  .slot-controls { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,8 +1,9 @@
-import { $, el, image, inventoryTile } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 
 const api = "/api/game/consumables";
 const format = new Intl.NumberFormat("en-GB");
 const query = new URLSearchParams(location.hash.slice(1));
+let visible = [], page = 0, pageSize = 24;
 let rows = [], selected = null, hasIcons = false, writable = false, saving = false, statusRequest = 0;
 $("search").value = query.get("q") || "";
 
@@ -58,6 +59,8 @@ function showItem(item) {
   if (item) {
     $("detail-name").textContent = item.name;
     $("category").textContent = item.category;
+    $("catalog-id").textContent = item.spec;
+    $("quantity-range").textContent = "Range 1 – " + format.format(item.maximum);
     $("owned").textContent = format.format(item.amount);
     $("quantity").max = item.maximum;
     $("quantity").value = item.amount;
@@ -67,13 +70,21 @@ function showItem(item) {
   syncUrl();
 }
 
-function draw() {
+function filter() {
   const search = $("search").value.trim().replace(/^#(?=\d)/, "").toLowerCase();
   const group = $("filter").value;
-  const visible = rows.filter(item => (!group || item.category === group) &&
+  visible = rows.filter(item => (!group || item.category === group) &&
     [item.name, item.id, item.spec].join(" ").toLowerCase().includes(search));
-  if (selected && !visible.includes(selected)) showItem(null);
-  const buttons = visible.map(item => {
+  if (!selected || !visible.includes(selected)) showItem(visible[0] || null);
+  page = Math.floor(Math.max(0, visible.indexOf(selected)) / pageSize);
+  selectTypeFilter($("types"), $("filter"), group);
+  drawGrid();
+  syncUrl();
+}
+
+function drawGrid() {
+  const start = page * pageSize;
+  const buttons = visible.slice(start, start + pageSize).map(item => {
     const wrap = el("span", "tile-art");
     art(item, wrap);
     const button = inventoryTile({ id: item.id, name: item.name, art: wrap,
@@ -90,8 +101,12 @@ function draw() {
   });
   $("tiles").replaceChildren(...buttons);
   $("empty").hidden = !!visible.length;
-  $("range").textContent = visible.length + (visible.length === 1 ? " stack" : " stacks");
-  syncUrl();
+  const end = Math.min(start + pageSize, visible.length);
+  $("range").textContent = visible.length
+    ? (start + 1) + "–" + end + " of " + visible.length + (visible.length === 1 ? " stack" : " stacks")
+    : "0 stacks";
+  $("prev").disabled = page === 0;
+  $("next").disabled = end >= visible.length;
 }
 
 async function load(id, group) {
@@ -100,17 +115,43 @@ async function load(id, group) {
   const data = await response.json();
   rows = data.rows;
   hasIcons = data.hasIcons;
-  const categories = [...new Set(rows.map(r => r.category))];
-  $("filter").replaceChildren(new Option("All types",""), ...categories.map(c => new Option(c,c)));
-  $("filter").value = categories.includes(group) ? group : "";
+  const categories = new Map();
+  for (const item of rows) {
+    if (!categories.has(item.category)) {
+      categories.set(item.category, {key: item.category, name: item.category, count: 0,
+        iconUrl: hasIcons ? "/icon/" + item.spec + ".png" : null});
+    }
+    categories.get(item.category).count++;
+  }
+  renderTypeFilters($("types"), $("filter"), [
+    {key: "", name: "All types", count: rows.length, iconUrl: "/type-icon/all.png"},
+    ...categories.values(),
+  ]);
+  $("filter").value = categories.has(group) ? group : "";
   ++statusRequest;
   setAccess(data.writable);
   showItem(rows.find(r => r.id === id) || null);
-  draw();
+  filter();
 }
 
 $("quantity").oninput = () => { $("message").hidden = true; updateForm(); };
-$("search").oninput = $("filter").onchange = draw;
+$("search").oninput = $("filter").onchange = filter;
+$("types").onclick = event => {
+  const button = event.target.closest("button[data-type]");
+  if (button) { $("filter").value = button.dataset.type; filter(); }
+};
+for (const [id, step] of [["prev", -1], ["next", 1]]) {
+  $(id).onclick = () => {
+    page += step;
+    showItem(visible[page * pageSize]);
+    drawGrid();
+  };
+}
+watchGridPageSize($("tiles"), size => {
+  pageSize = size;
+  page = Math.floor(Math.max(0, visible.indexOf(selected)) / pageSize);
+  if (visible.length) drawGrid();
+});
 $("editor").onsubmit = async event => {
   event.preventDefault();
   if ($("apply").disabled) return;
@@ -128,7 +169,7 @@ $("editor").onsubmit = async event => {
     if (!response.ok) throw new Error(result.error || "Could not save the quantity.");
     item.amount = result.amount;
     item.version = result.version;
-    showItem(item); draw();
+    showItem(item); drawGrid();
     $("message").textContent = "Quantity saved.";
     $("message").classList.remove("error");
   } catch (error) {

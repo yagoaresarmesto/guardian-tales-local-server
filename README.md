@@ -223,7 +223,8 @@ The [inventory panel](http://127.0.0.1:17661/) reads your existing
 `local/state/server.sqlite3` and the matching catalog in
 `local/client-data/reference`. Use `--data-dir` and `--reference-dir` if your
 backend uses other directories. Install the optional `panel-art` extra to show
-sprites from your imported resources.
+sprites from your imported resources. In each tab, search by name or ID, filter
+by type and use the page arrows to browse. Select an item to see its details.
 
 - **Equipment** lets you change basic options, sub-options and their locks on an individual weapon or accessory.
   Under **Weapon upgrades**, raise a weapon's limit breaks and engrave eligible exclusive weapons once they meet the experience and limit-break requirements. Choose an engraving count and one of the bonus values offered for that weapon. The editor reads these limits from the imported game catalog. **Apply** saves the selected upgrades and option edits together, without spending hammers or gold.

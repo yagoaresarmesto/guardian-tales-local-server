@@ -12,6 +12,32 @@ export function image(url) {
   return img;
 }
 
+// Use the same labels and counts for the desktop rail and compact selector.
+export function renderTypeFilters(rail, select, filters) {
+  rail.replaceChildren();
+  select.replaceChildren();
+  for (const {key, name, count, iconUrl} of filters) {
+    const button = el("button", "type-button");
+    button.type = "button";
+    button.dataset.type = key;
+    if (iconUrl) {
+      const icon = image(iconUrl);
+      icon.onerror = () => icon.remove();
+      button.append(icon);
+    }
+    button.append(el("span", "", name), el("small", "", count));
+    rail.append(button);
+    select.add(new Option(name + " (" + count + ")", key));
+  }
+}
+
+export function selectTypeFilter(rail, select, key) {
+  for (const button of rail.children) {
+    button.setAttribute("aria-pressed", String(button.dataset.type === key));
+  }
+  select.value = key;
+}
+
 // The header, artwork, name and footer occupy the same tracks on every card.
 export function inventoryTile({ id, name, art, selected, level, stars, quantity,
   locked, equipped, training, socketed }) {

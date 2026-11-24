@@ -22,21 +22,30 @@
     <div class="workspace">
       <section class="inspector" aria-labelledby="details-title">
         <div class="section-bar"><h2 id="details-title">Relic details</h2><span id="copy-id"></span></div>
-        <p id="none">Select a relic to see its options.</p>
+        <div id="placeholder"><img src="/type-icon/inventory.png" alt=""><p>Select a relic to see its options.</p></div>
         <div id="detail" hidden>
-          <div class="relic-head"><div id="portrait"></div><div><span id="family"></span><h3 id="name"></h3><span id="stars"></span></div></div>
-          <div class="relic-sheet">
-            <p id="state"></p>
-            <form id="editor">
-              <h4>Basic options</h4><div id="basic"></div>
-              <h4>Sub-options</h4>
-              <div id="slots"></div><p id="unavailable" hidden></p>
-              <div class="actions" id="actions" hidden>
-                <button id="save" class="apply-button" type="submit" aria-describedby="access" disabled>Apply</button>
-              </div>
-            </form>
-            <p id="message" role="status" aria-live="polite" hidden></p>
+          <div class="item-identity">
+            <div class="hero-art" id="portrait"></div>
+            <div><div class="identity-meta" id="family"></div><h3 id="name"></h3><div class="hero-stars" id="stars"></div></div>
           </div>
+          <dl class="inspector-facts">
+            <div class="fact"><dt>Equipped</dt><dd id="equipped"></dd></div>
+            <div class="fact"><dt>Protection</dt><dd id="protection"></dd></div>
+            <div class="fact"><dt>Jewels</dt><dd id="jewels"></dd></div>
+          </dl>
+          <form class="inspector-editor" id="editor">
+            <section aria-labelledby="basic-heading">
+              <h4 id="basic-heading">Basic options</h4><div class="option-group" id="basic"></div>
+            </section>
+            <section aria-labelledby="sub-heading">
+              <h4 id="sub-heading">Sub-options</h4><div class="option-group" id="slots"></div>
+              <p id="unavailable" class="editor-note" hidden></p>
+            </section>
+            <footer class="inspector-actions">
+              <button id="save" class="apply-button" type="submit" aria-describedby="access" disabled>Apply</button>
+              <p id="message" role="status" hidden></p>
+            </footer>
+          </form>
         </div>
       </section>
       <section class="collection" aria-labelledby="collection-heading">

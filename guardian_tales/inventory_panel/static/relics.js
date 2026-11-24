@@ -1,4 +1,4 @@
-import { $, el, image, inventoryTile, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 
 let size = 24;
 const groups = {
@@ -41,14 +41,10 @@ function drawFamilies() {
     groups.get(name).count++;
   }
   if (!groups.has(family)) family = "";
-  $("types").replaceChildren(); $("mobile-types").replaceChildren();
-  for (const [key, {spec, count}] of groups) {
-    const name = key || "All relics";
-    const btn = el("button", "type-button");
-    btn.type = "button"; btn.dataset.family = key;
-    btn.append(image(spec ? "/icon/" + spec + ".png" : "/type-icon/all.png"), el("span","",name), el("small","",count));
-    $("types").append(btn); $("mobile-types").add(new Option(name + " (" + count + ")", key));
-  }
+  renderTypeFilters($("types"), $("mobile-types"), Array.from(groups, ([key, {spec, count}]) => ({
+    key, name: key || "All relics", count,
+    iconUrl: spec ? "/icon/" + spec + ".png" : "/type-icon/all.png",
+  })));
 }
 function tile(r) {
   const spec = data.specs[r.spec];
@@ -66,8 +62,7 @@ function drawGrid() {
   $("empty").hidden = !!visible.length;
   $("range").textContent = visible.length ? (start + 1) + "–" + Math.min(start + size,visible.length) + " of " + visible.length + " relics" : "0 relics";
   $("prev").disabled = page === 0; $("next").disabled = start + size >= visible.length;
-  for (const btn of $("types").children) btn.setAttribute("aria-pressed", String(btn.dataset.family === family));
-  $("mobile-types").value = family;
+  selectTypeFilter($("types"), $("mobile-types"), family);
 }
 function changedSlots() {
   const row = current();
@@ -108,18 +103,22 @@ async function checkAccess() {
 function slotEditor(row, entry) {
   const {group, slot: index} = entry;
   const source = row[group][index], pool = slotPool(row, entry);
-  const section = el("fieldset","relic-slot"), legend = el("legend","", "Slot " + (index + 1) + (source.Locked ? " · Locked" : ""));
-  section.append(legend);
+  const section = el("div", "relic-slot");
+  const label = el("span", "slot-label", "Slot " + (index + 1) + (source.Locked ? " · Locked" : ""));
+  label.id = group + "-slot-" + index;
+  section.setAttribute("role", "group");
+  section.setAttribute("aria-labelledby", label.id);
+  section.append(label);
   if (!editable(row, entry)) {
-    section.append(el("span","",summary(source.OptionId, source.Level))); return section;
+    section.append(el("span","slot-summary",summary(source.OptionId, source.Level))); return section;
   }
   const controls = el("div","slot-controls"), effect = el("select"), value = el("select");
-  const slotName = (group === "main" ? "basic slot " : "slot ") + (index + 1);
+  const slotName = (group === "main" ? "basic slot " : "bonus slot ") + (index + 1);
   effect.setAttribute("aria-label","Effect for " + slotName);
   value.setAttribute("aria-label","Value for " + slotName);
   for (const id of Object.keys(pool)) effect.add(new Option(effectName(id),id));
   effect.value = String(entry.option); effect.disabled = Object.keys(pool).length === 1;
-  const range = el("small","slot-range"), compare = el("small","comparison");
+  const range = el("small","editor-note"), compare = el("small","edit-diff");
   function showChange() {
     compare.hidden = entry.option === source.OptionId && entry.level === source.Level;
     compare.textContent = summary(source.OptionId,source.Level) + " → " + summary(entry.option,entry.level);
@@ -143,22 +142,27 @@ function slotEditor(row, entry) {
   return section;
 }
 function drawEditor() {
-  const row = current(); $("detail").hidden = !row; $("none").hidden = !!row;
+  const row = current(); $("detail").hidden = !row; $("placeholder").hidden = !!row;
   $("copy-id").textContent = row ? "#" + row.id : "";
   if (!row) { draft = []; return; }
   draft = Object.keys(groups).flatMap(group => row[group].map((o, slot) =>
     ({group, slot, option:o.OptionId, level:o.Level})));
   const spec = data.specs[row.spec];
-  $("portrait").replaceChildren(image("/icon/" + row.spec + ".png"));
+  const portrait = image("/icon/" + row.spec + ".png");
+  portrait.onerror = () => portrait.replaceWith(el("span", "fallback", spec.family.slice(0, 2)));
+  $("portrait").replaceChildren(portrait);
   $("family").textContent = spec.family; $("name").textContent = spec.name; $("stars").textContent = "★".repeat(spec.stars);
-  $("state").textContent = [row.equipped ? "Equipped" : "Unequipped", row.locked ? "Item locked" : "Item unlocked",
-    row.jewels ? row.jewels + " socketed jewel" + (row.jewels === 1 ? "" : "s") : ""].filter(Boolean).join(" · ");
+  $("stars").setAttribute("aria-label", spec.stars + " stars");
+  $("equipped").textContent = row.equipped ? "Yes" : "No";
+  $("protection").textContent = row.locked ? "Locked" : "Unlocked";
+  $("jewels").textContent = row.jewels;
+  $("basic").parentElement.hidden = !row.main.length;
   for (const [group, layout] of Object.entries(groups)) {
     $(layout.container).replaceChildren(...draft.filter(e => e.group === group).map(e => slotEditor(row,e)));
   }
   const reason = row.pending ? "This relic has a pending in-game option change." : !row.bonus.length ? "This relic has no rolled sub-options." : "";
   $("unavailable").hidden = !reason; $("unavailable").textContent = reason;
-  $("actions").hidden = !draft.some(entry => editable(row,entry)); updateApplyButton();
+  updateApplyButton();
 }
 function filter() {
   const search = $("search").value.trim().toLowerCase().replace(/^#(?=\d)/, ""), mode = $("show").value;
@@ -194,7 +198,7 @@ for (const [id, step] of [["prev",-1],["next",1]]) $(id).onclick = () => navigat
   page += step; selected = visible[page*size].id; drawGrid(); drawEditor(); syncUrl();
 });
 $("types").onclick = e => {
-  const btn = e.target.closest("button[data-family]"); if (btn) navigate(() => { family=btn.dataset.family; filter(); });
+  const btn = e.target.closest("button[data-type]"); if (btn) navigate(() => { family=btn.dataset.type; filter(); });
 };
 $("mobile-types").onchange = e => navigate(() => { family=e.target.value; filter(); });
 $("search").oninput = $("show").onchange = () => { if (data) navigate(filter); };
