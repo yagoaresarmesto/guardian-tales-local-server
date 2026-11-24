@@ -10,16 +10,40 @@ const phaseLabels = {
 const dateFormat = new Intl.DateTimeFormat("en-GB", {dateStyle: "medium", timeZone: "UTC"});
 let state;
 
+function draft() {
+  if ($("old-mode").checked) {
+    return {action: "select-old", seasonId: Number($("old-season").value)};
+  }
+  const value = $("seasons").querySelector("input:checked")?.value;
+  const seasonId = value ? Number(value) : null;
+  return state.oldActive && seasonId === state.previousEventId ?
+    {action: "leave-old"} : {action: "select", seasonId};
+}
+
 function updateChoice() {
-  const choice = $("seasons").querySelector("input:checked")?.value;
-  const same = Boolean(choice) && Number(choice) === state.seasonId;
-  $("apply").disabled = !choice || (same && state.phase === "active");
-  $("apply").textContent = same && state.phase === "active" ? "Season active" :
-    same && ["expired", "reward-period"].includes(state.phase) ? "Renew season" : "Apply season";
+  const {action, seasonId} = draft();
+  const archived = action === "select-old";
+  $("seasons").hidden = archived;
+  $("archive-picker").hidden = !archived;
+  const rotation = state.oldSeasons.find(row => row.id === seasonId);
+  $("old-details").textContent = rotation ?
+    "Eight-floor practice · " + dateFormat.format(new Date(rotation.from)) + " – " + dateFormat.format(new Date(rotation.to)) :
+    "Choose a historical rotation to practice its eight regular floors.";
+  const same = seasonId != null && seasonId === state.seasonId;
+  $("apply").disabled = action !== "leave-old" && (!seasonId || (same && state.phase === "active"));
+  $("apply").textContent = action === "leave-old" ? "Turn off Old Kamazone" :
+    same && state.phase === "active" ? "Season active" :
+    same && ["expired", "reward-period"].includes(state.phase) ? "Renew season" :
+    archived && !state.oldActive ? "Activate Old Kamazone" : "Apply season";
 }
 
 function display(next) {
   state = next;
+  $("archive-controls").hidden = !state.oldSeasons.length;
+  $("old-mode").checked = state.oldActive;
+  $("old-season").replaceChildren(new Option("Choose a rotation", ""));
+  for (const row of state.oldSeasons) $("old-season").add(new Option(row.name, String(row.id)));
+  if (state.oldActive) $("old-season").value = String(state.seasonId);
   $("seasons").replaceChildren();
   for (const season of state.seasons) {
     const label = document.createElement("label");
@@ -28,18 +52,37 @@ function display(next) {
     radio.type = "radio";
     radio.name = "season";
     radio.value = String(season.id);
-    radio.checked = season.id === state.seasonId;
+    radio.checked = season.id === (state.oldActive ? state.previousEventId : state.seasonId);
+    if (season.image) {
+      const preview = document.createElement("img");
+      preview.className = "season-art";
+      preview.alt = "";
+      preview.width = 520;
+      preview.height = 240;
+      preview.addEventListener("error", () => preview.remove(), {once: true});
+      preview.src = season.image;
+      label.append(preview);
+    }
     const text = document.createElement("span");
+    text.className = "season-copy";
     const id = document.createElement("small");
     id.textContent = "Season " + season.id;
     const name = document.createElement("strong");
     name.textContent = season.name;
     text.append(id, name);
-    label.append(radio, text);
+    if (season.theme) {
+      const theme = document.createElement("span");
+      theme.className = "season-theme";
+      theme.textContent = season.theme;
+      text.append(theme);
+    }
+    label.append(text, radio);
     $("seasons").append(label);
   }
   const selected = state.seasons.find(row => row.id === state.seasonId);
-  $("current").textContent = state.seasonId === null ? "No local season selected" :
+  const archive = state.oldSeasons.find(row => row.id === state.seasonId);
+  $("current").textContent = archive ? "Old Kamazone · " + archive.name :
+    state.seasonId === null ? "No local season selected" :
     "Season " + state.seasonId + (selected ? " · " + selected.name : "");
   $("phase").textContent = phaseLabels[state.phase];
   $("period").hidden = !state.period;
@@ -78,9 +121,8 @@ async function refresh(message = "") {
   }
 }
 
-async function save(action) {
-  const body = {action, revision: state.revision};
-  if (action === "select") body.seasonId = Number($("editor").elements.season.value);
+async function save(change) {
+  const body = {...change, revision: state.revision};
   lockControls();
   feedback("Saving season calendar…");
   try {
@@ -106,8 +148,8 @@ async function save(action) {
 $("editor").addEventListener("change", () => { updateChoice(); feedback(""); });
 $("editor").addEventListener("submit", event => {
   event.preventDefault();
-  if (!$("controls").disabled && !$("apply").disabled) save("select");
+  if (!$("controls").disabled && !$("apply").disabled) save(draft());
 });
-$("restore").addEventListener("click", () => save("disable"));
+$("restore").addEventListener("click", () => save({action: "disable"}));
 $("reload").addEventListener("click", () => refresh());
 refresh();

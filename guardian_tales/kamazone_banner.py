@@ -9,7 +9,6 @@ import zlib
 from functools import lru_cache
 
 from . import kamazone
-from .raid_static import decode, records
 from .reference import ReferenceData
 
 # Original block lettering, not extracted game artwork or a bundled font.
@@ -102,11 +101,10 @@ def missing_banner(directory, path):
     body = references.read_bytes("static_data_get.bin")
     if hashlib.sha256(body).hexdigest() != selected["source_sha256"]:
         raise ValueError("Kama-ZONE preview belongs to another content pack")
-    if selected["season_id"] not in kamazone.catalog(body):
+    if not kamazone.playable_season(body, selected["season_id"]):
         raise ValueError("Kama-ZONE preview needs a selected Global season")
-    tables = records(decode(body))[1]
     season = kamazone.one(
-        json.loads(tables["kamazonland2"][1])["Seasons"], "Id", selected["season_id"]
+        kamazone.mode_data(body, selected["season_id"])["Seasons"], "Id", selected["season_id"]
     )
     banner = season.get("Banner")
     urls = json.loads(banner) if isinstance(banner, str) else banner

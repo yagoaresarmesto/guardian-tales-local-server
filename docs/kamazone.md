@@ -55,19 +55,48 @@ The matching external pack retains three Global/EU event seasons:
 | 42 | Lifeguard Season |
 | 43 | Mecha Harpy Scintilla Season |
 
-Four additional records belong to another service and are excluded from this
-selector. The older permanent Kama-ZONE data and Tetis/RogueChess are separate
-systems. The Events card requires a selected season.
+Four additional event records belong to another service. The **Old Kamazone**
+switch opens the separate catalog of permanent Global rotations. The game
+uses its Events card to enter either edition.
 
 ## Web panel
 
 Open the [Kama-ZONE tab](http://127.0.0.1:17658/kamazone) on the host PC while
 the backend is running. The current calendar shows the saved season, whether
-it is active in Events, and its UTC dates. Pick a season and click **Apply
+it is active in Events, and its UTC dates. The three event cards show their
+story theme and original English banner when present in the imported media.
+If the banner is missing, the panel uses that season's NPC portrait and
+background from the local art pack. Pick a season and click **Apply
 season**. During the post-season window or after expiry, **Renew season** starts
 a fresh window for the same season. **Restore original calendar** performs
 the same action as `kamazone disable`. Close the game before applying changes,
 then restart the backend and reopen the game. The CDN and bridge can stay running.
+
+### Old Kamazone
+
+1. Close Guardian Tales and open **Kama-ZONE** on the local dashboard.
+2. Turn on **Old Kamazone**, choose a rotation by number and theme, and click
+   **Activate Old Kamazone**. The previous event calendar is saved with its dates.
+3. Use **Services → Game backend → Restart**, reopen the game and enter
+   **Events → Kama-ZONE**. The in-game lobby uses the current client's presentation.
+4. To return to your previous event, turn the switch off and click **Turn off
+   Old Kamazone**. Restart the backend and reopen the game. Each old rotation
+   keeps its own run and benefits independently of the event run.
+
+The 3.57.0 Global pack contains 40 permanent rotations, from the April 2021
+reopening through the May 2024 Greenhouse finale. The panel identifies themes
+from the archived encounters. Practice uses the first mini-season of each
+rotation, eight regular floors, its difficulty levels, enemies, artifact pools,
+and special events supported by the local practice server. The local benefit
+budget is 4,000 points. Infinity floors, the historical shop for bottle caps,
+and account rewards are outside this restoration. Seven launch-era keycard
+calendars also survive. Their playable season definitions are missing from
+this pack. [April 2021 renewal](https://www.guardiantales.com/news/158) ·
+[Final permanent season](https://www.guardiantales.com/news/4406)
+
+Host checks on the 3.57.0 data resolved all 40 rotations and exercised regular
+battles and progression through eight floors on rotations 1, 20 and 40. The
+archived rotations still need an in-game check on this Android build.
 
 ## Commands
 

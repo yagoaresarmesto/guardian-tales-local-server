@@ -2,11 +2,9 @@
 """Read-only Kama-ZONE entry, projecting seasonal menu benefits and local run state."""
 
 import hashlib
-import json
 from functools import lru_cache
 
 from . import kamazone, kamazone_practice, kamazone_run
-from .raid_static import decode, records
 from .village import integer
 
 ROUTE = "/kamazonland/enter"
@@ -31,7 +29,7 @@ def selected_source(account):
         < kamazone.timestamp(selected["period"]["RewardUntil"])
     ):
         raise ValueError("Kama-ZONE preview window has expired; select the season again")
-    if selected["season_id"] not in kamazone.catalog(source):
+    if not kamazone.playable_season(source, selected["season_id"]):
         raise ValueError("Kama-ZONE preview requires a preserved Global season")
     return selected, source
 
@@ -50,7 +48,7 @@ def mini_season_id(source, season_id):
     # Cache only an immutable static identity, keyed by the complete source and
     # season. Every action still validates selection and reads live local state.
     # Avoid decompressing and checking the complete pack on every run response.
-    mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
+    mode = kamazone.mode_data(source, season_id)
     season = kamazone.one(mode["Seasons"], "Id", season_id)
     group = season.get("MiniSeasonGroupId")
     minis = mode.get("MiniSeasons")

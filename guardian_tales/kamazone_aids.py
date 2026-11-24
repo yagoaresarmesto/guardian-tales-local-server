@@ -54,7 +54,7 @@ def keep(value, ident, source, bonuses):
     if ident is not None:
         if "ArtifactKeep" not in bonuses or ident not in effects.ids(value):
             raise ValueError("Select an owned artifact with the artifact keep benefit")
-        spec = kamazone.artifact_specs(source)[ident]
+        spec = kamazone.artifact_specs(source, value["season_id"])[ident]
         if not integer(spec.get("Rarity")) or spec["Rarity"] in (4, 5):
             raise ValueError("This artifact rarity cannot be retained")
     value["keeping_artifact_id"] = ident
@@ -68,7 +68,7 @@ def start(value, bonuses, source):
         keeping_artifact_id=None,
         opening_aids={field: 0 for field, benefit in AIDS.items() if benefit in bonuses},
     )
-    specs = kamazone.artifact_specs(source) if value["artifacts"] else {}
+    specs = kamazone.artifact_specs(source, value["season_id"]) if value["artifacts"] else {}
     kamazone_silver.collect(value, bonuses.get("SilverCoinAid", 0), specs)
 
 
@@ -85,8 +85,8 @@ def validate_pick(request):
 def pick(value, source, season_id, request, starting):
     if not value["active"] or value["floor"] != 1 or value["current_node_id"] != starting:
         raise ValueError("Starting aids are available only at the beginning of a challenge")
-    season = kamazone.one(kamazone.mode_data(source)["Seasons"], "Id", season_id)
-    specs = kamazone.artifact_specs(source)
+    season = kamazone.one(kamazone.mode_data(source, season_id)["Seasons"], "Id", season_id)
+    specs = kamazone.artifact_specs(source, value["season_id"])
     for field, ident in request.items():
         if ident is None:
             continue

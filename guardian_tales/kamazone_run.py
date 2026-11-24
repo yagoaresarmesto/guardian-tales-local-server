@@ -69,9 +69,9 @@ def valid_formation(value):
 
 @lru_cache(maxsize=2)
 def catalog(source, season_id, floor=1):
-    if season_id not in kamazone.catalog(source):
+    if not kamazone.playable_season(source, season_id):
         raise ValueError("Kama-ZONE challenge requires a preserved Global season")
-    mode = kamazone.mode_data(source)
+    mode = kamazone.mode_data(source, season_id)
     season = kamazone.one(mode["Seasons"], "Id", season_id)
     maximum = season.get("MaxDifficulty")
     if not integer(maximum, maximum=32, minimum=1):
@@ -235,14 +235,20 @@ def floor_nodes(source, season_id, seed, floor=1):
     return result
 
 
-def load(references):
-    path = references.directory / STATE
+def run_file(source, season_id):
+    return (
+        f"kamazone_old_run_{season_id}.json" if season_id in kamazone.old_seasons(source) else STATE
+    )
+
+
+def load(references, filename=STATE):
+    path = references.directory / filename
     if not path.exists():
         return None
     if not path.is_file() or path.stat().st_size > 32768:
         raise ValueError("Invalid local Kama-ZONE run file")
     value = kamazone_events.upgrade(
-        kamazone_shelter.upgrade(kamazone_battle.upgrade(references.json(STATE)))
+        kamazone_shelter.upgrade(kamazone_battle.upgrade(references.json(filename)))
     )
     # Existing v1 files predate the distinction between opening the encounter
     # panel and loading combat. Reading them must not rewrite their contents.
@@ -332,7 +338,7 @@ def owner(account):
 
 
 def matching(account, source, season_id):
-    value = load(account.references)
+    value = load(account.references, run_file(source, season_id))
     user_id, owned = owner(account)
     if (
         value is None
@@ -706,7 +712,7 @@ def _handle(account, source, season_id, route, request, operation_id):
     encoded = json.dumps(value, indent=2).encode() + b"\n"
     if not kamazone_events.valid(value) or len(encoded) > 32768:
         raise ValueError("Local Kama-ZONE event state exceeds its bounded format")
-    atomic_write(account.references.directory / STATE, encoded)
+    atomic_write(account.references.directory / run_file(source, season_id), encoded)
     return response_extras(route, request, value)
 
 

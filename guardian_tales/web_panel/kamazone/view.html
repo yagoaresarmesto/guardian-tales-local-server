@@ -13,6 +13,17 @@
       <form id="editor">
         <fieldset id="controls" disabled>
           <legend class="sr">Choose a season</legend>
+          <div id="archive-controls" hidden>
+            <label class="archive-toggle">
+              <input type="checkbox" id="old-mode" role="switch" aria-controls="archive-picker">
+              <span>Old Kamazone</span>
+            </label>
+            <div id="archive-picker" hidden>
+              <label for="old-season">Permanent-mode rotation</label>
+              <select id="old-season"></select>
+              <p id="old-details" aria-live="polite"></p>
+            </div>
+          </div>
           <div id="seasons"></div>
           <div class="actions">
             <button type="submit" id="apply" disabled>Apply season</button>

@@ -21,6 +21,7 @@ from .dka import sprites
 from .expedition import adapter as expedition
 from .guild_war import adapter as guild_war
 from .kamazone import adapter as kamazone
+from .kamazone.season_art import SEASONS as KAMAZONE_SEASONS
 from .raid import adapter as raid
 from .tetis import sprites as tetis_sprites
 from .tetis.adapter import TetisChanged, TetisEditor
@@ -116,6 +117,10 @@ MEDIA = {
     "/map.png": (lambda refs: raid.map_image(refs).read_bytes(), "image/png"),
     "/guild-war/fortress.png": (partial(WAR.read, frame="gvg_multi_castle_03.png"), "image/png"),
     "/kamazone/lobby.jpg": (KAMAZONE.read, "image/jpeg"),
+    **{
+        f"/kamazone/seasons/{art.hero}.png": (art.read, "image/png")
+        for art in KAMAZONE_SEASONS.values()
+    },
     "/expedition/forest.jpg": (EXPEDITION.read, "image/jpeg"),
     "/arena.jpg": (lambda refs: dka.arena_image(refs).read_bytes(), "image/jpeg"),
     **{

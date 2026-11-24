@@ -9,7 +9,7 @@
   },
   "content": {
     "description": "Reference data, content packs, archives and catalog contracts",
-    "modules": ["test_reference", "test_content_pack", "test_ondemand_archives", "test_quest_catalog", "test_tutorial_catalog", "test_nickname_static", "test_kamazone", "test_kamazone_practice", "test_kamazone_run", "test_kamazone_battle", "test_kamazone_shop", "test_kamazone_shelter", "test_kamazone_conclude", "test_kamazone_aids", "test_kamazone_playthrough", "test_kamazone_events", "test_kamazone_loot"]
+    "modules": ["test_reference", "test_content_pack", "test_ondemand_archives", "test_quest_catalog", "test_tutorial_catalog", "test_nickname_static", "test_kamazone", "test_kamazone_legacy", "test_kamazone_practice", "test_kamazone_run", "test_kamazone_battle", "test_kamazone_shop", "test_kamazone_shelter", "test_kamazone_conclude", "test_kamazone_aids", "test_kamazone_playthrough", "test_kamazone_events", "test_kamazone_loot"]
   },
   "campaign": {
     "description": "Story entry, stage progress, completion and play menus",

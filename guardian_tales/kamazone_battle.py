@@ -165,7 +165,7 @@ def settle_victory(value, node, request, source, references):
     bonuses = kamazone_aids.selected(references, source, value["season_id"])
     tier = node["Type"]
     amount = kamazone_silver.BASE_REWARD[tier] + bonuses.get(tier, 0)
-    specs = kamazone.artifact_specs(source) if value["artifacts"] else {}
+    specs = kamazone.artifact_specs(source, value["season_id"]) if value["artifacts"] else {}
     value["last_battle_silver"] = kamazone_silver.collect(value, amount, specs)
     kamazone_silver.charge_clear(value, source)
     value["last_loot_close"] = close_receipt(request)

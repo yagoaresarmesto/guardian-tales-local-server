@@ -38,7 +38,7 @@ def collect(value, amount, specs):
 
 def charge_clear(value, source):
     if value["silver_coin"] and value["curses"]:
-        specs = kamazone.artifact_specs(source)
+        specs = kamazone.artifact_specs(source, value["season_id"])
         loss = sum(
             effect_amount(specs[i])
             for i in value["curses"]

@@ -2,14 +2,12 @@
 """Shelter choices use separate run HP and never alter the saved account."""
 
 import hashlib
-import json
 import math
 import random
 from functools import lru_cache
 
 from . import kamazone, kamazone_silver
 from .kamazone_battle import HP_SCALE
-from .raid_static import decode, records
 from .village import integer
 
 TAKE = "/kamazonland/take-shelter"
@@ -45,7 +43,7 @@ def valid(value):
 
 @lru_cache(maxsize=2)
 def catalog(source, season_id):
-    mode = json.loads(records(decode(source))[1]["kamazonland2"][1])
+    mode = kamazone.mode_data(source, season_id)
     rate = mode.get("Constants", {}).get("ShelterHpRecover")
     if type(rate) not in (int, float) or not math.isfinite(rate) or not 0 <= rate <= 1:
         raise ValueError("Invalid preserved Kama-ZONE shelter recovery rate")

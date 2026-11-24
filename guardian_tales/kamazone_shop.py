@@ -17,8 +17,8 @@ MAX_STOCK = 3
 
 @lru_cache(maxsize=2)
 def catalog(source, season_id):
-    mode = kamazone.mode_data(source)
-    specs = kamazone.artifact_specs(source)
+    mode = kamazone.mode_data(source, season_id)
+    specs = kamazone.artifact_specs(source, season_id)
     season = kamazone.one(mode["Seasons"], "Id", season_id)
     available, excluded = season.get("Artifacts"), season.get("ArtifactsException", [])
     if any(

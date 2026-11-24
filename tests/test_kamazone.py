@@ -16,7 +16,7 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from guardian_tales import kamazone_preview
+from guardian_tales import kamazone, kamazone_preview
 from guardian_tales.__main__ import main
 from guardian_tales.assets import ResourceLibrary, handler_for
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
@@ -251,6 +251,23 @@ class KamazoneTests(unittest.TestCase):
         before = path.read_bytes()
         self.assertFalse(self.cli("disable")["restart_backend_and_game_required"])
         self.assertEqual(path.read_bytes(), before)
+
+    def test_panel_previews_use_the_imported_banner_even_with_no_active_season(self):
+        from guardian_tales.reference import ReferenceData
+        from guardian_tales.web_panel.kamazone.season_art import season_card
+        from guardian_tales.web_panel.routes import media_resource
+
+        refs = ReferenceData(self.root / "reference")
+        season = {"season_id": 42, "name": "Lifeguard Season", "name_key": "mall_season_name_2"}
+        without_art = season_card(refs, season)
+        self.assertIn("AA72", without_art["theme"])
+        self.assertNotIn("image", without_art)
+        media = self.root / "resources/files/media/kamazon_land"
+        media.mkdir(parents=True)
+        (media / "v3.30_kamazon_land_event_banner_enUS.png").write_bytes(b"preserved banner")
+        reader, mime = media_resource(season_card(refs, season)["image"])
+        self.assertEqual((reader(refs), mime), (b"preserved banner", "image/png"))
+        self.assertIsNone(media_resource("/kamazone/seasons/unknown.png"))
 
     def test_overlapping_unselected_season_is_hidden_only_in_global(self):
         row = self.tables["seasondate"]["EventPeriod"][1]
@@ -492,11 +509,13 @@ class KamazonePreviewTests(unittest.TestCase):
 
     def test_repeated_entries_decode_static_identity_once_and_never_share_mutable_responses(self):
         self.fixture.cli("select", "--season-id", "43")
+        kamazone.mode_data.cache_clear()
         kamazone_preview.mini_season_id.cache_clear()
         self.addCleanup(kamazone_preview.mini_season_id.cache_clear)
         before = list(self.db.iterdump()), self.db.total_changes
         files = {p.name: p.read_bytes() for p in self.fixture.root.iterdir()}
-        with patch("guardian_tales.kamazone_preview.decode", wraps=decode) as decoding:
+        kamazone.source_tables.cache_clear()
+        with patch("guardian_tales.kamazone.decode", wraps=decode) as decoding:
             first = self.call()
             original = copy.deepcopy(first)
             first["UserKamazonLand"]["Nodes"].append({"Id": 999})

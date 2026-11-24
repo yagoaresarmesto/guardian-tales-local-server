@@ -7,7 +7,7 @@ import json
 from functools import lru_cache
 from threading import Lock
 
-from . import kamazone
+from . import kamazone, kamazone_legacy
 from .punchking_static import atomic_write
 from .raid_static import compress, decode, digest, records
 from .reference import ReferenceData
@@ -22,9 +22,9 @@ _save_lock = Lock()
 
 @lru_cache(maxsize=2)
 def catalog(source, season_id):
-    if season_id not in kamazone.catalog(source):
+    if not kamazone.playable_season(source, season_id):
         raise ValueError("Kama-ZONE practice requires a preserved Global season")
-    mode = kamazone.mode_data(source)
+    mode = kamazone.mode_data(source, season_id)
     return seasonal_benefits(mode, kamazone.one(mode["Seasons"], "Id", season_id))
 
 
@@ -217,11 +217,11 @@ def save(references, source, season_id, request, operation_id):
 
 
 @lru_cache(maxsize=2)
-def prepare(body, generation, season_id):
+def prepare(body, generation, season_id, *, old=False):
     lines, tables = records(decode(body))
     content = tables["kamazonland2"][1]
     if season_id is not None:
-        mode = json.loads(content)
+        mode = kamazone_legacy.event_mode(tables, season_id) if old else json.loads(content)
         season = kamazone.one(mode["Seasons"], "Id", season_id)
         for row in seasonal_benefits(mode, season).values():
             if row["OpenType"] != "None":
@@ -261,6 +261,7 @@ def bootstrap_seed(references, filename, request, parent):
         parent(references, "static_data_get.bin", request),
         generation,
         selected["season_id"] if selected else None,
+        old=bool(selected and selected["version"] == 2),
     )
     if filename == "static_data_get.bin":
         return body

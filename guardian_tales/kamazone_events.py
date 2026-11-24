@@ -171,7 +171,7 @@ def valid(value):
 
 @lru_cache(maxsize=2)
 def catalog(source, season_id):
-    mode = kamazone.mode_data(source)
+    mode = kamazone.mode_data(source, season_id)
     if any(
         not isinstance(mode.get(k), list)
         for k in ("SpecialEvents", "SpecialEventChoices", "Artifacts")
@@ -183,7 +183,7 @@ def catalog(source, season_id):
     events = {r["Id"]: r for r in mode["SpecialEvents"] if r["Id"] in season["SpecialEvents"]}
     choices = {r["Id"]: r for r in mode["SpecialEventChoices"] if r["EventId"] in events}
     randoms = {r["Id"]: r for r in mode.get("RandomConclusions", [])}
-    artifacts = kamazone.artifact_specs(source)
+    artifacts = kamazone.artifact_specs(source, season_id)
     if len(events) != len(season["SpecialEvents"]) or any(
         not any(c["EventId"] == i for c in choices.values()) for i in events
     ):
@@ -206,7 +206,10 @@ def catalog(source, season_id):
 
 
 def matches(value, source, season_id, nodes):
-    if value["artifacts"] and not set(effects.ids(value)) <= kamazone.artifact_specs(source).keys():
+    if (
+        value["artifacts"]
+        and not set(effects.ids(value)) <= kamazone.artifact_specs(source, season_id).keys()
+    ):
         return False
     if not any(
         value[k] for k in ("events", "known_events", "known_choices", "known_random")

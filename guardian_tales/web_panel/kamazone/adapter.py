@@ -4,6 +4,7 @@
 from ... import kamazone
 from ...village import integer
 from ..artwork import KAMAZONE
+from .season_art import season_card
 
 
 def state(references):
@@ -13,7 +14,18 @@ def state(references):
         "phase": current["calendar_phase"],
         "period": current["local_period"],
         "revision": current["generation"],
-        "seasons": [{"id": row["season_id"], "name": row["name"]} for row in current["seasons"]],
+        "seasons": [season_card(references, row) for row in current["seasons"]],
+        "oldSeasons": [
+            {
+                "id": row["season_id"],
+                "name": row["name"],
+                "from": kamazone.timestamp(row["original_period"]["From"]).date().isoformat(),
+                "to": kamazone.timestamp(row["original_period"]["To"]).date().isoformat(),
+            }
+            for row in current["old_seasons"]
+        ],
+        "oldActive": current["old_active"],
+        "previousEventId": current["previous_event_season_id"],
         "hasArt": KAMAZONE.available(references),
     }
 
@@ -21,10 +33,11 @@ def state(references):
 def apply(references, body):
     if not isinstance(body, dict) or not integer(body.get("revision")):
         raise ValueError("Reload the season calendar before applying.")
-    if body.get("action") == "disable" and body.keys() == {"action", "revision"}:
+    action = body.get("action")
+    if action in ("disable", "leave-old") and body.keys() == {"action", "revision"}:
         season_id = None
     elif (
-        body.get("action") == "select"
+        action in ("select", "select-old")
         and body.keys() == {"action", "revision", "seasonId"}
         and integer(body["seasonId"], minimum=1)
     ):
@@ -33,4 +46,10 @@ def apply(references, body):
         raise ValueError(
             "Choose a season from the Global catalog or restore the original calendar."
         )
-    kamazone.change_season(references, season_id, expected_generation=body["revision"])
+    kamazone.change_season(
+        references,
+        season_id,
+        expected_generation=body["revision"],
+        old=action == "select-old",
+        leave_old=action == "leave-old",
+    )
