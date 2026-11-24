@@ -1,15 +1,10 @@
-.war-banner {
-  min-height: 215px;
-  background: radial-gradient(ellipse at 75% 85%, #4c6571 0, transparent 43%),
-    linear-gradient(114deg, #233750 20%, #1b2b44 65%, #172239);
-}
-.war-banner h1 { margin-bottom: 10px; }
+.war-banner h1 { margin-bottom: 4px; }
 .war-intro, #inactive-note { color: var(--muted); font-size: .95rem; }
 .fortress {
-  display: grid; place-items: center; align-self: stretch; justify-self: center; width: min(100%, 370px);
+  display: grid; place-items: center; align-self: stretch; flex: 0 1 245px;
   background: repeating-radial-gradient(ellipse 70% 20% at 50% 81%, transparent 0 36%, #aad9fc18 37% 38%, transparent 39% 65%);
 }
-#fortress-art { width: min(80%, 200px); height: 195px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 6px 4px #101c30); }
+#fortress-art { width: 100%; height: 92px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 3px #101c30); }
 .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
 .presets button, #disable {
   padding: 8px 12px; border: 1px solid #526580; border-radius: 4px; background: var(--field);
@@ -21,7 +16,7 @@
 .war-fields > div { min-width: 0; }
 .basic-option { display: flex; align-items: center; gap: 9px; margin-top: 18px; cursor: pointer; }
 .basic-option input { width: 17px; height: 17px; margin: 0; accent-color: var(--gold); }
-.war-summary { padding: 20px 22px; }
+.war-summary { padding: var(--inset); }
 #war-status { display: block; font-size: 1.2rem; }
 #war-status[data-enabled="true"] { color: var(--gold); }
 #inactive-note { margin-top: 8px; }
@@ -30,11 +25,9 @@
 #details dt { color: var(--muted); }
 #details dd { margin: 0; text-align: right; font-weight: 600; }
 @media (max-width: 690px) {
-  .war-banner { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); min-height: 160px; }
-  .war-banner .banner-copy { padding: 18px 15px; }
-  #fortress-art { width: 95%; height: 130px; }
+  .fortress { flex-basis: 22%; }
+  #fortress-art { height: 72px; }
 }
 @media (max-width: 420px) {
   .war-fields { grid-template-columns: 1fr; }
-  .war-summary { padding: 16px; }
 }

@@ -254,6 +254,10 @@ database; restoring the save alone does not activate them. Guild War overrides
 the guild calendars while enabled. Disable its trial before returning to the
 parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
 
+The backend panel uses the inventory editor's two-column layout. Raid, DKA,
+Guild Wars and Kama-ZONE show the saved selection beside the editor. In
+Expedition, select a stage from the table to open its level settings.
+
 ### Raid and Dungeon Kingdom Arena
 
 With the backend running, open the [Guild Raid panel](http://127.0.0.1:17658/)

@@ -1,13 +1,13 @@
-.encounter-detail { display: flex; align-items: center; gap: 12px; }
+.encounter-detail { display: flex; align-items: center; gap: 12px; max-width: 52%; }
 .boss-portrait { display: block; width: 50px; height: 50px; object-fit: contain; image-rendering: pixelated; }
-#encounter-art .boss-portrait { width: 70px; height: 70px; }
+#encounter-art .boss-portrait { width: 58px; height: 58px; }
 #encounter-art:not(:has(img:not([hidden]))), #encounter-element:not(:has(img:not([hidden]))) { display: none; }
 .detail-meta { display: flex; align-items: center; gap: 6px; }
 .encounter-detail p { color: #c5d3e5; font-size: .78rem; font-weight: 600; letter-spacing: .065em; text-transform: uppercase; }
 .encounter-detail strong { display: block; margin-top: 2px; font-size: clamp(1.1rem, 1.8vw, 1.44rem); line-height: 1.2; }
 .battlefield {
-  position: relative; width: min(100%, 472px); aspect-ratio: 512/334; justify-self: center; align-self: center;
-  margin-block: -16px; isolation: isolate; background-image: radial-gradient(#97c6f43a 1px, transparent 1px); background-size: 14px 14px;
+  position: relative; width: min(90%, 320px); aspect-ratio: 512/334; margin: 0 auto 14px;
+  isolation: isolate; border: 1px solid var(--line); border-radius: 7px; background: radial-gradient(#97c6f426 1px, transparent 1px) 0 0 / 14px 14px, #152232;
 }
 #map {
   display: block; width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0; z-index: -1;
@@ -48,7 +48,7 @@
 .mode span { display: block; padding: 8px 4px; border: 1px solid transparent; border-radius: 4px; font-size: .94rem; font-weight: 700; color: var(--muted); }
 .mode input:checked + span { color: #def6ff; border-color: #527992; background: linear-gradient(180deg, #35546a, #2c435a); box-shadow: inset 0 -2px #76d5f2; }
 .mode input:focus-visible + span { outline: 2px solid var(--gold); outline-offset: -2px; }
-.encounters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+.encounters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 .boss-card {
   display: grid; width: 100%; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; text-align: left;
   column-gap: 10px; border: 1px solid #3f4f67; border-radius: 5px; background: #182538; color: var(--ink);
@@ -56,16 +56,22 @@
 .slot-num { color: #a4b5cc; font: 650 .76rem/1.2 "IBM Plex Mono", Consolas, monospace; }
 .boss-name { font-size: 1rem; font-weight: 650; line-height: 1.25; overflow-wrap: anywhere; }
 .element { display: inline-flex; align-items: center; gap: 5px; color: var(--tone); font-size: .79rem; font-weight: 600; line-height: 1.25; }
-.encounters .boss-card { grid-template-columns: auto minmax(0, 1fr) auto; padding: 9px 10px; min-height: 57px; height: 100%; column-gap: 8px; }
-.encounters .boss-portrait { grid-row: 1 / 3; grid-column: 1; }
-.encounters .boss-name { grid-column: 2; grid-row: 1; font-size: .9rem; align-self: end; }
-.encounters .element { grid-column: 2; grid-row: 2; align-self: start; }
-.encounters .slot-num { grid-column: 3; grid-row: 1 / 3; font-size: .72rem; }
-.active-meta { color: var(--muted); font-size: .875rem; margin: 14px 20px 11px; }
-.active-bosses { display: grid; gap: 6px; margin: 0 19px; }
-.active-bosses .boss-card { grid-template-columns: 20px auto minmax(0, 1fr) auto; min-height: 52px; padding: 6px 12px; }
-.active-bosses .boss-name { grid-column: 3; }
-.active-bosses .boss-portrait { grid-column: 2; }
+.encounters .boss-card {
+  height: 100%; padding: 10px; grid-template-columns: 1fr; grid-template-rows: auto 64px 1fr auto;
+  justify-items: center; gap: 5px; text-align: center; border-radius: 7px; background: var(--tile);
+}
+.encounters .slot-num { grid-row: 1; justify-self: start; }
+.encounters .boss-portrait { grid-row: 2; width: 64px; height: 64px; max-width: 100%; }
+.encounters .boss-name { grid-row: 3; font-size: .9rem; }
+.encounters .element { grid-row: 4; }
+.encounters .boss-card:not(:has(.boss-portrait:not([hidden]))) { grid-template-rows: auto 0 1fr auto; }
+.active-meta { color: var(--muted); font-size: .875rem; margin: 12px var(--inset); }
+.active-bosses { display: grid; gap: 5px; margin: 0 var(--inset); }
+.active-bosses .boss-card { grid-template-columns: auto auto minmax(0, 1fr); min-height: 48px; gap: 2px 8px; padding: 5px 9px; }
+.active-bosses .slot-num, .active-bosses .boss-portrait { grid-row: 1 / 3; }
+.active-bosses .boss-portrait { grid-column: 2; width: 40px; height: 40px; }
+.active-bosses .boss-name, .active-bosses .element { grid-column: 3; }
+.active-bosses .boss-name { font-size: .88rem; }
 .active-bosses .boss-card[aria-pressed="true"] {
   border-color: #b89958; box-shadow: inset 3px 0 var(--gold);
   background: linear-gradient(90deg, #3a3940, #253145 83%);
@@ -76,7 +82,7 @@
 .active-hp strong { font: 750 1.15rem/1 "IBM Plex Mono", Consolas, monospace; letter-spacing: -.045em; color: #a5e7ff; }
 .mode-note { margin: -3px 0 13px; color: var(--muted); font-size: .875rem; }
 .slot-list { display: grid; gap: 7px; }
-.slot-row { display: grid; grid-template-columns: 44px minmax(0, 1.7fr) minmax(0, 1fr); align-items: end; gap: 10px; }
+.slot-row { display: grid; grid-template-columns: 44px minmax(0, 1.7fr) minmax(0, 1fr); align-items: end; gap: 10px; border: 1px solid var(--line); border-radius: 7px; padding: 8px; background: var(--tile); }
 .slot-row label { min-width: 0; position: relative; }
 .slot-art { position: relative; align-self: end; display: grid; place-items: center; min-height: 42px; }
 .slot-art .boss-portrait { width: 42px; height: 42px; }
@@ -88,31 +94,16 @@
 .select-icon { position: absolute; pointer-events: none; left: 8px; bottom: 11px; line-height: 0; }
 .slot-row label:has(.element-icon:not([hidden])) select { padding-left: 36px; }
 .hp-field { margin-top: 16px; }
-@media (max-width: 850px) {
-  .encounters { grid-template-columns: 1fr; }
-  .active-bosses .boss-card { grid-template-columns: auto auto minmax(0,1fr); column-gap: 8px; }
-  .active-bosses .slot-num, .active-bosses .boss-portrait { grid-row: 1 / 3; }
-  .active-bosses .element { grid-column: 3; }
-}
-@media (max-width: 690px) {
+@media (min-width: 741px) and (max-width: 980px), (max-width: 520px) {
   .encounters { grid-template-columns: repeat(2, minmax(0,1fr)); }
-  .active-bosses .boss-card { grid-template-columns: 20px auto minmax(0,1fr) auto; }
-  .active-bosses .slot-num, .active-bosses .boss-portrait { grid-row: auto; }
-  .active-bosses .element { grid-column: auto; }
 }
 @media (max-width: 480px) {
-  .battlefield { width: 85%; max-width: 300px; margin: 0; }
+  .raid-banner { align-items: start; flex-direction: column; }
+  .encounter-detail { max-width: 100%; gap: 8px; }
+  #encounter-art .boss-portrait { width: 38px; height: 38px; }
   .slot-row { grid-template-columns: 32px minmax(0,1.45fr) minmax(0,1fr); gap: 5px; }
   .slot-art .boss-portrait { width: 32px; height: 38px; }
   .slot-row select { padding-left: 6px; }
   .slot-row label:has(.element-icon:not([hidden])) select { padding-left: 25px; padding-right: 16px; background-position: right 9px center, right 4px center; }
   .select-icon { left: 5px; bottom: 13px; } .select-icon img { width: 17px; height: 17px; }
-  .encounters { gap: 5px; }
-  .encounters .boss-card { padding: 8px 7px; column-gap: 5px; }
-  .encounters .boss-portrait { width: 35px; height: 38px; }
-  .active-bosses { margin-inline: 14px; }
-}
-@media (max-width: 355px) {
-  .encounters { grid-template-columns: 1fr; }
-  .active-bosses .boss-card { gap: 6px; padding-inline: 8px; }
 }

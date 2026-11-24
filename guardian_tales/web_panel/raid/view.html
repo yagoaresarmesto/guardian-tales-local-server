@@ -1,21 +1,17 @@
 <main>
-  <section class="banner" aria-labelledby="page-title">
+  <section class="banner raid-banner" aria-labelledby="page-title">
     <div class="banner-copy">
       <p id="season-status" class="season-status">Loading selection…</p>
       <h1 id="page-title">Guild <em>Raid</em></h1>
-      <div id="encounter-detail" class="encounter-detail" aria-live="polite" hidden>
-        <span id="encounter-art"></span>
-        <div><div class="detail-meta"><span id="encounter-element"></span><p id="encounter-meta"></p></div><strong id="encounter-name"></strong></div>
-      </div>
     </div>
-    <div class="battlefield" role="group" aria-label="Active encounters on the raid map">
-      <img id="map" alt="" hidden>
-      <div id="map-pins"></div>
+    <div id="encounter-detail" class="encounter-detail" aria-live="polite" hidden>
+      <span id="encounter-art"></span>
+      <div><div class="detail-meta"><span id="encounter-element"></span><p id="encounter-meta"></p></div><strong id="encounter-name"></strong></div>
     </div>
   </section>
 
   <div class="workspace">
-    <section class="surface editor" aria-labelledby="editor-title">
+    <section class="surface collection" aria-labelledby="editor-title">
       <header class="panel-heading">
         <span class="section-icon sliders" aria-hidden="true"></span>
         <h2 id="editor-title">Rotation editor</h2>
@@ -49,13 +45,17 @@
       </form>
       <p id="feedback" role="status" hidden></p>
     </section>
-    <aside class="surface summary" aria-labelledby="lineup-title">
+    <aside class="surface inspector" aria-labelledby="lineup-title">
       <header class="panel-heading">
         <span class="section-icon stack" aria-hidden="true"></span>
         <h2 id="lineup-title">Active lineup</h2>
         <button type="button" id="reload" aria-label="Reload active selection" title="Reload active selection">↻</button>
       </header>
       <p class="active-meta" id="active-season">Loading…</p>
+      <div class="battlefield" role="group" aria-label="Active encounters on the raid map">
+        <img id="map" alt="" hidden>
+        <div id="map-pins"></div>
+      </div>
       <ol id="active-bosses" class="active-bosses"></ol>
       <div class="active-hp"><span>HP per bar <small>Round 1</small></span><strong id="active-hp">—</strong></div>
     </aside>

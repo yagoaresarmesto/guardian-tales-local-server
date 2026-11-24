@@ -1,37 +1,30 @@
-.arena-banner { display: flex; min-height: clamp(180px, 18vw, 260px); }
-.arena-banner img { position: absolute; inset: 0 0 0 auto; width: 68%; height: 100%; object-fit: cover; object-position: 50% 55%; z-index: -1; mask-image: linear-gradient(90deg, transparent, #000 38%); }
-.arena-banner .banner-copy { max-width: 65%; padding-block: 26px; }
-.arena-banner h1 { margin: 8px 0 0; font-size: clamp(2.25rem, 4.3vw, 4.25rem); }
-.arena-banner h1 em { display: block; }
-.arena-work { grid-template-columns: minmax(0, 2.3fr) minmax(240px, 1fr); }
+.arena-banner img { position: absolute; inset: 0 0 0 auto; width: 55%; height: 100%; object-fit: cover; object-position: 50% 55%; z-index: -1; mask-image: linear-gradient(90deg, transparent, #000 55%); }
 .arena-days { margin-top: 20px; }
-#days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(132px, 100%), 1fr)); gap: 8px; }
+#days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(122px, 100%), 1fr)); gap: 8px; }
 #days label { position: relative; min-width: 0; }
 .day-card {
-  display: grid; align-content: start; gap: 5px; height: 100%; padding: 13px 11px;
+  display: grid; grid-template-rows: auto 64px 1fr auto; justify-items: center; align-items: center;
+  gap: 6px; height: 100%; padding: 10px 8px; text-align: center;
   cursor: pointer; border: 1px solid var(--line); border-radius: 6px;
-  background: radial-gradient(ellipse at 20% 30%, color-mix(in srgb, var(--tone) 12%, transparent), transparent 80%), var(--field);
+  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--tone) 10%, transparent), transparent 80%), var(--tile);
 }
-.day-card .day-number { display: flex; align-items: center; justify-content: space-between; gap: 4px; color: var(--muted); font-size: .85rem; font-weight: 650; }
-.day-card .slime { margin-block: 6px; }
-.day-card strong { font-size: 1rem; }
-.day-card small { margin: 0; }
+.day-card .day-number { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 4px; color: var(--muted); font-size: .79rem; font-weight: 650; }
+.day-card .slime { grid-row: 2; width: 64px; height: 64px; }
+.day-card strong { grid-row: 3; font-size: .9rem; }
+.day-card small { grid-row: 4; margin: 0; }
+.day-card:has(.slime[hidden]) { grid-template-rows: auto 0 1fr auto; }
 #days input:checked + .day-card { border-color: var(--gold); box-shadow: inset 0 -3px var(--gold); }
 #days input:checked + .day-card .day-number { color: var(--gold); }
 #days input:focus-visible + .day-card { outline: 2px solid var(--ice); outline-offset: 2px; }
 .day-card:hover { border-color: var(--tone); }
 .slime { width: 76px; max-width: 100%; height: 72px; object-fit: contain; image-rendering: pixelated; flex: none; }
-.arena-saved { padding: 20px 22px; }
+.arena-saved { padding: var(--inset); }
 #saved-status, #saved-weakness { color: var(--muted); font-size: .94rem; }
 #saved-encounter { display: flex; align-items: center; gap: 15px; padding-top: 16px; margin-top: 14px; border-top: 1px solid var(--line); }
 #saved-slime { display: flex; align-items: center; gap: 6px; color: var(--tone); font-size: 1.3rem; margin-bottom: 3px; }
 @media (min-width: 1360px) {
   #days { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 }
-@media (max-width: 760px) {
-  .arena-work { grid-template-columns: 1fr; }
-}
 @media (max-width: 540px) {
-  .arena-banner .banner-copy { max-width: 80%; }
-  .arena-banner img { width: 80%; mask-image: linear-gradient(90deg, transparent 2%, #000b 70%); }
+  .arena-banner img { width: 68%; opacity: .45; }
 }
