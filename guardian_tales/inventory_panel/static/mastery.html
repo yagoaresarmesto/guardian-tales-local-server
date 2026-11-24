@@ -18,34 +18,36 @@
     <span class="context">Save editor</span>
   </div></header>
   <main>
-    <div class="title-row"><h1>Guardian Mastery</h1><span class="temporary">Game save · server.sqlite3</span></div>
+    <header class="mastery-heading">
+      <h1>Guardian Mastery</h1>
+      <details class="rules"><summary>Mastery rules</summary>
+        <div><p>Every 10 levels in your lowest class unlocks the next 10 in each class.</p><p id="ceiling"></p></div>
+      </details>
+    </header>
+    <img class="training-scene" src="/mastery-training.png" width="1103" height="176" alt="">
     <p class="save-access" id="access" role="status" hidden></p>
     <p id="loading" role="status">Loading mastery…</p>
     <form id="allocation" hidden>
       <div class="mastery-grid">
-        <section class="collection skills" aria-labelledby="skills-heading">
-          <header class="collection-bar"><h2 id="skills-heading">Skill allocation</h2><span id="level-range"></span></header>
-          <div id="classes"></div>
-          <p class="class-rule">Every 10 levels in your lowest class unlocks the next 10 levels in each class.</p>
+        <aside class="class-rail"><h2>Class</h2><div id="classes" role="group" aria-label="Hero class"></div></aside>
+        <section class="skill-list" aria-labelledby="skills-heading">
+          <header><h2 id="skills-heading">Skills</h2><span id="level-range"></span></header>
+          <div id="skills"></div>
         </section>
-        <aside class="collection review" aria-labelledby="review-heading">
-          <header class="collection-bar"><h2 id="review-heading">Review changes</h2></header>
-          <div class="review-body">
-            <dl>
-              <div><dt>Available points</dt><dd id="balance"></dd></div>
-              <div><dt id="delta-label">Point change</dt><dd id="delta"></dd></div>
-              <div class="after"><dt>After applying</dt><dd id="after"></dd></div>
-            </dl>
-            <p id="ceiling"></p>
-            <p class="notice" id="excess" hidden></p>
-            <p id="issue" role="status" hidden></p>
-            <button type="button" id="reload" hidden>Reload saved allocation</button>
-            <button class="apply-button" id="apply" disabled>Apply</button>
-            <div class="draft-actions"><button type="button" id="reset">Reset all levels</button><button type="button" id="max">Max all levels</button><button type="button" id="undo" disabled>Discard edits</button></div>
-            <p id="message" role="status" hidden></p>
-          </div>
-        </aside>
       </div>
+      <footer class="mastery-footer">
+        <div class="toolbar">
+          <div class="balance"><span class="point-icon" aria-hidden="true"></span><div><span>Mastery points</span><strong id="balance"></strong></div></div>
+          <div class="actions"><button type="button" id="reset">Reset all levels</button><button type="button" id="max">Max all levels</button><button type="button" id="undo" disabled>Discard edits</button><button class="apply-button" id="apply" disabled>Apply</button></div>
+        </div>
+        <div id="review" hidden>
+          <dl><div><dt id="delta-label">Point change</dt><dd id="delta"></dd></div><div><dt>After applying</dt><dd id="after"></dd></div></dl>
+          <p id="excess" role="status" hidden></p>
+          <p id="issue" role="status" hidden></p>
+          <button type="button" id="reload" hidden>Reload saved allocation</button>
+        </div>
+        <p id="message" role="status" hidden></p>
+      </footer>
     </form>
   </main>
 </body>

@@ -28,6 +28,7 @@ from guardian_tales.web_panel.server import PanelHandler
 from .equipment import TYPE_ICONS, EquipmentDisplay
 from .equipment_options import EquipmentOptionEditor
 from .mastery import MasteryEditor
+from .mastery_art import training_banner
 from .relics import RelicEditor
 from .stack_quantities import CONSUMABLES, StackQuantityEditor
 
@@ -224,6 +225,8 @@ class Handler(PanelHandler):
                 return self.list_json(self.server.sandbox.listing())
             if path == "/preview-status":
                 return self.json(200, {"preview": "gt-inventory-sandbox"})
+            if path == "/mastery-training.png":
+                return self.reply(200, "image/png", training_banner(self.server.catalog.refs))
             if path == "/api/game/mastery":
                 return self.list_json(self.server.mastery.info())
             if path == "/api/game/relics":

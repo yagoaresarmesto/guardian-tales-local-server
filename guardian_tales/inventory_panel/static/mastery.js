@@ -3,6 +3,7 @@ import { $, el } from "/inventory-dom.js";
 const api = "/api/game/mastery";
 const number = new Intl.NumberFormat("en-GB");
 const fields = new Map(), groups = new Map();
+let activeGroup;
 let state, writable = false, busy = false, stale = false;
 let previewBody, timer, generation = 0, statusRequest = 0;
 
@@ -48,6 +49,7 @@ async function json(url, body) {
 }
 
 function problem(error) {
+  $("review").hidden = false;
   show("issue", error.message);
   if (error.status === 409) {
     stale = true;
@@ -57,34 +59,100 @@ function problem(error) {
   buttons();
 }
 
+const classArt = {Warrior: "warrior", Ranged: "ranged", Tank: "tank", Support: "support"};
+const skillIcons = {ATK: "⚔", HP: "♥", DEF: "⛨", "Skill damage": "✦"};
+
+function selectClass(id) {
+  activeGroup = id;
+  for (const [key, group] of groups) {
+    group.panel.hidden = key !== id;
+    group.button.setAttribute("aria-pressed", String(key === id));
+  }
+  $("skills-heading").textContent = groups.get(id).name + " skills";
+}
+
+function addClass(skill) {
+  const name = skill.className, button = el("button", "class-button");
+  button.type = "button";
+  const icon = el("span", "class-icon", name.slice(0, 1));
+  icon.setAttribute("aria-hidden", "true");
+  if (classArt[name]) {
+    const sprite = el("img");
+    sprite.alt = "";
+    sprite.onload = () => icon.replaceChildren(sprite);
+    sprite.src = "/type-icon/" + classArt[name] + ".png";
+  }
+  const text = el("span", "class-name", name), total = el("span", "class-total");
+  text.append(total);
+  button.append(icon, text);
+  const panel = el("div", "class-skills");
+  panel.id = "class-" + skill.group;
+  button.setAttribute("aria-controls", panel.id);
+  button.onclick = () => selectClass(skill.group);
+  $("classes").append(button);
+  $("skills").append(panel);
+  groups.set(skill.group, {name, button, panel, total, count: 0});
+}
+
+function stepButton(label, step, input, name) {
+  const button = el("button", "level-step", label);
+  button.type = "button";
+  button.setAttribute("aria-label", (step > 0 ? "Increase " : "Decrease ") + name);
+  button.onclick = () => {
+    const value = Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : 0;
+    input.value = Math.max(0, Math.min(state.maxLevel, value + step));
+    input.dispatchEvent(new Event("input", {bubbles: true}));
+  };
+  return button;
+}
+
 function renderSkills() {
-  fields.clear();
-  groups.clear();
-  $("classes").replaceChildren();
+  fields.clear(); groups.clear();
+  $("classes").replaceChildren(); $("skills").replaceChildren();
   for (const skill of state.skills) {
-    if (!groups.has(skill.group)) {
-      const card = el("section", "class-card");
-      card.dataset.group = skill.group;
-      const heading = el("h3", "", skill.className);
-      const total = el("span", "class-total"), bar = el("progress");
-      bar.setAttribute("aria-label", skill.className + " allocated levels");
-      heading.append(total);
-      const header = el("header");
-      header.append(heading, bar);
-      card.append(header);
-      $("classes").append(card);
-      groups.set(skill.group, {card, total, bar, count: 0});
-    }
+    if (!groups.has(skill.group)) addClass(skill);
     const group = groups.get(skill.group);
     group.count++;
-    const control = el("label", "skill", skill.name), input = el("input");
+    const row = el("div", "skill-row");
+    const text = el("div", "skill-copy"), icon = el("span", "skill-icon", skillIcons[skill.name] || "◆");
+    icon.setAttribute("aria-hidden", "true");
+    const title = el("h3", "", skill.name + (skillIcons[skill.name] ? " Increase" : ""));
+    const bonus = el("span"), change = el("span", "bonus-change");
+    const description = el("p"); description.append(bonus, change);
+    text.append(title, description);
+    const cost = el("span", "skill-cost"), costText = el("span");
+    const point = el("span", "point-icon"); point.setAttribute("aria-hidden", "true");
+    cost.append(point, costText);
+    const name = skill.className + " " + skill.name;
+    const input = el("input");
     input.type = "number"; input.required = true; input.min = 0; input.max = state.maxLevel; input.step = 1;
-    input.inputMode = "numeric"; input.value = skill.level;
-    input.setAttribute("aria-label", skill.className + " " + skill.name);
-    control.append(input);
-    group.card.append(control);
-    fields.set(skill.id, input);
+    input.inputMode = "numeric"; input.value = skill.level; input.setAttribute("aria-label", name);
+    const down = stepButton("−", -1, input, name), up = stepButton("+", 1, input, name);
+    const controls = el("div", "level-control");
+    const stepper = el("div", "stepper"); stepper.append(down, input, up);
+    controls.append(el("span", "level-label", "Level"), stepper);
+    row.append(icon, text, cost, controls);
+    group.panel.append(row);
+    fields.set(skill.id, {input, bonus, change, down, up, cost, costText});
   }
+  if (groups.size) selectClass(groups.has(activeGroup) ? activeGroup : groups.keys().next().value);
+}
+
+function displayLevel(skill, field) {
+  const value = field.input.valueAsNumber, valid = field.input.validity.valid;
+  const saved = skill.bonuses?.[skill.level], projected = skill.bonuses?.[value];
+  field.bonus.textContent = valid && projected != null
+    ? skill.className + " heroes’ " + skill.name + " +" + number.format(projected) + "%"
+    : "Saved level " + skill.level;
+  const difference = valid && projected != null && saved != null ? projected - saved : 0;
+  field.change.textContent = difference ? " (" + (difference > 0 ? "+" : "") + number.format(difference) + "%)" : "";
+  field.change.classList.toggle("decrease", difference < 0);
+  field.down.disabled = valid && value === 0;
+  field.up.disabled = valid && value === state.maxLevel;
+  const cost = valid ? state.levelCosts?.[value] : null;
+  field.costText.textContent = cost != null ? number.format(cost) : "—";
+  field.cost.title = cost != null ? "Next level: " + number.format(cost) + " mastery points" : (value === state.maxLevel ? "Maximum level" : "Next level cost unavailable");
+  field.cost.setAttribute("aria-label", field.cost.title);
 }
 
 function edit() {
@@ -94,7 +162,8 @@ function edit() {
   const levels = {}, totals = new Map();
   let dirty = false, valid = true, anyLevel = false;
   for (const skill of state.skills) {
-    const input = fields.get(skill.id), value = input.valueAsNumber;
+    const field = fields.get(skill.id), input = field.input, value = input.valueAsNumber;
+    displayLevel(skill, field);
     const changed = value !== skill.level;
     input.classList.toggle("modified", changed);
     dirty ||= changed;
@@ -105,12 +174,11 @@ function edit() {
   }
   for (const [id, group] of groups) {
     const value = totals.get(id), maximum = group.count * state.maxLevel;
-    group.bar.max = maximum;
-    group.bar.value = Number.isFinite(value) ? value : 0;
     group.total.textContent = (Number.isFinite(value) ? value : "—") + " / " + maximum;
   }
+  $("review").hidden = !dirty && !stale;
   $("reset").disabled = !anyLevel && valid;
-  $("max").disabled = [...fields.values()].every(input => input.valueAsNumber === state.maxLevel);
+  $("max").disabled = [...fields.values()].every(({input}) => input.valueAsNumber === state.maxLevel);
   $("undo").disabled = !dirty;
   $("delta-label").textContent = "Point change";
   $("delta").textContent = dirty ? "—" : "0";
@@ -158,12 +226,12 @@ async function load() {
   } catch (error) { show("loading", error.message); }
 }
 
-$("classes").oninput = () => { show("message"); edit(); };
+$("skills").oninput = () => { show("message"); edit(); };
 for (const id of ["reset", "max", "undo"]) {
   $(id).onclick = () => {
     for (const skill of state.skills) {
       const targets = {reset: 0, max: state.maxLevel, undo: skill.level};
-      fields.get(skill.id).value = targets[id];
+      fields.get(skill.id).input.value = targets[id];
     }
     show("message"); edit();
   };
@@ -191,6 +259,10 @@ $("allocation").onsubmit = async event => {
     busy = false; $("allocation").inert = false; buttons();
   }
 };
+
+const scene = document.querySelector(".training-scene");
+scene.addEventListener("error", () => { scene.hidden = true; });
+if (scene.complete && !scene.naturalWidth) scene.hidden = true;
 
 load();
 window.setInterval(checkAccess, 2500);

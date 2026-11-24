@@ -26,6 +26,11 @@ TYPE_ICONS = {
     "shield": "ic_wp_shield_00",
     "accessory": "ic_wp_acc_00",
     "lock": "ic_lock_00",
+    "warrior": "ic_atk_type_warrior",
+    "ranged": "ic_atk_type_sniper",
+    "tank": "ic_atk_type_tanker",
+    "support": "ic_atk_type_support",
+    "mastery-point": "ic_guardian_mastery_point",
 }
 
 

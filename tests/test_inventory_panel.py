@@ -65,9 +65,23 @@ def prepare_inventory(root):
         ],
         "buffs": [],
         "options": [
+            dict(
+                Id=10,
+                Name="test_warrior_atk",
+                Class="TotalAttackScale",
+                CoopClassType="Melee",
+                AttackScaleAdd=0.001,
+            ),
             dict(Id=7, Name="relic_base_hp_scale", Class="HpScale", HpScaleAdd=0.01),
             dict(Id=8, Name="test_atk", Class="TotalAttackScale", AttackScaleAdd=0.01),
         ],
+        "guardianlevel": {
+            "GuardianSkill": [dict(SkillId=101, SkillCategoryId=1, OptionId=[10])],
+            "GuardianSkillLevel": [
+                dict(SkillLevel=1, OptionLevel=1),
+                dict(SkillLevel=11, OptionLevel=21),
+            ],
+        },
         "weaponenhance": {
             "Constants": dict(
                 WeaponMaxLimitBreak=3, WeaponEngravingCeiling=3, WeaponEngravingLevelRequirement=2
@@ -165,6 +179,9 @@ class InventoryPanelTests(unittest.TestCase):
             self.assertIn(b'lang="en"', page)
             for asset in re.findall(rb'(?:href|src)="(/[^"]+\.(?:css|js))"', page):
                 self.assertTrue(self.call(asset.decode()))
+        with self.assertRaises(HTTPError) as missing_art:
+            self.call("/mastery-training.png")
+        self.assertEqual(missing_art.exception.code, 404)
         self.assertTrue(self.call("/inventory-dom.js"))
         self.assertTrue(self.call("/equipment-options.js"))
 
@@ -196,6 +213,14 @@ class InventoryPanelTests(unittest.TestCase):
             )
             db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
         return profile, dict.fromkeys(skills, 12)
+
+    def test_mastery_card_uses_catalog_option_rank_and_next_level_cost(self):
+        self.seed_mastery()
+        state = self.call("/api/game/mastery")
+        skill = next(skill for skill in state["skills"] if skill["id"] == "101")
+        self.assertEqual((skill["className"], skill["name"]), ("Warrior", "ATK"))
+        self.assertEqual(skill["bonuses"], {"0": 0, "1": 0.1, "11": 2.1})
+        self.assertEqual(state["levelCosts"][11], 13)
 
     def test_mastery_full_reset_capped_refund_and_rebuild_from_zero(self):
         path = "/api/game/mastery"

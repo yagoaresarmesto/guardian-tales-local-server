@@ -35,33 +35,48 @@ class MasteryEditor(GameSaveEditor):
         self.references = references
 
     @cached_property
-    def labels(self):
+    def skill_details(self):
         tables = records(decode(self.references.read_bytes("static_data_get.bin")))[1]
         if "guardianlevel" not in tables:
             return {}
         options = {o["Id"]: o for o in json.loads(tables["options"][1])}
+        guardian = json.loads(tables["guardianlevel"][1])
+        ranks = {
+            row["SkillLevel"]: row["OptionLevel"] for row in guardian.get("GuardianSkillLevel", [])
+        }
         stats = {
-            "TotalAttackScale": "ATK",
-            "HpScale": "HP",
-            "DefenseScale": "DEF",
-            "SuperSkillScale": "Skill damage",
+            "TotalAttackScale": ("ATK", "AttackScale"),
+            "HpScale": ("HP", "HpScale"),
+            "DefenseScale": ("DEF", "DefenseScale"),
+            "SuperSkillScale": ("Skill damage", "AttackScale"),
         }
         classes = {
-            "Melee": "Melee",
+            "Melee": "Warrior",
             "Projectile": "Ranged",
             "Tanker": "Tank",
             "Supporter": "Support",
         }
-        labels = {}
-        for row in json.loads(tables["guardianlevel"][1]).get("GuardianSkill", []):
+        details = {}
+        for row in guardian.get("GuardianSkill", []):
             effects = row.get("OptionId") or []
             option = options.get(effects[0], {}) if effects else {}
-            labels[str(row["SkillId"])] = (
-                row["SkillCategoryId"],
-                classes.get(option.get("CoopClassType")),
-                stats.get(option.get("Class")),
+            name, scale = stats.get(option.get("Class"), (None, None))
+            bonuses = {}
+            if scale and len(effects) == 1:
+                step = option.get(scale + "Add")
+                base = option.get(scale + "Base", 0)
+                if isinstance(step, (float, int)) and isinstance(base, (float, int)):
+                    bonuses = {
+                        level: round(100 * (base + rank * step), 5) for level, rank in ranks.items()
+                    }
+                    bonuses[0] = 0
+            details[str(row["SkillId"])] = dict(
+                group=row["SkillCategoryId"],
+                className=classes.get(option.get("CoopClassType")),
+                name=name,
+                bonuses=bonuses,
             )
-        return labels
+        return details
 
     def state(self, db):
         catalog = load_catalog(self.references)
@@ -91,19 +106,23 @@ class MasteryEditor(GameSaveEditor):
         costs = catalog["level_costs"]
         skills = []
         for key, group in catalog["skills"].items():
-            category, class_name, name = self.labels.get(key, (None, None, None))
+            details = self.skill_details.get(key, {})
+            if details.get("group") != group:
+                details = {}
             skills.append(
                 dict(
                     id=key,
                     group=group,
-                    className=(class_name if category == group else None) or f"Class {group}",
-                    name=(name if category == group else None) or f"Skill {key}",
                     level=levels.get(key, 0),
+                    className=details.get("className") or f"Class {group}",
+                    name=details.get("name") or f"Skill {key}",
+                    bonuses=details.get("bonuses", {}),
                 )
             )
         return dict(
             skills=skills,
             maxLevel=len(costs),
+            levelCosts=costs,
             balance=points["Amount"],
             maxInvestment=len(skills) * sum(costs),
             refundCeiling=refund_ceiling(catalog),
