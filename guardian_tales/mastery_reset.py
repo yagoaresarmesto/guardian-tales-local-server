@@ -6,7 +6,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 from .campaign import FREE_GEMS
-from .mastery import MASTERY_POINTS, load_catalog, saved_mastery
+from .mastery import MASTERY_POINTS, invested_points, load_catalog, saved_mastery
 from .snapshots import CLIENT
 from .stamina_regen import TIMESTAMP
 from .village import INT_MAX, MAX_REVISION, MAX_TIME, current_village, integer
@@ -100,7 +100,7 @@ def reset(account, body, operation_id, now=None):
     points, gems = rows[MASTERY_POINTS][0], rows[FREE_GEMS][0]
     # Refund the configured investment in the current skill map, never the
     # historical counter wholesale. Signed counter offsets survive the refund.
-    refund = sum(sum(catalog["level_costs"][:level]) for level in levels.values())
+    refund = invested_points(levels, catalog["level_costs"])
     cost = policy["cost"]
     if (
         refund > INT_MAX - points["Amount"]

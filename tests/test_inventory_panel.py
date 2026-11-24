@@ -11,9 +11,11 @@ from threading import Thread
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from guardian_tales.basecamp import MASTERY_POINTS
 from guardian_tales.inventory_panel.server import InventoryServer
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
+from guardian_tales.snapshots import CLIENT
 from guardian_tales.state_lock import StateLock
 
 
@@ -158,13 +160,109 @@ class InventoryPanelTests(unittest.TestCase):
     def test_views_and_referenced_static_assets(self):
         import re
 
-        for section in ("equipment", "relics", "consumables"):
+        for section in ("equipment", "relics", "consumables", "mastery"):
             page = self.call("/" + section)
             self.assertIn(b'lang="en"', page)
             for asset in re.findall(rb'(?:href|src)="(/[^"]+\.(?:css|js))"', page):
                 self.assertTrue(self.call(asset.decode()))
         self.assertTrue(self.call("/inventory-dom.js"))
         self.assertTrue(self.call("/equipment-options.js"))
+
+    def seed_mastery(self, balance=500):
+        skills = {str(group * 100 + index): group for group in range(1, 5) for index in (1, 2)}
+        catalog = dict(
+            client=CLIENT, portal_specs=[9001], skills=skills, level_costs=list(range(2, 14))
+        )
+        (self.root / "guardian_mastery_catalog.json").write_text(json.dumps(catalog))
+        village = dict(UserId=1, Buildings=[dict(SpecId=9001, Status=2)])
+        reads = {"/lobby-village/enter": {"value": {"UserLobbyVillage": village}}}
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY, startup_reads TEXT)")
+            db.execute("INSERT INTO imported_account VALUES(1,?)", (json.dumps(reads),))
+            profile = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+            user = profile["User"]
+            user.update(
+                GuardianMasteryLevel=96,
+                Options={
+                    "GuardianMastery": {
+                        "GuardianMasterySkill": dict.fromkeys(skills, 12),
+                        "SkillNextResetTime": "2099-01-01T00:00:00+00:00",
+                    }
+                },
+                Assets=[
+                    dict(Id=MASTERY_POINTS, Amount=balance, Spent=719),
+                    dict(Id=70003, Amount=0, Spent=20),
+                ],
+            )
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        return profile, dict.fromkeys(skills, 12)
+
+    def test_mastery_full_reset_capped_refund_and_rebuild_from_zero(self):
+        path = "/api/game/mastery"
+        before, maximum = self.seed_mastery()
+        state = self.call(path)
+        self.assertEqual(
+            (state["maxInvestment"], state["refundCeiling"], state["maxLevel"]), (720, 733, 12)
+        )
+        reset = dict(version=state["version"], levels=dict.fromkeys(maximum, 0))
+        with StateLock(self.root):
+            self.assertEqual(self.call(path + "/preview", reset)["excess"], 487)
+            with self.assertRaises(HTTPError) as locked:
+                self.call(path, reset)
+            self.assertEqual(locked.exception.code, 423)
+        self.assertEqual(self.call(path), state)
+        result = self.call(path, reset)
+        self.assertEqual((result["balance"], result["delta"], result["excess"]), (733, -720, 487))
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+        expected = before["User"]
+        expected["Cas"] += 1
+        expected["GuardianMasteryLevel"] = 0
+        expected["Options"]["GuardianMastery"]["GuardianMasterySkill"] = {}
+        expected["Assets"][0].update(Amount=733, Spent=-1)
+        self.assertEqual(saved, before)
+        with self.assertRaises(HTTPError) as stale:
+            self.call(path, reset)
+        self.assertEqual(stale.exception.code, 409)
+        self.assertEqual(
+            self.call(path, dict(version=result["version"], levels=maximum))["balance"], 13
+        )
+
+    def test_mastery_validates_final_distribution_and_settles_only_net_cost(self):
+        path = "/api/game/mastery"
+        _, maximum = self.seed_mastery(balance=1000)
+        initial = self.call(path)
+
+        def body(levels):
+            return dict(version=initial["version"], levels=levels)
+
+        for target in (
+            dict(maximum, extra=0),
+            {},
+            dict(maximum, **{"101": True}),
+            dict(maximum, **{"101": 13}),
+            dict(dict.fromkeys(maximum, 0), **{"101": 11}),
+        ):
+            with self.subTest(target=target), self.assertRaises(HTTPError) as invalid:
+                self.call(path, body(target))
+            self.assertEqual(invalid.exception.code, 400)
+        self.assertEqual(self.call(path), initial)
+        self.assertFalse(self.call(path, body(maximum))["changed"])
+        lowered = dict(maximum, **{"101": 11})
+        result = self.call(path, body(lowered))
+        self.assertEqual((result["balance"], result["excess"]), (1000, 13))
+        swap = dict(maximum, **{"102": 11})
+        move = self.call(path, dict(version=result["version"], levels=swap))
+        self.assertEqual((move["balance"], move["delta"], move["excess"]), (1000, 0, 0))
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            profile = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+            profile["User"]["Assets"][0]["Amount"] = 0
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        state = self.call(path)
+        with self.assertRaises(HTTPError) as insufficient:
+            self.call(path, dict(version=state["version"], levels=maximum))
+        self.assertEqual(insufficient.exception.code, 400)
+        self.assertEqual(self.call(path), state)
 
     def test_consumable_filter_limits_lock_and_stale_edits(self):
         path = "/api/game/consumables"

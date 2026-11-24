@@ -319,6 +319,8 @@ main > #message.error { border-color: #ff997b; }
   .inspector { scroll-margin-top: 8px; }
 }
 @media (max-width:420px) {
+  .mode-nav { flex-wrap: wrap; gap: 0; }
+  .mode-nav a { padding-inline: 7px; font-size: .82rem; }
   .tools { flex-wrap: wrap; }
   .tools .search { flex-basis: 100%; }
   .tools .sort { flex: 1; justify-content: space-between; }

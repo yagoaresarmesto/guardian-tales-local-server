@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Browse equipment, relics and consumables and apply offline inventory edits."""
+"""Browse the local inventory and Guardian Mastery and apply offline save edits."""
 
 import argparse
 import gzip
@@ -27,6 +27,7 @@ from guardian_tales.web_panel.server import PanelHandler
 
 from .equipment import TYPE_ICONS, EquipmentDisplay
 from .equipment_options import EquipmentOptionEditor
+from .mastery import MasteryEditor
 from .relics import RelicEditor
 from .stack_quantities import CONSUMABLES, StackQuantityEditor
 
@@ -200,6 +201,9 @@ class Handler(PanelHandler):
             "/quantity-editor.js": ("quantity-editor.js", "text/javascript; charset=utf-8"),
             "/inventory-dom.js": ("inventory-dom.js", "text/javascript; charset=utf-8"),
             "/equipment.css": ("equipment.css", "text/css; charset=utf-8"),
+            "/mastery": ("mastery.html", "text/html; charset=utf-8"),
+            "/mastery.js": ("mastery.js", "text/javascript; charset=utf-8"),
+            "/mastery.css": ("mastery.css", "text/css; charset=utf-8"),
             "/relics": ("relics.html", "text/html; charset=utf-8"),
             "/relics.js": ("relics.js", "text/javascript; charset=utf-8"),
             "/relics.css": ("relics.css", "text/css; charset=utf-8"),
@@ -220,6 +224,8 @@ class Handler(PanelHandler):
                 return self.list_json(self.server.sandbox.listing())
             if path == "/preview-status":
                 return self.json(200, {"preview": "gt-inventory-sandbox"})
+            if path == "/api/game/mastery":
+                return self.list_json(self.server.mastery.info())
             if path == "/api/game/relics":
                 return self.list_json(self.server.relics.info())
             if path == "/api/game/equipment":
@@ -255,16 +261,23 @@ class Handler(PanelHandler):
             "/api/close",
             "/api/game/relics",
             "/api/game/equipment",
+            "/api/game/mastery",
+            "/api/game/mastery/preview",
             "/api/game/equipment/roll",
             "/api/game/equipment/hammers",
             "/api/game/consumables",
         ):
             return self.json(404, {"error": "Unknown action."})
         try:
+            max_body = (
+                32768
+                if self.path.startswith("/api/game/mastery")
+                else (4096 if self.path.startswith("/api/game/") else 512)
+            )
             lengths = self.headers.get_all("Content-Length", [])
             if (
                 len(lengths) != 1
-                or not 0 < int(lengths[0]) <= (4096 if self.path.startswith("/api/game/") else 512)
+                or not 0 < int(lengths[0]) <= max_body
                 or "Transfer-Encoding" in self.headers
             ):
                 raise ValueError("Invalid request size.")
@@ -284,6 +297,10 @@ class Handler(PanelHandler):
                 return
             if self.path == "/api/game/relics":
                 status, result = self.server.relics.apply(payload)
+            elif self.path == "/api/game/mastery/preview":
+                status, result = self.server.mastery.preview(payload)
+            elif self.path == "/api/game/mastery":
+                status, result = self.server.mastery.write(payload)
             elif self.path == "/api/game/equipment/hammers":
                 status, result = self.server.equipment.hammers.write(payload)
             elif self.path == "/api/game/consumables":
@@ -312,6 +329,7 @@ class InventoryServer(ThreadingHTTPServer):
         self._sandbox_guard = Lock()
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source:
             self.catalog = InventoryCatalog(source, references)
+        self.mastery = MasteryEditor(database, references)
         self.relics = RelicEditor(database, self.catalog)
         self.equipment = EquipmentOptionEditor(database, self.catalog)
         self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)

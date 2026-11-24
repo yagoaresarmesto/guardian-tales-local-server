@@ -231,6 +231,8 @@ by type and use the page arrows to browse. Select an item to see its details.
   Choose **Enhance** below **Accessory** to edit an owned hammer stack. Strengthening Hammers show their level, and Limit Breaking Hammers show their rarity. Enter a quantity, review the change and click **Apply**.
 - **Relics** lets you choose the effect and value for each editable basic or bonus slot.
 - **Consumables** lets you change the quantity of an owned stack. The panel checks each change against the item's catalog limits.
+- **Mastery** lets you edit individual Guardian Mastery levels or prepare a full reset, including a fully maxed allocation. Review the projected point balance, then click **Apply** to save the whole allocation at once. The panel enforces the catalog’s skill costs, class caps and upgraded camp requirement. Redistribution in the panel is free of gem charges and cooldowns.
+  Refunds can fill the balance up to the cost of maxing every skill plus one final skill level, within the game’s integer limit. The review shows any excess points that will be discarded. With the 3.57.0 EU catalog, the ceiling is 2,032,300,000 points.
 
 You can browse while playing. To save edits, close the game, stop the backend,
 then click **Apply**. This writes directly to your working save without creating

@@ -86,6 +86,22 @@ def saved_mastery(user, village, catalog):
     return levels, total
 
 
+def class_limits(levels, catalog):
+    skills, costs = catalog["skills"], catalog["level_costs"]
+    class_levels = {
+        c: sum(levels.get(k, 0) for k, v in skills.items() if v == c) for c in (1, 2, 3, 4)
+    }
+    # The native cap advances in tens with the lowest class total. Its maximum
+    # is the largest class's skill count multiplied by the per-skill level count.
+    maximum = max(Counter(skills.values()).values()) * len(costs)
+    cap = min((min(class_levels.values()) // 10 + 1) * 10, maximum)
+    return class_levels, cap
+
+
+def invested_points(levels, costs):
+    return sum(sum(costs[:level]) for level in levels.values())
+
+
 def upgrade(account, body, operation_id):
     if (
         not isinstance(body, dict)
@@ -111,13 +127,7 @@ def upgrade(account, body, operation_id):
     if str(skill_id) not in skills:
         raise ValueError("Unknown guardian mastery skill")
     levels, total = saved_mastery(user, current_village(account.db), catalog)
-    class_levels = {
-        c: sum(levels.get(k, 0) for k, v in skills.items() if v == c) for c in (1, 2, 3, 4)
-    }
-    # The native cap advances in tens with the lowest class total. Its maximum
-    # is the largest class's skill count multiplied by the per-skill level count.
-    maximum = max(Counter(skills.values()).values()) * len(costs)
-    cap = min((min(class_levels.values()) // 10 + 1) * 10, maximum)
+    class_levels, cap = class_limits(levels, catalog)
     key = str(skill_id)
     level = levels.get(key, 0)
     if level >= len(costs) or class_levels[skills[key]] >= cap:

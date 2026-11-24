@@ -1,0 +1,46 @@
+.mastery-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(285px, 335px); gap: 16px; align-items: start; }
+.skills .collection-bar { justify-content: flex-start; }
+#level-range { margin-left: auto; color: var(--muted); font-size: .82rem; }
+#classes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 16px; }
+.class-rule { margin: 0 16px 16px; color: var(--muted); font-size: .82rem; }
+.class-card { --accent: #9ed9ed; min-width: 0; border: 1px solid var(--line); border-top: 2px solid var(--accent); border-radius: 7px; background: #19283b; overflow: hidden; }
+.class-card[data-group="2"] { --accent: #b8d88a; }
+.class-card[data-group="3"] { --accent: #edc581; }
+.class-card[data-group="4"] { --accent: #c6b5e4; }
+.class-card header { padding: 13px 14px 9px; background: #203146; }
+.class-card h3 { font-size: 1rem; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.class-total { color: var(--accent); font-size: .82rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.class-card progress { display: block; margin-top: 8px; height: 4px; border: 0; border-radius: 4px; width: 100%; overflow: hidden; background: #101d2c; color: var(--accent); }
+.class-card progress::-webkit-progress-bar { background: #101d2c; }
+.class-card progress::-webkit-progress-value { background: var(--accent); }
+.class-card progress::-moz-progress-bar { background: var(--accent); }
+.skill { margin: 0 14px; min-height: 47px; display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: .88rem; }
+.skill + .skill { border-top: 1px solid var(--line); }
+.skill input { width: 68px; padding: 5px 6px; border-radius: 5px; border: 1px solid #52667d; background: var(--field); font-variant-numeric: tabular-nums; }
+.skill input.modified { border-color: var(--gold); color: var(--gold); }
+.review { position: sticky; top: 12px; }
+.review-body { padding: 16px; }
+.review dl { display: grid; gap: 12px; margin: 0; }
+.review dl div { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.review dt, #ceiling { color: var(--muted); font-size: .83rem; }
+.review dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 650; }
+.review .after { border-top: 1px solid var(--line); padding-top: 12px; }
+.after dd { font-size: 1.15rem; color: var(--gold); }
+#ceiling, #excess, #issue { margin-top: 12px; font-size: .81rem; line-height: 1.45; }
+#excess, #issue { color: #ffdaa1; }
+.review .apply-button { margin-top: 16px; width: 100%; }
+.draft-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.draft-actions button, #reload { flex: auto; border: 1px solid var(--line); border-radius: 5px; background: #23354b; padding: 7px; font-size: .8rem; }
+#reload { margin-top: 8px; }
+.review #message { margin-top: 10px; color: #a4e6c7; font-size: .83rem; }
+@media (max-width: 900px) {
+  .mastery-grid { grid-template-columns: minmax(0, 1fr) 260px; gap: 12px; }
+  #classes { gap: 9px; padding: 10px; }
+}
+@media (max-width: 760px) {
+  .mastery-grid { grid-template-columns: minmax(0, 1fr); }
+  .review { position: static; }
+}
+@media (max-width: 490px) {
+  #classes { grid-template-columns: minmax(0, 1fr); }
+}

@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Guardian Mastery · Guardian Tales</title>
+  <link rel="stylesheet" href="/equipment.css"><link rel="stylesheet" href="/mastery.css">
+  <script type="module" src="/mastery.js"></script>
+</head>
+<body>
+  <header class="top"><div class="top-inner">
+    <div class="brand"><img src="/brand.png" alt="">Guardian Tales</div>
+    <nav class="mode-nav" aria-label="Save editor sections">
+      <a href="/equipment">Equipment</a>
+      <a href="/relics">Relics</a>
+      <a href="/consumables">Consumables</a>
+      <a href="/mastery" aria-current="page">Mastery</a>
+    </nav>
+    <span class="context">Save editor</span>
+  </div></header>
+  <main>
+    <div class="title-row"><h1>Guardian Mastery</h1><span class="temporary">Game save · server.sqlite3</span></div>
+    <p class="save-access" id="access" role="status" hidden></p>
+    <p id="loading" role="status">Loading mastery…</p>
+    <form id="allocation" hidden>
+      <div class="mastery-grid">
+        <section class="collection skills" aria-labelledby="skills-heading">
+          <header class="collection-bar"><h2 id="skills-heading">Skill allocation</h2><span id="level-range"></span></header>
+          <div id="classes"></div>
+          <p class="class-rule">Every 10 levels in your lowest class unlocks the next 10 levels in each class.</p>
+        </section>
+        <aside class="collection review" aria-labelledby="review-heading">
+          <header class="collection-bar"><h2 id="review-heading">Review changes</h2></header>
+          <div class="review-body">
+            <dl>
+              <div><dt>Available points</dt><dd id="balance"></dd></div>
+              <div><dt id="delta-label">Point change</dt><dd id="delta"></dd></div>
+              <div class="after"><dt>After applying</dt><dd id="after"></dd></div>
+            </dl>
+            <p id="ceiling"></p>
+            <p class="notice" id="excess" hidden></p>
+            <p id="issue" role="status" hidden></p>
+            <button type="button" id="reload" hidden>Reload saved allocation</button>
+            <button class="apply-button" id="apply" disabled>Apply</button>
+            <div class="draft-actions"><button type="button" id="reset">Reset all levels</button><button type="button" id="max">Max all levels</button><button type="button" id="undo" disabled>Discard edits</button></div>
+            <p id="message" role="status" hidden></p>
+          </div>
+        </aside>
+      </div>
+    </form>
+  </main>
+</body>
+</html>
