@@ -26,7 +26,7 @@ The 3.57.0 stage catalog still contains `roguechess_1` (stage `280010001`) and i
 .\.venv\Scripts\python.exe -m guardian_tales tetis-map-trial enable --reference-dir local/client-data/reference
 ```
 
-Fully close and reopen Guardian Tales. Open Tetis, select **Elf of the Abandoned Factory**, and play floor 1. The trial serves the preserved map with that floor's regular waves, opponents and rewards. A different arena, a working first wave, and a return to the map test three separate parts of the client. The host can verify the stage definition it serves, while the original game rules and client behavior require an in-game check.
+Fully close and reopen Guardian Tales. Open Tetis, select **Elf of the Abandoned Factory**, and play floor 1. The trial serves the preserved map with that floor's regular waves, opponents and rewards.
 
 To return floor 1 to its normal map, run the command below and fully reopen the game.
 
@@ -37,9 +37,12 @@ To return floor 1 to its normal map, run the command below and fully reopen the 
 Both commands update the local server's map selection. Actual battles use the usual Tetis progression for your save.
 
 The preserved arena uses the same factory tileset as the normal Season 1 map.
-Its deployment area is about half as wide, so placing a hero near the enemy
-side is a better way to tell the arenas apart than comparing the background.
-Check that both sides move and attack and that the first wave finishes.
+Its map data defines a narrower deployment area. In the Android 3.57.0 trial
+the player still described it as looking like the usual wide arena. With the
+trial active, the game cleared floor 1. On a second entry, a read-only monitor
+of the map files recorded two opens of `roguechess_1.bytes` and none of
+`roguechess_season_1_normal.bytes`. This verifies the preserved arena loads
+under the current Tetis battle rules.
 
 | Other preserved tilemap | Findings from the local 3.57.0 files |
 | --- | --- |
