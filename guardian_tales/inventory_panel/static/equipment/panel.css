@@ -1,4 +1,42 @@
 #preview-link { font-size: .82rem; }
+.tile[data-exclusive="standard"], .hero-art[data-exclusive="standard"] {
+  --exclusive-light: #2e5948; --exclusive-dark: #152d28; --exclusive-edge: #599a78;
+  --exclusive-highlight: #a1e7b9;
+}
+.tile[data-exclusive="myth"], .hero-art[data-exclusive="myth"] {
+  --exclusive-light: #66363f; --exclusive-dark: #341d28; --exclusive-edge: #b46972;
+  --exclusive-highlight: #ffc1b6;
+}
+.tile[data-exclusive], .hero-art[data-exclusive] {
+  position: relative;
+  background: linear-gradient(155deg, var(--exclusive-light), var(--exclusive-dark) 80%);
+  border-color: var(--exclusive-edge);
+}
+.tile[data-exclusive]:hover { border-color: var(--exclusive-highlight); }
+.tile[data-exclusive][aria-pressed="true"] { border-color: var(--gold); }
+.tile[data-exclusive] .tile-stars {
+  padding-inline-end: var(--hero-face-size);
+  color: var(--exclusive-highlight);
+}
+/* Reserve the same footer height across the grid so names and stars line up. */
+#tiles .tile {
+  --hero-face-size: clamp(1.35rem, 1.65vw, 1.75rem);
+  grid-template-rows: 1rem minmax(0, 1fr) 1.85rem max(1rem, calc(var(--hero-face-size) - 4px));
+}
+.tile > .exclusive-portrait, .hero-art > img.exclusive-portrait {
+  position: absolute;
+  inset: auto 3px 3px auto;
+  margin: 0;
+  width: var(--hero-face-size, 32%);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1.5px solid var(--exclusive-highlight);
+  background: var(--exclusive-dark);
+  box-shadow: 0 1px 3px #080f19aa;
+  filter: none;
+  object-fit: cover;
+}
 #lock { padding: 9px 10px; border: 1px solid #748aa455; border-radius: 4px; background: #263b54; font-size: .85rem; font-weight: 650; width: calc(100% - 2 * var(--inspector-inset)); margin: 12px var(--inspector-inset); }
 
 #basic-options summary { margin: 0; font-size: .91rem; line-height: 1.35; font-weight: 650; }

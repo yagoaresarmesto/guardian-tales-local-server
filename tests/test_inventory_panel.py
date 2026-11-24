@@ -85,6 +85,12 @@ def prepare_inventory(root):
                 EngraveStaticOptions=[dict(OptionId=7, Level=1)],
             ),
         ],
+        "heroes": [
+            dict(Id=1, OriginId=1, Rank=2, PortraitAssetName="swordsman"),
+            dict(Id=2, OriginId=1, Rank=6, PortraitAssetName="swordsman_myth"),
+            dict(Id=3, OriginId=1, Rank=4, PortraitAssetName="swordsman"),
+            dict(Id=4, OriginId=4, Rank=2, PortraitAssetName="archer"),
+        ],
         "buffs": [],
         "options": [
             dict(
@@ -237,6 +243,33 @@ class InventoryPanelTests(unittest.TestCase):
         )
         with urlopen(request, timeout=5) as response:
             return json.load(response) if path.startswith("/api/") else response.read()
+
+    def test_exclusive_hero_is_independent_of_weapon_copy_rarity(self):
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            profile = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+            weapons = profile["User"]["ItemWeapons"]
+            weapons.append(dict(weapons[1], Id=99, ItemId=50))
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        for path in ("/api/game/equipment", "/api/inventory"):
+            with self.subTest(path=path):
+                rows = {row["id"]: row for row in self.call(path)["rows"]}
+                self.assertIsNone(rows[11]["exclusiveHero"])
+                self.assertEqual((rows[15]["exclusiveHero"], rows[15]["stars"]), (1, 5))
+                self.assertEqual((rows[99]["exclusiveHero"], rows[99]["stars"]), (1, 6))
+
+    def test_hero_face_prefers_native_myth_and_falls_back_to_linked_hero(self):
+        with patch("guardian_tales.inventory_panel.hero_portraits.PORTRAITS") as atlas:
+            atlas.read.side_effect = lambda refs, *, frame: frame.encode()
+            self.assertEqual(self.call("/hero-face/1.png"), b"swordsman_myth")
+            self.assertEqual(self.call("/hero-face/3.png"), b"swordsman_myth")
+            self.assertEqual(self.call("/hero-face/4.png"), b"archer")
+            atlas.read.side_effect = [FileNotFoundError(), b"swordsman"]
+            self.assertEqual(self.call("/hero-face/1.png"), b"swordsman")
+            self.assertEqual(atlas.read.call_args.kwargs["frame"], "swordsman")
+            with self.assertRaises(HTTPError) as missing:
+                self.call("/hero-face/999.png")
+            self.assertEqual(missing.exception.code, 404)
+            missing.exception.close()
 
     def test_views_and_referenced_static_assets(self):
         import re

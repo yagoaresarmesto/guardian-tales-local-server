@@ -91,10 +91,30 @@ function drawTypes() {
 function stars(item) {
   return item.stars >= 1 && item.stars <= 6 ? "★".repeat(item.stars) : "";
 }
+function addHeroPortrait(square, item) {
+  if (!item.exclusiveHero) {
+    delete square.dataset.exclusive;
+    return "";
+  }
+  square.dataset.exclusive = item.stars === 6 ? "myth" : "standard";
+  const label = "Exclusive to " + (item.exclusiveHeroName || "hero #" + item.exclusiveHero);
+  const face = image("/hero-face/" + item.exclusiveHero + ".png");
+  face.className = "exclusive-portrait";
+  face.alt = label;
+  face.title = label;
+  face.onerror = () => face.remove();
+  square.append(face);
+  return label;
+}
 function tile(item) {
   const button = inventoryTile({ ...item, art: art(item, "tile-art"), selected: item.id === selected,
     quantity: item.kind === "enhance" ? quantityFormat.format(item.amount) : null });
   button.dataset.grade = item.grade ?? "";
+  const hero = addHeroPortrait(button, item);
+  if (hero) {
+    button.title += " · " + hero;
+    button.setAttribute("aria-label", button.title);
+  }
   return button;
 }
 function fact(label, value) {
@@ -116,7 +136,9 @@ function drawDetails() {
   editor?.select(enhance ? null : item);
   hammerEditor?.select(enhance ? item : null);
   if (!item) return;
-  $("hero-art").replaceChildren(...art(item, "").childNodes);
+  const detailArt = $("hero-art");
+  detailArt.replaceChildren(...art(item, "").childNodes);
+  detailArt.title = addHeroPortrait(detailArt, item);
   $("hero-stars").textContent = stars(item);
   $("hero-stars").setAttribute("aria-label", item.stars ? item.stars + " stars" : "Star rating unavailable");
   $("detail-type").textContent = enhance ? item.rarityName : typeName(item.kind);

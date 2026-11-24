@@ -34,11 +34,11 @@ TYPE_ICONS = {
 }
 
 
-def english_inventory_names(references, specs, catalog_hash):
+def english_inventory_names(references, specs, catalog_hash, hero_name_keys):
     # The optional local English table uses the same binding as the hero trial.
     path = references.directory / f"andras-trial-strings-{catalog_hash}.bin"
     if not path.is_file():
-        return {}
+        return {}, {}
     names = {}
     try:
         for spec in specs.values():
@@ -50,20 +50,24 @@ def english_inventory_names(references, specs, catalog_hash):
                 continue
             if name:
                 names[spec["Id"]] = binary_name_hash(name)
-        wanted = set(names.values())
+        heroes = {ident: binary_name_hash(name) for ident, name in hero_name_keys.items()}
+        wanted = set(names.values()) | set(heroes.values())
         entries = binary_rows(
             base64.b64encode(path.read_bytes()).decode(), require_id=False, max_count=500000
         )
         strings = {key: raw.decode("utf-8") for _, key, raw in entries if key in wanted}
     except (OSError, ValueError):
-        return {}
-    return {ident: strings[key] for ident, key in names.items() if key in strings}
+        return {}, {}
+    return (
+        {ident: strings[key] for ident, key in names.items() if key in strings},
+        {ident: strings[key] for ident, key in heroes.items() if key in strings},
+    )
 
 
 class EquipmentDisplay:
-    def __init__(self, references, specs, catalog_bytes, thresholds):
-        self.names = english_inventory_names(
-            references, specs, hashlib.sha256(catalog_bytes).hexdigest()
+    def __init__(self, references, specs, catalog_bytes, thresholds, hero_name_keys):
+        self.names, self.hero_names = english_inventory_names(
+            references, specs, hashlib.sha256(catalog_bytes).hexdigest(), hero_name_keys
         )
         self.thresholds = thresholds
         self.hammer_exp = {}
@@ -78,9 +82,12 @@ class EquipmentDisplay:
         rarity = spec.get("Rarity")
         if isinstance(xp, int) and self.thresholds:
             level = min(bisect_right(self.thresholds, xp) + 1, len(self.thresholds))
+        hero = spec.get("ExclusiveCharacterId") or None
         return {
             "level": level,
             "stars": rarity + 1 if isinstance(rarity, int) else None,
             "grade": spec.get("OriginRarity"),
+            "exclusiveHero": hero,
+            "exclusiveHeroName": self.hero_names.get(hero),
             "training": item["Id"] in training,
         }

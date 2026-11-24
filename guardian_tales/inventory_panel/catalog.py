@@ -37,10 +37,12 @@ def inventory_icon(png):
 
 
 class InventoryCatalog:
-    def __init__(self, db, references, catalog, thresholds):
+    def __init__(self, db, references, catalog, thresholds, hero_name_keys):
         self.refs = references
         self.specs = {s["Id"]: s for s in item_definitions(catalog)}
-        self.equipment = EquipmentDisplay(references, self.specs, catalog, thresholds)
+        self.equipment = EquipmentDisplay(
+            references, self.specs, catalog, thresholds, hero_name_keys
+        )
         self.names = self.equipment.names | NAMES
         for encoded in active_specs(db):
             spec = json.loads(encoded)

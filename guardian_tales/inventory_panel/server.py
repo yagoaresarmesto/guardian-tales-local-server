@@ -28,6 +28,7 @@ from .account_details import AccountEditor
 from .catalog import InventoryCatalog, inventory_icon
 from .equipment import TYPE_ICONS
 from .equipment_options import EquipmentOptionEditor
+from .hero_portraits import HeroPortraits
 from .mastery import MasteryEditor
 from .mastery_art import training_banner
 from .preview import Sandbox
@@ -87,6 +88,13 @@ class Handler(LocalPanelHandler):
                 return self.json(200, {"preview": "gt-inventory-sandbox"})
             if path == "/mastery-training.png":
                 return self.reply(200, "image/png", training_banner(self.server.catalog.refs))
+            hero = re.fullmatch(r"/hero-face/([0-9]{1,10})\.png", path)
+            if hero:
+                return self.reply(
+                    200,
+                    "image/png",
+                    self.server.hero_portraits.read(self.server.catalog.refs, int(hero[1])),
+                )
             if path in ("/api/game/relics/status", "/api/game/status"):
                 return self.json(200, self.server.relics.status())
             if path.startswith("/type-icon/"):
@@ -150,9 +158,12 @@ class InventoryServer(ThreadingHTTPServer):
         self._sandbox_guard = Lock()
         body = references.read_bytes("static_data_get.bin")
         tables = records(decode(body))[1]
+        self.hero_portraits = HeroPortraits(tables)
         progression = WeaponProgression(tables)
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source:
-            self.catalog = InventoryCatalog(source, references, body, progression.thresholds)
+            self.catalog = InventoryCatalog(
+                source, references, body, progression.thresholds, self.hero_portraits.name_keys
+            )
         self.mastery = MasteryEditor(database, references)
         self.account_editor = AccountEditor(database, references, self.catalog.specs)
         self.relics = RelicEditor(database, self.catalog)
