@@ -20,6 +20,7 @@ REFERENCES = (
     "product_ids.bin",
     "static_data_get.bin",
     "static_data_check.bin",
+    "strings-bin-enUS",
     "attendance_catalog.json",
     "beginner_mission_catalog.json",
     "challenge_mission_catalog.json",

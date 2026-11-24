@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Exercise the local panel against a synthetic catalog and disposable working save."""
 
+import base64
 import json
 import sqlite3
 import subprocess
@@ -16,8 +17,14 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from guardian_tales.andras_trial_static import pack_rows
 from guardian_tales.basecamp import MASTERY_POINTS
 from guardian_tales.inventory_panel import server
+from guardian_tales.inventory_panel.equipment import english_inventory_names
+from guardian_tales.inventory_panel.equipment_ribbons import (
+    completed_weapon_books,
+    equipment_ribbons,
+)
 from guardian_tales.inventory_panel.server import InventoryServer
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
@@ -190,16 +197,36 @@ def prepare_inventory(root):
 
 
 class InventoryStartupTests(unittest.TestCase):
+    def test_native_english_cache_resolves_weapon_and_hero_and_prefers_exact_binding(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        refs = ReferenceData(root)
+        specs = {42: {"Id": 42, "WeaponType": "basket", "NameWithoutRarity": "cwp_example"}}
+        keys = {"cwp_example": 101, "name_example": 102}
+        with patch(
+            "guardian_tales.inventory_panel.equipment.binary_name_hash",
+            side_effect=keys.__getitem__,
+        ):
+            for filename, title in (
+                ("strings-bin-enUS", b"Example Basket"),
+                ("andras-trial-strings-abc.bin", b"Updated Basket"),
+            ):
+                table = pack_rows([(1, 101, title), (2, 102, b"Basket Hero")])
+                (root / filename).write_bytes(base64.b64decode(table))
+                self.assertEqual(
+                    english_inventory_names(refs, specs, "abc", {31: "name_example"}),
+                    ({42: title.decode()}, {31: "Basket Hero"}),
+                )
+
     def test_first_launch_installs_panel_art_and_next_launch_skips_pip(self):
         with (Path(__file__).resolve().parents[1] / "pyproject.toml").open("rb") as config:
             requirements = tomllib.load(config)["project"]["optional-dependencies"]["panel-art"]
         with (
-            patch.object(server, "decoder_available", side_effect=[False, True, True]),
+            patch.object(server, "display_readers_available", side_effect=[False, True, True]),
             patch.object(subprocess, "run") as install,
             redirect_stderr(StringIO()),
         ):
-            server.ensure_artwork_decoder()
-            server.ensure_artwork_decoder()
+            server.ensure_display_readers()
+            server.ensure_display_readers()
         (args,), kwargs = install.call_args
         install.assert_called_once()
         self.assertEqual(args[:3], [sys.executable, "-m", "pip"])
@@ -209,7 +236,7 @@ class InventoryStartupTests(unittest.TestCase):
     def test_failed_install_still_serves_panel_and_explains_retry(self):
         with (
             tempfile.TemporaryDirectory() as directory,
-            patch.object(server, "decoder_available", return_value=False),
+            patch.object(server, "display_readers_available", return_value=False),
             patch.object(subprocess, "run", side_effect=subprocess.CalledProcessError(1, "pip")),
             patch.object(server, "InventoryServer") as panel,
             redirect_stdout(StringIO()),
@@ -883,6 +910,11 @@ class InventoryPanelTests(unittest.TestCase):
             )
             db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
         self.call(path, self.weapon_edit(progression=dict(engraving=dict(count=2, level=15))))
+        self.assertEqual(self.call(path)["rows"][1]["ribbons"], ["engraved-max"])
+        preview = self.call("/api/inventory")["rows"]
+        self.assertEqual(
+            next(row["ribbons"] for row in preview if row["id"] == 15), ["engraved-max"]
+        )
         with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
             saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
         self.assertEqual(
@@ -892,3 +924,49 @@ class InventoryPanelTests(unittest.TestCase):
         with self.assertRaises(HTTPError) as invalid:
             self.call(path, self.weapon_edit(progression=dict(engraving=dict(count=3, level=15))))
         self.assertEqual(invalid.exception.code, 400)
+
+
+class EquipmentRibbonTests(unittest.TestCase):
+    def test_book_requires_all_tracked_rarities_and_their_linked_sets(self):
+        base = dict(Type="weapon", WeaponType="bow", OriginRarity=2)
+        specs = {
+            12: dict(base, Rarity=2, EvolveTo={"Default": 13}),
+            13: dict(base, Rarity=3, SortingNumber=-1, EvolveTo={"Default": 14}),
+            14: dict(base, Rarity=4),
+        }
+        definitions = {
+            "ItemMastery": {"Bow": []},
+            "Collection": [
+                dict(Id=11, ItemId=[13]),
+                dict(Id=12, ItemId=[14]),
+                dict(Id=13, ItemId=[12], VersionFrom={"KakaoGlobal": "v9.99"}),
+            ],
+        }
+        saved = {"ItemCollections": {"12": 0, "14": 2}, "CustomCollections": [11]}
+        self.assertEqual(completed_weapon_books(specs, definitions, saved), set())
+        saved["CustomCollections"].append(12)
+        self.assertEqual(completed_weapon_books(specs, definitions, saved), {12, 13, 14})
+        saved["ItemCollections"]["14"] = -1
+        self.assertEqual(completed_weapon_books(specs, definitions, saved), set())
+
+    def test_exclusive_marks_reflect_engraving_option_and_collaboration(self):
+        spec = dict(
+            Id=15,
+            ExclusiveCharacterId=8,
+            Rarity=4,
+            EngraveRandomOptions=[dict(OptionId=2, Level=6), dict(OptionId=2, Level=3)],
+        )
+        saved = dict(EngraveCeiling=0, EngraveOptions=[])
+        self.assertEqual(equipment_ribbons(saved, spec, {15}), ["book-complete", "exclusive"])
+        self.assertEqual(equipment_ribbons(saved, dict(spec, ExclusiveCharacterId=0), set()), [])
+        collab = dict(spec, CollaborationId=1, Rarity=5)
+        self.assertEqual(equipment_ribbons(saved, collab, set()), ["exclusive-collab"])
+        saved.update(EngraveCeiling=1, EngraveOptions=[dict(OptionId=2, Level=3)])
+        self.assertEqual(equipment_ribbons(saved, spec, set()), ["engraved"])
+        self.assertEqual(equipment_ribbons(saved, collab, set()), ["engraved-collab"])
+        saved["EngraveOptions"][0]["Level"] = 6
+        self.assertEqual(equipment_ribbons(saved, spec, set()), ["engraved-max"])
+        self.assertEqual(equipment_ribbons(saved, collab, set()), ["engraved-max"])
+        # Match the first template tier even on a nonstandard custom weapon.
+        spec["EngraveRandomOptions"].append(dict(OptionId=2, Level=9))
+        self.assertEqual(equipment_ribbons(saved, spec, set()), ["engraved-max"])

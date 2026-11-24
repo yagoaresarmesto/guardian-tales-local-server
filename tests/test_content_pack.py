@@ -96,6 +96,7 @@ class ContentPackTests(unittest.TestCase):
 
     def test_practice_catalogs_round_trip_without_saved_accounts_or_mode_selections(self):
         names = (
+            "strings-bin-enUS",
             "attendance_mock_catalog.json",
             "basecamp_harvest_catalog.json",
             "guardian_mastery_catalog.json",

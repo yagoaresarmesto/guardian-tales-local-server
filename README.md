@@ -222,17 +222,25 @@ From the repository root, open the inventory panel in its own terminal:
 The [inventory panel](http://127.0.0.1:17661/) reads your existing
 `local/state/server.sqlite3` and the matching catalog in
 `local/client-data/reference`. Use `--data-dir` and `--reference-dir` if your
-backend uses other directories. At startup the inventory panel checks for the artwork
-reader. If it is missing, the panel uses the same Python interpreter to install it
-with pip. Later launches reuse it offline. If installation fails, you can still
+backend uses other directories. At startup the inventory panel checks for its artwork
+and English name readers and uses the same Python interpreter to install missing
+dependencies with pip. Later launches reuse them offline. If installation fails, you can still
 browse with placeholder icons and rerun the command to retry. The images come from
 your imported game resources. The panel also reads the game's UI atlas for
 icons such as the Selectable Summon Controller. In each tab, search by name or ID, filter
 by type and use the page arrows to browse. Select an item to see its details.
 
+For English equipment names, the panel looks up the item's shared name key in the
+game's English text table. Content packs can include the decoded
+`reference/strings-bin-enUS`. With an older pack, copy `cache/strings-bin-enUS`
+from a matching English game-data export to `local/client-data/reference/strings-bin-enUS`,
+then restart the inventory panel. The file under `files/static_data/` is the
+encoded download. Existing catalog-bound English tables also work.
+
 - **Equipment** lets you change basic options, sub-options and their locks on an individual weapon or accessory.
   The grid and detail view size equipment artwork by its original sprite dimensions so that compact items, such as rings and gauntlets, retain their proportions alongside long weapons.
-  Exclusive weapons show their hero’s face in the lower-right corner, using the hero’s 6★ portrait when available. The card is green until that particular weapon reaches 6★, when it turns red.
+  Exclusive weapons show their hero’s face in the lower-right corner, using the hero’s 6★ portrait when available. Their cards fade from blue to green, or to pink for a 6★ copy.
+  The upper-right book ribbon marks completed weapon knowledge and its associated collections. The exclusive ribbon shows the weapon’s current engraving state. A rainbow star means the bonus has reached its maximum, even if the weapon still has engraving attempts left.
   Under **Weapon upgrades**, raise a weapon's limit breaks and engrave eligible exclusive weapons once they meet the experience and limit-break requirements. Choose an engraving count and one of the bonus values offered for that weapon. The editor reads these limits from the imported game catalog. **Apply** saves the selected upgrades and option edits together, without spending hammers or gold.
   Under **Shield upgrades** or **Accessory upgrades**, choose a higher limit break for the selected item. Once all breaks are unlocked, **Raise to max level** stays available until the item reaches its level cap.
   **Raise to max level** previews the highest level that copy can reach with your story progress and selected upgrades. Tick it and click **Apply** to grant exactly the missing equipment XP for free. On a save with base level 100 in 3.57.0, each limit break adds 3 levels, an eligible engraving adds 15 once, and Myth weapon rarity adds 20. With all five breaks, a shield or accessory reaches 115, an engraved 5★ weapon reaches 130 and an engraved 6★ weapon reaches 150.

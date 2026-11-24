@@ -13,7 +13,7 @@ import webbrowser
 from contextlib import closing
 from functools import partial
 from http.server import ThreadingHTTPServer
-from importlib import invalidate_caches
+from importlib import import_module, invalidate_caches
 from pathlib import Path
 from threading import Lock
 from urllib.parse import urlsplit
@@ -38,7 +38,7 @@ from .stack_quantities import CONSUMABLES, StackQuantityEditor
 from .weapon_progression import WeaponProgression
 
 # Also declared by the panel-art extra. Bare checkouts lack installed package metadata.
-PANEL_ART_REQUIREMENT = "UnityPy>=1.25.4,<2"
+PANEL_ART_REQUIREMENTS = ("UnityPy>=1.25.4,<2", "xxhash>=3.5,<5")
 
 
 class Handler(LocalPanelHandler):
@@ -162,7 +162,12 @@ class InventoryServer(ThreadingHTTPServer):
         progression = WeaponProgression(tables)
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source:
             self.catalog = InventoryCatalog(
-                source, references, body, progression.thresholds, self.hero_portraits.name_keys
+                source,
+                references,
+                body,
+                progression.thresholds,
+                self.hero_portraits.name_keys,
+                tables,
             )
         self.mastery = MasteryEditor(database, references)
         self.account_editor = AccountEditor(database, references, self.catalog.specs)
@@ -213,10 +218,21 @@ class InventoryServer(ThreadingHTTPServer):
             self._sandbox.db.close()
 
 
-def ensure_artwork_decoder():
-    if decoder_available():
+def display_readers_available():
+    try:
+        import_module("xxhash")
+    except (ImportError, OSError):
+        return False
+    return decoder_available()
+
+
+def ensure_display_readers():
+    if display_readers_available():
         return
-    print("Installing the inventory artwork reader in this Python environment.", file=sys.stderr)
+    print(
+        "Installing the inventory artwork and name readers in this Python environment.",
+        file=sys.stderr,
+    )
     try:
         subprocess.run(
             [
@@ -226,7 +242,7 @@ def ensure_artwork_decoder():
                 "--disable-pip-version-check",
                 "install",
                 "--no-input",
-                PANEL_ART_REQUIREMENT,
+                *PANEL_ART_REQUIREMENTS,
             ],
             check=True,
         )
@@ -236,13 +252,13 @@ def ensure_artwork_decoder():
             if user_site not in sys.path and Path(user_site).is_dir():
                 site.addsitedir(user_site)
         invalidate_caches()
-        if decoder_available():
+        if display_readers_available():
             return
     except (OSError, subprocess.CalledProcessError) as error:
-        print(f"Artwork setup failed: {error}", file=sys.stderr)
+        print(f"Inventory display setup failed: {error}", file=sys.stderr)
     print(
         "Opening the inventory panel with placeholders. "
-        "Run the same command again to retry artwork setup.",
+        "Run the same command again to retry inventory display setup.",
         file=sys.stderr,
     )
 
@@ -274,7 +290,7 @@ def main(argv=None):
         parser.error(
             f"Working save not found: {database}. Set --data-dir to your existing save directory."
         )
-    ensure_artwork_decoder()
+    ensure_display_readers()
     try:
         server = InventoryServer(
             args.port,

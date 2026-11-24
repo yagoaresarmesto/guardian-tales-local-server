@@ -1,25 +1,41 @@
 #preview-link { font-size: .82rem; }
-.tile[data-exclusive="standard"], .hero-art[data-exclusive="standard"] {
-  --exclusive-light: #2e5948; --exclusive-dark: #152d28; --exclusive-edge: #599a78;
-  --exclusive-highlight: #a1e7b9;
+.tile, .hero-art { --card-top: #333e61; }
+[data-equipment-color="normal"] {
+  --card-mid: #39475b; --card-lower: #526473; --card-band: #8999a5; --card-highlight: #c0e4ef;
 }
-.tile[data-exclusive="myth"], .hero-art[data-exclusive="myth"] {
-  --exclusive-light: #66363f; --exclusive-dark: #341d28; --exclusive-edge: #b46972;
-  --exclusive-highlight: #ffc1b6;
+[data-equipment-color="rare"] {
+  --card-mid: #2c496b; --card-lower: #205e8b; --card-band: #348dcc; --card-highlight: #6dd0ff;
 }
-.tile[data-exclusive], .hero-art[data-exclusive] {
+[data-equipment-color="unique"] {
+  --card-mid: #494355; --card-lower: #82503c; --card-band: #b8764c; --card-highlight: #ffae7a;
+}
+[data-equipment-color="legend"] {
+  --card-mid: #514952; --card-lower: #80642e; --card-band: #cf9a24; --card-highlight: #ffdf63;
+}
+[data-equipment-color="epic"] {
+  --card-mid: #274f56; --card-lower: #087b39; --card-band: #4dc100; --card-highlight: #b4f671;
+}
+[data-equipment-color="myth"] {
+  --card-top: #2c3b88; --card-mid: #4b3d80; --card-lower: #9e416b;
+  --card-band: #e4437e; --card-highlight: #ffafce; --star-color: #b4f671;
+}
+.tile[data-equipment-color], .hero-art[data-equipment-color] {
   position: relative;
-  background: linear-gradient(155deg, var(--exclusive-light), var(--exclusive-dark) 80%);
-  border-color: var(--exclusive-edge);
+  background: linear-gradient(to bottom, var(--card-top) 27%, var(--card-mid) 55%,
+    var(--card-lower) 90%, var(--card-band) 90%);
+  border-color: color-mix(in srgb, var(--card-top) 70%, var(--card-highlight));
 }
-.tile[data-exclusive]:hover { border-color: var(--exclusive-highlight); }
-.tile[data-exclusive][aria-pressed="true"] { border-color: var(--gold); }
-.tile[data-exclusive] .tile-stars {
-  padding-inline-end: var(--hero-face-size);
-  color: var(--exclusive-highlight);
+.hero-art[data-equipment-color]::before { display: none; }
+.tile[data-equipment-color]:hover { border-color: var(--card-highlight); }
+.tile[data-equipment-color][aria-pressed="true"] { border-color: var(--gold); }
+.tile[data-equipment-color] :is(.tile-stars, .tile-name) {
+  text-shadow: 0 1px 2px #101420, 0 0 3px #101420;
 }
+.tile[data-equipment-color] .tile-stars { color: var(--star-color, var(--card-highlight)); }
+.tile:has(.exclusive-portrait) .tile-stars { padding-inline-end: var(--hero-face-size); }
 /* Reserve the same footer height across the grid so names and stars line up. */
 #tiles .tile {
+  position: relative;
   --hero-face-size: clamp(1.35rem, 1.65vw, 1.75rem);
   grid-template-rows: 1rem minmax(0, 1fr) 1.85rem max(1rem, calc(var(--hero-face-size) - 4px));
 }
@@ -31,11 +47,24 @@
   height: auto;
   aspect-ratio: 1;
   border-radius: 50%;
-  border: 1.5px solid var(--exclusive-highlight);
-  background: var(--exclusive-dark);
+  border: 1.5px solid var(--card-highlight);
+  background: var(--card-top);
   box-shadow: 0 1px 3px #080f19aa;
   filter: none;
   object-fit: cover;
+}
+.equipment-ribbons {
+  position: absolute; inset: 0 2px auto auto; z-index: 1;
+  display: flex; align-items: flex-start;
+}
+.equipment-ribbons > img {
+  position: static; margin: 0; width: clamp(14px, 1.15vw, 19px); height: auto;
+  object-fit: contain; filter: none;
+}
+.hero-art .equipment-ribbons > img { width: clamp(11px, 4cqi, 15px); }
+.tile:has(.equipment-ribbons) .tile-badges {
+  position: absolute; inset: 1.5rem auto auto 4px;
+  display: grid; grid-template-columns: repeat(2, max-content); justify-items: center; gap: 2px;
 }
 #lock { padding: 9px 10px; border: 1px solid #748aa455; border-radius: 4px; background: #263b54; font-size: .85rem; font-weight: 650; width: calc(100% - 2 * var(--inspector-inset)); margin: 12px var(--inspector-inset); }
 

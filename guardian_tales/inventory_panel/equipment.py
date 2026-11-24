@@ -9,6 +9,7 @@ from guardian_tales.andras_trial_static import binary_rows
 from guardian_tales.raid_custom import binary_name_hash
 from guardian_tales.weapon_enhance import load_catalog
 
+from .equipment_ribbons import equipment_ribbons
 from .stack_quantities import CONSUMABLES, HAMMERS
 
 TYPE_ICONS = {
@@ -31,12 +32,20 @@ TYPE_ICONS = {
     "tank": "ic_atk_type_tanker",
     "support": "ic_atk_type_support",
     "mastery-point": "ic_guardian_mastery_point",
+    "book-complete": "ic_slot_book_mark_00",
+    "exclusive": "ic_slot_only_mark_00",
+    "exclusive-collab": "ic_slot_only_mark_collab_00",
+    "engraved": "ic_slot_only_mark_engrave_00",
+    "engraved-max": "ic_slot_only_mark_engrave_01",
+    "engraved-collab": "slot_only_mark_engrave_collab_00",
 }
 
 
 def english_inventory_names(references, specs, catalog_hash, hero_name_keys):
-    # The optional local English table uses the same binding as the hero trial.
+    # Prefer an exact catalog binding; content packs can also supply the native English cache.
     path = references.directory / f"andras-trial-strings-{catalog_hash}.bin"
+    if not path.is_file():
+        path = references.directory / "strings-bin-enUS"
     if not path.is_file():
         return {}, {}
     names = {}
@@ -65,11 +74,14 @@ def english_inventory_names(references, specs, catalog_hash, hero_name_keys):
 
 
 class EquipmentDisplay:
-    def __init__(self, references, specs, catalog_bytes, thresholds, hero_name_keys):
+    def __init__(
+        self, references, specs, catalog_bytes, thresholds, hero_name_keys, completed_books
+    ):
         self.names, self.hero_names = english_inventory_names(
             references, specs, hashlib.sha256(catalog_bytes).hexdigest(), hero_name_keys
         )
         self.thresholds = thresholds
+        self.completed_books = completed_books
         self.hammer_exp = {}
         if (references.directory / "weapon_enhance_debug_catalog.json").is_file():
             enhancement = load_catalog(references)
@@ -89,5 +101,6 @@ class EquipmentDisplay:
             "grade": spec.get("OriginRarity"),
             "exclusiveHero": hero,
             "exclusiveHeroName": self.hero_names.get(hero),
+            "ribbons": equipment_ribbons(item, spec, self.completed_books),
             "training": item["Id"] in training,
         }

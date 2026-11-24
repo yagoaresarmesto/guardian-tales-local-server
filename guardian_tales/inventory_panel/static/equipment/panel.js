@@ -22,6 +22,11 @@ const types = new Map(Object.entries({
   claw: "Claw", shield: "Shield", accessory: "Accessory",
 }));
 const typeName = key => types.get(key) || key || "Other equipment";
+const gradeColors = ["normal", "rare", "unique", "legend", "epic", "myth"];
+const ribbonLabels = {
+  "book-complete": "Book complete", exclusive: "Exclusive weapon", "exclusive-collab": "Exclusive collaboration weapon",
+  engraved: "Engraved", "engraved-max": "Maximum engraving bonus", "engraved-collab": "Engraved collaboration weapon",
+};
 const params = new URLSearchParams(location.hash.slice(1));
 // Old necklace bookmarks carry the inventory copy ID as a bare fragment.
 const initialSearch = new URLSearchParams(location.search).get("q");
@@ -91,28 +96,44 @@ function drawTypes() {
 function stars(item) {
   return item.stars >= 1 && item.stars <= 6 ? "★".repeat(item.stars) : "";
 }
-function addHeroPortrait(square, item) {
-  if (!item.exclusiveHero) {
-    delete square.dataset.exclusive;
-    return "";
+function decorateEquipment(square, item) {
+  const labels = [];
+  let color = gradeColors[item.grade];
+  if (item.exclusiveHero) {
+    color = "epic";
+    const label = "Exclusive to " + (item.exclusiveHeroName || "hero #" + item.exclusiveHero);
+    const face = image("/hero-face/" + item.exclusiveHero + ".png");
+    face.className = "exclusive-portrait";
+    face.alt = label;
+    face.title = label;
+    face.onerror = () => face.remove();
+    square.append(face);
+    labels.push(label);
   }
-  square.dataset.exclusive = item.stars === 6 ? "myth" : "standard";
-  const label = "Exclusive to " + (item.exclusiveHeroName || "hero #" + item.exclusiveHero);
-  const face = image("/hero-face/" + item.exclusiveHero + ".png");
-  face.className = "exclusive-portrait";
-  face.alt = label;
-  face.title = label;
-  face.onerror = () => face.remove();
-  square.append(face);
-  return label;
+  if (item.stars === 6) color = "myth";
+  if (types.has(item.kind) && color) square.dataset.equipmentColor = color;
+  else delete square.dataset.equipmentColor;
+  if (item.ribbons?.length) {
+    const strip = el("span", "equipment-ribbons");
+    for (const key of item.ribbons) {
+      const icon = image("/type-icon/" + key + ".png");
+      icon.alt = ribbonLabels[key] || key;
+      icon.title = icon.alt;
+      icon.onerror = () => icon.remove();
+      strip.append(icon);
+      labels.push(icon.alt);
+    }
+    square.append(strip);
+  }
+  return labels.join(" · ");
 }
 function tile(item) {
   const button = inventoryTile({ ...item, art: art(item, "tile-art"), selected: item.id === selected,
     quantity: item.kind === "enhance" ? quantityFormat.format(item.amount) : null });
   button.dataset.grade = item.grade ?? "";
-  const hero = addHeroPortrait(button, item);
-  if (hero) {
-    button.title += " · " + hero;
+  const markers = decorateEquipment(button, item);
+  if (markers) {
+    button.title += " · " + markers;
     button.setAttribute("aria-label", button.title);
   }
   return button;
@@ -138,7 +159,7 @@ function drawDetails() {
   if (!item) return;
   const detailArt = $("hero-art");
   detailArt.replaceChildren(...art(item, "").childNodes);
-  detailArt.title = addHeroPortrait(detailArt, item);
+  detailArt.title = decorateEquipment(detailArt, item);
   $("hero-stars").textContent = stars(item);
   $("hero-stars").setAttribute("aria-label", item.stars ? item.stars + " stars" : "Star rating unavailable");
   $("detail-type").textContent = enhance ? item.rarityName : typeName(item.kind);

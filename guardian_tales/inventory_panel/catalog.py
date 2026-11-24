@@ -10,6 +10,7 @@ from guardian_tales.panel_common.artwork import UI, Atlas
 from guardian_tales.test_item_static import PIN_ID, active_specs, item_definitions
 
 from .equipment import EquipmentDisplay
+from .equipment_ribbons import read_completed_books
 
 NAMES = {
     9110264: "Earth Necklace",
@@ -37,11 +38,16 @@ def inventory_icon(png):
 
 
 class InventoryCatalog:
-    def __init__(self, db, references, catalog, thresholds, hero_name_keys):
+    def __init__(self, db, references, catalog, thresholds, hero_name_keys, tables):
         self.refs = references
         self.specs = {s["Id"]: s for s in item_definitions(catalog)}
         self.equipment = EquipmentDisplay(
-            references, self.specs, catalog, thresholds, hero_name_keys
+            references,
+            self.specs,
+            catalog,
+            thresholds,
+            hero_name_keys,
+            read_completed_books(db, self.specs, tables),
         )
         self.names = self.equipment.names | NAMES
         for encoded in active_specs(db):
