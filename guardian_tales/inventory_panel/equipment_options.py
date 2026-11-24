@@ -8,13 +8,12 @@ from random import SystemRandom
 
 from guardian_tales.admin_test_items import save_profile
 from guardian_tales.item_sell import gear_references
-from guardian_tales.raid_static import decode, records
 from guardian_tales.village import MAX_REVISION, integer
+from guardian_tales.weapon_enhance import unlocked_weapon_level
 from guardian_tales.weapon_options import valid_options
 
 from .game_save import GameSaveEditor
 from .stack_quantities import HAMMERS, StackQuantityEditor
-from .weapon_progression import WeaponProgression
 
 RANDOM = SystemRandom()
 EDIT_FIELDS = ("Options", "LimitBreaks", "EngraveCeiling", "EngraveOptions", "Experience", "Amount")
@@ -198,12 +197,11 @@ def roll_basics(spec, locked):
 
 
 class EquipmentOptionEditor(GameSaveEditor):
-    def __init__(self, database, catalog):
+    def __init__(self, database, catalog, tables, progression):
         super().__init__(database)
         self.catalog = catalog
         self.hammers = StackQuantityEditor(database, catalog, HAMMERS)
-        tables = records(decode(catalog.refs.read_bytes("static_data_get.bin")))[1]
-        self.progression = WeaponProgression(tables)
+        self.progression = progression
         buffs = {row["Id"]: row for row in json.loads(tables["buffs"][1])}
         weapons = {i: s for i, s in catalog.specs.items() if s.get("Type") == "weapon"}
         ids = {o["OptionId"] for s in weapons.values() for o in s.get("Options") or []}
@@ -224,6 +222,7 @@ class EquipmentOptionEditor(GameSaveEditor):
         equipped = gear_references(user["Characters"])
         training = {slot.get("ItemId") for slot in user.get("TrainingSlots", {}).values()}
         rows, used = [], {}
+        base = unlocked_weapon_level(user)
         for item in user["ItemWeapons"]:
             ident, key = item["Id"], item["ItemId"]
             spec = self.catalog.specs.get(key, {})
@@ -245,7 +244,7 @@ class EquipmentOptionEditor(GameSaveEditor):
                     options=item.get("Options") or [],
                     version=self.option_version(user, item, *EDIT_FIELDS),
                     progression=(
-                        self.progression.choices(item, spec) if ident not in pending else None
+                        self.progression.choices(item, spec, base) if ident not in pending else None
                     ),
                     unavailable=unavailable(item, used[key], ident in pending),
                     **self.catalog.equipment.facts(item, spec, training),
@@ -302,7 +301,10 @@ class EquipmentOptionEditor(GameSaveEditor):
         changes = {}
         if "progression" in body:
             changes = self.progression.changes(
-                item, self.catalog.specs.get(item["ItemId"], {}), body["progression"]
+                item,
+                self.catalog.specs.get(item["ItemId"], {}),
+                unlocked_weapon_level(user),
+                body["progression"],
             )
         if roll or "options" in body:
             result = self.edit_options(item, spec, body, roll=roll)

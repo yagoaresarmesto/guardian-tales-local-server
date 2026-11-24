@@ -61,15 +61,15 @@ def english_inventory_names(references, specs, catalog_hash):
 
 
 class EquipmentDisplay:
-    def __init__(self, references, specs, catalog_bytes):
+    def __init__(self, references, specs, catalog_bytes, thresholds):
         self.names = english_inventory_names(
             references, specs, hashlib.sha256(catalog_bytes).hexdigest()
         )
-        self.thresholds = ()
+        self.thresholds = thresholds
         self.hammer_exp = {}
         if (references.directory / "weapon_enhance_debug_catalog.json").is_file():
             enhancement = load_catalog(references)
-            self.thresholds = enhancement["level_total_exps"]
+            self.thresholds = thresholds or enhancement["level_total_exps"]
             self.hammer_exp = enhancement["hammer_exp"]
 
     def facts(self, item, spec, training):

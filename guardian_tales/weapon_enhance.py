@@ -74,6 +74,17 @@ def load_catalog(references):
     return value
 
 
+def unlocked_weapon_level(user):
+    unlocked = user.get("Unlocked")
+    maximums = unlocked.get("MaxLevel") if isinstance(unlocked, dict) else None
+    return maximums.get("Weapon") if isinstance(maximums, dict) else None
+
+
+def level_cap(base, breaks, rarity, break_coef, myth_coef, engrave_bonus):
+    """Internal cap in equipment levels above visible level one."""
+    return base + breaks * break_coef + (myth_coef if rarity > 4 else 0) + engrave_bonus
+
+
 def enhance(account, body, operation_id):
     # The engraving catalog depends on the shared canonical-ID validator here.
     from .weapon_engrave import saved_engrave_bonus
@@ -122,15 +133,17 @@ def enhance(account, body, operation_id):
         or not integer(user.get("Cas"), MAX_REVISION - 1)
     ):
         raise ValueError("Unsupported target equipment, engraving or account revision")
-    unlocked = user.get("Unlocked")
-    maximums = unlocked.get("MaxLevel") if isinstance(unlocked, dict) else None
-    base = maximums.get("Weapon") if isinstance(maximums, dict) else None
+    base = unlocked_weapon_level(user)
     if not integer(base, len(catalog["level_total_exps"]), 1):
         raise ValueError("Invalid saved weapon level cap")
-    cap_level = base + target["LimitBreaks"] * catalog["limit_break_coef"]
-    cap_level += saved_engrave_bonus(target, account.references)
-    if catalog["weapons"][str(target["ItemId"])] > 4:
-        cap_level += catalog["myth_coef"]
+    cap_level = level_cap(
+        base,
+        target["LimitBreaks"],
+        catalog["weapons"][str(target["ItemId"])],
+        catalog["limit_break_coef"],
+        catalog["myth_coef"],
+        saved_engrave_bonus(target, account.references),
+    )
     if cap_level > len(catalog["level_total_exps"]):
         raise ValueError("Equipment level cap is not covered by the matching catalog")
     cap_exp = catalog["level_total_exps"][cap_level - 1]

@@ -16,6 +16,8 @@
 #engraving-controls:not([hidden]) { display: contents; }
 #weapon-progression label { color: #afc1d3; font-size: .73rem; line-height: 1.35; display: grid; align-content: start; gap: 4px; min-width: 0; }
 #weapon-progression .engraving-bonus { grid-column: 1 / -1; }
+#weapon-progression #max-level-action:not([hidden]) { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--blue); font-size: .85rem; }
+#max-level { accent-color: var(--gold); }
 .option-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
 #roll-count, .sub-range { color: var(--muted); font-size: .73rem; line-height: 1.4; }
 .sub-row {

@@ -156,7 +156,7 @@ export function equipmentOptions(reload, onAccess) {
   }
   $("apply-options").onclick=apply;
   return {
-    load(data) { catalog=data; ++check; access(data.writable); },
+    load(data) { catalog=data; item=null; ++check; access(data.writable); },
     select,
     lock() { ++check; access(false); },
   };
@@ -164,6 +164,7 @@ export function equipmentOptions(reload, onAccess) {
 
 function weaponProgression(onChange, format, name) {
   const breaks = $("break-count"), count = $("engrave-count"), tier = $("engrave-tier");
+  const maxLevel = $("max-level");
   let item, rules, engraving;
 
   function choices(select, values, label, selected) {
@@ -199,18 +200,36 @@ function weaponProgression(onChange, format, name) {
     $("engrave-hint").hidden = !hint;
   }
 
+  function targetLevel() {
+    if (!rules?.levels) return null;
+    return engraving && Number(count.value) > engraving.count
+      ? rules.levels.engraved : rules.levels.byBreaks[breaks.value];
+  }
+
+  function drawLevel() {
+    const target = targetLevel();
+    $("max-level-action").hidden = target == null;
+    maxLevel.disabled = target == null || item.level >= target;
+    if (maxLevel.disabled) maxLevel.checked = false;
+    if (target != null) $("max-level-title").textContent = maxLevel.disabled
+      ? "Maximum level: " + target : "Raise to max level · Lv. " + item.level + " → " + target;
+  }
+
   function select(row) {
     item = row;
     rules = row?.progression;
     $("weapon-progression").hidden = !rules;
     if (!rules) return;
+    $("break-label").hidden = row.kind === "accessory" && row.breaks === rules.maxBreaks;
     $("upgrades-heading").textContent = row.kind === "accessory" ? "Accessory upgrades" : "Weapon upgrades";
     const values = Array.from({length: rules.maxBreaks - row.breaks + 1}, (_, i) => row.breaks + i);
     choices(breaks, values, n => n + " / " + rules.maxBreaks, row.breaks);
     engraving = rules.engraving;
     count.replaceChildren();
     tier.replaceChildren();
+    maxLevel.checked = false;
     drawEngraving();
+    drawLevel();
   }
 
   function changes() {
@@ -220,11 +239,13 @@ function weaponProgression(onChange, format, name) {
     if (engraving && Number(count.value) !== engraving.count) {
       result.engraving = {count: Number(count.value), level: Number(tier.value)};
     }
+    if (maxLevel.checked) result.maxLevel = targetLevel();
     return Object.keys(result).length ? result : null;
   }
 
-  breaks.onchange = () => { drawEngraving(); onChange(); };
-  count.onchange = () => { drawTier(); onChange(); };
+  breaks.onchange = () => { drawEngraving(); drawLevel(); onChange(); };
+  count.onchange = () => { drawTier(); drawLevel(); onChange(); };
   tier.onchange = onChange;
+  maxLevel.onchange = onChange;
   return { select, changes };
 }

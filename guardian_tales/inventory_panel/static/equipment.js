@@ -125,7 +125,7 @@ function drawDetails() {
     return;
   }
   $("facts").replaceChildren(
-    fact("Catalog ID", item.spec), ...(!item.progression ? [fact("Limit breaks", item.breaks)] : []),
+    fact("Catalog ID", item.spec), ...(!item.progression || (item.kind === "accessory" && item.breaks === item.progression.maxBreaks) ? [fact("Limit breaks", item.breaks)] : []),
     fact("Equipped", item.equipped ? "Yes" : "No"),
     fact("Protection", item.locked ? "Locked" : "Unlocked"),
   );

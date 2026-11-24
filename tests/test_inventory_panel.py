@@ -37,6 +37,7 @@ def prepare_inventory(root):
                 Name="test_ring",
                 Type="weapon",
                 WeaponType="accessory",
+                Rarity=4,
                 Options=[pool],
                 MinOptions=1,
                 MaxOptions=1,
@@ -84,9 +85,14 @@ def prepare_inventory(root):
         },
         "weaponenhance": {
             "Constants": dict(
-                WeaponMaxLimitBreak=3, WeaponEngravingCeiling=3, WeaponEngravingLevelRequirement=2
+                WeaponMaxLimitBreak=3,
+                WeaponEngravingCeiling=3,
+                WeaponEngravingLevelRequirement=2,
+                WeaponLimitBreakCoef=3,
+                WeaponEngraveCoef=15,
+                WeaponMythCoef=20,
             ),
-            "LevelExps": [dict(Level=1, TotalExps=100)],
+            "LevelExps": [dict(Level=i, TotalExps=50 * (i + 1)) for i in range(150)],
             "WeaponEngraveOptionProbability": [
                 dict(CeilingCount=i, OptionWeights=weights)
                 for i, weights in enumerate(([1, 1, 1], [1, 1, 1], [1, 0, 0]))
@@ -94,6 +100,8 @@ def prepare_inventory(root):
         },
         "__checksum__": {},
     }
+    sword = next(item for item in catalog["items"] if item["Id"] == 5)
+    catalog["items"].append(dict(sword, Id=50, Name="test_myth_sword", Rarity=5))
     records = []
     for key, value in catalog.items():
         content = json.dumps(value)
@@ -540,6 +548,86 @@ class InventoryPanelTests(unittest.TestCase):
         original["User"]["ItemWeapons"][0]["LimitBreaks"] = 3
         original["User"]["Cas"] += 2
         self.assertEqual(saved, original)
+
+    def test_free_max_level_matches_saved_cap_rarity_breaks_and_first_engraving(self):
+        path = "/api/game/equipment"
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            original = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+            user = original["User"]
+            user["Unlocked"] = {"MaxLevel": {"Weapon": 99}}
+            ring, sword = user["ItemWeapons"]
+            ring["LimitBreaks"] = 3
+            myth = dict(sword, Id=99, ItemId=50)
+            user["ItemWeapons"].append(myth)
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(original),))
+
+        for item, upgrades, level in [
+            (ring, {}, 109),
+            (sword, dict(breaks=3, engraving=dict(count=1, level=9)), 124),
+            (myth, dict(breaks=3), 129),
+            (myth, dict(engraving=dict(count=1, level=9)), 144),
+            (myth, dict(engraving=dict(count=2, level=15)), None),
+        ]:
+            state = self.call(path)
+            row = next(r for r in state["rows"] if r["id"] == item["Id"])
+            changes = dict(upgrades)
+            if level:
+                targets = row["progression"]["levels"]
+                offered = (
+                    targets["engraved"]
+                    if "engraving" in upgrades
+                    else targets["byBreaks"][str(upgrades.get("breaks", row["breaks"]))]
+                )
+                self.assertEqual(offered, level)
+                changes["maxLevel"] = level
+                item["Experience"] = (level - 1) * 50
+            if "breaks" in upgrades:
+                item["LimitBreaks"] = upgrades["breaks"]
+            if "engraving" in upgrades:
+                item.update(
+                    EngraveCeiling=upgrades["engraving"]["count"],
+                    EngraveOptions=[dict(OptionId=8, Level=upgrades["engraving"]["level"])],
+                )
+            body = dict(
+                id=row["id"],
+                revision=state["revision"],
+                version=row["version"],
+                progression=changes,
+            )
+            self.call(path, body)
+            user["Cas"] += 1
+            saved = next(r for r in self.call(path)["rows"] if r["id"] == item["Id"])
+            self.assertEqual(saved["level"], level or 144)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            self.assertEqual(
+                json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), original
+            )
+
+    def test_max_level_rejects_stale_story_cap_and_overcap_edits_atomically(self):
+        path = "/api/game/equipment"
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            profile = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+            profile["User"]["Unlocked"] = {"MaxLevel": {"Weapon": 49}}
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        edit = self.weapon_edit(progression=dict(maxLevel=53), options={"7": 2})
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(path, edit)
+        self.assertEqual(locked.exception.code, 423)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            profile["User"]["Unlocked"]["MaxLevel"]["Weapon"] = 50
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        for level in (True, 53, 150, 100000):
+            with self.subTest(level=level), self.assertRaises(HTTPError) as invalid:
+                self.call(path, dict(edit, progression=dict(maxLevel=level)))
+            self.assertEqual(invalid.exception.code, 400)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            self.assertEqual(
+                json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), profile
+            )
+        self.call(path, dict(edit, progression=dict(maxLevel=54)))
+        with self.assertRaises(HTTPError) as capped:
+            self.call(path, self.weapon_edit(progression=dict(maxLevel=54)))
+        self.assertEqual(capped.exception.code, 400)
 
     def test_upgrades_and_options_apply_together_with_native_tiers(self):
         path = "/api/game/equipment"

@@ -20,6 +20,7 @@ from guardian_tales.account import AccountStore
 from guardian_tales.head_hunter_static import SOURCE, VARIANT, active_spec
 from guardian_tales.item_lock import INVENTORIES, LOCK, UNLOCK
 from guardian_tales.item_sell import gear_references
+from guardian_tales.raid_static import decode, records
 from guardian_tales.reference import ReferenceData
 from guardian_tales.test_item_static import PIN_ID, active_specs, item_definitions
 from guardian_tales.web_panel.artwork import UI, Atlas
@@ -32,6 +33,7 @@ from .mastery import MasteryEditor
 from .mastery_art import training_banner
 from .relics import RelicEditor
 from .stack_quantities import CONSUMABLES, StackQuantityEditor
+from .weapon_progression import WeaponProgression
 
 STATIC = Path(__file__).resolve().parent / "static"
 
@@ -62,11 +64,10 @@ def inventory_icon(png):
 
 
 class InventoryCatalog:
-    def __init__(self, db, references):
+    def __init__(self, db, references, catalog, thresholds):
         self.refs = references
-        catalog = references.read_bytes("static_data_get.bin")
         self.specs = {s["Id"]: s for s in item_definitions(catalog)}
-        self.equipment = EquipmentDisplay(references, self.specs, catalog)
+        self.equipment = EquipmentDisplay(references, self.specs, catalog, thresholds)
         self.names = self.equipment.names | NAMES
         for encoded in active_specs(db):
             spec = json.loads(encoded)
@@ -339,12 +340,15 @@ class InventoryServer(ThreadingHTTPServer):
         self.brand_image = art_dir / "brand.png"
         self._sandbox = None
         self._sandbox_guard = Lock()
+        body = references.read_bytes("static_data_get.bin")
+        tables = records(decode(body))[1]
+        progression = WeaponProgression(tables)
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source:
-            self.catalog = InventoryCatalog(source, references)
+            self.catalog = InventoryCatalog(source, references, body, progression.thresholds)
         self.mastery = MasteryEditor(database, references)
         self.account_editor = AccountEditor(database, references)
         self.relics = RelicEditor(database, self.catalog)
-        self.equipment = EquipmentOptionEditor(database, self.catalog)
+        self.equipment = EquipmentOptionEditor(database, self.catalog, tables, progression)
         self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)
         super().__init__(("127.0.0.1", port), Handler)
 
