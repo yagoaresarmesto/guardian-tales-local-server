@@ -25,6 +25,7 @@ from guardian_tales.test_item_static import PIN_ID, active_specs, item_definitio
 from guardian_tales.web_panel.artwork import UI, Atlas
 from guardian_tales.web_panel.server import PanelHandler
 
+from .account_details import AccountEditor
 from .equipment import TYPE_ICONS, EquipmentDisplay
 from .equipment_options import EquipmentOptionEditor
 from .mastery import MasteryEditor
@@ -202,6 +203,9 @@ class Handler(PanelHandler):
             "/quantity-editor.js": ("quantity-editor.js", "text/javascript; charset=utf-8"),
             "/inventory-dom.js": ("inventory-dom.js", "text/javascript; charset=utf-8"),
             "/equipment.css": ("equipment.css", "text/css; charset=utf-8"),
+            "/account": ("account.html", "text/html; charset=utf-8"),
+            "/account.js": ("account.js", "text/javascript; charset=utf-8"),
+            "/account.css": ("account.css", "text/css; charset=utf-8"),
             "/mastery": ("mastery.html", "text/html; charset=utf-8"),
             "/mastery.js": ("mastery.js", "text/javascript; charset=utf-8"),
             "/mastery.css": ("mastery.css", "text/css; charset=utf-8"),
@@ -229,6 +233,8 @@ class Handler(PanelHandler):
                 return self.reply(200, "image/png", training_banner(self.server.catalog.refs))
             if path == "/api/game/mastery":
                 return self.list_json(self.server.mastery.info())
+            if path == "/api/game/account":
+                return self.list_json(self.server.account_editor.info())
             if path == "/api/game/relics":
                 return self.list_json(self.server.relics.info())
             if path == "/api/game/equipment":
@@ -266,6 +272,7 @@ class Handler(PanelHandler):
             "/api/game/equipment",
             "/api/game/mastery",
             "/api/game/mastery/preview",
+            "/api/game/account",
             "/api/game/equipment/roll",
             "/api/game/equipment/hammers",
             "/api/game/consumables",
@@ -300,6 +307,8 @@ class Handler(PanelHandler):
                 return
             if self.path == "/api/game/relics":
                 status, result = self.server.relics.apply(payload)
+            elif self.path == "/api/game/account":
+                status, result = self.server.account_editor.write(payload)
             elif self.path == "/api/game/mastery/preview":
                 status, result = self.server.mastery.preview(payload)
             elif self.path == "/api/game/mastery":
@@ -333,6 +342,7 @@ class InventoryServer(ThreadingHTTPServer):
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source:
             self.catalog = InventoryCatalog(source, references)
         self.mastery = MasteryEditor(database, references)
+        self.account_editor = AccountEditor(database, references)
         self.relics = RelicEditor(database, self.catalog)
         self.equipment = EquipmentOptionEditor(database, self.catalog)
         self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)

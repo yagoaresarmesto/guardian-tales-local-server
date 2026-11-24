@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Account · Guardian Tales</title>
+  <link rel="stylesheet" href="/equipment.css"><link rel="stylesheet" href="/account.css">
+  <script type="module" src="/account.js"></script>
+</head>
+<body>
+  <header class="top"><div class="top-inner">
+    <div class="brand"><img src="/brand.png" alt="">Guardian Tales</div>
+    <nav class="mode-nav" aria-label="Save editor sections">
+      <a href="/equipment">Equipment</a>
+      <a href="/relics">Relics</a>
+      <a href="/consumables">Consumables</a>
+      <a href="/mastery">Mastery</a>
+      <a href="/account" aria-current="page">Account</a>
+    </nav>
+    <span class="context">Save editor</span>
+  </div></header>
+  <main>
+    <div class="title-row"><h1>Account</h1></div>
+    <p id="access" class="save-access" role="status" hidden></p>
+    <p id="loading" role="status">Loading account…</p>
+    <form id="account-form" hidden>
+      <div class="account-grid">
+        <section class="account-card" aria-labelledby="identity-heading">
+          <h2 id="identity-heading">Player identity</h2>
+          <div class="identity-body">
+            <div class="identity-summary"><small>Saved identity</small><strong id="saved-identity"></strong></div>
+            <label for="name">Nickname</label>
+            <input id="name" required minlength="2" maxlength="10" autocomplete="off" aria-describedby="name-help">
+            <small id="name-help">2–10 UTF-16 units. An emoji can count as two.</small>
+            <label for="tag">Player tag</label>
+            <input id="tag" required maxlength="6" autocomplete="off" spellcheck="false" aria-describedby="tag-help">
+            <small id="tag-help">Five letters or digits. Leading zeros are kept.</small>
+            <p id="identity-preview" class="identity-preview" aria-live="polite" hidden></p>
+          </div>
+        </section>
+        <section class="account-card" aria-labelledby="wallet-heading">
+          <h2 id="wallet-heading">Wallet</h2>
+          <div id="wallet"></div>
+        </section>
+      </div>
+      <footer class="account-actions">
+        <p id="message" role="status"></p>
+        <button type="button" id="reload" hidden>Reload account</button>
+        <button type="submit" id="apply" class="apply-button" disabled>Apply</button>
+      </footer>
+    </form>
+  </main>
+</body>
+</html>

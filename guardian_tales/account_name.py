@@ -31,6 +31,29 @@ def resource(profile):
     return result
 
 
+def owned_member(profile):
+    member = profile.get("GuildMember")
+    if member is not None and (
+        not isinstance(member, dict)
+        or type(member.get("UserId")) is not int
+        or member["UserId"] != profile["User"].get("Id")
+        or not integer(member.get("Cas"), MAX_REVISION)
+        or not isinstance(member.get("Name"), str)
+    ):
+        raise ValueError("Invalid saved guild member identity or revision")
+    return member
+
+
+def sync_member(member, identity):
+    if member is None or all(member.get(key) == value for key, value in identity.items()):
+        return False
+    if member["Cas"] == MAX_REVISION:
+        raise ValueError("Guild member revision overflow")
+    member.update(identity)
+    member["Cas"] += 1
+    return True
+
+
 def change(account, body, operation_id):
     if (
         not isinstance(body, dict)
@@ -43,19 +66,11 @@ def change(account, body, operation_id):
         raise ValueError("Choose a nickname of 2..10 UTF-16 units after completing the prologue")
     profile = account.profile()
     user = profile["User"]
-    member = profile.get("GuildMember")
+    member = owned_member(profile)
     if (
         not integer(user.get("Id"), minimum=1)
         or not integer(user.get("Cas"), MAX_REVISION)
         or not valid_name(user.get("Name"))
-        or member is not None
-        and (
-            not isinstance(member, dict)
-            or type(member.get("UserId")) is not int
-            or member["UserId"] != user["Id"]
-            or not integer(member.get("Cas"), MAX_REVISION)
-            or not isinstance(member.get("Name"), str)
-        )
     ):
         raise ValueError("Invalid saved nickname, owner or revision")
     encoded = json.dumps(body, separators=(",", ":"))
@@ -68,21 +83,12 @@ def change(account, body, operation_id):
         # Retries return the current name, including later edits, without another write.
         return resource(profile)
     changed = user["Name"] != body["Name"]
-    member_changed = member is not None and member["Name"] != body["Name"]
-    if changed or member_changed:
-        if (
-            changed
-            and user["Cas"] == MAX_REVISION
-            or member_changed
-            and member["Cas"] == MAX_REVISION
-        ):
-            raise ValueError("Nickname revision overflow")
-        if changed:
-            user["Name"] = body["Name"]
-            user["Cas"] += 1
-        if member_changed:
-            member["Name"] = body["Name"]
-            member["Cas"] += 1
+    if changed and user["Cas"] == MAX_REVISION:
+        raise ValueError("Nickname revision overflow")
+    member_changed = sync_member(member, body)
+    if changed:
+        user["Name"] = body["Name"]
+        user["Cas"] += 1
     with account.db:
         if changed or member_changed:
             account.db.execute(

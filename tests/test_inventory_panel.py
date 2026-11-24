@@ -174,9 +174,10 @@ class InventoryPanelTests(unittest.TestCase):
     def test_views_and_referenced_static_assets(self):
         import re
 
-        for section in ("equipment", "relics", "consumables", "mastery"):
+        for section in ("equipment", "relics", "consumables", "mastery", "account"):
             page = self.call("/" + section)
             self.assertIn(b'lang="en"', page)
+            self.assertIn(b'href="/account"', page)
             for asset in re.findall(rb'(?:href|src)="(/[^"]+\.(?:css|js))"', page):
                 self.assertTrue(self.call(asset.decode()))
         with self.assertRaises(HTTPError) as missing_art:
@@ -184,6 +185,122 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertEqual(missing_art.exception.code, 404)
         self.assertTrue(self.call("/inventory-dom.js"))
         self.assertTrue(self.call("/equipment-options.js"))
+
+    def seed_wallet(self):
+        (self.root / "stamina_purchase_catalog.json").write_text(
+            json.dumps(
+                dict(amount_per_charge=50, gem_prices=[100], max_storage=3000, daily_limit=1)
+            )
+        )
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            profile = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+            profile["User"].update(
+                Name="Player",
+                HashTag="00001",
+                Assets=[
+                    dict(Id=70001, Amount=5, Spent=-10),
+                    dict(Id=70003, Amount=8, Spent=9),
+                    dict(Id=70006, Amount=90, Spent=12, MaxAdj=27, NextCharge="saved timer"),
+                    dict(Id=70032, Amount=2990, Spent=8),
+                ],
+            )
+            profile["GuildMember"] = dict(UserId=1, Name="Player", HashTag="00001", Cas=4)
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            db.execute("CREATE TABLE prologue_selection (id INTEGER PRIMARY KEY)")
+            db.execute("INSERT INTO prologue_selection VALUES (1)")
+        return profile
+
+    def test_account_identity_and_separate_wallet_caps_apply_once(self):
+        original = self.seed_wallet()
+        path = "/api/game/account"
+        view = self.call(path)
+        self.assertTrue(view["ready"])
+        body = dict(
+            version=view["version"],
+            name="Knight",
+            tag="#0ab01",
+            add=dict(gold=99_999_995, freeGems=99_999_992, paidGems=100_000_000, coffee=10),
+        )
+        with StateLock(self.root):
+            self.assertFalse(self.call(path)["writable"])
+            with self.assertRaises(HTTPError) as locked:
+                self.call(path, body)
+            self.assertEqual(locked.exception.code, 423)
+        result = self.call(path, body)
+        self.assertEqual(result["tag"], "0AB01")
+        self.assertEqual(
+            {w["key"]: w["balance"] for w in result["wallet"]},
+            dict(gold=100_000_000, freeGems=100_000_000, paidGems=100_000_000, coffee=3000),
+        )
+        with self.assertRaises(HTTPError) as repeated:
+            self.call(path, body)
+        self.assertEqual(repeated.exception.code, 409)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+        user = original["User"]
+        user.update(Name="Knight", HashTag="0AB01", Cas=user["Cas"] + 1)
+        for index, amount in [(0, 100_000_000), (1, 100_000_000), (3, 3000)]:
+            user["Assets"][index]["Amount"] = amount
+        user["Assets"].append(
+            dict(Id=70002, Amount=100_000_000, Spent=0, MaxAdj=0, NextCharge=None)
+        )
+        original["GuildMember"].update(Name="Knight", HashTag="0AB01", Cas=5)
+        self.assertEqual(saved, original)
+        no_op = self.call(
+            path, dict(version=result["version"], name="Knight", tag="#0ab01", add={})
+        )
+        self.assertEqual(no_op, result)
+
+    def test_account_rejects_invalid_edits_without_partial_writes(self):
+        self.seed_wallet()
+        path = "/api/game/account"
+        view = self.call(path)
+        body = dict(version=view["version"], name="Renamed", tag="00123", add={})
+        for change in [
+            dict(name="x"),
+            dict(name="😀" * 6),
+            dict(tag="1234"),
+            dict(tag=" A001"),
+            dict(tag="ßAAAA"),
+            dict(add={"gold": 1, "coffee": 11}),
+            dict(add={"freeGems": 99_999_993}),
+            dict(add={"paidGems": 100_000_001}),
+            dict(add={"gold": 99_999_996}),
+            dict(add={"gold": -1}),
+            dict(add={"coffee": True}),
+            dict(add={"chargedCoffee": 1}),
+        ]:
+            with self.subTest(change=change), self.assertRaises(HTTPError) as invalid:
+                self.call(path, body | change)
+            self.assertEqual(invalid.exception.code, 400)
+        self.assertEqual(self.call(path), view)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            db.execute("DELETE FROM prologue_selection")
+        with self.assertRaises(HTTPError) as early:
+            self.call(path, body)
+        self.assertEqual(early.exception.code, 400)
+        self.assertFalse(self.call(path)["ready"])
+
+    def test_account_keeps_legacy_balances_and_checks_guild_owner(self):
+        profile = self.seed_wallet()
+        (self.root / "stamina_purchase_catalog.json").unlink()
+        profile["User"]["Assets"][0]["Amount"] = 100_000_001
+        profile["GuildMember"]["UserId"] = 2
+        path = "/api/game/account"
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        state = self.call(path)
+        body = dict(version=state["version"], name=state["name"], tag=state["tag"], add={})
+        for change in (dict(tag="0A123", add={"freeGems": 1}), dict(add={"coffee": 1})):
+            with self.assertRaises(HTTPError) as invalid:
+                self.call(path, body | change)
+            self.assertEqual(invalid.exception.code, 400)
+            self.assertEqual(self.call(path), state)
+        updated = self.call(path, body | {"add": {"freeGems": 1}})
+        balances = {item["key"]: item for item in updated["wallet"]}
+        self.assertEqual(balances["gold"]["balance"], 100_000_001)
+        self.assertEqual(balances["freeGems"]["balance"], 9)
+        self.assertIsNone(balances["coffee"]["limit"])
 
     def seed_mastery(self, balance=500):
         skills = {str(group * 100 + index): group for group in range(1, 5) for index in (1, 2)}
