@@ -204,6 +204,7 @@ function weaponProgression(onChange, format, name) {
     rules = row?.progression;
     $("weapon-progression").hidden = !rules;
     if (!rules) return;
+    $("upgrades-heading").textContent = row.kind === "accessory" ? "Accessory upgrades" : "Weapon upgrades";
     const values = Array.from({length: rules.maxBreaks - row.breaks + 1}, (_, i) => row.breaks + i);
     choices(breaks, values, n => n + " / " + rules.maxBreaks, row.breaks);
     engraving = rules.engraving;

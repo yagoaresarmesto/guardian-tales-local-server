@@ -106,7 +106,12 @@ def prepare_inventory(root):
             "Characters": [],
             "ItemWeapons": [
                 dict(
-                    Id=11, ItemId=3, Locked=True, Amount=1, Options=[dict(option, OptionSource=0)]
+                    Id=11,
+                    ItemId=3,
+                    Experience=0,
+                    Locked=True,
+                    Amount=1,
+                    Options=[dict(option, OptionSource=0)],
                 ),
                 dict(
                     Id=15,
@@ -496,10 +501,49 @@ class InventoryPanelTests(unittest.TestCase):
         item = state["rows"][1]
         return dict(id=item["id"], version=item["version"], revision=state["revision"], **changes)
 
+    def test_accessory_limit_breaks_are_increase_only_without_engraving(self):
+        path = "/api/game/equipment"
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            original = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+        for before, target in [(0, 1), (1, 3)]:
+            state = self.call(path)
+            ring = state["rows"][0]
+            self.assertEqual(ring["breaks"], before)
+            self.assertEqual(ring["progression"], dict(maxBreaks=3, engraving=None))
+            body = dict(id=ring["id"], revision=state["revision"], version=ring["version"])
+            for invalid in (
+                dict(breaks=0),
+                dict(breaks=4),
+                dict(breaks=3, engraving=dict(count=1, level=9)),
+            ):
+                with self.assertRaises(HTTPError) as error:
+                    self.call(path, dict(body, progression=invalid))
+                self.assertEqual(error.exception.code, 400)
+            self.call(path, dict(body, progression=dict(breaks=target)))
+        state = self.call(path)
+        ring = state["rows"][0]
+        self.assertEqual(ring["breaks"], 3)
+        self.assertIsNone(ring["progression"])
+        with self.assertRaises(HTTPError) as capped:
+            self.call(
+                path,
+                dict(
+                    id=ring["id"],
+                    revision=state["revision"],
+                    version=ring["version"],
+                    progression=dict(breaks=4),
+                ),
+            )
+        self.assertEqual(capped.exception.code, 400)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+        original["User"]["ItemWeapons"][0]["LimitBreaks"] = 3
+        original["User"]["Cas"] += 2
+        self.assertEqual(saved, original)
+
     def test_upgrades_and_options_apply_together_with_native_tiers(self):
         path = "/api/game/equipment"
         state = self.call(path)
-        self.assertIsNone(state["rows"][0]["progression"])
         stack = self.call("/api/game/consumables")["rows"][0]
         body = self.weapon_edit(
             progression=dict(breaks=3, engraving=dict(count=1, level=9)), options={"7": 2}

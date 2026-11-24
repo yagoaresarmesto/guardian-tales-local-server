@@ -1,12 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Weapon progression choices derived from the installed client enhancement tables."""
+"""Equipment progression choices derived from the installed client enhancement tables."""
 
 import json
 
 from guardian_tales.village import integer
 from guardian_tales.weapon_engrave import saved_option_pair, valid_option
 
-WEAPON_TYPES = {
+LIMIT_BREAK_TYPES = {
     "onehandsword",
     "twohandsword",
     "assaultrifle",
@@ -15,6 +15,7 @@ WEAPON_TYPES = {
     "staff",
     "gauntlet",
     "claw",
+    "accessory",
 }
 
 
@@ -41,7 +42,7 @@ class WeaponProgression:
         breaks = item.get("LimitBreaks", 0)
         if (
             spec.get("Type") != "weapon"
-            or spec.get("WeaponType") not in WEAPON_TYPES
+            or spec.get("WeaponType") not in LIMIT_BREAK_TYPES
             or not integer(self.max_breaks, 100, 1)
             or not integer(breaks, self.max_breaks)
             or not integer(item.get("Amount"), 1, 1)
@@ -58,6 +59,8 @@ class WeaponProgression:
         if (saved or count) and breaks != self.max_breaks:
             return None
         result = {"maxBreaks": self.max_breaks, "engraving": None}
+        if spec["WeaponType"] == "accessory":
+            return result if breaks < self.max_breaks else None
         options = spec.get("EngraveRandomOptions") or []
         if (
             not integer(spec.get("Rarity"), 5, 4)
@@ -117,13 +120,13 @@ class WeaponProgression:
             or not requested
             or requested.keys() - {"breaks", "engraving"}
         ):
-            raise ValueError("Choose a supported weapon upgrade.")
+            raise ValueError("Choose a supported equipment upgrade.")
         changes = {}
         breaks = item.get("LimitBreaks", 0)
         if "breaks" in requested:
             new = requested["breaks"]
             if not integer(new, choices["maxBreaks"], breaks + 1):
-                raise ValueError("Choose a higher limit break within this weapon's cap.")
+                raise ValueError("Choose a higher limit break within this item's cap.")
             changes["LimitBreaks"] = breaks = new
         if "engraving" in requested:
             edit = requested["engraving"]
