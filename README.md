@@ -223,7 +223,8 @@ The [inventory panel](http://127.0.0.1:17661/) reads your existing
 `local/state/server.sqlite3` and the matching catalog in
 `local/client-data/reference`. Use `--data-dir` and `--reference-dir` if your
 backend uses other directories. Install the optional `panel-art` extra to show
-sprites from your imported resources. In each tab, search by name or ID, filter
+sprites from your imported resources. The panel also reads the game's UI atlas for
+icons such as the Selectable Summon Controller. In each tab, search by name or ID, filter
 by type and use the page arrows to browse. Select an item to see its details.
 
 - **Equipment** lets you change basic options, sub-options and their locks on an individual weapon or accessory.

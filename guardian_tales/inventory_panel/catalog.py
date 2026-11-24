@@ -6,7 +6,7 @@ from functools import lru_cache
 from io import BytesIO
 
 from guardian_tales.head_hunter_static import SOURCE, VARIANT, active_spec
-from guardian_tales.panel_common.artwork import Atlas
+from guardian_tales.panel_common.artwork import UI, Atlas
 from guardian_tales.test_item_static import PIN_ID, active_specs, item_definitions
 
 from .equipment import EquipmentDisplay
@@ -49,11 +49,15 @@ class InventoryCatalog:
         head = active_spec(db, references)
         if head:
             self.specs[VARIANT] = json.loads(head)
-        self.has_icons = ICONS.available(references)
+        self.has_icons = ICONS.available(references) or UI.available(references)
 
     def icon(self, ident):
         sprite = self.specs.get(ident, {}).get("SpriteName")
         frame = sprite.get("default") if isinstance(sprite, dict) else None
-        if not frame or not self.has_icons:
+        if not frame:
             raise FileNotFoundError
-        return inventory_icon(ICONS.read(self.refs, frame=frame))
+        try:
+            png = ICONS.read(self.refs, frame=frame)
+        except FileNotFoundError:
+            png = UI.read(self.refs, frame=frame)
+        return inventory_icon(png)

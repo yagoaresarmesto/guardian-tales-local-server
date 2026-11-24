@@ -8,6 +8,7 @@ import unittest
 from contextlib import closing
 from pathlib import Path
 from threading import Thread
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -33,8 +34,19 @@ def prepare_inventory(root):
             ),
             dict(Id=9, Name="hammer_box", Type="gachaitem"),
             dict(Id=70014, Name="spiritStone", Type="goods"),
-            dict(Id=110007, Name="summon_ticket", Type="ticket", MaxCount=40),
-            dict(Id=110015, Name="selectable_summon_ticket", Type="ticket"),
+            dict(
+                Id=110007,
+                Name="summon_ticket",
+                Type="ticket",
+                MaxCount=40,
+                SpriteName={"default": "ic_drone_controller"},
+            ),
+            dict(
+                Id=110015,
+                Name="selectable_summon_ticket",
+                Type="ticket",
+                SpriteName={"default": "ic_drone_controller_2"},
+            ),
             dict(
                 Id=3,
                 Name="test_ring",
@@ -207,6 +219,26 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertEqual(missing_art.exception.code, 404)
         self.assertTrue(self.call("/inventory-dom.js"))
         self.assertTrue(self.call("/equipment-options.js"))
+
+    def test_controller_icons_prefer_item_art_and_fall_back_to_the_exact_ui_frame(self):
+        module = "guardian_tales.inventory_panel.catalog"
+        with (
+            patch(module + ".ICONS") as items,
+            patch(module + ".UI") as ui,
+            patch(module + ".inventory_icon", side_effect=lambda png: png),
+        ):
+            items.read.side_effect = [b"regular icon", FileNotFoundError(), FileNotFoundError()]
+            ui.read.side_effect = [b"selectable icon", FileNotFoundError()]
+            self.assertEqual(self.call("/icon/110007.png"), b"regular icon")
+            items.read.assert_called_once_with(
+                self.server.catalog.refs, frame="ic_drone_controller"
+            )
+            ui.read.assert_not_called()
+            self.assertEqual(self.call("/icon/110015.png"), b"selectable icon")
+            ui.read.assert_called_once_with(self.server.catalog.refs, frame="ic_drone_controller_2")
+            with self.assertRaises(HTTPError) as missing:
+                self.call("/icon/110015.png")
+            self.assertEqual(missing.exception.code, 404)
 
     def seed_wallet(self):
         (self.root / "stamina_purchase_catalog.json").write_text(
