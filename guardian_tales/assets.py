@@ -32,8 +32,13 @@ def resource_path(url):
 class ResourceLibrary:
     def __init__(self, roots):
         self.files = {}
+        roots = [Path(root).resolve() for root in roots]
+        self.kamazone_reference = (
+            roots[0].parents[1] / "reference"
+            if len(roots) == 1 and roots[0].parts[-2:] == ("resources", "files")
+            else None
+        )
         for root in roots:
-            root = Path(root).resolve()
             manifest = json.loads(
                 (root.parent.parent / "manifest.json").read_text(encoding="utf-8")
             )
@@ -51,6 +56,8 @@ class ResourceLibrary:
 
 
 def handler_for(library, journal=None, reference_dir=None):
+    banner_reference = reference_dir or library.kamazone_reference
+
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
         timeout = 30
@@ -97,11 +104,11 @@ def handler_for(library, journal=None, reference_dir=None):
                 entry, override = missing_recommended(library, relative)
             if entry is None and override is None:
                 override = missing_tetis_media(library, relative)
-            if entry is None and override is None and reference_dir is not None:
+            if entry is None and override is None and banner_reference is not None:
                 from .kamazone_banner import missing_banner
 
                 try:
-                    override = missing_banner(reference_dir, relative)
+                    override = missing_banner(banner_reference, relative)
                 except (OSError, ValueError):
                     self.send_error(503, "Optional Kama-ZONE preview is not ready")
                     return

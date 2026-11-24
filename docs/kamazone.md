@@ -95,8 +95,9 @@ this pack. [April 2021 renewal](https://www.guardiantales.com/news/158) ·
 [Final permanent season](https://www.guardiantales.com/news/4406)
 
 Host checks on the 3.57.0 data resolved all 40 rotations and exercised regular
-battles and progression through eight floors on rotations 1, 20 and 40. The
-archived rotations still need an in-game check on this Android build.
+battles and progression through eight floors on rotations 1, 20 and 40. On
+Android 3.57.0, Season 40 opened through Events, its first fight started, and
+the backend recorded the result.
 
 ## Commands
 
@@ -118,7 +119,9 @@ season, for example the most recent preserved Global season:
 ```
 
 Start the backend again with the same state, reference and certificate arguments
-as usual. The CDN must also use the same reference directory:
+as usual. With a single imported pack, the CDN finds its Kama-ZONE selection
+in the sibling `reference` directory automatically. For a different location,
+pass the same reference directory to the CDN:
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales assets --resource-root .\local\client-data\resources\files --port 18081 --journal .\local\cdn-requests.jsonl --reference-dir .\local\client-data\reference

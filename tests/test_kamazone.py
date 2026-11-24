@@ -699,6 +699,21 @@ class KamazoneBannerTests(unittest.TestCase):
         self.assertEqual(error.exception.code, code)
         error.exception.close()
 
+    def test_single_pack_cdn_finds_its_selected_season_without_explicit_reference_dir(self):
+        pack = self.fixture.root / "external"
+        reference = pack / "reference"
+        files = pack / "resources" / "files"
+        reference.mkdir(parents=True)
+        files.mkdir(parents=True)
+        (pack / "manifest.json").write_text('{"files":[]}')
+        (reference / "static_data_get.bin").write_bytes(self.fixture.source)
+        self.library = ResourceLibrary([files])
+        base = self.server(references=False)
+        self.error(base + self.path, 404)
+        self.fixture.cli("select", "--season-id", "41", reference_dir=reference)
+        with urlopen(base + self.path, timeout=3) as reply:
+            self.assertEqual(reply.read(8), b"\x89PNG\r\n\x1a\n")
+
     def test_generated_preview_is_a_valid_png_and_serves_head_ranges_and_etags_without_files(self):
         self.fixture.cli("select", "--season-id", "41")
         before = {p.name: p.read_bytes() for p in self.fixture.root.iterdir()}
