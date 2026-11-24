@@ -66,7 +66,7 @@
           </div>
         </div>
       </section>
-      <section class="collection" aria-labelledby="collection-heading">
+      <section class="collection equipment-collection" aria-labelledby="collection-heading">
         <header class="collection-bar"><h2 id="collection-heading">Equipment</h2></header>
         <div class="collection-body">
           <div class="rack">
@@ -78,7 +78,10 @@
             <p id="empty" hidden>No equipment matches these filters.</p>
             <footer class="pager"><span id="range" aria-live="polite">Loading equipment…</span><button id="previous" aria-label="Previous page" disabled>‹</button><button id="next" aria-label="Next page" disabled>›</button></footer>
           </div>
-          <aside class="types"><h3>Type</h3><div id="types" role="group" aria-label="Equipment type"></div></aside>
+          <aside class="types equipment-types">
+            <h3 id="equipment-types-heading">Equipment type</h3>
+            <div id="types" role="group" aria-labelledby="equipment-types-heading"></div>
+          </aside>
         </div>
       </section>
     </div>
