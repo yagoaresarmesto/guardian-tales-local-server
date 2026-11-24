@@ -2,6 +2,7 @@
 """Tetis daily sweeps and past-season coin exchange in the local account transaction."""
 
 import random
+from bisect import bisect_right
 from datetime import datetime, timedelta, timezone
 
 from .story_quests import grant
@@ -95,15 +96,20 @@ def sweep(account, profile, state, catalog, count, now=None):
     drops = []
     artifact_ids = []
     data = state["seasonData"][str(catalog.current)]
-    artifacts = [
-        r["Id"] for r in catalog.data["SeasonArtifacts"] if r["SeasonId"] == catalog.current
-    ]
+    artifacts = list(catalog.artifacts)
+    bounds = catalog.artifact_bounds
+    if artifacts:
+        weights = catalog.data["Constants"]["ArtifactDropWeight"]
+        tactic_level = catalog.level_for(data["Exp"])
+        band = min(bisect_right(bounds, tactic_level) - 1, len(weights) - 1)
     for _ in range(count):
         drops.extend(_draw_rewards(reward["SweepRewards"]))
         if artifacts and RNG.random() < catalog.data["Constants"]["SeasonArtifactDropRate"]:
             ident = RNG.choice(artifacts)
             key = str(ident)
-            data["Artifacts"][key] = data["Artifacts"].get(key, 0) + 1
+            bucket = RNG.choices(range(len(bounds) - 1), weights=weights[band])[0]
+            rolled = RNG.randrange(bounds[bucket], bounds[bucket + 1])
+            data["Artifacts"][key] = max(data["Artifacts"].get(key, 0), rolled)
             artifact_ids.append(ident)
     added = grant(account, profile, drops)["AddedItems"]
     gain = min(reward["PointReward"] * count, catalog.max_experience - data["Exp"])

@@ -5,7 +5,7 @@ import json
 from datetime import datetime, timezone
 
 from .story_quests import grant, save_profile
-from .tetis_progress import load_catalog, read_progress, save_progress
+from .tetis_progress import load_catalog, read_progress, save_progress, set_abilities, set_loadout
 from .village import integer
 
 BASE = "/rogue-chess3/"
@@ -56,28 +56,6 @@ def resource(account, catalog, state, season, now):
     }
 
 
-def set_loadout(catalog, state, season, values):
-    fields(values, optional=("SpellId", "ArtifactId"))
-    data = state["seasonData"][str(season)]
-    for key, selected in values.items():
-        if selected is None:
-            continue
-        if not integer(selected):
-            raise ValueError("Invalid Tetis loadout selection")
-        if key == "ArtifactId" and selected and not data["Artifacts"].get(str(selected)):
-            raise ValueError("Acquire the Tetis artifact before equipping it")
-        if key == "SpellId" and selected:
-            if selected not in catalog.seasons[season]["SummonerSpellsUI"]:
-                raise ValueError("Unknown summoner spell for this season")
-            nodes = catalog.nodes[season]
-            required = {
-                ident for ident, node in nodes.items() if node.get("SummonerSpellId") == selected
-            }
-            if required and not required.intersection(catalog.unpacked(data["Abilities"])):
-                raise ValueError("Unlock the summoner spell before equipping it")
-        data[key] = selected
-
-
 def stage(account, catalog, state, profile, route, body):
     key = "StartStageInfo" if route == START else "EndStageInfo"
     fields(body, (key,))
@@ -100,9 +78,9 @@ def stage(account, catalog, state, profile, route, body):
             raise ValueError("Clear the preceding Tetis floor first")
         set_loadout(
             catalog,
-            state,
-            catalog.current,
-            {k: info[k] for k in ("ArtifactId", "SpellId") if k in info},
+            state["seasonData"][str(catalog.current)],
+            info.get("SpellId"),
+            info.get("ArtifactId"),
         )
         state["active"] = attempt
         return season, {}
@@ -174,17 +152,13 @@ def mutate(account, catalog, state, profile, route, body, now):
         if len(points) != len(picks):
             raise ValueError("Duplicate Tetis ability")
         data = state["seasonData"][str(season)]
-        data["Abilities"] = catalog.validate_abilities(season, data["Exp"], points)
-        spell_nodes = {
-            i
-            for i, n in catalog.nodes[season].items()
-            if data["SpellId"] and n.get("SummonerSpellId") == data["SpellId"]
-        }
-        if spell_nodes and spell_nodes.isdisjoint(points):
-            data["SpellId"] = 0
+        set_abilities(catalog, data, season, data["Exp"], points)
         return season, {}
     if route == LOADOUT:
-        set_loadout(catalog, state, season, body)
+        fields(body, optional=("SpellId", "ArtifactId"))
+        set_loadout(
+            catalog, state["seasonData"][str(season)], body.get("SpellId"), body.get("ArtifactId")
+        )
         return season, {}
     if route == SWEEP:
         fields(body, ("Count",))

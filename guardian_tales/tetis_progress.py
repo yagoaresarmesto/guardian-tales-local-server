@@ -14,6 +14,8 @@ __all__ = [
     "save_progress",
     "editor_view",
     "edit_progress",
+    "set_loadout",
+    "set_abilities",
 ]
 
 
@@ -36,6 +38,12 @@ def read_progress(db, catalog):
         state["seasonData"].setdefault(
             key, {"Exp": 0, "Abilities": [], "Artifacts": {}, "ArtifactId": 0, "SpellId": 0}
         )
+    # Early offline sweeps counted duplicates, including after the native maximum.
+    shared = state["seasonData"][str(catalog.current)]["Artifacts"]
+    for ident in catalog.artifacts:
+        key = str(ident)
+        if shared.get(key, 0) > catalog.max_artifact_level:
+            shared[key] = catalog.max_artifact_level
     return state
 
 
@@ -79,11 +87,67 @@ def editor_view(db, catalog):
         "maxExperience": catalog.max_experience,
         "maxPoints": catalog.max_points,
         "levelPerPoint": catalog.level_per_point,
+        "loadout": catalog.describe_loadout(state["seasonData"][str(catalog.current)]),
     }
 
 
+def set_abilities(catalog, data, season, experience, points):
+    packed = catalog.validate_abilities(season, experience, points)
+    if data["SpellId"] and not catalog.spell_unlocked(
+        season, data["SpellId"], catalog.unpacked(packed)
+    ):
+        data["SpellId"] = 0
+    data.update(Exp=experience, Abilities=packed)
+
+
+def set_loadout(catalog, data, spell=None, artifact=None):
+    if spell is not None:
+        if not integer(spell) or (
+            spell
+            and not catalog.spell_unlocked(
+                catalog.current, spell, catalog.unpacked(data["Abilities"])
+            )
+        ):
+            raise ValueError("Select an unlocked Guardian Spell from the current Tetis season.")
+        data["SpellId"] = spell
+    if artifact is not None:
+        if not integer(artifact) or (
+            artifact
+            and (artifact not in catalog.artifacts or not data["Artifacts"].get(str(artifact)))
+        ):
+            raise ValueError("Acquire a current-season Tetis artifact before equipping it.")
+        data["ArtifactId"] = artifact
+
+
+def edit_loadout(catalog, data, payload):
+    levels = payload.get("artifactLevels", {})
+    if not isinstance(levels, dict) or len(levels) > len(catalog.artifacts):
+        raise ValueError("Choose current-season Tetis artifact levels.")
+    known = {str(ident) for ident in catalog.artifacts}
+    for key, level in levels.items():
+        if key not in known or not integer(level, maximum=catalog.max_artifact_level):
+            raise ValueError("Unknown Tetis artifact or level outside its range.")
+        if level:
+            data["Artifacts"][key] = level
+        else:
+            data["Artifacts"].pop(key, None)
+            if key == str(data["ArtifactId"]):
+                data["ArtifactId"] = 0
+    if any(key in payload and payload[key] is None for key in ("spellId", "artifactId")):
+        raise ValueError("Choose a Tetis loadout ID, or zero to unequip.")
+    set_loadout(catalog, data, payload.get("spellId"), payload.get("artifactId"))
+
+
 def edit_progress(db, catalog, payload):
-    fields = {"seasonId", "clearedFloor", "experience", "abilities"}
+    fields = {
+        "seasonId",
+        "clearedFloor",
+        "experience",
+        "abilities",
+        "spellId",
+        "artifactId",
+        "artifactLevels",
+    }
     if not isinstance(payload, dict) or payload.keys() - fields or len(payload) < 2:
         raise ValueError("Choose a Tetis season and at least one progression change.")
     ident = payload.get("seasonId")
@@ -106,14 +170,6 @@ def edit_progress(db, catalog, payload):
         if not integer(exp, maximum=catalog.max_experience):
             raise ValueError("Experience is outside the Tetis level table.")
         abilities = payload.get("abilities", catalog.unpacked(data["Abilities"]))
-        packed = catalog.validate_abilities(ident, exp, abilities)
-        if packed != data["Abilities"] and data["SpellId"]:
-            # Base spells remain selectable independently of training. Unequip a trained
-            # spell if its node is removed, as in the client's skill reset.
-            removed = set(catalog.unpacked(data["Abilities"])) - set(catalog.unpacked(packed))
-            if any(
-                catalog.nodes[ident][node]["SummonerSpellId"] == data["SpellId"] for node in removed
-            ):
-                data["SpellId"] = 0
-        data.update(Exp=exp, Abilities=packed)
+        set_abilities(catalog, data, ident, exp, abilities)
+    edit_loadout(catalog, state["seasonData"][str(catalog.current)], payload)
     save_progress(db, state)

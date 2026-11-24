@@ -37,13 +37,23 @@ class TetisCatalog:
         self.categories = {row["Id"]: row for row in data["AbilityCategories"]}
         self.nodes = {i: {} for i in self.seasons}
         self.parents = defaultdict(list)
-        self.ability_names = {row["Id"]: row["Name"] for row in data["AbilitySpecs"]}
-        self.spell_names = {row["Id"]: row["Name"] for row in data["SummonerSpells"]}
+        self.abilities = {row["Id"]: row for row in data["AbilitySpecs"]}
+        self.spells = {row["Id"]: row for row in data["SummonerSpells"]}
+        self.artifacts = {
+            row["Id"]: row
+            for row in data.get("SeasonArtifacts", [])
+            if row["SeasonId"] == self.current
+        }
+        self.artifact_bounds = data["Constants"].get("ArtifactLevels", [])
+        self.max_artifact_level = self.artifact_bounds[-1] - 1 if self.artifact_bounds else 0
+        self.spell_nodes = defaultdict(list)
         for node in data["AbilityNodes"]:
             category = node["AbilityCategoryId"]
             ident = category * 10000 + node["NodeId"]
             season = self.categories[category]["SeasonId"]
             self.nodes[season][ident] = node
+            if node.get("SummonerSpellId"):
+                self.spell_nodes[season, node["SummonerSpellId"]].append(ident)
             for target in node.get("NextNodeIds") or []:
                 self.parents[category * 10000 + target].append(ident)
 
@@ -119,11 +129,19 @@ class TetisCatalog:
     def describe_node(self, ident, node, points):
         category = self.categories[node["AbilityCategoryId"]]
         spell = node.get("SummonerSpellId")
+        spec = self.spells[spell] if spell else self.abilities[node["AbilityId"]]
         return {
             "id": ident,
-            "name": self.spell_names[spell] if spell else self.ability_names[node["AbilityId"]],
+            "name": spec["Name"],
+            "description": spec.get("DescKey"),
+            "sprite": node.get("NodeSpriteName"),
+            "position": node.get("Position"),
+            "type": node.get("NodeType"),
+            "tier": node.get("NodeTier"),
+            "spellId": spell or 0,
             "category": category["Id"],
             "categoryName": category["AbilityCategoryTitle"],
+            "categorySprite": category.get("SpriteName"),
             "step": node["Step"],
             "requiredPoints": category["StepMinimumPoints"][node["Step"] - 1],
             "requiredCategories": [
@@ -132,6 +150,41 @@ class TetisCatalog:
             "requiresNodes": self.parents.get(ident, []),
             "maxPoints": node["MaxPoints"],
             "points": points.get(ident, 0),
+        }
+
+    def spell_unlocked(self, season, spell, points):
+        if spell not in self.seasons[season].get("SummonerSpellsUI", []):
+            return False
+        required = self.spell_nodes.get((season, spell), [])
+        return not required or any(points.get(ident, 0) > 0 for ident in required)
+
+    def describe_loadout(self, data):
+        points = self.unpacked(data["Abilities"])
+        return {
+            "seasonId": self.current,
+            "spellId": data["SpellId"],
+            "artifactId": data["ArtifactId"],
+            "maxArtifactLevel": self.max_artifact_level,
+            "spells": [
+                {
+                    "id": ident,
+                    "name": self.spells[ident]["Name"],
+                    "sprite": self.spells[ident].get("NodeIconSpriteName"),
+                    "requiredNodes": self.spell_nodes.get((self.current, ident), []),
+                    "unlocked": self.spell_unlocked(self.current, ident, points),
+                }
+                for ident in self.seasons[self.current].get("SummonerSpellsUI", [])
+            ],
+            "artifacts": [
+                {
+                    "id": ident,
+                    "name": spec["Name"],
+                    "sprite": spec.get("SpriteName"),
+                    "level": data["Artifacts"].get(str(ident), 0),
+                    "gradeLevels": spec.get("GradeUpLevel", []),
+                }
+                for ident, spec in self.artifacts.items()
+            ],
         }
 
 

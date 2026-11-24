@@ -37,7 +37,11 @@ class TetisGameTests(unittest.TestCase):
                 for f in (1, 2)
             ],
             "Constants": dict(
-                MaxFloor=2, MaxAbilityPoint=5, LevelPerPoint=1, RecordReward=[reward]
+                MaxFloor=2,
+                MaxAbilityPoint=5,
+                LevelPerPoint=1,
+                RecordReward=[reward],
+                ArtifactLevels=[1, 101],
             ),
             "Narratives": [dict(Id=9, SeasonId=1, UnlockFloor=1)],
             "RogueChessLevel": [dict(Level=i, TotalExp=i * 100) for i in range(1, 4)],
@@ -48,7 +52,8 @@ class TetisGameTests(unittest.TestCase):
                 dict(NodeId=101, AbilityCategoryId=3, Step=1, MaxPoints=2, SummonerSpellId=3)
             ],
             "AbilitySpecs": [],
-            "SummonerSpells": [],
+            "SummonerSpells": [dict(Id=1, Name="starter"), dict(Id=3, Name="trained")],
+            "SeasonArtifacts": [dict(Id=8, Name="gauntlet", SeasonId=3)],
         }
         self.catalog = TetisCatalog(data)
         self.enterContext(patch.object(tetis, "load_catalog", return_value=self.catalog))
@@ -146,11 +151,17 @@ class TetisGameTests(unittest.TestCase):
         self.assertEqual(self.call(tetis.REWARD, {"NarrativeIds": [9]})["AddedItems"], [])
 
     def test_archived_floor_retains_loadout_selected_in_lobby(self):
+        with self.db:
+            edit_progress(
+                self.db, self.catalog, {"seasonId": 1, "artifactLevels": {"8": 70}, "artifactId": 8}
+            )
         self.call(tetis.ABILITY, {"Abilities": [3010101]})
         self.call(tetis.LOADOUT, {"SpellId": 3, "ArtifactId": None})
         stage = {"SeasonId": 1, "Floor": 1, "SpellId": None, "ArtifactId": None}
         started = self.call(tetis.START, {"StartStageInfo": stage}, 100)
         self.assertEqual(started["UserRogueChess"]["SeasonData"]["SpellId"], 3)
+        self.assertEqual(started["UserRogueChess"]["SeasonData"]["ArtifactId"], 8)
+        self.assertEqual(started["UserRogueChess"]["SeasonData"]["Artifacts"], {"8": 70})
         self.assertEqual(started["UserRogueChess"]["SeasonId"], 1)
         self.assertEqual(self.call(tetis.START, {"StartStageInfo": stage}, 100), started)
         narrative = self.call(tetis.MARK, {"NarrativeIds": [9]})["UserRogueChess"]

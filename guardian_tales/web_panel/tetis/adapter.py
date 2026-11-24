@@ -36,8 +36,8 @@ class TetisEditor:
         )
 
     @staticmethod
-    def revision(season):
-        return hashlib.sha256(json.dumps(season, sort_keys=True).encode()).hexdigest()
+    def revision(season, loadout):
+        return hashlib.sha256(json.dumps([season, loadout], sort_keys=True).encode()).hexdigest()
 
     def state(self):
         catalog, checksum = self.catalog_and_hash
@@ -45,12 +45,14 @@ class TetisEditor:
             db.execute("BEGIN")
             data = tetis_progress.editor_view(db, catalog)
         for season in data["seasons"]:
-            season["revision"] = self.revision(season)
+            season["revision"] = self.revision(season, data["loadout"])
         if self.labels is None:
             keys = {season["title"] for season in data["seasons"]}
             for season in data["seasons"]:
                 for node in season["nodes"]:
-                    keys.update((node["name"], node["categoryName"]))
+                    keys.update((node["name"], node["categoryName"], node["description"]))
+            for items in ("spells", "artifacts"):
+                keys.update(row["name"] for row in data["loadout"][items])
             self.labels = english_labels(self.references, checksum, {key for key in keys if key})
         return {**data, "labels": self.labels, "hasArt": TETIS.available(self.references)}
 
@@ -64,7 +66,7 @@ class TetisEditor:
             season = next((s for s in state["seasons"] if s["id"] == body.get("seasonId")), None)
             if season is None:
                 raise ValueError("Choose a Tetis season from the catalog.")
-            if body["revision"] != self.revision(season):
+            if body["revision"] != self.revision(season, state["loadout"]):
                 raise TetisChanged("Tetis progression changed. Reload this season before saving.")
             tetis_progress.edit_progress(
                 db, catalog, {k: v for k, v in body.items() if k != "revision"}

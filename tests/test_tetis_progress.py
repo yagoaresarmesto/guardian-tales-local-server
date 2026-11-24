@@ -16,14 +16,27 @@ def catalog_data():
     return {
         "Seasons": [
             {"Id": 1, "SeasonLastStage": 2, "TitleName": "s1", "SeasonCoin": 771},
-            {"Id": 2, "SeasonLastStage": 10, "TitleName": "s2", "SeasonCoin": 772, "Current": True},
+            {
+                "Id": 2,
+                "SeasonLastStage": 10,
+                "TitleName": "s2",
+                "SeasonCoin": 772,
+                "Current": True,
+                "SummonerSpellsUI": [1, 3],
+            },
         ],
         "Floors": [
             dict(SeasonId=s, Floor=f, Id=s * 10000 + f, StageId=s * 100 + f)
             for s, n in [(1, 2), (2, 4)]
             for f in range(1, n + 1)
         ],
-        "Constants": {"MaxFloor": 2, "LevelPerPoint": 1, "MaxAbilityPoint": 5},
+        "Constants": {
+            "MaxFloor": 2,
+            "LevelPerPoint": 1,
+            "MaxAbilityPoint": 5,
+            "ArtifactLevels": [1, 11, 21],
+            "ArtifactDropWeight": [[1, 0], [0, 1]],
+        },
         "RogueChessLevel": [{"Level": i, "TotalExp": i * 10} for i in range(1, 7)],
         "AbilityCategories": [
             {
@@ -42,7 +55,11 @@ def catalog_data():
             },
         ],
         "AbilitySpecs": [{"Id": 1, "Name": "ability"}],
-        "SummonerSpells": [{"Id": 3, "Name": "spell"}],
+        "SummonerSpells": [{"Id": 1, "Name": "starter"}, {"Id": 3, "Name": "spell"}],
+        "SeasonArtifacts": [
+            {"Id": 7, "SeasonId": 1, "Name": "past"},
+            {"Id": 8, "SeasonId": 2, "Name": "current", "GradeUpLevel": [1, 15]},
+        ],
         "AbilityNodes": [
             dict(
                 AbilityCategoryId=4,
@@ -118,7 +135,6 @@ class TetisProgressTests(unittest.TestCase):
         cat = self.catalog
         cat.sweep_counter = {"PlayLimit": 1, "RefillLimit": 1, "RefillCost": [3]}
         cat.data["Constants"]["SeasonArtifactDropRate"] = 1
-        cat.data["SeasonArtifacts"] = [{"Id": 8, "SeasonId": 2}]
         coin = {"ItemId": 772, "Amount": 5}
         cat.data["SweepRewards"] = [
             {
@@ -137,6 +153,7 @@ class TetisProgressTests(unittest.TestCase):
         ]
         now = datetime(2026, 1, 1, 23, 59, tzinfo=timezone.utc)
         state = read_progress(self.db, cat)
+        state["seasonData"]["2"]["Artifacts"] = {"8": 19}
         profile = {"User": {"Assets": [{"Id": 70003, "Amount": 7, "Spent": 4}]}}
         with patch(
             "guardian_tales.tetis_sweep.grant",
@@ -149,13 +166,57 @@ class TetisProgressTests(unittest.TestCase):
             self.assertEqual(rewards["AddedItems"], [coin, coin])
             self.assertEqual(rewards["Exp"], 60)
             self.assertEqual(rewards["ArtifactIds"], [8, 8])
-            self.assertEqual(state["seasonData"]["2"]["Artifacts"], {"8": 2})
+            # Both low-level drops leave the edited higher-level artifact equipped or available.
+            self.assertEqual(state["seasonData"]["2"]["Artifacts"], {"8": 19})
             self.assertEqual(profile["User"]["Assets"][0], {"Id": 70003, "Amount": 4, "Spent": 7})
             with self.assertRaises(ValueError):
                 sweep(None, profile, state, cat, 1, now)
             tomorrow = counter(state, cat, now + timedelta(minutes=2))
             self.assertEqual((tomorrow["PlayCount"], tomorrow["RefillCount"]), (0, 0))
             self.assertEqual(state["sweepCounter"]["PlayCount"], 1)
+
+    def test_shared_loadout_validates_training_and_ownership_after_all_changes(self):
+        cat, db = self.catalog, self.db
+        with db:
+            edit_progress(
+                db, cat, {"seasonId": 1, "artifactLevels": {"8": 15}, "artifactId": 8, "spellId": 1}
+            )
+        view = editor_view(db, cat)["loadout"]
+        self.assertEqual(
+            (view["artifactId"], view["artifacts"][0]["level"], view["spellId"]), (8, 15, 1)
+        )
+        self.assertEqual([s["unlocked"] for s in view["spells"]], [True, False])
+        for request in (
+            {"artifactLevels": {"7": 4}},
+            {"artifactLevels": {"8": 21}},
+            {"artifactId": 7},
+            {"spellId": 3},
+            {"spellId": None},
+            {"artifactLevels": {"8": True}},
+            {"artifactLevels": {"08": 3}},
+            {"artifactLevels": {"8": 0}, "artifactId": 8},
+        ):
+            with self.subTest(request=request), self.assertRaises(ValueError), db:
+                edit_progress(db, cat, {"seasonId": 1, **request})
+        self.assertEqual(editor_view(db, cat)["loadout"], view)
+        with db:
+            edit_progress(
+                db,
+                cat,
+                {
+                    "seasonId": 2,
+                    "experience": 40,
+                    "abilities": {"40101": 2, "40201": 1, "50101": 1},
+                    "spellId": 3,
+                },
+            )
+        state = read_progress(db, cat)
+        self.assertEqual(state["seasonData"]["2"]["SpellId"], 3)
+        self.assertEqual(state["seasonData"]["1"]["Artifacts"], {})
+        with db:
+            edit_progress(db, cat, {"seasonId": 2, "abilities": {}, "artifactLevels": {"8": 0}})
+        state = read_progress(db, cat)["seasonData"]["2"]
+        self.assertEqual((state["SpellId"], state["ArtifactId"], state["Artifacts"]), (0, 0, {}))
 
     def test_exchange_only_prior_coins_once(self):
         cat = self.catalog
