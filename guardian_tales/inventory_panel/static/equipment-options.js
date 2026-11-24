@@ -57,17 +57,22 @@ export function equipmentOptions(reload) {
     $("basic-options").hidden = !required.length;
     const invalid = changed && (!editable || !initialized || !allowed.includes(count));
     $("apply-options").disabled = busy || !writable || invalid || (!changed && !progression.changes());
-    $("roll-count").textContent = editable && optional.length ? optional.filter(id => draft[id] != null).length + " selected" : "";
     const subCounts = allowed.map(n => n - required.length);
+    const cap = Math.max(...subCounts);
+    const selected = optional.filter(id => draft[id] != null).length;
+    $("sub-options").hidden = !optional.length;
+    $("roll-count").textContent = editable && optional.length ? selected + " / " + cap + " selected" : "";
     let hint = item.unavailable;
     if (!hint && !initialized) hint = "Choose a value for each basic option.";
-    else if (!hint && !optional.length) hint = "This item has basic options only.";
-    else if (!hint) hint = "Allowed sub-option count: " + subCounts.join(", ") + ".";
+    else if (!hint && optional.length && subCounts.length !== cap + 1) {
+      hint = "Allowed sub-option counts: " + subCounts.join(", ") + ".";
+    }
     $("option-hint").textContent = hint;
+    $("option-hint").hidden = !hint;
   }
   function optionRow([id,rule]) {
     const required = rule.probability === 1;
-    const row = el("div","sub-row"), line = el("div","sub-line"), label = el("label","",name(id)), select = el("select");
+    const row = el("div","sub-row"), stat = el("div","stat-label"), label = el("label","",name(id)), select = el("select");
     label.htmlFor = select.id = "equipment-option-" + id;
     if (!required) select.add(new Option(format(id,null),""));
     else if (draft[id] == null) {
@@ -77,6 +82,8 @@ export function equipmentOptions(reload) {
     for (let level=rule.low;level<=rule.high;level++) select.add(new Option(format(id,level),level));
     select.value = draft[id] ?? "";
     const range = el("small","sub-range",format(id,rule.low) + " – " + format(id,rule.high));
+    range.id = select.id + "-range";
+    select.setAttribute("aria-describedby", range.id);
     const lock = el("button","option-lock");
     lock.type = "button";
     lock.setAttribute("aria-label","Lock " + name(id));
@@ -87,7 +94,6 @@ export function equipmentOptions(reload) {
       select.disabled = disabled || isLocked || (required && rule.low === rule.high && draft[id] != null);
       lock.disabled = disabled || draft[id] == null;
       lock.setAttribute("aria-pressed",String(isLocked));
-      lock.textContent = isLocked ? "🔒" : "🔓";
       lock.title = draft[id] == null ? "Choose a value to lock this option" : (isLocked ? "Unlock " : "Lock ") + name(id);
       const changes = [];
       if (before[id] !== draft[id]) changes.push(format(id,before[id]) + " → " + format(id,draft[id]));
@@ -103,7 +109,10 @@ export function equipmentOptions(reload) {
       if (select.value === "") delete draft[id]; else draft[id] = Number(select.value);
       updateRow(); message(); state();
     };
-    line.append(label,select,lock); updateRow(); row.append(line,range,diff); return row;
+    stat.append(label, range);
+    row.append(stat, select, lock, diff);
+    updateRow();
+    return row;
   }
   function draw() {
     if (!item) return;
@@ -171,7 +180,10 @@ function weaponProgression(onChange, format, name) {
 
   function drawEngraving() {
     $("engraving-controls").hidden = !engraving;
-    if (!engraving) return;
+    if (!engraving) {
+      $("engrave-hint").hidden = true;
+      return;
+    }
     const maxBreaks = Number(breaks.value) === rules.maxBreaks;
     const targets = maxBreaks ? Object.keys(engraving.tiers).map(Number) : [];
     choices(count, [engraving.count, ...targets], n => n + " / " + engraving.maxCount, Number(count.value));

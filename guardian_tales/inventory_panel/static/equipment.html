@@ -23,36 +23,45 @@
     <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
     <p class="save-access" id="equipment-access" role="status" hidden></p>
     <div class="workspace" id="workspace">
-      <section class="inspector" aria-labelledby="details-heading">
+      <section class="inspector equipment-inspector" aria-labelledby="details-heading">
         <div class="section-bar"><h2 id="details-heading">Equipment details</h2><span id="copy-id"></span></div>
         <div id="placeholder"><img src="/type-icon/equipment.png" alt=""><p>Select equipment to see its details.</p></div>
         <div id="detail" hidden>
-          <div class="showcase" id="showcase">
+          <div class="equipment-identity">
             <div class="hero-art" id="hero-art"></div>
-            <div id="hero-stars" class="hero-stars"></div>
+            <div class="identity-text">
+              <div class="identity-meta"><span id="detail-type"></span><span id="detail-level"></span></div>
+              <h3 id="detail-name"></h3>
+              <div id="hero-stars" class="hero-stars"></div>
+            </div>
           </div>
           <div class="item-info">
-            <div class="type-line"><span id="detail-type"></span><span id="detail-level"></span></div>
-            <h3 id="detail-name"></h3>
             <dl id="facts"></dl>
             <button type="button" id="lock" hidden></button>
             <section id="option-editor" hidden aria-label="Equipment options">
-              <fieldset id="weapon-progression" hidden>
-                <legend>Weapon upgrades</legend>
-                <label>Limit breaks <select id="break-count"></select></label>
-                <div id="engraving-controls" hidden>
-                  <label>Engravings <select id="engrave-count"></select></label>
-                  <label>Engraving bonus <select id="engrave-tier"></select></label>
-                  <p id="engrave-hint" class="sub-range" hidden></p>
+              <section id="weapon-progression" aria-labelledby="upgrades-heading" hidden>
+                <h4 id="upgrades-heading">Weapon upgrades</h4>
+                <div class="upgrade-fields">
+                  <label>Limit breaks <select id="break-count"></select></label>
+                  <div id="engraving-controls" hidden>
+                    <label>Engravings <select id="engrave-count"></select></label>
+                    <label class="engraving-bonus">Engraving bonus <select id="engrave-tier"></select></label>
+                  </div>
                 </div>
-              </fieldset>
+                <p id="engrave-hint" class="editor-note" hidden></p>
+              </section>
               <details id="basic-options" open><summary>Basic options</summary>
                 <div id="basic-stats"></div>
               </details>
-              <div class="option-heading"><h4>Sub-options</h4><span id="roll-count"></span></div>
-              <div id="sub-stats"></div><p id="option-hint"></p>
-              <button type="button" id="apply-options" class="apply-button" disabled aria-describedby="equipment-access">Apply</button>
-              <p id="option-message" role="status" hidden></p>
+              <section id="sub-options" aria-labelledby="sub-heading">
+                <div class="option-heading"><h4 id="sub-heading">Sub-options</h4><span id="roll-count"></span></div>
+                <div id="sub-stats"></div>
+              </section>
+              <p id="option-hint" class="editor-note" hidden></p>
+              <footer class="equipment-actions">
+                <button type="button" id="apply-options" class="apply-button" disabled aria-describedby="equipment-access">Apply</button>
+                <p id="option-message" role="status" hidden></p>
+              </footer>
             </section>
           </div>
         </div>
