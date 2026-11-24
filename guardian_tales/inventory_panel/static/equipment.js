@@ -42,7 +42,17 @@ function art(item, className) {
   if (hasIcons) {
     const img = image("/icon/" + item.spec + ".png");
     img.hidden = true;
-    img.onload = () => { fallback.hidden = true; img.hidden = false; };
+    img.onload = () => {
+      if (types.has(item.kind)) {
+        // A 45px sword fills the slot. Give smaller sprites some breathing room
+        // while keeping even the smallest claws legible on compact cards.
+        const nativeEdge = Math.max(img.naturalWidth, img.naturalHeight);
+        const scale = Math.max(0.55, Math.min(1, nativeEdge / 45));
+        img.style.setProperty("--gear-scale", String(scale));
+      }
+      fallback.hidden = true;
+      img.hidden = false;
+    };
     img.onerror = () => img.remove();
     wrap.append(img);
   }
