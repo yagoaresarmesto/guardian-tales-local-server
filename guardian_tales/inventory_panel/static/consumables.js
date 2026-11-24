@@ -1,11 +1,19 @@
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 
+import { quantityEditor, quantityFormat as format } from "/quantity-editor.js";
+
 const api = "/api/game/consumables";
-const format = new Intl.NumberFormat("en-GB");
 const query = new URLSearchParams(location.hash.slice(1));
 let visible = [], page = 0, pageSize = 24;
-let rows = [], selected = null, hasIcons = false, writable = false, saving = false, statusRequest = 0;
+let rows = [], selected = null, hasIcons = false, statusRequest = 0;
 $("search").value = query.get("q") || "";
+
+const editor = quantityEditor($("editor"), {
+  api, accessId: "access",
+  lock: () => { ++statusRequest; setAccess(false); },
+  reload: () => load(selected?.id, $("filter").value),
+  saved: item => { showItem(item); drawGrid(); },
+});
 
 function art(item, container) {
   const fallback = () => container.replaceChildren(el("span", "fallback", item.name.split(/\s+/).slice(0,2).map(w => w[0]).join("")));
@@ -16,14 +24,14 @@ function art(item, container) {
 }
 
 function setAccess(allowed, text = "Close Guardian Tales and stop the backend to apply quantity changes.") {
-  writable = allowed === true;
+  const writable = allowed === true;
   $("access").hidden = writable;
   if (!writable) $("access").textContent = text;
-  updateForm();
+  editor.setWritable(writable);
 }
 
 async function checkAccess() {
-  if (saving || document.hidden) return;
+  if (editor.saving || document.hidden) return;
   const request = ++statusRequest;
   try {
     const response = await fetch("/api/game/status", {cache:"no-store", signal:AbortSignal.timeout(4000)});
@@ -33,13 +41,6 @@ async function checkAccess() {
   } catch {
     if (request === statusRequest) setAccess(false, "Reconnect to the local save editor to apply changes.");
   }
-}
-
-function updateForm() {
-  const amount = $("quantity").valueAsNumber;
-  const changed = selected && $("quantity").validity.valid && amount !== selected.amount;
-  $("apply").disabled = !changed || !writable || saving;
-  $("comparison").textContent = changed ? format.format(selected.amount) + " → " + format.format(amount) : "";
 }
 
 function syncUrl() {
@@ -55,18 +56,14 @@ function showItem(item) {
   $("detail").hidden = !item;
   $("placeholder").hidden = !!item;
   $("copy-id").textContent = item ? "#" + item.id : "";
-  $("message").hidden = true;
+  editor.select(item);
   if (item) {
     $("detail-name").textContent = item.name;
     $("category").textContent = item.category;
     $("catalog-id").textContent = item.spec;
-    $("quantity-range").textContent = "Range 1 – " + format.format(item.maximum);
     $("owned").textContent = format.format(item.amount);
-    $("quantity").max = item.maximum;
-    $("quantity").value = item.amount;
     art(item, $("portrait"));
   }
-  updateForm();
   syncUrl();
 }
 
@@ -134,7 +131,6 @@ async function load(id, group) {
   filter();
 }
 
-$("quantity").oninput = () => { $("message").hidden = true; updateForm(); };
 $("search").oninput = $("filter").onchange = filter;
 $("types").onclick = event => {
   const button = event.target.closest("button[data-type]");
@@ -152,37 +148,6 @@ watchGridPageSize($("tiles"), size => {
   page = Math.floor(Math.max(0, visible.indexOf(selected)) / pageSize);
   if (visible.length) drawGrid();
 });
-$("editor").onsubmit = async event => {
-  event.preventDefault();
-  if ($("apply").disabled) return;
-  const item = selected, amount = $("quantity").valueAsNumber;
-  saving = true;
-  ++statusRequest;
-  document.querySelector(".workspace").inert = true;
-  updateForm();
-  try {
-    const response = await fetch(api, {method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({id:item.id, version:item.version, amount})});
-    const result = await response.json();
-    if (response.status === 423) setAccess(false);
-    if (response.status === 409) await load(item.id, $("filter").value);
-    if (!response.ok) throw new Error(result.error || "Could not save the quantity.");
-    item.amount = result.amount;
-    item.version = result.version;
-    showItem(item); drawGrid();
-    $("message").textContent = "Quantity saved.";
-    $("message").classList.remove("error");
-  } catch (error) {
-    $("message").textContent = error.message;
-    $("message").classList.add("error");
-    if (!selected) $("range").textContent = error.message;
-  } finally {
-    $("message").hidden = false;
-    saving = false;
-    document.querySelector(".workspace").inert = false;
-    updateForm();
-  }
-};
 load(Number(query.get("id")), query.get("type")).catch(error => { $("range").textContent = error.message; });
 window.setInterval(checkAccess, 2500);
 document.addEventListener("visibilitychange", checkAccess);

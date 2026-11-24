@@ -1,4 +1,1 @@
 .tile { --shade: #273755; --edge: #50688c; }
-.stack-size { color: #abdffa; font-size: clamp(.67rem, 9cqi, .8rem); font-variant-numeric: tabular-nums; font-weight: 700; }
-.stack-editor { display: grid; gap: 6px; padding: 9px; }
-#comparison:empty { display: none; }

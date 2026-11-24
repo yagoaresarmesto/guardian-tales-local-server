@@ -32,20 +32,7 @@
             <div class="fact"><dt>Catalog ID</dt><dd id="catalog-id"></dd></div>
             <div class="fact"><dt>Owned</dt><dd id="owned"></dd></div>
           </dl>
-          <form class="inspector-editor" id="editor">
-            <section aria-labelledby="quantity-heading">
-              <h4 id="quantity-heading"><label for="quantity">Quantity</label></h4>
-              <div class="option-group stack-editor">
-                <input type="number" id="quantity" required min="1" step="1" inputmode="numeric" aria-describedby="quantity-range">
-                <p id="quantity-range" class="editor-note"></p>
-                <p id="comparison" class="edit-diff" aria-live="polite"></p>
-              </div>
-            </section>
-            <footer class="inspector-actions">
-              <button type="submit" id="apply" class="apply-button" disabled aria-describedby="access">Apply</button>
-              <p id="message" role="status" hidden></p>
-            </footer>
-          </form>
+          <form class="inspector-editor" id="editor"></form>
         </div>
       </section>
       <section class="collection" aria-labelledby="collection-title">

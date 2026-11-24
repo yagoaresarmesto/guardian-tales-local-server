@@ -24,6 +24,12 @@ def prepare_inventory(root):
         "items": [
             dict(Id=1, Name="test_ticket", Type="ticket", MaxCount=10),
             dict(Id=2, Name="test_card", Type="card"),
+            dict(Id=6, Name="exp_hammer_1_rare", Type="enhancehammer", Level=19, Rarity=1),
+            dict(Id=7, Name="limitbreak_hammer_legend", Type="limitbreakhammer", Rarity=3),
+            dict(
+                Id=8, Name="limitbreak_hammer_epic", Type="limitbreakhammer", Rarity=4, MaxCount=6
+            ),
+            dict(Id=9, Name="hammer_box", Type="gachaitem"),
             dict(
                 Id=3,
                 Name="test_ring",
@@ -110,6 +116,11 @@ def prepare_inventory(root):
             "ItemStackables": [
                 dict(Id=13, ItemId=1, Amount=5, Locked=False),
                 dict(Id=14, ItemId=2, Amount=1, Locked=False),
+                dict(Id=16, ItemId=6, Amount=11, Locked=False),
+                dict(Id=17, ItemId=7, Amount=4, Locked=False),
+                dict(Id=18, ItemId=8, Amount=2, Locked=True),
+                dict(Id=19, ItemId=9, Amount=9, Locked=False),
+                dict(Id=20, ItemId=8, Amount=1, Locked=False),
             ],
         }
     }
@@ -178,6 +189,40 @@ class InventoryPanelTests(unittest.TestCase):
             self.call(path, dict(edit, amount=8))
         self.assertEqual(stale.exception.code, 409)
         self.assertEqual(self.call(path)["rows"][0]["amount"], 9)
+
+    def test_enhance_edits_only_the_selected_owned_hammer_stack(self):
+        path = "/api/game/equipment/hammers"
+        equipment = self.call("/api/game/equipment")
+        hammers = equipment["hammers"]
+        self.assertEqual([h["id"] for h in hammers], [16, 17, 18, 20])
+        self.assertEqual([h["rarityName"] for h in hammers], ["Rare", "Legend", "Epic", "Epic"])
+        self.assertEqual((hammers[0]["name"], hammers[0]["level"]), ("Strengthening Hammer", 20))
+        self.assertEqual(hammers[2]["name"], "Epic Limit Breaking Hammer")
+        (ticket,) = self.call("/api/game/consumables")["rows"]
+        edit = dict(id=18, version=hammers[2]["version"], amount=6)
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(path, edit)
+        self.assertEqual(locked.exception.code, 423)
+        for endpoint, request in (
+            (path, dict(edit, amount=7)),
+            (path, dict(edit, amount=0)),
+            (path, dict(edit, amount=True)),
+            (path, dict(id=ticket["id"], version=ticket["version"], amount=2)),
+            ("/api/game/consumables", edit),
+        ):
+            with self.subTest(request=request), self.assertRaises(HTTPError) as invalid:
+                self.call(endpoint, request)
+            self.assertEqual(invalid.exception.code, 400)
+        saved = self.call(path, edit)
+        with self.assertRaises(HTTPError) as stale:
+            self.call(path, dict(edit, amount=3))
+        self.assertEqual(stale.exception.code, 409)
+        after = self.call("/api/game/equipment")
+        self.assertEqual(after["revision"], equipment["revision"] + 1)
+        self.assertEqual(after["rows"], equipment["rows"])
+        self.assertEqual(after["hammers"], [*hammers[:2], dict(hammers[2], **saved), hammers[3]])
+        self.assertTrue(after["hammers"][2]["locked"])
+        self.assertEqual(self.call("/api/game/consumables")["rows"], [ticket])
 
     def test_equipment_and_relic_respect_catalog_and_preserve_other_slots(self):
         path = "/api/game/equipment"

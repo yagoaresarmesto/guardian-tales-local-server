@@ -1,7 +1,13 @@
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 import { equipmentOptions } from "/equipment-options.js";
+import { quantityEditor, quantityFormat } from "/quantity-editor.js";
+
 const preview = location.pathname === "/equipment/preview";
-const editor = preview ? null : equipmentOptions(load);
+const hammerEditor = preview ? null : quantityEditor($("hammer-editor"), {
+  api: "/api/game/equipment/hammers", accessId: "equipment-access",
+  lock: () => editor.lock(), reload: load, saved: () => draw(),
+});
+const editor = preview ? null : equipmentOptions(load, hammerEditor.setWritable);
 document.body.classList.toggle("live-equipment", !preview);
 if (preview) {
   document.querySelector(".context").textContent = "Save preview";
@@ -24,7 +30,7 @@ if (initialSearch && /^#\d+$/.test(location.hash)) {
 }
 let pageSize = 24;
 const collator = new Intl.Collator("en", {numeric: true, sensitivity: "base"});
-let items = [], visible = [], page = 0, revision, hasIcons = false, saving = false;
+let items = [], hammers = [], visible = [], page = 0, revision, hasIcons = false, saving = false;
 let kind = params.get("type") || "all", selected = Number(params.get("id")) || null;
 $("search").value = params.get("q") || initialSearch || "";
 if (["rating", "name", "id"].includes(params.get("sort"))) $("sort").value = params.get("sort");
@@ -56,6 +62,7 @@ function updateUrl() {
   history.replaceState(null, "", location.pathname + (query.size ? "#" + query : ""));
 }
 function applyType(value) {
+  if ((kind === "enhance") !== (value === "enhance")) $("search").value = "";
   kind = value;
   note();
   filter();
@@ -65,18 +72,24 @@ function drawTypes() {
   for (const item of items) counts.set(item.kind, (counts.get(item.kind) || 0) + 1);
   const keys = ["all", ...Array.from(types.keys()).filter(key => counts.has(key)),
     ...Array.from(counts.keys()).filter(key => !types.has(key))];
-  if (!keys.includes(kind)) kind = "all";
-  renderTypeFilters($("types"), $("mobile-types"), keys.map(key => ({
+  const filters = keys.map(key => ({
     key, name: key === "all" ? "All types" : typeName(key),
     count: key === "all" ? items.length : counts.get(key),
     iconUrl: "/type-icon/" + (types.has(key) ? key : "all") + ".png",
-  })));
+  }));
+  if (!preview) filters.push({
+    key: "enhance", name: "Enhance", count: hammers.length,
+    iconUrl: hammers.length && hasIcons ? "/icon/" + hammers[0].spec + ".png" : null,
+  });
+  if (!filters.some(f => f.key === kind)) kind = "all";
+  renderTypeFilters($("types"), $("mobile-types"), filters);
 }
 function stars(item) {
   return item.stars >= 1 && item.stars <= 6 ? "★".repeat(item.stars) : "";
 }
 function tile(item) {
-  const button = inventoryTile({ ...item, art: art(item, "tile-art"), selected: item.id === selected });
+  const button = inventoryTile({ ...item, art: art(item, "tile-art"), selected: item.id === selected,
+    quantity: item.kind === "enhance" ? quantityFormat.format(item.amount) : null });
   button.dataset.grade = item.grade ?? "";
   return button;
 }
@@ -89,14 +102,28 @@ function drawDetails() {
   const item = visible.find(row => row.id === selected);
   $("detail").hidden = !item; $("placeholder").hidden = !!item;
   $("copy-id").textContent = item ? "#" + item.id : "";
-  editor?.select(item);
+  const enhance = kind === "enhance";
+  $("details-heading").textContent = enhance ? "Hammer details" : "Equipment details";
+  $("collection-heading").textContent = enhance ? "Enhance" : "Equipment";
+  $("empty").textContent = enhance ? "No owned hammers match these filters." : "No equipment matches these filters.";
+  $("placeholder").querySelector("p").textContent = enhance ? "Select a hammer to see its quantity." : "Select equipment to see its details.";
+  $("tiles").setAttribute("aria-label", enhance ? "Owned hammer stacks" : "Equipment copies");
+  $("preview-link").hidden = enhance;
+  editor?.select(enhance ? null : item);
+  hammerEditor?.select(enhance ? item : null);
   if (!item) return;
   $("hero-art").replaceChildren(...art(item, "").childNodes);
   $("hero-stars").textContent = stars(item);
   $("hero-stars").setAttribute("aria-label", item.stars ? item.stars + " stars" : "Star rating unavailable");
-  $("detail-type").textContent = typeName(item.kind);
+  $("detail-type").textContent = enhance ? item.rarityName : typeName(item.kind);
   $("detail-level").textContent = item.level != null ? "Lv. " + item.level : "";
   $("detail-name").textContent = item.name;
+  if (enhance) {
+    $("facts").replaceChildren(fact("Catalog ID", item.spec), fact("Owned", quantityFormat.format(item.amount)),
+      fact("Protection", item.locked ? "Locked" : "Unlocked"));
+    if (item.enhanceExp != null) $("facts").append(fact("EXP per hammer", quantityFormat.format(item.enhanceExp)));
+    return;
+  }
   $("facts").replaceChildren(
     fact("Catalog ID", item.spec), ...(!item.progression ? [fact("Limit breaks", item.breaks)] : []),
     fact("Equipped", item.equipped ? "Yes" : "No"),
@@ -123,8 +150,9 @@ function draw() {
 function filter() {
   const search = $("search").value.trim().toLowerCase().replace(/^#(?=\d)/, "");
   const order = $("sort").value;
-  visible = items.filter(item => (kind === "all" || item.kind === kind) && (!search ||
-    [item.name, item.key, typeName(item.kind), item.id, item.spec].join(" ").toLowerCase().includes(search)));
+  const inventory = kind === "enhance" ? hammers : items;
+  visible = inventory.filter(item => (kind === "all" || item.kind === kind) && (!search ||
+    [item.name, item.key, typeName(item.kind), item.rarityName, item.level, item.id, item.spec].join(" ").toLowerCase().includes(search)));
   visible.sort((a, b) => {
     if (order === "name") return collator.compare(a.name, b.name) || a.id - b.id;
     if (order === "id") return a.id - b.id;
@@ -142,6 +170,7 @@ async function load() {
   const data = await res.json();
   revision = data.revision; hasIcons = data.hasIcons;
   items = preview ? data.rows.filter(item => item.group === "Equipment") : data.rows;
+  hammers = data.hammers ?? [];
   editor?.load(data);
   drawTypes(); filter();
 }
@@ -160,7 +189,7 @@ window.addEventListener("hashchange", () => {
   kind = query.get("type") || "all";
   $("search").value = query.get("q") || "";
   $("sort").value = ["rating","name","id"].includes(query.get("sort")) ? query.get("sort") : "level";
-  if (items.length) { drawTypes(); filter(); }
+  if (items.length || hammers.length) { drawTypes(); filter(); }
 });
 $("types").onclick = e => {
   const btn = e.target.closest("button[data-type]");

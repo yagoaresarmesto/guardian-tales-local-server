@@ -13,6 +13,7 @@ from guardian_tales.village import MAX_REVISION, integer
 from guardian_tales.weapon_options import valid_options
 
 from .game_save import GameSaveEditor
+from .stack_quantities import HAMMERS, StackQuantityEditor
 from .weapon_progression import WeaponProgression
 
 RANDOM = SystemRandom()
@@ -200,6 +201,7 @@ class EquipmentOptionEditor(GameSaveEditor):
     def __init__(self, database, catalog):
         super().__init__(database)
         self.catalog = catalog
+        self.hammers = StackQuantityEditor(database, catalog, HAMMERS)
         tables = records(decode(catalog.refs.read_bytes("static_data_get.bin")))[1]
         self.progression = WeaponProgression(tables)
         buffs = {row["Id"]: row for row in json.loads(tables["buffs"][1])}
@@ -251,6 +253,7 @@ class EquipmentOptionEditor(GameSaveEditor):
             )
         return dict(
             rows=rows,
+            hammers=self.hammers.rows(user),
             specs=used,
             effects=self.effects,
             revision=user["Cas"],

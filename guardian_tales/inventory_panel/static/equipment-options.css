@@ -51,3 +51,9 @@
   .stat-label { grid-column: 1 / -1; display: flex; align-items: baseline; justify-content: space-between; }
   .sub-range { flex: none; }
 }
+
+.types .type-button[data-type="enhance"] {
+  margin-top: 7px;
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 5px 5px;
+}

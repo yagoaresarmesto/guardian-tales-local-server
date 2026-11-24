@@ -233,6 +233,10 @@ select { min-width:0; border:0; background:var(--field); color:#f4f7fb; padding:
   white-space: nowrap;
   line-height: 1;
 }
+.stack-size { color: #abdffa; font-size: clamp(.67rem, 9cqi, .8rem); font-variant-numeric: tabular-nums; font-weight: 700; }
+.stack-editor { display: grid; gap: 6px; padding: 9px; }
+#comparison:empty { display: none; }
+
 .tile-stars { color: #ffe073; font-size: clamp(.65rem, 10cqi, .8rem); }
 .tile[data-grade="4"] .tile-stars, .tile[data-grade="5"] .tile-stars { color: #c3f267; }
 .types {

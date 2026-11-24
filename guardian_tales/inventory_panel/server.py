@@ -25,10 +25,10 @@ from guardian_tales.test_item_static import PIN_ID, active_specs, item_definitio
 from guardian_tales.web_panel.artwork import UI, Atlas
 from guardian_tales.web_panel.server import PanelHandler
 
-from .consumables import ConsumableEditor
 from .equipment import TYPE_ICONS, EquipmentDisplay
 from .equipment_options import EquipmentOptionEditor
 from .relics import RelicEditor
+from .stack_quantities import CONSUMABLES, StackQuantityEditor
 
 STATIC = Path(__file__).resolve().parent / "static"
 
@@ -197,6 +197,7 @@ class Handler(PanelHandler):
             "/equipment-options.js": ("equipment-options.js", "text/javascript; charset=utf-8"),
             "/equipment-options.css": ("equipment-options.css", "text/css; charset=utf-8"),
             "/equipment.js": ("equipment.js", "text/javascript; charset=utf-8"),
+            "/quantity-editor.js": ("quantity-editor.js", "text/javascript; charset=utf-8"),
             "/inventory-dom.js": ("inventory-dom.js", "text/javascript; charset=utf-8"),
             "/equipment.css": ("equipment.css", "text/css; charset=utf-8"),
             "/relics": ("relics.html", "text/html; charset=utf-8"),
@@ -255,6 +256,7 @@ class Handler(PanelHandler):
             "/api/game/relics",
             "/api/game/equipment",
             "/api/game/equipment/roll",
+            "/api/game/equipment/hammers",
             "/api/game/consumables",
         ):
             return self.json(404, {"error": "Unknown action."})
@@ -282,6 +284,8 @@ class Handler(PanelHandler):
                 return
             if self.path == "/api/game/relics":
                 status, result = self.server.relics.apply(payload)
+            elif self.path == "/api/game/equipment/hammers":
+                status, result = self.server.equipment.hammers.write(payload)
             elif self.path == "/api/game/consumables":
                 status, result = self.server.consumables.write(payload)
             elif self.path in ("/api/game/equipment", "/api/game/equipment/roll"):
@@ -310,7 +314,7 @@ class InventoryServer(ThreadingHTTPServer):
             self.catalog = InventoryCatalog(source, references)
         self.relics = RelicEditor(database, self.catalog)
         self.equipment = EquipmentOptionEditor(database, self.catalog)
-        self.consumables = ConsumableEditor(database, self.catalog)
+        self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)
         super().__init__(("127.0.0.1", port), Handler)
 
     @property

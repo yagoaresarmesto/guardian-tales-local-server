@@ -2,7 +2,7 @@ import { $, el } from "/inventory-dom.js";
 
 const api = "/api/game/equipment";
 
-export function equipmentOptions(reload) {
+export function equipmentOptions(reload, onAccess) {
   let catalog, item, rules, before = {}, draft = {}, savedLocks = new Set(), locked = new Set();
   let writable = false, busy = false, check = 0;
   const progression = weaponProgression(() => { message(); state(); }, format, name);
@@ -24,6 +24,7 @@ export function equipmentOptions(reload) {
   }
   function access(allowed, unavailable = false) {
     writable = allowed === true;
+    onAccess(writable);
     $("equipment-access").hidden = writable;
     const text = unavailable ? "Cannot check the game save. Apply is locked until the editor reconnects." :
       "Apply is locked while the game save is in use. Close Guardian Tales and stop the backend to enable it.";
@@ -157,6 +158,7 @@ export function equipmentOptions(reload) {
   return {
     load(data) { catalog=data; ++check; access(data.writable); },
     select,
+    lock() { ++check; access(false); },
   };
 }
 

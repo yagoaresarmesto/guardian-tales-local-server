@@ -9,7 +9,7 @@ from guardian_tales.andras_trial_static import binary_rows
 from guardian_tales.raid_custom import binary_name_hash
 from guardian_tales.weapon_enhance import load_catalog
 
-from .consumables import category as consumable_category
+from .stack_quantities import CONSUMABLES, HAMMERS
 
 TYPE_ICONS = {
     "all": "ic_filter_00",
@@ -37,7 +37,7 @@ def english_inventory_names(references, specs, catalog_hash):
     names = {}
     try:
         for spec in specs.values():
-            if consumable_category(spec):
+            if spec.get("Type") in CONSUMABLES or spec.get("Type") in HAMMERS:
                 name = spec.get("Name")
             elif spec.get("WeaponType") or spec.get("Type") == "relic":
                 name = spec.get("NameWithoutRarity")
@@ -61,8 +61,11 @@ class EquipmentDisplay:
             references, specs, hashlib.sha256(catalog_bytes).hexdigest()
         )
         self.thresholds = ()
+        self.hammer_exp = {}
         if (references.directory / "weapon_enhance_debug_catalog.json").is_file():
-            self.thresholds = load_catalog(references)["level_total_exps"]
+            enhancement = load_catalog(references)
+            self.thresholds = enhancement["level_total_exps"]
+            self.hammer_exp = enhancement["hammer_exp"]
 
     def facts(self, item, spec, training):
         xp = item.get("Experience")
