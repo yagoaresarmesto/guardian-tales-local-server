@@ -32,6 +32,9 @@ def prepare_inventory(root):
                 Id=8, Name="limitbreak_hammer_epic", Type="limitbreakhammer", Rarity=4, MaxCount=6
             ),
             dict(Id=9, Name="hammer_box", Type="gachaitem"),
+            dict(Id=70014, Name="spiritStone", Type="goods"),
+            dict(Id=110007, Name="summon_ticket", Type="ticket", MaxCount=40),
+            dict(Id=110015, Name="selectable_summon_ticket", Type="ticket"),
             dict(
                 Id=3,
                 Name="test_ring",
@@ -216,6 +219,7 @@ class InventoryPanelTests(unittest.TestCase):
             profile["User"].update(
                 Name="Player",
                 HashTag="00001",
+                ItemIdCounter=20,
                 Assets=[
                     dict(Id=70001, Amount=5, Spent=-10),
                     dict(Id=70003, Amount=8, Spent=9),
@@ -270,6 +274,66 @@ class InventoryPanelTests(unittest.TestCase):
         )
         self.assertEqual(no_op, result)
 
+    def test_account_sets_summoning_totals_across_stacks_and_allocates_missing_tickets(self):
+        profile = self.seed_wallet()
+        user = profile["User"]
+        user["ItemIdCounter"] = 22
+        user["ItemStackables"].extend(
+            [
+                dict(Id=22, ItemId=110007, Amount=8, Locked=True),
+                dict(Id=21, ItemId=110007, Amount=5, Locked=False),
+            ]
+        )
+        user["Assets"].append(dict(Id=70014, Amount=300, Spent=17))
+        path = "/api/game/account"
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        view = self.call(path)
+        self.assertEqual([r["balance"] for r in view["summoning"]], [300, 13, 0])
+        body = dict(
+            version=view["version"],
+            name=view["name"],
+            tag=view["tag"],
+            add={},
+            set=dict(mileage=0, summonControllers=6, selectableControllers=10),
+        )
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(path, body)
+        self.assertEqual(locked.exception.code, 423)
+        result = self.call(path, body)
+        self.assertEqual([r["balance"] for r in result["summoning"]], [0, 6, 10])
+        with self.assertRaises(HTTPError) as stale:
+            self.call(path, body)
+        self.assertEqual(stale.exception.code, 409)
+        body["version"] = result["version"]
+        self.assertEqual(self.call(path, body), result)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])[
+                "User"
+            ]
+        self.assertEqual(saved["Assets"][-1], dict(Id=70014, Amount=0, Spent=17))
+        self.assertEqual(saved["ItemStackables"][:-2], user["ItemStackables"][:-2])
+        self.assertEqual(
+            saved["ItemStackables"][-2], dict(Id=22, ItemId=110007, Amount=6, Locked=True)
+        )
+        ticket = saved["ItemStackables"][-1]
+        self.assertEqual((ticket["Id"], ticket["ItemId"], ticket["Amount"]), (23, 110015, 10))
+        self.assertEqual(saved["ItemIdCounter"], 23)
+        body["set"] = dict(mileage=2_147_483_647, summonControllers=40, selectableControllers=0)
+        self.call(path, body)
+        self.assertEqual(
+            [r["balance"] for r in self.call(path)["summoning"]], [2_147_483_647, 40, 0]
+        )
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])[
+                "User"
+            ]
+        self.assertEqual(
+            saved["ItemStackables"],
+            user["ItemStackables"][:-2] + [dict(Id=22, ItemId=110007, Amount=40, Locked=True)],
+        )
+        self.assertEqual(saved["ItemIdCounter"], 23)
+
     def test_account_rejects_invalid_edits_without_partial_writes(self):
         self.seed_wallet()
         path = "/api/game/account"
@@ -288,6 +352,14 @@ class InventoryPanelTests(unittest.TestCase):
             dict(add={"gold": -1}),
             dict(add={"coffee": True}),
             dict(add={"chargedCoffee": 1}),
+            dict(set={"mileage": -1}),
+            dict(set={"mileage": 2_147_483_648}),
+            dict(add={"gold": 1}, set={"summonControllers": 10, "selectableControllers": False}),
+            dict(set={"summonControllers": 41}),
+            dict(set={"selectableControllers": 4.5}),
+            dict(set={"gold": 10}),
+            dict(add={"mileage": 1}),
+            dict(set=[]),
         ]:
             with self.subTest(change=change), self.assertRaises(HTTPError) as invalid:
                 self.call(path, body | change)

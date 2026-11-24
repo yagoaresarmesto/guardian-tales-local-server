@@ -147,7 +147,7 @@ class InventoryServer(ThreadingHTTPServer):
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source:
             self.catalog = InventoryCatalog(source, references, body, progression.thresholds)
         self.mastery = MasteryEditor(database, references)
-        self.account_editor = AccountEditor(database, references)
+        self.account_editor = AccountEditor(database, references, self.catalog.specs)
         self.relics = RelicEditor(database, self.catalog)
         self.equipment = EquipmentOptionEditor(database, self.catalog, tables, progression)
         self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)

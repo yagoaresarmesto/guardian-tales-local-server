@@ -17,10 +17,16 @@
             <p id="identity-preview" class="identity-preview" aria-live="polite" hidden></p>
           </div>
         </section>
-        <section class="account-card" aria-labelledby="wallet-heading">
-          <h2 id="wallet-heading">Wallet</h2>
-          <div id="wallet"></div>
-        </section>
+        <div class="account-balances">
+          <section class="account-card" aria-labelledby="wallet-heading">
+            <h2 id="wallet-heading">Wallet</h2>
+            <div id="wallet"></div>
+          </section>
+          <section id="summoning-section" class="account-card" aria-labelledby="summoning-heading" hidden>
+            <h2 id="summoning-heading">Summoning</h2>
+            <div id="summoning"></div>
+          </section>
+        </div>
       </div>
       <footer class="account-actions">
         <p id="message" role="status"></p>

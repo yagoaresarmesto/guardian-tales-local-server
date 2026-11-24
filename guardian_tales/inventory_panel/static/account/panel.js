@@ -22,9 +22,10 @@ function update() {
   preview.hidden = !identityChanged;
   preview.textContent = !validName ? "Enter a valid nickname." : !validTag ? "Enter five letters or digits." : "After applying: " + name + "#" + tag;
   let valid = validName && validTag, changed = identityChanged;
-  for (const {item, input, result, note} of controls.values()) {
-    const add = input.valueAsNumber, ok = input.disabled || input.validity.valid;
-    const total = item.balance + (input.disabled ? 0 : add);
+  for (const {item, input, result, note, setTotal} of controls.values()) {
+    const ok = input.disabled || input.validity.valid;
+    const total = setTotal ? (input.value === "" ? item.balance : input.valueAsNumber)
+      : item.balance + (input.disabled ? 0 : input.valueAsNumber);
     input.setAttribute("aria-invalid", String(!ok));
     result.textContent = ok ? number.format(total) : "—";
     result.classList.toggle("changed", ok && total !== item.balance);
@@ -58,15 +59,9 @@ async function checkAccess() {
   }
 }
 
-function render(data) {
-  account = data;
-  $("name").value = data.name;
-  $("tag").value = data.tag;
-  $("saved-identity").textContent = data.name + "#" + data.tag;
-  controls.clear();
-  const wallet = $("wallet");
-  wallet.replaceChildren();
-  for (const item of data.wallet) {
+function renderBalances(container, items, setTotal) {
+  container.replaceChildren();
+  for (const item of items) {
     const row = el("div", "wallet-row");
     const identity = el("div", "wallet-item"), icon = image("/icon/" + item.id + ".png");
     icon.onerror = () => icon.remove();
@@ -74,21 +69,37 @@ function render(data) {
     detail.append(el("strong", "", item.label), el("small", "", "Saved: " + number.format(item.balance)));
     if (item.limit !== null) detail.append(el("small", "", "Limit: " + number.format(item.limit)));
     identity.append(icon, detail);
-    const field = el("div", "wallet-input"), label = el("label", "", "Add"), input = el("input");
-    input.id = "add-" + item.key; label.htmlFor = input.id;
-    input.type = "number"; input.inputMode = "numeric"; input.required = true;
-    input.min = 0; input.step = 1; input.max = Math.max(0, item.limit - item.balance); input.value = 0;
-    input.disabled = Number(input.max) === 0;
-    input.setAttribute("aria-label", "Add " + item.label.toLowerCase());
+    const action = setTotal ? "Set total" : "Add";
+    const field = el("div", "wallet-input"), label = el("label", "", action), input = el("input");
+    input.id = (setTotal ? "set-" : "add-") + item.key; label.htmlFor = input.id;
+    input.type = "number"; input.inputMode = "numeric"; input.required = !setTotal;
+    input.min = 0; input.step = 1;
+    input.max = setTotal ? item.limit : Math.max(0, item.limit - item.balance);
+    input.value = setTotal ? (item.balance <= item.limit ? item.balance : "") : 0;
+    input.placeholder = String(item.balance);
+    input.disabled = !setTotal && Number(input.max) === 0;
+    input.setAttribute("aria-label", setTotal ? item.label + " total" : "Add " + item.label.toLowerCase());
     const note = el("p", "field-note");
     note.id = input.id + "-note"; input.setAttribute("aria-describedby", note.id);
     const after = el("div", "wallet-result"), result = el("strong");
     after.append(el("small", "", "After applying"), result);
     field.append(label, input);
     row.append(identity, field, after, note);
-    wallet.append(row);
-    controls.set(item.key, {item, input, result, note});
+    container.append(row);
+    controls.set(item.key, {item, input, result, note, setTotal});
   }
+}
+
+function render(data) {
+  account = data;
+  $("name").value = data.name;
+  $("tag").value = data.tag;
+  $("saved-identity").textContent = data.name + "#" + data.tag;
+  controls.clear();
+  renderBalances($("wallet"), data.wallet, false);
+  const summoning = data.summoning || [];
+  renderBalances($("summoning"), summoning, true);
+  $("summoning-section").hidden = !summoning.length;
   $("reload").hidden = true;
   stale = false;
   access(data.writable);
@@ -115,12 +126,16 @@ $("reload").onclick = load;
 $("account-form").onsubmit = async event => {
   event.preventDefault();
   if ($("apply").disabled) return;
-  const add = {};
-  for (const [key, {input}] of controls) {
-    if (!input.disabled && input.valueAsNumber > 0) add[key] = input.valueAsNumber;
+  const add = {}, set = {};
+  for (const [key, {item, input, setTotal}] of controls) {
+    if (input.disabled || input.value === "") continue;
+    if (setTotal) {
+      if (input.valueAsNumber !== item.balance) set[key] = input.valueAsNumber;
+    } else if (input.valueAsNumber > 0) add[key] = input.valueAsNumber;
   }
   const body = {version: account.version, name: $("name").value,
     tag: $("tag").value === account.tag ? account.tag : tagValue(), add};
+  if (Object.keys(set).length) body.set = set;
   saving = true; ++statusRequest;
   $("account-form").inert = true; update();
   try {

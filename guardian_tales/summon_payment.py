@@ -100,6 +100,10 @@ def pay(profile, catalog, body, references, kind):
         gems["Spent"] += cost
         return
     ticket = catalog["ticket_item_id" if cost_type == 3 else "selectable_ticket_item_id"]
+    spend_tickets(user, ticket, count)
+
+
+def spend_tickets(user, ticket, count):
     stacks = [i for i in user["ItemStackables"] if i["ItemId"] == ticket]
     if (
         any(not integer(i.get("Amount")) for i in stacks)
@@ -113,4 +117,6 @@ def pay(profile, catalog, body, references, kind):
         left -= spent
         if spent and item["Amount"] == 0:
             depleted.add(item["Id"])
-    user["ItemStackables"] = [i for i in user["ItemStackables"] if i["Id"] not in depleted]
+    user["ItemStackables"] = [
+        i for i in user["ItemStackables"] if i["ItemId"] != ticket or i["Id"] not in depleted
+    ]

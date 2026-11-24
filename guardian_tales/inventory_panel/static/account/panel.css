@@ -1,4 +1,5 @@
 .account-grid { display: grid; grid-template-columns: minmax(250px, 1fr) minmax(440px, 2fr); gap: 16px; align-items: start; }
+.account-balances { display: grid; gap: 16px; }
 .account-card, .account-actions { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; }
 .account-card h2 { background: var(--heading); border-bottom: 1px solid var(--line); padding: 14px 18px; font-size: 1.05rem; border-radius: 9px 9px 0 0; }
 .identity-body { display: grid; gap: 6px; padding: 16px 18px 22px; }
