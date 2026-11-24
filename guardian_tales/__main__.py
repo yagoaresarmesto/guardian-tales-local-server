@@ -13,6 +13,7 @@ COMMANDS = {
     "dka-season": ("punchking", "List/select Dungeon Kingdom Arena variants and days"),
     "guild-war": ("guild_war", "Enable/disable an experimental local Guild War season"),
     "expedition": ("expedition_levels", "List, set or restore per-stage Expedition enemy levels"),
+    "tetis-map-trial": ("tetis_map_trial", "Try or restore the preserved map on Tetis S1 floor 1"),
     "kamazone": ("kamazone", "Select an optional Kama-ZONE season for Events menu visibility"),
     "andras-trial": ("andras_trial", "Toggle the response-only experimental Andras Myth variant"),
     "head-hunter": (

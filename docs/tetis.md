@@ -18,6 +18,34 @@ in its usual terminal after updating the artwork code.
 
 The game opens each new chapter after you clear floor 20 of the preceding one. The current season reuses encounter layouts beyond the authored floors and the client applies its floor scaling. The older chapters use the current Tetis battle system. This build contains three seasons under `roguechess3`. An independent playable version of the original Tetis board has yet to be identified.
 
+## Trying the preserved Tetis map
+
+The 3.57.0 stage catalog still contains `roguechess_1` (stage `280010001`) and its matching tilemap. To try it, finish or leave any battle, then run this from the project folder:
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales tetis-map-trial enable --reference-dir local/client-data/reference
+```
+
+Fully close and reopen Guardian Tales. Open Tetis, select **Elf of the Abandoned Factory**, and play floor 1. The trial serves the preserved map with that floor's regular waves, opponents and rewards. A different arena, a working first wave, and a return to the map test three separate parts of the client. The host can verify the stage definition it serves, while the original game rules and client behavior require an in-game check.
+
+To return floor 1 to its normal map, run the command below and fully reopen the game.
+
+```powershell
+.\.venv\Scripts\python.exe -m guardian_tales tetis-map-trial restore --reference-dir local/client-data/reference
+```
+
+Both commands update the local server's map selection. Actual battles use the usual Tetis progression for your save.
+
+The preserved arena uses the same factory tileset as the normal Season 1 map.
+Its deployment area is about half as wide, so placing a hero near the enemy
+side is a better way to tell the arenas apart than comparing the background.
+Check that both sides move and attack and that the first wave finishes.
+
+| Other preserved tilemap | Findings from the local 3.57.0 files |
+| --- | --- |
+| `roguechess_2`, `roguechess_defense` | Both have player and enemy spawns and named battle areas. The stage catalog has no entry pointing to either map. |
+| `roguechess_test` | Uses Kama-ZONE artwork and lacks the player and enemy spawn markers used by the current Tetis controller. |
+
 ## Editing a test save
 
 Open the [Tetis editor](http://127.0.0.1:17658/tetis) and select a season. If you configured a different dashboard port, use **Tetis** in the navigation of that dashboard.

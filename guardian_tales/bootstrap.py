@@ -29,6 +29,7 @@ from . import (
     story_rewards,
     story_world_pass,
     tetis,
+    tetis_map_trial,
     tetis_presets,
 )
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
@@ -993,8 +994,11 @@ class BootstrapSession:
                 def calendar(references, name, value):
                     return kamazone.bootstrap_seed(references, name, value, equipped)
 
-                seed = kamazone_practice.bootstrap_seed(
-                    self.store.references, filename, body, calendar
+                def practice(references, name, value):
+                    return kamazone_practice.bootstrap_seed(references, name, value, calendar)
+
+                seed = tetis_map_trial.bootstrap_seed(
+                    self.store.references, filename, body, practice
                 )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc

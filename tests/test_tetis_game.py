@@ -8,9 +8,10 @@ import unittest
 from contextlib import closing
 from unittest.mock import patch
 
-from guardian_tales import tetis
+from guardian_tales import tetis, tetis_map_trial
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
 from guardian_tales.protocol import PacketError
+from guardian_tales.raid_static import compress, decode, digest, records
 from guardian_tales.tetis_catalog import TetisCatalog
 from guardian_tales.tetis_progress import edit_progress, read_progress
 from tests.test_snapshots import request
@@ -85,6 +86,70 @@ class TetisGameTests(unittest.TestCase):
             packet = lobby.respond(request("/content-book/recommend", {}), object(), self.db)
         body = json.loads(packet.body)
         self.assertEqual((body["RogueChessFloor"], body["RogueChessSweepCount"]), (1, 2))
+
+    def trial_source(self, original_stage="roguechess_1"):
+        floors = [
+            {"Id": 10001, "SeasonId": 1, "Floor": 1, "StageId": 280010011, "WavePresetIds": [30]},
+            {"Id": 10002, "SeasonId": 1, "Floor": 2, "StageId": 280010011, "WavePresetIds": [31]},
+        ]
+        stages = [
+            {"Id": ident, "Tilemap": {"Default": name}, "Event": ["RogueChess"]}
+            for ident, name in (
+                (280010011, "roguechess_season_1_normal"),
+                (280010001, original_stage),
+            )
+        ]
+        tables = {
+            "roguechess3": json.dumps({"Floors": floors}),
+            "stages": json.dumps(stages),
+            "constants": '{"ChangeNickCost":300}',
+            "__checksum__": "stock",
+        }
+        source = compress(
+            "".join(f"{k}\n{v}\n12\n{digest(v.encode())}\n" for k, v in tables.items()).encode()
+        )
+        (self.session.store.references.directory / "static_data_get.bin").write_bytes(source)
+        return source
+
+    def test_map_trial_switches_one_floor_and_revises_client_cache_on_each_transition(self):
+        refs = self.session.store.references
+        original = self.trial_source()
+
+        def fetched():
+            return records(decode(self.session.handle(request("/static-data/get", {})).body))[1]
+
+        baseline = fetched()
+        self.assertEqual(json.loads(baseline["constants"][1])["ChangeNickCost"], 0)
+        old_checksum = baseline["__checksum__"][1]
+        self.assertEqual(tetis_map_trial.configure(refs, False)["generation"], 0)
+        for generation, enabled in enumerate((True, False, True), 1):
+            result = tetis_map_trial.configure(refs, enabled)
+            self.assertEqual(result["generation"], generation)
+            self.assertEqual(tetis_map_trial.configure(refs, enabled), result)
+            new = self.call("/static-data/check-update", {"Checksum": old_checksum})
+            self.assertFalse(new["UpToDate"])
+            self.assertTrue(
+                self.call("/static-data/check-update", {"Checksum": new["Checksum"]})["UpToDate"]
+            )
+            changed = fetched()
+            self.assertEqual(changed["__checksum__"][1], new["Checksum"])
+            old_checksum = new["Checksum"]
+            self.assertEqual(changed["stages"], baseline["stages"])
+            self.assertEqual(changed["constants"], baseline["constants"])
+            expected = json.loads(baseline["roguechess3"][1])
+            expected["Floors"][0]["StageId"] = 280010001 if enabled else 280010011
+            self.assertEqual(json.loads(changed["roguechess3"][1]), expected)
+            self.assertEqual(changed["roguechess3"][2], baseline["roguechess3"][2] + generation)
+            if not enabled:
+                self.assertEqual(changed["roguechess3"][1], baseline["roguechess3"][1])
+        self.assertEqual(refs.read_bytes("static_data_get.bin"), original)
+
+    def test_map_trial_rejects_unmatched_stage_before_publishing(self):
+        refs = self.session.store.references
+        self.trial_source(original_stage="different_board")
+        with self.assertRaisesRegex(ValueError, "roguechess_1"):
+            tetis_map_trial.configure(refs, True)
+        self.assertEqual(tetis_map_trial.selection(refs), (False, 0))
 
     def test_entry_win_loss_replay_and_editor(self):
         roster = {"Cas": 1, "Presets": [{"Id": 1700, "Characters": [{"Id": 8}]}]}
