@@ -113,7 +113,7 @@ class PresetReorderTests(unittest.TestCase):
         self.assertEqual(self.db.total_changes, changes)
 
     def test_both_native_modes_change_only_target_order_and_group_revision(self):
-        self.assertEqual(SLOT_COUNTS, {4: 5, 7: 30, 18: 30})
+        self.assertEqual(SLOT_COUNTS, {4: 5, 7: 30, 17: 15, 18: 30})
         raw = self.db.execute("SELECT profile FROM local_account").fetchone()[0]
         seed = self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0]
         original_read = preserved_read(self.db, "/preset/get-presets")
@@ -136,6 +136,44 @@ class PresetReorderTests(unittest.TestCase):
             self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0], seed
         )
         self.assertEqual(self.source.read_bytes(), self.source_bytes)
+
+    def test_tetis_roster_lifecycle_uses_its_own_resource_and_fifteen_slots(self):
+        route = "/preset/set-character-list-preset"
+        character = self.initial_group["Presets"][0]["Characters"][0]
+
+        def save(slot, seq):
+            payload = {
+                "CharacterListPreset": {
+                    "Id": slot,
+                    "Name": "Tetis",
+                    "Order": 999,
+                    "Characters": [character],
+                },
+                "SetSelected": True,
+            }
+            return self.call(payload, route, seq)
+
+        group = save(1700, 80)["UserCharacterListPreset"]
+        self.assertEqual((group["Cas"], group["Presets"][0]["Id"]), (5, 1700))
+        second = save(1714, 81)
+        self.assertEqual(second["User"]["SelectedPresetId"]["RogueChess"], 1714)
+        roster = self.call(self.orders(17, [1714, 1700]), sequence=82)["UserCharacterListPreset"]
+        self.assertEqual([(p["Id"], p["Order"]) for p in roster["Presets"]], [(1700, 1), (1714, 0)])
+        self.assertEqual(
+            self.call({"PresetId": 1700}, "/preset/set-selected-preset", 83)["User"][
+                "SelectedPresetId"
+            ]["RogueChess"],
+            1700,
+        )
+        self.open_session(reconnect=True)
+        reads = self.call({}, "/preset/get-presets", 84)
+        self.assertEqual(reads["UserCharacterListPreset"], roster)
+        self.assertEqual(reads["UserPartyPreset2"], self.initial_group)
+        deleted = self.call({"PresetId": 1700}, "/preset/delete-character-list-preset", 85)
+        self.assertEqual(deleted["User"]["SelectedPresetId"]["RogueChess"], 0)
+        self.assertEqual(deleted["UserCharacterListPreset"]["Presets"][0]["Id"], 1714)
+        with self.assertRaises(PacketError):
+            save(1715, 86)
 
     def test_top_bottom_up_down_permutations_keep_slot_ids_and_physical_array_order(self):
         sequence = 70

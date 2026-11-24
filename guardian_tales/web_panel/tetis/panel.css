@@ -1,0 +1,26 @@
+.tetis-banner { min-height: 104px; }
+.tetis-banner[data-art] {
+  background: linear-gradient(100deg, #19283ce8 10%, #213349b3 56%, #23334940),
+    url("/tetis/skill-tree.jpg") center 55% / cover;
+}
+#tetis-form .workspace { grid-template-columns: minmax(245px, .8fr) minmax(0, 1.8fr); }
+.training { display: grid; gap: 12px; grid-template-columns: 1fr 1.35fr; }
+.field-note, .tree-note { margin-top: 7px; font-size: .83rem; color: var(--muted); }
+#skills, #no-skills { padding: var(--inset); }
+#branch { max-width: 30rem; }
+#budget { margin-left: auto; font-size: .88rem; font-variant-numeric: tabular-nums; color: var(--ice); }
+#budget[data-error="true"] { color: #ffb8a7; }
+.skill-tier { margin: 15px 0 5px; color: var(--muted); font-size: .85rem; }
+.skill-row { display: grid; grid-template-columns: minmax(0, 1fr) 54px 42px; align-items: center; gap: 8px; padding: 7px 0; }
+.skill-row + .skill-row { border-top: 1px solid var(--line); }
+.skill-row input { height: 33px; padding-inline: 6px; font-variant-numeric: tabular-nums; }
+.skill-row small { margin: 0; }
+.skill-row label { font-size: .94rem; }
+.skill-row label small { display: block; margin-top: 3px; }
+#discard, #refresh { background: var(--field); color: var(--ink); border: 1px solid #52667d; border-radius: 5px; padding: 8px 12px; }
+#discard:disabled { opacity: .55; }
+.status-line { display: flex; justify-content: flex-end; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.status-line #feedback { margin: 0 auto 0 0; }
+@media (max-width: 740px) {
+  #tetis-form .workspace { grid-template-columns: minmax(0, 1fr); grid-template-areas: "inspector" "collection"; }
+}

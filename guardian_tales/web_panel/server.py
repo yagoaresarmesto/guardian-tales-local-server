@@ -2,6 +2,7 @@
 """Loopback HTTP transport for registered panel modes."""
 
 import json
+import sqlite3
 import uuid
 from http.server import ThreadingHTTPServer
 from threading import Thread
@@ -10,17 +11,19 @@ from guardian_tales.panel_common.http import LocalPanelHandler
 from guardian_tales.panel_common.views import HTML
 
 from .routes import API, FILES, PAGES, media_resource, render_page
+from .tetis.adapter import TetisEditor
 
 
 class WebPanel(ThreadingHTTPServer):
     # Finish any selection being published when the backend exits.
     daemon_threads = False
 
-    def __init__(self, references, port, *, art_dir=None, restart=None):
+    def __init__(self, references, port, *, art_dir=None, database=None, restart=None):
         super().__init__(("127.0.0.1", port), PanelHandler)
         self.references = references
         self.restart = restart
         self.instance = uuid.uuid4().hex
+        self.tetis = TetisEditor(references, database)
         self.brand_image = art_dir / "brand.png" if art_dir is not None else None
 
     def start(self):
@@ -59,7 +62,8 @@ class PanelHandler(LocalPanelHandler):
                 path, mime = FILES[self.path]
                 self.reply(200, mime, path.read_bytes())
             elif self.path in API:
-                self.json(200, API[self.path].state(self.server.references))
+                mode = API[self.path]
+                self.json(200, mode.state(getattr(self.server, mode.source)))
             elif resource := media_resource(self.path):
                 reader, mime = resource
                 self.reply(200, mime, reader(self.server.references))
@@ -67,7 +71,7 @@ class PanelHandler(LocalPanelHandler):
                 self.json(404, {"error": "Unknown panel resource"})
         except FileNotFoundError:
             self.json(404, {"error": "Panel resource unavailable"})
-        except (ValueError, KeyError, TypeError, OSError) as error:
+        except (ValueError, KeyError, TypeError, OSError, sqlite3.Error) as error:
             self.json(503, {"error": f"Could not load panel data: {error}"})
 
     def do_POST(self):
@@ -102,7 +106,7 @@ class PanelHandler(LocalPanelHandler):
             self.server.restart()
             return
         try:
-            mode.apply(self.server.references, body)
+            mode.apply(getattr(self.server, mode.source), body)
         except mode.conflict as error:
             self.json(409, {"error": str(error)})
         except RuntimeError:
@@ -111,7 +115,7 @@ class PanelHandler(LocalPanelHandler):
             )
         except (ValueError, TypeError, KeyError, RecursionError) as error:
             self.json(400, {"error": str(error)})
-        except OSError as error:
+        except (OSError, sqlite3.Error) as error:
             self.json(503, {"error": f"Could not save the selection: {error}"})
         else:
             self.json(200, {"applied": True})

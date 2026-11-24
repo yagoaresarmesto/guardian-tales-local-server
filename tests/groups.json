@@ -43,6 +43,10 @@
     "description": "Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War",
     "modules": ["test_guild_reads", "test_guild_raid", "test_raid_static", "test_raid_panel", "test_punchking", "test_guild_meteor", "test_guild_war", "test_guild_war_panel"]
   },
+  "tetis": {
+    "description": "Offline Tetis battles, seasonal progression, sweeps and the web editor",
+    "modules": ["test_tetis_game", "test_tetis_progress", "test_tetis_panel"]
+  },
   "orbital": {
     "description": "Orbital entry, progress and completion",
     "modules": ["test_orbital", "test_orbital_completion", "test_orbital_formation"]

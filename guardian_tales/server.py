@@ -356,6 +356,7 @@ async def run(args):
             server.guests.references,
             args.raid_panel_port,
             art_dir=args.data_dir.parent / "panel-art",
+            database=server.data_dir / "server.sqlite3",
             restart=lambda: loop.call_soon_threadsafe(restart.set),
         )
         panel.start()

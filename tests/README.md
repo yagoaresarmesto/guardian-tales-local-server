@@ -33,6 +33,7 @@ Execution stays sequential; this change does not introduce parallel workers.
 | `summons` | Saved wishlists, hero/weapon draws and imported summon state |
 | `village` | Harvest, gifts, obstacles, basecamp and guardian mastery |
 | `guild` | Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War |
+| `tetis` | Offline battles, archived seasons, tactics progression, sweeps and the web editor |
 | `orbital` | Orbital entry, progress and completion |
 | `android` | Temporary Android bridge configuration and restoration |
 | `integration` | Loopback TLS/transport, packet codec and resource serving |

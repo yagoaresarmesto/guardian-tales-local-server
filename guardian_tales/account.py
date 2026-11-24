@@ -18,6 +18,7 @@ from . import (
     story_loot,
     story_rewards,
     story_world_pass,
+    tetis_presets,
 )
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .account_name import change as change_account_name
@@ -270,6 +271,8 @@ ACCOUNT_ROUTES = (
     WEAPON_SUMMON_ROUTE,
     "/preset/set-selected-preset",
     "/preset/set-presets",
+    tetis_presets.SAVE,
+    tetis_presets.DELETE,
     "/preset/delete-preset",
     PRESET_REORDER_ROUTE,
     "/lobby-village/harvest-all",
@@ -1223,11 +1226,11 @@ class AccountStore:
     def select_party_preset(self, request, operation_id):
         return set_selected_preset(self, request, operation_id)
 
-    def save_party_preset(self, request, operation_id):
-        return save_party_preset(self, request, operation_id)
+    def save_party_preset(self, request, operation_id, character_list=False):
+        return save_party_preset(self, request, operation_id, character_list)
 
-    def delete_party_preset(self, request, operation_id):
-        return delete_existing_preset(self, request, operation_id)
+    def delete_party_preset(self, request, operation_id, character_list=False):
+        return delete_existing_preset(self, request, operation_id, character_list)
 
     def reorder_party_presets(self, request, operation_id):
         return reorder_party_presets(self, request, operation_id)

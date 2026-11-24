@@ -1,12 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
 """Display data for the current inventory and its equipment preview."""
 
-import base64
 import hashlib
 from bisect import bisect_right
 
-from guardian_tales.andras_trial_static import binary_rows
-from guardian_tales.raid_custom import binary_name_hash
+from guardian_tales.panel_common.labels import english_labels
 from guardian_tales.weapon_enhance import load_catalog
 
 from .equipment_ribbons import equipment_ribbons
@@ -42,34 +40,22 @@ TYPE_ICONS = {
 
 
 def english_inventory_names(references, specs, catalog_hash, hero_name_keys):
-    # Prefer an exact catalog binding; content packs can also supply the native English cache.
-    path = references.directory / f"andras-trial-strings-{catalog_hash}.bin"
-    if not path.is_file():
-        path = references.directory / "strings-bin-enUS"
-    if not path.is_file():
-        return {}, {}
     names = {}
-    try:
-        for spec in specs.values():
-            if spec.get("Type") in CONSUMABLES or spec.get("Type") in HAMMERS:
-                name = spec.get("Name")
-            elif spec.get("WeaponType") or spec.get("Type") == "relic":
-                name = spec.get("NameWithoutRarity")
-            else:
-                continue
-            if name:
-                names[spec["Id"]] = binary_name_hash(name)
-        heroes = {ident: binary_name_hash(name) for ident, name in hero_name_keys.items()}
-        wanted = set(names.values()) | set(heroes.values())
-        entries = binary_rows(
-            base64.b64encode(path.read_bytes()).decode(), require_id=False, max_count=500000
-        )
-        strings = {key: raw.decode("utf-8") for _, key, raw in entries if key in wanted}
-    except (OSError, ValueError):
-        return {}, {}
+    for spec in specs.values():
+        if spec.get("Type") in CONSUMABLES or spec.get("Type") in HAMMERS:
+            name = spec.get("Name")
+        elif spec.get("WeaponType") or spec.get("Type") == "relic":
+            name = spec.get("NameWithoutRarity")
+        else:
+            continue
+        if name:
+            names[spec["Id"]] = name
+    strings = english_labels(
+        references, catalog_hash, set(names.values()) | set(hero_name_keys.values())
+    )
     return (
         {ident: strings[key] for ident, key in names.items() if key in strings},
-        {ident: strings[key] for ident, key in heroes.items() if key in strings},
+        {ident: strings[key] for ident, key in hero_name_keys.items() if key in strings},
     )
 
 

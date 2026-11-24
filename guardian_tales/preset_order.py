@@ -1,14 +1,21 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Reorder Orbital/Raid slots, including Guild War's shared Raid alias."""
+"""Reorder Orbital, Raid, Guild War, Expedition and Tetis preset slots."""
 
 import json
 
-from .presets import MAX_REVISION, RAID_PRESET_COUNT, current_group, integer
+from .presets import (
+    MAX_REVISION,
+    RAID_PRESET_COUNT,
+    TETIS_PRESET_COUNT,
+    current_group,
+    integer,
+    write_group,
+)
 
 ROUTE = "/preset/reorder-preset"
 # Native PresetCount/GetBasePresetId map Guild War (18) to Raid (7),
-# including its slot count; the direct PresetCountS3[17] entry is zero.
-SLOT_COUNTS = {4: 5, 7: RAID_PRESET_COUNT, 18: RAID_PRESET_COUNT}
+# including its slot count. Tetis has a separate 15-slot character-list roster.
+SLOT_COUNTS = {4: 5, 7: RAID_PRESET_COUNT, 17: TETIS_PRESET_COUNT, 18: RAID_PRESET_COUNT}
 
 
 def reorder(account, body, operation_id):
@@ -28,17 +35,19 @@ def reorder(account, body, operation_id):
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
-        raise ValueError("Reorder existing Orbital, Raid/Conquest or Guild War slots")
+        raise ValueError("Reorder existing slots for the selected preset type")
     encoded = json.dumps(body, sort_keys=True, separators=(",", ":"))
     previous = account.db.execute(
         "SELECT request FROM preset_reorder_requests WHERE operation_id=?", (operation_id,)
     ).fetchone()
-    group = current_group(account.db)
+    character_list = body["PresetType"] == 17
+    response_field = "UserCharacterListPreset" if character_list else "UserPartyPreset2"
+    group = current_group(account.db, character_list)
     if previous:
         if previous[0] != encoded:
             raise ValueError("Preset reorder request identity was reused with different data")
         # A delayed retry never changes later ordering, deletes or recreated slots.
-        return {"UserPartyPreset2": group}
+        return {response_field: group}
     base = 700 if body["PresetType"] == 18 else body["PresetType"] * 100
     count = SLOT_COUNTS[body["PresetType"]]
     if any(not isinstance(row, dict) or not integer(row.get("Id")) for row in group["Presets"]):
@@ -73,12 +82,8 @@ def reorder(account, body, operation_id):
         group["Cas"] += 1
     with account.db:
         if changed:
-            account.db.execute(
-                "INSERT INTO party_preset_state VALUES(1,?) "
-                "ON CONFLICT(id) DO UPDATE SET value=excluded.value",
-                (json.dumps(group, separators=(",", ":")),),
-            )
+            write_group(account.db, group, character_list)
         account.db.execute(
             "INSERT INTO preset_reorder_requests VALUES(?,?)", (operation_id, encoded)
         )
-    return {"UserPartyPreset2": group}
+    return {response_field: group}

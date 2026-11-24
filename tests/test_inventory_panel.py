@@ -203,7 +203,7 @@ class InventoryStartupTests(unittest.TestCase):
         specs = {42: {"Id": 42, "WeaponType": "basket", "NameWithoutRarity": "cwp_example"}}
         keys = {"cwp_example": 101, "name_example": 102}
         with patch(
-            "guardian_tales.inventory_panel.equipment.binary_name_hash",
+            "guardian_tales.panel_common.labels.binary_name_hash",
             side_effect=keys.__getitem__,
         ):
             for filename, title in (

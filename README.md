@@ -276,6 +276,14 @@ bridge run separately.
 The backend panel uses the inventory editor's two-column layout. Raid, DKA,
 Guild Wars and Kama-ZONE show the saved selection beside the editor. In
 Expedition, select a stage from the table to open its level settings.
+Open the [Tetis tab](http://127.0.0.1:17658/tetis) to edit each season's highest
+cleared floor. Seasons 2 and 3 also have a shared Guardian Tactic Level for
+that season's heroes, total experience and a Season Specialty skill tree.
+Choose a level or enter its exact total experience, allocate skill points, then
+select **Save changes** and reopen the Tetis lobby. Finish any active Tetis
+battle before applying an edit. These changes are saved in the backend's
+account database. See the [Tetis guide](docs/tetis.md) for the archived
+chapters, floor limits and offline requests.
 
 ### Raid and Dungeon Kingdom Arena
 

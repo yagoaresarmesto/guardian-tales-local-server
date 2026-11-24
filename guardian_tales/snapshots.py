@@ -57,6 +57,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/tower-infinity/save-formation",
         "/preset/set-selected-preset",
         "/preset/set-presets",
+        "/preset/set-character-list-preset",
+        "/preset/delete-character-list-preset",
         "/preset/delete-preset",
         "/preset/delete-multi-party-preset",
         "/preset/set-multi-party-preset",
@@ -179,6 +181,7 @@ def preserved_read(db, route):
     overlays = {
         "/preset/get-presets": (
             ("party_preset_state", "UserPartyPreset2"),
+            ("character_list_preset_state", "UserCharacterListPreset"),
             ("multi_party_preset_state", "UserMultiPartyPreset"),
         ),
         "/lobby-village/enter": (("village_state", "UserLobbyVillage"),),

@@ -19,9 +19,25 @@ READ_RESPONSES = json.loads((ROOT / "empty_lobby.json").read_text())
 LOBBY_ROUTES = tuple(READ_RESPONSES)
 
 
-def respond(request, references=None):
+def respond(request, references=None, db=None):
     template = READ_RESPONSES[request["api"]]
     value = template["value"]
+    if request["api"] == "/preset/get-presets" and db is not None:
+        from .tetis_presets import group
+
+        value = dict(value, UserCharacterListPreset=group(db))
+    if request["api"] == "/content-book/recommend" and db is not None:
+        from .tetis_progress import load_catalog, stored_progress
+        from .tetis_sweep import counter
+
+        progress = stored_progress(db)
+        if progress and references is not None:
+            catalog = load_catalog(references)
+            value = dict(
+                value,
+                RogueChessFloor=progress["floors"].get(str(catalog.current), 0),
+                RogueChessSweepCount=counter(progress, catalog)["PlayCount"],
+            )
     if request["api"] in ("/summon/enter", "/summon/on-event"):
         catalog = load_selection_catalog(references)
         weapons = load_weapon_selection_catalog(references)

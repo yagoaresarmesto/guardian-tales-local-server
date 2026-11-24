@@ -28,6 +28,8 @@ from . import (
     story_interactions,
     story_rewards,
     story_world_pass,
+    tetis,
+    tetis_presets,
 )
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
@@ -90,6 +92,7 @@ BOOTSTRAP_ROUTES = (
     *expedition.ROUTES,
     *multi_presets.ROUTES,
     *classic_coop.ROUTES,
+    *tetis.ROUTES,
     *kamazone_preview.ROUTES,
     kamazone_practice.SAVE,
     *kamazone_run.ROUTES,
@@ -279,6 +282,19 @@ class BootstrapSession:
         if route not in BOOTSTRAP_ROUTES:
             raise PacketError("API operation not implemented")
         body = read_json_body(request)
+        if route in tetis.ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            try:
+                epoch = self.request_epoch or self.store.request_epoch(True)
+                return json_response(
+                    request,
+                    tetis.handle(
+                        self.store.account, route, body, epoch + ":" + str(request["sequence_id"])
+                    ),
+                )
+            except (ValueError, FileNotFoundError) as exc:
+                raise PacketError(str(exc)) from exc
         if route == "/auth/unpause":
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
@@ -444,7 +460,7 @@ class BootstrapSession:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")
             try:
-                return lobby_response(request, self.store.references)
+                return lobby_response(request, self.store.references, self.store.db)
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc
         if route in ACCOUNT_ROUTES:
@@ -703,12 +719,15 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == "/preset/delete-preset":
+            if route in ("/preset/delete-preset", tetis_presets.DELETE):
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
-                        request, self.store.account.delete_party_preset(body, operation_id)
+                        request,
+                        self.store.account.delete_party_preset(
+                            body, operation_id, route == tetis_presets.DELETE
+                        ),
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
@@ -721,12 +740,15 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == "/preset/set-presets":
+            if route in ("/preset/set-presets", tetis_presets.SAVE):
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
-                        request, self.store.account.save_party_preset(body, operation_id)
+                        request,
+                        self.store.account.save_party_preset(
+                            body, operation_id, route == tetis_presets.SAVE
+                        ),
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
