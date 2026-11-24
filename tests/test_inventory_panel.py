@@ -30,6 +30,7 @@ from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.state_lock import StateLock
+from guardian_tales.web_panel.server import WebPanel
 
 
 def prepare_inventory(root):
@@ -242,6 +243,7 @@ class InventoryStartupTests(unittest.TestCase):
             redirect_stdout(StringIO()),
             redirect_stderr(StringIO()) as errors,
         ):
+            panel.return_value.server_port = 17661
             Path(directory, "server.sqlite3").touch()
             server.main(["--data-dir", directory])
         panel.return_value.serve_forever.assert_called_once()
@@ -319,6 +321,39 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertTrue(self.call("/inventory-dom.js"))
         self.assertTrue(self.call("/equipment-options.js"))
 
+    def test_either_dashboard_serves_both_sections_on_the_same_save(self):
+        game_panel = WebPanel(
+            ReferenceData(self.root), 0, database=self.root / "server.sqlite3", art_dir=self.root
+        )
+        game_panel.start()
+        self.addCleanup(game_panel.stop)
+        with StateLock(self.root):
+            for panel, landing in ((self.server, "/equipment"), (game_panel, "/raid")):
+                with self.subTest(landing=landing):
+                    self.origin = f"http://127.0.0.1:{panel.server_port}"
+                    self.assertEqual(self.call("/"), self.call(landing))
+                    for page in ("/raid", "/tetis", "/equipment", "/mastery"):
+                        html = self.call(page)
+                        self.assertIn(b'aria-label="Dashboard sections"', html)
+                        self.assertIn(b'id="service-controls"', html)
+                    equipment = self.call("/api/game/equipment")
+                    self.assertEqual({row["id"] for row in equipment["rows"]}, {11, 15})
+                    self.assertFalse(equipment["writable"])
+                    self.assertFalse(self.call("/api/game/status")["writable"])
+
+    def test_closing_equipment_preview_discards_the_copy_and_keeps_dashboard_open(self):
+        self.seed_wallet()
+        preview = self.call("/api/inventory")
+        ring = next(row for row in preview["rows"] if row["id"] == 11)
+        self.call("/api/lock", dict(id=11, locked=False, revision=preview["revision"]))
+        self.assertTrue(ring["locked"])
+        self.assertFalse(
+            next(row for row in self.call("/api/inventory")["rows"] if row["id"] == 11)["locked"]
+        )
+        self.assertEqual(self.call("/api/preview/close", {}), {"closed": True})
+        self.assertEqual(self.call("/api/inventory")["rows"], preview["rows"])
+        self.assertTrue(self.call("/raid"))
+
     def test_controller_icons_prefer_item_art_and_fall_back_to_the_exact_ui_frame(self):
         module = "guardian_tales.inventory_panel.catalog"
         with (
@@ -330,11 +365,13 @@ class InventoryPanelTests(unittest.TestCase):
             ui.read.side_effect = [b"selectable icon", FileNotFoundError()]
             self.assertEqual(self.call("/icon/110007.png"), b"regular icon")
             items.read.assert_called_once_with(
-                self.server.catalog.refs, frame="ic_drone_controller"
+                self.server.inventory.catalog.refs, frame="ic_drone_controller"
             )
             ui.read.assert_not_called()
             self.assertEqual(self.call("/icon/110015.png"), b"selectable icon")
-            ui.read.assert_called_once_with(self.server.catalog.refs, frame="ic_drone_controller_2")
+            ui.read.assert_called_once_with(
+                self.server.inventory.catalog.refs, frame="ic_drone_controller_2"
+            )
             with self.assertRaises(HTTPError) as missing:
                 self.call("/icon/110015.png")
             self.assertEqual(missing.exception.code, 404)

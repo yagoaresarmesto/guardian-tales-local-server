@@ -5,9 +5,12 @@ import json
 import sqlite3
 import uuid
 from http.server import ThreadingHTTPServer
-from threading import Thread
+from threading import Lock, Thread
+from urllib.parse import urlsplit
 
-from guardian_tales.panel_common.http import LocalPanelHandler
+from guardian_tales.inventory_panel.application import InventoryApplication
+from guardian_tales.inventory_panel.http import InventoryHandler
+from guardian_tales.panel_common.services import service_request
 from guardian_tales.panel_common.views import HTML
 
 from .routes import API, FILES, PAGES, media_resource, render_page
@@ -17,14 +20,44 @@ from .tetis.adapter import TetisEditor
 class WebPanel(ThreadingHTTPServer):
     # Finish any selection being published when the backend exits.
     daemon_threads = False
+    # Inventory grids load dozens of separate artwork requests as a page opens.
+    request_queue_size = 64
+    inventory_home = False
 
-    def __init__(self, references, port, *, art_dir=None, database=None, restart=None):
-        super().__init__(("127.0.0.1", port), PanelHandler)
+    def __init__(
+        self, references, port, *, art_dir=None, database=None, restart=None, prepare_inventory=None
+    ):
         self.references = references
+        self.database = database.resolve() if database is not None else None
+        self._inventory = None
+        self._inventory_lock = Lock()
+        self.prepare_inventory = prepare_inventory
         self.restart = restart
         self.instance = uuid.uuid4().hex
         self.tetis = TetisEditor(references, database)
         self.brand_image = art_dir / "brand.png" if art_dir is not None else None
+        super().__init__(("127.0.0.1", port), PanelHandler)
+
+    @property
+    def inventory(self):
+        with self._inventory_lock:
+            if self._inventory is None:
+                if self.database is None:
+                    raise ValueError("This dashboard has no working game save.")
+                if self.prepare_inventory is not None:
+                    self.prepare_inventory()
+                    self.prepare_inventory = None
+                self._inventory = InventoryApplication(self.database, self.references)
+            return self._inventory
+
+    def close_preview(self):
+        with self._inventory_lock:
+            if self._inventory is not None:
+                self._inventory.close_preview()
+
+    def server_close(self):
+        super().server_close()
+        self.close_preview()
 
     def start(self):
         Thread(target=self.serve_forever, name="Local web panel", daemon=True).start()
@@ -34,15 +67,20 @@ class WebPanel(ThreadingHTTPServer):
         self.server_close()
 
 
-class PanelHandler(LocalPanelHandler):
+class PanelHandler(InventoryHandler):
     def do_GET(self):
+        if service_request(self):
+            return
         if not self.allowed_host():
             self.json(
                 403, {"error": "Open the panel using the local address printed by the backend."}
             )
             return
         try:
-            if self.path == "/api/backend":
+            path = urlsplit(self.path).path
+            if path == "/":
+                path = "/equipment" if self.server.inventory_home else "/raid"
+            if path == "/api/backend":
                 self.json(
                     200,
                     {
@@ -50,36 +88,36 @@ class PanelHandler(LocalPanelHandler):
                         "canRestart": self.server.restart is not None,
                     },
                 )
-            elif self.path in PAGES:
+            elif path in PAGES:
                 brand = self.server.brand_image
-                page = render_page(
-                    PAGES[self.path], show_brand=brand is not None and brand.is_file()
-                )
+                page = render_page(PAGES[path], show_brand=brand is not None and brand.is_file())
                 self.reply(200, HTML, page)
-            elif self.path == "/brand.png" and self.server.brand_image is not None:
-                self.reply(200, "image/png", self.server.brand_image.read_bytes())
-            elif self.path in FILES:
-                path, mime = FILES[self.path]
+            elif path in FILES:
+                path, mime = FILES[path]
                 self.reply(200, mime, path.read_bytes())
-            elif self.path in API:
-                mode = API[self.path]
+            elif path in API:
+                mode = API[path]
                 self.json(200, mode.state(getattr(self.server, mode.source)))
-            elif resource := media_resource(self.path):
+            elif resource := media_resource(path):
                 reader, mime = resource
                 self.reply(200, mime, reader(self.server.references))
             else:
-                self.json(404, {"error": "Unknown panel resource"})
+                self.inventory_get(path)
+        except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):
+            # A user can navigate to another editor while its predecessor is still loading.
+            return
         except FileNotFoundError:
             self.json(404, {"error": "Panel resource unavailable"})
         except (ValueError, KeyError, TypeError, OSError, sqlite3.Error) as error:
             self.json(503, {"error": f"Could not load panel data: {error}"})
 
     def do_POST(self):
+        if service_request(self):
+            return
         mode = API.get(self.path)
         restarting = self.path == "/api/backend/restart"
         if mode is None and not restarting:
-            self.json(404, {"error": "Unknown panel action"})
-            return
+            return self.inventory_post()
         try:
             raw = self.read_body(4096, "Invalid selection size")
         except (ValueError, OSError) as error:

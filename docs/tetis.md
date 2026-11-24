@@ -27,11 +27,15 @@ Open the [Tetis editor](http://127.0.0.1:17658/tetis) and select a season. If yo
 | Highest cleared floor | Unlocks the following floor. For example, to play season 3 floor 100, set seasons 1 and 2 to 20 and season 3 to 99. Save each season separately. |
 | Guardian Tactic Level | Sets that season’s total XP to the start of the selected level. The level applies to all heroes in that season. |
 | Guardian Tactic XP | Sets the exact cumulative XP and updates the displayed level. |
-| Season specialties | Assign points by branch. The editor shows the available budget, maximum rank and prerequisites. |
+| Season specialties | Use the category wheel to choose a branch. Select a diamond to see its description, prerequisites and rank. Use the plus or minus button to assign points. **Reset** clears the season's draft allocations. **Revert** restores its saved ranks. |
+| Guardian spell | Select an available spell to equip it. Select it again to unequip. Some spells require a point in a particular specialty in the current season. |
+| Season artifacts | Set an artifact's level and choose **Equip**. Level 0 means unowned. Setting an equipped artifact to 0 also unequips it. |
+
+The game shares the equipped spell and artifact across chapters. The loadout editor always shows the current season's collection, including when you select an archived season. Floors, training XP and specialty ranks belong to the selected season.
 
 Finish or leave the current battle before editing. Click **Save changes**, then leave and reopen the Tetis lobby to load the new values. The editor saves progress in the same local account database as the game. Editing the floor changes access directly. Play a floor normally to earn its first-clear rewards.
 
-On the game-mode dashboard, **Restart backend** reloads server code using the same terminal, ports and save. Applying a Tetis progression edit only requires reopening the Tetis lobby.
+Use **Services** in the dashboard header to restart the game backend, content CDN or standalone inventory server individually. Each service restarts in its own terminal on its existing ports. Applying a Tetis progression edit only requires reopening the Tetis lobby.
 
 ## Offline requests
 

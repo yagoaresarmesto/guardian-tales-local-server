@@ -1,0 +1,35 @@
+.dashboard-header { color: #eff5ff; background: #111c2d; border-bottom: 1px solid #384961; }
+.dashboard-top, .dashboard-bar {
+  width: min(1560px, 96%); margin-inline: auto; display: flex; align-items: center;
+  gap: 12px; min-width: 0;
+}
+.dashboard-top { flex-wrap: wrap; min-height: 52px; padding-block: 5px; }
+.dashboard-brand { display: flex; align-items: center; gap: 8px; font-size: 1.07rem; font-weight: 800; white-space: nowrap; }
+.dashboard-brand img { width: 48px; height: 39px; object-fit: cover; object-position: 50% 45%; }
+.dashboard-sections { display: flex; align-items: center; gap: 4px; }
+.dashboard-sections a {
+  display: block; padding: .46rem .75rem; border: 1px solid transparent; border-radius: 5px;
+  color: #b2c1d7; text-decoration: none; font-size: .87rem; font-weight: 650; white-space: nowrap;
+}
+.dashboard-sections a[aria-current] { background: #263a51; border-color: #415672; color: #f2f7ff; }
+.dashboard-sections a:hover, .dashboard-tabs a:hover { background: #22354d; color: white; }
+.dashboard-top .backend-control { margin-left: auto; }
+.dashboard-bar { border-top: 1px solid #2b3b4e; align-items: center; flex-wrap: wrap; column-gap: 14px; }
+.dashboard-tabs {
+  display: flex; flex-wrap: wrap; align-items: stretch; min-width: 0; margin-right: auto;
+}
+.dashboard-tabs a {
+  display: inline-flex; align-items: center; min-height: 39px; padding: 7px 13px;
+  border-bottom: 3px solid transparent; color: #b2c1d7; text-decoration: none; font-size: .9rem; font-weight: 650;
+}
+.dashboard-tabs a[aria-current="page"] { border-color: #ffcf69; color: #ffcf69; }
+.dashboard-bar #preview-link { font-size: .82rem; color: #b4e7ff; }
+.dashboard-bar #end { font-size: .78rem; color: #c4d2e4; }
+@media (max-width: 650px) {
+  .dashboard-top, .dashboard-bar { gap: 4px 8px; }
+  .dashboard-brand { font-size: .95rem; }
+  .dashboard-brand img { width: 33px; height: 31px; }
+  .dashboard-sections a { padding: .42rem .48rem; font-size: .8rem; }
+  .dashboard-tabs a { padding-inline: 7px; font-size: .82rem; }
+  .dashboard-bar #preview-link { margin-block: 4px; }
+}

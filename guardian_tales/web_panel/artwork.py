@@ -9,6 +9,7 @@ BOSSES = Atlas("spritesheets/bosses", "bosses")
 WAR = Atlas("ondemand/guild_war/ui", "guildWar")
 KAMAZONE = Atlas("ondemand/ancientmall/ui", "roguelike_mall_bg")
 EXPEDITION = Atlas("ondemand/expedition/ui", "expedition_bg_forest_night")
+TETIS_ARTIFACTS = Atlas("spritesheets/items", "items")
 TETIS = Atlas("ui/backgrounds/rogue_chess", "bg_rogue_chess_perks_00")
 ELEMENT_FRAMES = {
     "basic": "ic_attribute_no",

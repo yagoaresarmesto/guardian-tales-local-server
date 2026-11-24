@@ -220,13 +220,18 @@ not a public multiplayer service.
 
 ## Inventory editor
 
-From the repository root, open the inventory panel in its own terminal:
+Use **Game modes** and **Inventory** at the top of the dashboard to switch
+between Raid, Tetis and the save editors. While the game backend is running,
+you can browse [Equipment](http://127.0.0.1:17658/equipment) directly.
+
+To keep the dashboard available when you stop the game backend for inventory
+edits, launch it independently from the repository root:
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales inventory-panel --open
 ```
 
-The [inventory panel](http://127.0.0.1:17661/) reads your existing
+This command opens the same dashboard on [the Equipment page](http://127.0.0.1:17661/). It reads your existing
 `local/state/server.sqlite3` and the matching catalog in
 `local/client-data/reference`. Use `--data-dir` and `--reference-dir` if your
 backend uses other directories. At startup the inventory panel checks for its artwork
@@ -259,9 +264,13 @@ encoded download. Existing catalog-bound English tables also work.
 - **Account** edits the local nickname and five-character player tag and keeps the player's guild membership in sync. Enter amounts to add to free gems, paid gems, gold or reserve coffee. Review the resulting balances, then click **Apply** with the game closed and the backend stopped. Free gems, paid gems and gold each have a separate panel limit of 100,000,000. Reserve coffee uses the stamina purchase catalog's storage limit (3,000 in the 3.57.0 pack). Natural coffee recharge continues on its existing timer.
   Under **Summoning**, enter the total you want for **Mileage Ticket**, **Summon Controller** or **Selectable Summon Controller**. You can increase or decrease each balance independently, including setting it to zero or granting controllers you do not currently own.
 
-You can browse while playing. To save edits, close the game, stop the backend,
-then click **Apply**. This writes directly to your working save without creating
-a backup. Restart the backend and reopen the game to use your changes.
+You can browse while playing. To save inventory changes, open the standalone
+dashboard, close Guardian Tales, stop the game backend, then click **Apply**.
+The editor writes directly to your working save without creating a backup.
+Restart the game backend and reopen
+Guardian Tales to use your changes. **Equipment preview** lets you try changes
+to item locks in a temporary copy. **End preview** discards that copy and
+returns you to Equipment.
 
 ## Practice commands
 
@@ -275,10 +284,11 @@ database; restoring the save alone does not activate them. Guild War overrides
 the guild calendars while enabled. Disable its trial before returning to the
 parent Raid/DKA configuration, following the [mode guide](docs/guild-war.md).
 
-Use **Restart backend** at the top of any game-mode tab to reload server code.
-When the dashboard shows **Backend restarted**, reconnect or reopen Guardian Tales.
-The backend uses the same ports, save and PyCharm terminal. The CDN and Android
-bridge run separately.
+Open **Services** on any dashboard page to restart the **Game backend**,
+**Content CDN** or **Inventory server** individually. Each button restarts a
+running service in its existing terminal on its original ports. After updating
+from an older version, relaunch each service once in its usual terminal to
+register its button. Reopen Guardian Tales after a game or content update.
 
 The backend panel uses the inventory editor's two-column layout. Raid, DKA,
 Guild Wars and Kama-ZONE show the saved selection beside the editor. In
@@ -286,8 +296,10 @@ Expedition, select a stage from the table to open its level settings.
 Open the [Tetis tab](http://127.0.0.1:17658/tetis) to edit each season's highest
 cleared floor. Seasons 2 and 3 also have a shared Guardian Tactic Level for
 that season's heroes, total experience and a Season Specialty skill tree.
-Choose a level or enter its exact total experience, allocate skill points, then
-select **Save changes** and reopen the Tetis lobby. Finish any active Tetis
+Use the branch wheel and skill diamonds to edit specialty ranks. You can also
+equip a Guardian spell and edit the levels and selection of season artifacts.
+Spells and artifacts carry over when playing an archived chapter. Select
+**Save changes** and reopen the Tetis lobby. Finish any active Tetis
 battle before applying an edit. These changes are saved in the backend's
 account database. See the [Tetis guide](docs/tetis.md) for the archived
 chapters, floor limits and offline requests.

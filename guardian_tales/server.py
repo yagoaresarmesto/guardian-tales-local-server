@@ -9,7 +9,6 @@ import secrets
 import sqlite3
 import ssl
 import struct
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -19,6 +18,7 @@ from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
 from .protocol import PacketError, decode_frame, encode_wire, frame_length, make_pong
 from .reference import default_cert_dir
+from .service_control import register, restart_worker
 from .snapshots import IMPORTED_MUTATIONS, is_imported
 from .state_lock import StateLock
 from .web_panel.server import WebPanel
@@ -339,6 +339,8 @@ class LocalServer:
 
 
 async def run(args):
+    from .inventory_panel.server import ensure_display_readers
+
     server = LocalServer(
         args.data_dir,
         args.api_port,
@@ -357,6 +359,7 @@ async def run(args):
             args.raid_panel_port,
             art_dir=args.data_dir.parent / "panel-art",
             database=server.data_dir / "server.sqlite3",
+            prepare_inventory=ensure_display_readers,
             restart=lambda: loop.call_soon_threadsafe(restart.set),
         )
         panel.start()
@@ -372,15 +375,24 @@ async def run(args):
     )
     print("Health: http://127.0.0.1:" + str(server.ports["status"]) + "/health", flush=True)
     if panel is not None:
-        print(f"Raid panel: http://127.0.0.1:{panel.server_port}/", flush=True)
+        print(f"Local dashboard: http://127.0.0.1:{panel.server_port}/", flush=True)
     print("Press Ctrl+C to stop.", flush=True)
     try:
         try:
-            await asyncio.wait_for(restart.wait(), timeout=args.run_seconds or None)
+            with register(
+                "game",
+                server.data_dir / "server.sqlite3",
+                server.ports["api"],
+                lambda: loop.call_soon_threadsafe(restart.set),
+            ):
+                await asyncio.wait_for(restart.wait(), timeout=args.run_seconds or None)
         except asyncio.TimeoutError:
             pass
-        if restart.is_set() and panel is not None:
-            return {**server.ports, "raid-panel": panel.server_port}
+        if restart.is_set():
+            return {
+                **server.ports,
+                "raid-panel": panel.server_port if panel else args.raid_panel_port,
+            }
     finally:
         try:
             if panel is not None:
@@ -429,37 +441,12 @@ def main(argv=None):
     try:
         ports = asyncio.run(run(args))
         if ports:
-            # Keep the original terminal attached across restarts on Windows. Each worker
-            # imports the current source in a new interpreter after the old one has closed.
-            again = 75
-            if args.restart_worker:
-                raise SystemExit(again)
-            command = [
-                sys.executable,
-                "-m",
-                "guardian_tales",
+            restart_worker(
                 "serve",
-                *launch_args,
-                "--restart-worker",
-            ]
-            for name, port in ports.items():
-                command.extend([f"--{name}-port", str(port)])
-            while True:
-                worker = subprocess.Popen(command)
-                try:
-                    code = worker.wait()
-                except KeyboardInterrupt:
-                    # Ctrl+C is delivered to the entire foreground console group.
-                    try:
-                        worker.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        worker.terminate()
-                        worker.wait()
-                    raise
-                if code != again:
-                    if code:
-                        raise SystemExit(code)
-                    break
+                launch_args,
+                {f"--{name}-port": port for name, port in ports.items()},
+                args.restart_worker,
+            )
     except KeyboardInterrupt:
         print("Server stopped.")
 

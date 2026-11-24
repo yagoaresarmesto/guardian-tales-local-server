@@ -35,12 +35,14 @@ for slug in TITLES:
 def render_page(slug):
     directory = STATIC / slug
     return render_layout(
-        STATIC / "shared/layout.html",
         directory / "view.html",
         tabs=(("/" + key, key.capitalize()) for key in TITLES),
         active_path="/" + slug,
         title=TITLES[slug],
         slug=slug,
+        base_css="/equipment.css",
+        brand_icon='<img class="brand-icon" src="/brand.png" alt="">',
+        inventory=True,
         stylesheet=stylesheet(slug),
         body_attributes=' class="relic-page"' if slug == "relics" else "",
         preview_controls=(

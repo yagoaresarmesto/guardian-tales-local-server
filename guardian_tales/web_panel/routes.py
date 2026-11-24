@@ -8,20 +8,21 @@ from functools import partial
 from html import escape
 from pathlib import Path
 
-from guardian_tales.panel_common.views import CSS, JS, render_layout
+from guardian_tales.panel_common.views import CSS, DASHBOARD, JS, render_layout
 
 from ..expedition_levels import LevelSelectionChanged
 from ..guild_raid import RaidSelectionChanged
 from ..guild_war_static import WarSelectionChanged
 from ..kamazone import SeasonSelectionChanged
 from ..punchking_static import ArenaSelectionChanged
-from .artwork import BOSSES, ELEMENT_FRAMES, EXPEDITION, KAMAZONE, TETIS, UI, WAR
+from .artwork import BOSSES, ELEMENT_FRAMES, EXPEDITION, KAMAZONE, TETIS, TETIS_ARTIFACTS, UI, WAR
 from .dka import adapter as dka
 from .dka import sprites
 from .expedition import adapter as expedition
 from .guild_war import adapter as guild_war
 from .kamazone import adapter as kamazone
 from .raid import adapter as raid
+from .tetis import sprites as tetis_sprites
 from .tetis.adapter import TetisChanged, TetisEditor
 
 ROOT = Path(__file__).parent
@@ -44,7 +45,7 @@ class Mode:
 
 
 MODES = (
-    Mode("raid", "/", "Raid", "Guild Raid", raid.state, raid.apply, RaidSelectionChanged),
+    Mode("raid", "/raid", "Raid", "Guild Raid", raid.state, raid.apply, RaidSelectionChanged),
     Mode(
         "dka", "/dka", "DKA", "Dungeon Kingdom Arena", dka.state, dka.apply, ArenaSelectionChanged
     ),
@@ -89,11 +90,28 @@ MODES = (
 PAGES = {mode.path: mode for mode in MODES}
 API = {f"/api/{mode.slug}": mode for mode in MODES}
 FILES = {"/panel.css": (ROOT / "shared/panel.css", CSS), "/panel.js": (ROOT / "shared/ui.js", JS)}
+FILES["/dashboard.css"] = (DASHBOARD / "dashboard.css", CSS)
 FILES["/backend.js"] = (ROOT / "shared/backend.js", JS)
+FILES["/tetis-specialty.js"] = (ROOT / "tetis/specialty.js", JS)
+FILES["/services.css"] = (ROOT / "shared/services.css", CSS)
+FILES["/tetis-loadout.js"] = (ROOT / "tetis/loadout.js", JS)
+FILES["/tetis-loadout.css"] = (ROOT / "tetis/loadout.css", CSS)
 for mode in MODES:
     for suffix, mime in (("css", CSS), ("js", JS)):
         FILES[f"/{mode.slug}.{suffix}"] = (mode.directory / f"panel.{suffix}", mime)
 MEDIA = {
+    **{
+        f"/tetis/specialty/{frame}.png": (partial(UI.read, frame=frame), "image/png")
+        for frame in (
+            "frame_deco_perks_00",
+            "frame_perks_on_00",
+            "frame_perks_on_01",
+            "ic_lock_perks_00",
+            "ic_rogue_chess_perks_num_00",
+            "ic_rogue_chess_perks_num_01",
+            "ic_rogue_chess_perks_num_02",
+        )
+    },
     "/tetis/skill-tree.jpg": (TETIS.read, "image/jpeg"),
     "/map.png": (lambda refs: raid.map_image(refs).read_bytes(), "image/png"),
     "/guild-war/fortress.png": (partial(WAR.read, frame="gvg_multi_castle_03.png"), "image/png"),
@@ -112,8 +130,14 @@ MEDIA = {
 
 
 def media_resource(path):
+    artifact = re.fullmatch(r"/tetis/artifacts/(rc_[a-z0-9_]{1,60})\.png", path)
+    if artifact:
+        return partial(TETIS_ARTIFACTS.read, frame=artifact[1]), "image/png"
     if path in MEDIA:
         return MEDIA[path]
+    match = re.fullmatch(r"/tetis/specialty/(nodes|spells)/([a-z0-9_]{1,100})\.png", path)
+    if match:
+        return partial(tetis_sprites.read, atlas=match[1], frame=match[2]), "image/png"
     # Only the frame name varies. The local bosses bundle is fixed.
     match = re.fullmatch(r"/raid/bosses/([a-z0-9_]{1,100})\.png", path)
     if match:
@@ -123,11 +147,14 @@ def media_resource(path):
 
 def render_page(mode, *, show_brand):
     return render_layout(
-        ROOT / "shared/layout.html",
         mode.directory / "view.html",
         tabs=((entry.path, entry.label) for entry in MODES),
         active_path=mode.path,
         title=escape(mode.title),
+        base_css="/panel.css",
+        stylesheet="/" + mode.slug + ".css",
+        preview_controls="",
+        body_attributes="",
         brand_icon='<img class="brand-icon" src="/brand.png" alt="">' if show_brand else "",
         slug=mode.slug,
     )

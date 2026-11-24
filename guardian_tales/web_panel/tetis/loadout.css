@@ -1,0 +1,48 @@
+#tetis-loadout {
+  margin-top: 16px;
+  display: grid;
+  gap: 16px;
+}
+#tetis-loadout[hidden], #tetis-loadout img[hidden] { display: none; }
+.loadout-section { min-width: 0; overflow: hidden; }
+.loadout-note { color: #b8c9df; margin: 15px 18px 12px; }
+.loadout-grid { display: grid; gap: 8px; padding: 0 18px 18px; }
+.loadout-grid.spells { grid-template-columns: repeat(auto-fit, minmax(min(112px, 100%), 1fr)); }
+.loadout-grid.artifacts { grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); }
+#tetis-loadout .spell-card, .artifact-card {
+  border: 1px solid #42546e;
+  border-radius: 7px;
+  background: #1b2b40;
+  color: #e7eff9;
+}
+#tetis-loadout .spell-card {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  grid-template-rows: 44px auto 1fr;
+  gap: 6px;
+  padding: 12px 6px 8px;
+  min-height: 108px;
+  height: auto;
+  white-space: normal;
+  line-height: 1.2;
+}
+#tetis-loadout .spell-card[aria-pressed=true], .artifact-card.equipped { border-color: #ffcf6d; background: #343045; }
+#tetis-loadout .spell-card:disabled { opacity: .66; }
+.spell-card small { align-self: end; color: #bfcadd; }
+.spell-card[aria-pressed=true] small { color: #ffcf6d; }
+.loadout-icon { width: 44px; height: 44px; object-fit: contain; }
+.spell-card .spell-name { grid-row: 2; }
+.artifact-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-areas: "art name name" "level level equip";
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+}
+.artifact-card img { grid-area: art; image-rendering: pixelated; }
+.artifact-card h3 { grid-area: name; font-size: 1rem; margin: 0; }
+.artifact-level { grid-area: level; display: flex; align-items: center; gap: 6px; color: #b8c9df; }
+.artifact-level input { width: 4.7em; min-width: 0; }
+.artifact-equip { grid-area: equip; }

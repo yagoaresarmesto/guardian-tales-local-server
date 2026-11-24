@@ -31,13 +31,34 @@
           <header class="panel-heading"><span class="section-icon stack" aria-hidden="true"></span><h2 id="skills-title">Season specialties</h2>
             <span id="budget"></span></header>
           <div id="skills">
-            <label class="label" for="branch">Skill tree branch</label>
-            <select id="branch"></select>
-            <div id="nodes"></div>
+            <aside class="specialty-sidebar">
+              <div id="branches" role="group" aria-label="Specialty branches">
+                <div class="branch-ring" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                <div id="branch-buttons"></div>
+              </div>
+              <div class="branch-info">
+                <h3 id="branch-name"></h3>
+                <p class="point-title">Season Specialty Points</p>
+                <output id="available-points" aria-label="Unspent specialty points"></output>
+              </div>
+              <div class="tree-actions" aria-label="Specialty actions">
+                <button type="submit" id="save-tree" disabled>Save</button>
+                <button type="button" id="reset-tree" disabled>Reset</button>
+                <button type="button" id="revert-tree" disabled>Revert</button>
+              </div>
+            </aside>
+            <div class="tree-canvas">
+              <div id="board" role="group" aria-labelledby="branch-name">
+                <div id="connections" aria-hidden="true"></div>
+                <div id="nodes"></div>
+              </div>
+              <div id="step-labels" aria-hidden="true"></div>
+            </div>
           </div>
           <p id="no-skills" hidden>This season has no specialty tree.</p>
         </section>
       </div>
+      <section id="tetis-loadout"></section>
     </fieldset>
   </form>
   <div class="status-line">
@@ -45,3 +66,17 @@
     <button type="button" id="refresh">Reload saved progress</button>
   </div>
 </main>
+<dialog id="node-dialog" aria-labelledby="node-title">
+  <div class="node-dialog-head">
+    <img id="node-portrait" alt="" hidden>
+    <div><p id="node-location"></p><h3 id="node-title"></h3></div>
+    <button type="button" id="close-node" aria-label="Close specialty">×</button>
+  </div>
+  <p id="node-description" hidden></p>
+  <div class="rank-controls">
+    <button type="button" id="remove-point" aria-label="Remove a specialty point">−</button>
+    <output id="node-rank" aria-live="polite"></output>
+    <button type="button" id="add-point" aria-label="Add a specialty point">+</button>
+  </div>
+  <p id="node-requirements"></p>
+</dialog>

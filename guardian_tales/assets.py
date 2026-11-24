@@ -6,12 +6,14 @@ import hashlib
 import json
 import mimetypes
 import re
+import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from .recommended_art import missing_recommended
+from .service_control import register, restart_worker
 from .tetis_art import missing_tetis_media
 
 
@@ -215,23 +217,43 @@ def main(argv=None):
         "--reference-dir", type=Path, help="Optional Andras title inputs and Kama-ZONE selection"
     )
     p.add_argument("--run-seconds", type=int, default=0)
-    args = p.parse_args(argv)
+    p.add_argument("--restart-worker", action="store_true", help=argparse.SUPPRESS)
+    launch_args = list(sys.argv[1:] if argv is None else argv)
+    args = p.parse_args(launch_args)
     library = ResourceLibrary(args.resource_root)
     server = ThreadingHTTPServer(
         ("127.0.0.1", args.port), handler_for(library, args.journal, args.reference_dir)
     )
     server.daemon_threads = True
+    timer = None
     if args.run_seconds:
         timer = threading.Timer(args.run_seconds, server.shutdown)
         timer.daemon = True
         timer.start()
     print("Local CDN: manifest-listed resource files:", len(library.files), flush=True)
+    requested = threading.Event()
+    port = server.server_port
+    scope = (
+        args.reference_dir.resolve().parent
+        if args.reference_dir
+        else args.resource_root[0].resolve().parent.parent
+    )
+
+    def restart():
+        requested.set()
+        server.shutdown()
+
     try:
-        server.serve_forever()
+        with register("cdn", scope, port, restart):
+            server.serve_forever()
     except KeyboardInterrupt:
         pass
     finally:
+        if timer:
+            timer.cancel()
         server.server_close()
+    if requested.is_set():
+        restart_worker("assets", launch_args, {"--port": port}, args.restart_worker)
 
 
 if __name__ == "__main__":

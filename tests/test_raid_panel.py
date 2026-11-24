@@ -2,6 +2,7 @@
 """Local browser selection, legacy CLI readback and atomic Raid publication."""
 
 import json
+import os
 import tempfile
 import unittest
 from importlib.util import find_spec
@@ -14,6 +15,7 @@ from urllib.request import Request, urlopen
 
 from guardian_tales import guild_raid, raid_custom, raid_panel, raid_static
 from guardian_tales.reference import ReferenceData
+from guardian_tales.service_control import active_services, directory, register
 from guardian_tales.web_panel.artwork import BOSSES, UI, frame_png
 from tests.test_guild_raid import synthetic_catalog, synthetic_static
 
@@ -164,6 +166,73 @@ class RaidPanelTests(unittest.TestCase):
             self.assertEqual(response.status, 202)
             self.assertEqual(json.load(response), {"restarting": True})
         self.assertTrue(called.wait(1))
+
+    def test_service_restart_checks_scope_origin_and_current_registration(self):
+        db = self.root / "save.sqlite3"
+        self.server.database = db
+        called, other = Event(), Event()
+        endpoint = "/api/services/restart"
+        with (
+            patch.dict(os.environ, {"LOCALAPPDATA": str(self.root / "cache")}),
+            register("inventory", self.root / "unrelated.sqlite3", 11111, other.set),
+            register("cdn", self.root.parent, 12345, other.set),
+        ):
+            foreign = active_services("inventory", self.root / "unrelated.sqlite3")[0][1]
+            with register("inventory", db, 12346, called.set):
+                rows = {
+                    row["id"]: row for row in json.loads(self.call("/api/services"))["services"]
+                }
+                self.assertEqual((rows["cdn"]["port"], rows["inventory"]["port"]), (12345, 12346))
+                self.assertIsNone(rows["game"]["instance"])
+                token = rows["inventory"]["instance"]
+                good = {"id": "inventory", "instance": token}
+                for payload, headers, status in (
+                    ({**good, "instance": foreign}, {}, 409),
+                    ({**good, "id": "cdn"}, {}, 409),
+                    (good, {"Origin": "https://elsewhere.invalid"}, 403),
+                    (good, {"Host": "elsewhere.invalid"}, 403),
+                    (good, {"Content-Type": "text/plain"}, 415),
+                    ({"id": "all", "instance": token}, {}, 400),
+                ):
+                    with (
+                        self.subTest(payload=payload, headers=headers),
+                        self.assertRaises(HTTPError) as error,
+                    ):
+                        self.call(endpoint, payload, **headers)
+                    self.assertEqual(error.exception.code, status)
+                    error.exception.close()
+                self.assertFalse(called.is_set())
+                self.assertEqual(json.loads(self.call(endpoint, good)), {"restarting": True})
+                self.assertTrue(called.wait(2))
+                self.assertFalse(other.is_set())
+            with register("inventory", db, 12346, other.set):
+                running = active_services("inventory", db)
+                self.assertEqual(len(running), 1)
+                self.assertNotEqual(running[0][1], token)
+                with self.assertRaises(HTTPError) as stale:
+                    self.call(endpoint, good)
+                self.assertEqual(stale.exception.code, 409)
+                stale.exception.close()
+                self.assertFalse(other.is_set())
+            self.assertEqual(active_services("inventory", db), [])
+
+    def test_dead_service_lease_is_not_advertised(self):
+        with patch.dict(os.environ, {"LOCALAPPDATA": str(self.root / "cache")}):
+            scope = self.root / "save.sqlite3"
+            folder = directory(scope)
+            folder.mkdir(parents=True)
+            marker = folder / ("game-12345-" + "0" * 32 + ".ready")
+            for suffix in (".ready", ".lock", ".restart"):
+                marker.with_suffix(suffix).touch()
+            self.assertEqual(active_services("game", scope), [])
+            self.assertEqual(list(folder.iterdir()), [])
+
+    def test_service_runs_even_if_dashboard_registration_is_unavailable(self):
+        unavailable = self.root / "file-in-place-of-cache"
+        unavailable.touch()
+        with patch.dict(os.environ, {"LOCALAPPDATA": str(unavailable)}):
+            with register("cdn", self.root, 12345, self.fail):
+                self.assertEqual(active_services("cdn", self.root), [])
 
     def test_optional_brand_is_shared_and_missing_art_does_not_block_the_pages(self):
         self.assertNotIn(b'src="/brand.png"', self.call("/"))

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>$title · Guardian Tales</title>
+  <link rel="stylesheet" href="$base_css">
+  <link rel="stylesheet" href="$stylesheet">
+  <link rel="stylesheet" href="/dashboard.css">
+  <link rel="stylesheet" href="/services.css">
+  <script type="module" src="/${slug}.js"></script>
+  <script type="module" src="/backend.js"></script>
+</head>
+<body$body_attributes>
+<header class="dashboard-header">
+  <div class="dashboard-top">
+    <div class="dashboard-brand">${brand_icon}Guardian Tales</div>
+    <nav class="dashboard-sections" aria-label="Dashboard sections">
+      <a href="/raid"$mode_section>Game modes</a>
+      <a href="/equipment"$inventory_section>Inventory</a>
+    </nav>
+    <div class="backend-control" id="service-controls"></div>
+  </div>
+  <div class="dashboard-bar">
+    <nav class="dashboard-tabs" aria-label="$section_name">
+      $navigation
+    </nav>
+    $preview_controls
+  </div>
+</header>
+$body
+</body>
+</html>

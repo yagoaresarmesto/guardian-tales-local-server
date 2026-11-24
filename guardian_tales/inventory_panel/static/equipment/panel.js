@@ -10,7 +10,6 @@ const hammerEditor = preview ? null : quantityEditor($("hammer-editor"), {
 const editor = preview ? null : equipmentOptions(load, hammerEditor.setWritable);
 document.body.classList.toggle("live-equipment", !preview);
 if (preview) {
-  document.querySelector(".context").textContent = "Save preview";
   document.querySelector(".temporary").textContent = "Temporary save copy";
   $("end").hidden = false;
   $("preview-link").textContent = "Game save editor";
@@ -270,10 +269,9 @@ $("lock").onclick = async () => {
 $("end").onclick = async () => {
   if (!confirm("Close this preview and discard its temporary changes?")) return;
   try {
-    const res = await fetch("/api/close", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
+    const res = await fetch("/api/preview/close", {method: "POST", headers: {"Content-Type": "application/json"}, body: "{}"});
     if (!res.ok) throw new Error("Could not close the preview.");
-    $("workspace").hidden = true; $("end").disabled = true;
-    note("Preview closed. Launch it again to start a fresh session.");
+    location.assign("/equipment");
   } catch (error) { note(error.message, true); }
 };
 watchGridPageSize($("tiles"), size => {
