@@ -12,6 +12,13 @@ export function image(url) {
   return img;
 }
 
+export function sizeItemSprite(img, maxScale = 1) {
+  // A 45px sprite fills its allotted space. Keep tiny artwork legible on narrow cards.
+  const nativeEdge = Math.max(img.naturalWidth, img.naturalHeight);
+  const scale = Math.max(0.55, maxScale * Math.min(1, nativeEdge / 45));
+  img.style.setProperty("--sprite-scale", String(scale));
+}
+
 // Use the same labels and counts for the desktop rail and compact selector.
 export function renderTypeFilters(rail, select, filters) {
   rail.replaceChildren();

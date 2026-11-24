@@ -98,8 +98,8 @@ h1 { font:italic 900 clamp(2.2rem,3.5vw,3.4rem)/1 "Barlow Condensed","Arial Narr
   position: absolute;
   inset: 0;
   margin: auto;
-  width: calc(var(--art-size, 100%) * var(--gear-scale, 1));
-  height: calc(var(--art-size, 100%) * var(--gear-scale, 1));
+  width: calc(var(--art-size, 100%) * var(--sprite-scale, 1));
+  height: calc(var(--art-size, 100%) * var(--sprite-scale, 1));
   object-fit: contain;
   image-rendering: pixelated;
 }

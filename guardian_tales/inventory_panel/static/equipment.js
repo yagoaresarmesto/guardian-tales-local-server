@@ -1,4 +1,4 @@
-import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
 import { equipmentOptions } from "/equipment-options.js";
 import { quantityEditor, quantityFormat } from "/quantity-editor.js";
 
@@ -43,13 +43,7 @@ function art(item, className) {
     const img = image("/icon/" + item.spec + ".png");
     img.hidden = true;
     img.onload = () => {
-      if (types.has(item.kind)) {
-        // A 45px sword fills the slot. Give smaller sprites some breathing room
-        // while keeping even the smallest claws legible on compact cards.
-        const nativeEdge = Math.max(img.naturalWidth, img.naturalHeight);
-        const scale = Math.max(0.55, Math.min(1, nativeEdge / 45));
-        img.style.setProperty("--gear-scale", String(scale));
-      }
+      if (types.has(item.kind)) sizeItemSprite(img);
       fallback.hidden = true;
       img.hidden = false;
     };

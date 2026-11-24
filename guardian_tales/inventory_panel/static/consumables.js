@@ -1,4 +1,4 @@
-import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
 
 import { quantityEditor, quantityFormat as format } from "/quantity-editor.js";
 
@@ -16,10 +16,11 @@ const editor = quantityEditor($("editor"), {
 });
 
 function art(item, container) {
-  const fallback = () => container.replaceChildren(el("span", "fallback", item.name.split(/\s+/).slice(0,2).map(w => w[0]).join("")));
-  if (!hasIcons) { fallback(); return; }
+  const fallback = () => el("span", "fallback", item.name.split(/\s+/).slice(0,2).map(w => w[0]).join(""));
+  if (!hasIcons) { container.replaceChildren(fallback()); return; }
   const icon = image("/icon/" + item.spec + ".png");
-  icon.onerror = fallback;
+  icon.onload = () => sizeItemSprite(icon, 0.8);
+  icon.onerror = () => icon.replaceWith(fallback());
   container.replaceChildren(icon);
 }
 
