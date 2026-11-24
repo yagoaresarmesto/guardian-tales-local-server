@@ -99,8 +99,8 @@ function stepButton(label, step, input, name) {
   button.type = "button";
   button.setAttribute("aria-label", (step > 0 ? "Increase " : "Decrease ") + name);
   button.onclick = () => {
-    const value = Number.isFinite(input.valueAsNumber) ? input.valueAsNumber : 0;
-    input.value = Math.max(0, Math.min(state.maxLevel, value + step));
+    if (step > 0) input.stepUp();
+    else input.stepDown();
     input.dispatchEvent(new Event("input", {bubbles: true}));
   };
   return button;
@@ -130,15 +130,46 @@ function renderSkills() {
     const down = stepButton("−", -1, input, name), up = stepButton("+", 1, input, name);
     const controls = el("div", "level-control");
     const stepper = el("div", "stepper"); stepper.append(down, input, up);
-    controls.append(el("span", "level-label", "Level"), stepper);
+    const range = el("span", "level-label");
+    controls.append(range, stepper);
     row.append(icon, text, cost, controls);
     group.panel.append(row);
-    fields.set(skill.id, {input, bonus, change, down, up, cost, costText});
+    const field = {input, range, level: skill.level, bonus, change, down, up, cost, costText};
+    fields.set(skill.id, field);
+    input.oninput = () => {
+      if (input.validity.valid) field.level = input.valueAsNumber;
+      show("message"); edit();
+    };
+    function finishTyping() {
+      if (input.validity.valid) return;
+      const typed = input.valueAsNumber;
+      field.level = Number.isFinite(typed)
+        ? Math.max(Number(input.min), Math.min(Number(input.max), Math.round(typed)))
+        : field.level;
+      input.value = field.level;
+      edit();
+    }
+    input.onblur = finishTyping;
+    input.onkeydown = event => {
+      if (event.key === "Enter" && !input.validity.valid) {
+        event.preventDefault();
+        finishTyping();
+      }
+    };
   }
   if (groups.size) selectClass(groups.has(activeGroup) ? activeGroup : groups.keys().next().value);
 }
 
-function displayLevel(skill, field) {
+function displayLevel(skill, field, total, bounds) {
+  const {input, level} = field;
+  const siblings = total - level;
+  // Keep corrective steps available when a legacy allocation is already out of balance.
+  const min = Math.max(0, Math.min(level, bounds.min - siblings));
+  const max = Math.min(state.maxLevel, Math.max(level, bounds.max - siblings));
+  input.min = min; input.max = max;
+  field.range.textContent = "Level · " + (min === max ? min : min + "–" + max);
+  field.down.disabled = level <= min;
+  field.up.disabled = level >= max;
   const value = field.input.valueAsNumber, valid = field.input.validity.valid;
   const saved = skill.bonuses?.[skill.level], projected = skill.bonuses?.[value];
   field.bonus.textContent = valid && projected != null
@@ -147,34 +178,45 @@ function displayLevel(skill, field) {
   const difference = valid && projected != null && saved != null ? projected - saved : 0;
   field.change.textContent = difference ? " (" + (difference > 0 ? "+" : "") + number.format(difference) + "%)" : "";
   field.change.classList.toggle("decrease", difference < 0);
-  field.down.disabled = valid && value === 0;
-  field.up.disabled = valid && value === state.maxLevel;
   const cost = valid ? state.levelCosts?.[value] : null;
   field.costText.textContent = cost != null ? number.format(cost) : "—";
   field.cost.title = cost != null ? "Next level: " + number.format(cost) + " mastery points" : (value === state.maxLevel ? "Maximum level" : "Next level cost unavailable");
   field.cost.setAttribute("aria-label", field.cost.title);
 }
 
+function classBounds(totals, id) {
+  const peers = [...totals.keys()].filter(key => key !== id).map(key => totals.get(key));
+  // As in mastery.class_limits, the lowest total unlocks the next ten-level tier.
+  const tier = 10;
+  return {
+    min: (Math.ceil(Math.max(...peers) / tier) - 1) * tier,
+    max: (Math.floor(Math.min(...peers) / tier) + 1) * tier,
+  };
+}
+
 function edit() {
   clearTimeout(timer);
   const request = ++generation;
   previewBody = null;
-  const levels = {}, totals = new Map();
+  const levels = {}, totals = new Map(), bounds = new Map();
+  for (const skill of state.skills) {
+    const level = fields.get(skill.id).level;
+    levels[skill.id] = level;
+    totals.set(skill.group, (totals.get(skill.group) ?? 0) + level);
+  }
+  for (const [id, group] of groups) {
+    bounds.set(id, classBounds(totals, id));
+    group.total.textContent = totals.get(id) + " / " + group.count * state.maxLevel;
+  }
   let dirty = false, valid = true, anyLevel = false;
   for (const skill of state.skills) {
     const field = fields.get(skill.id), input = field.input, value = input.valueAsNumber;
-    displayLevel(skill, field);
+    displayLevel(skill, field, totals.get(skill.group), bounds.get(skill.group));
     const changed = value !== skill.level;
     input.classList.toggle("modified", changed);
     dirty ||= changed;
     valid &&= input.validity.valid;
     anyLevel ||= value > 0;
-    levels[skill.id] = value;
-    totals.set(skill.group, (totals.get(skill.group) ?? 0) + value);
-  }
-  for (const [id, group] of groups) {
-    const value = totals.get(id), maximum = group.count * state.maxLevel;
-    group.total.textContent = (Number.isFinite(value) ? value : "—") + " / " + maximum;
   }
   $("review").hidden = !dirty && !stale;
   $("reset").disabled = !anyLevel && valid;
@@ -186,11 +228,7 @@ function edit() {
   show("excess");
   if (!stale) show("issue");
   buttons();
-  if (stale || !dirty) return;
-  if (!valid) {
-    show("issue", "Enter a whole level from 0 to " + state.maxLevel + " for each skill.");
-    return;
-  }
+  if (stale || !dirty || !valid) return;
   const body = JSON.stringify({version: state.version, levels});
   timer = setTimeout(async () => {
     try {
@@ -226,12 +264,12 @@ async function load() {
   } catch (error) { show("loading", error.message); }
 }
 
-$("skills").oninput = () => { show("message"); edit(); };
 for (const id of ["reset", "max", "undo"]) {
   $(id).onclick = () => {
     for (const skill of state.skills) {
       const targets = {reset: 0, max: state.maxLevel, undo: skill.level};
-      fields.get(skill.id).input.value = targets[id];
+      const field = fields.get(skill.id);
+      field.level = targets[id]; field.input.value = field.level;
     }
     show("message"); edit();
   };
