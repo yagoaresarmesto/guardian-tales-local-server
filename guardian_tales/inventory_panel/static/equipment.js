@@ -105,7 +105,7 @@ function drawDetails() {
   $("detail-level").textContent = item.level != null ? "Lv. " + item.level : "";
   $("detail-name").textContent = item.name;
   $("facts").replaceChildren(
-    fact("Catalog ID", item.spec), fact("Limit breaks", item.breaks),
+    fact("Catalog ID", item.spec), ...(!item.progression ? [fact("Limit breaks", item.breaks)] : []),
     fact("Equipped", item.equipped ? "Yes" : "No"),
     fact("Protection", item.locked ? "Locked" : "Unlocked"),
   );

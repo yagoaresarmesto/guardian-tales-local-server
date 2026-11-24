@@ -27,6 +27,20 @@ def valid_option(option):
     )
 
 
+def saved_option_pair(option):
+    """Read both locally generated pairs and native imported option rows."""
+    if isinstance(option, dict) and option.keys() == {
+        "OptionId",
+        "Level",
+        "Locked",
+        "OptionSource",
+    }:
+        if type(option["Locked"]) is not bool or not integer(option["OptionSource"], 0):
+            return None
+        option = {"OptionId": option["OptionId"], "Level": option["Level"]}
+    return option if valid_option(option) else None
+
+
 def load_catalog(references):
     path = references.directory / "weapon_engrave_mock_catalog.json"
     if not path.is_file() or path.stat().st_size > 1024 * 1024:
@@ -86,8 +100,7 @@ def saved_engrave_bonus(target, references):
         not spec
         or not isinstance(options, list)
         or len(options) != 1
-        or not valid_option(options[0])
-        or options[0] not in spec["options"]
+        or saved_option_pair(options[0]) not in spec["options"]
         or not integer(target.get("EngraveCeiling"), catalog["max_ceiling"], 1)
     ):
         raise ValueError("Saved engraving is outside the supported public option tiers")

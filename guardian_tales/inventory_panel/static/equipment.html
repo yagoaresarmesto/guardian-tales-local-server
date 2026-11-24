@@ -37,6 +37,15 @@
             <dl id="facts"></dl>
             <button type="button" id="lock" hidden></button>
             <section id="option-editor" hidden aria-label="Equipment options">
+              <fieldset id="weapon-progression" hidden>
+                <legend>Weapon upgrades</legend>
+                <label>Limit breaks <select id="break-count"></select></label>
+                <div id="engraving-controls" hidden>
+                  <label>Engravings <select id="engrave-count"></select></label>
+                  <label>Engraving bonus <select id="engrave-tier"></select></label>
+                  <p id="engrave-hint" class="sub-range" hidden></p>
+                </div>
+              </fieldset>
               <details id="basic-options" open><summary>Basic options</summary>
                 <div id="basic-stats"></div>
               </details>

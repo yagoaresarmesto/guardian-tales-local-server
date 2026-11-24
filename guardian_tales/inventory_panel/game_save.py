@@ -55,8 +55,8 @@ class GameSaveEditor:
         return profile
 
     @staticmethod
-    def option_version(user, item, field):
-        values = [user["Id"], item["Id"], item["ItemId"], item.get(field)]
+    def option_version(user, item, *fields):
+        values = [user["Id"], item["Id"], item["ItemId"], *(item.get(field) for field in fields)]
         return hashlib.sha256(json.dumps(values, sort_keys=True).encode()).hexdigest()
 
     def write(self, body):

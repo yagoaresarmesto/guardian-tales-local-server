@@ -13,8 +13,10 @@ from guardian_tales.village import MAX_REVISION, integer
 from guardian_tales.weapon_options import valid_options
 
 from .game_save import GameSaveEditor
+from .weapon_progression import WeaponProgression
 
 RANDOM = SystemRandom()
+EDIT_FIELDS = ("Options", "LimitBreaks", "EngraveCeiling", "EngraveOptions", "Experience", "Amount")
 ELEMENTS = {"none": "Basic", "ice": "Water", "darkness": "Dark"}
 SCALES = {
     "HpScale": ("HP", "HpScaleAdd"),
@@ -44,6 +46,16 @@ def effect_display(effect, buffs):
         name, field = effect["ResistType"] + " debuff resistance", "ResistAdd"
     elif kind == "WeaponDamageReduction":
         name, field, unit, multiplier = "Damage reduction", "DamageReductionAdd", "", 1
+    elif effect.get("ConditionType") == "EngraveOptionExclusive" and kind in (
+        "CriticalChanceUp",
+        "CriticalResistanceUp",
+    ):
+        name, field = (
+            ("Critical hit chance", "CriticalUpAdd")
+            if kind == "CriticalChanceUp"
+            else ("Critical hit resistance", "CriticalResistanceAdd")
+        )
+        multiplier = 1
     elif (
         kind == "BuffOnKill"
         and effect.get("BuffId") in buffs
@@ -189,9 +201,13 @@ class EquipmentOptionEditor(GameSaveEditor):
         super().__init__(database)
         self.catalog = catalog
         tables = records(decode(catalog.refs.read_bytes("static_data_get.bin")))[1]
+        self.progression = WeaponProgression(tables)
         buffs = {row["Id"]: row for row in json.loads(tables["buffs"][1])}
         weapons = {i: s for i, s in catalog.specs.items() if s.get("Type") == "weapon"}
         ids = {o["OptionId"] for s in weapons.values() for o in s.get("Options") or []}
+        ids.update(
+            o["OptionId"] for s in weapons.values() for o in s.get("EngraveRandomOptions") or []
+        )
         self.effects = {
             o["Id"]: effect_display(o, buffs)
             for o in json.loads(tables["options"][1])
@@ -225,7 +241,10 @@ class EquipmentOptionEditor(GameSaveEditor):
                     equipped=ident in equipped,
                     breaks=item.get("LimitBreaks") or 0,
                     options=item.get("Options") or [],
-                    version=self.option_version(user, item, "Options"),
+                    version=self.option_version(user, item, *EDIT_FIELDS),
+                    progression=(
+                        self.progression.choices(item, spec) if ident not in pending else None
+                    ),
                     unavailable=unavailable(item, used[key], ident in pending),
                     **self.catalog.equipment.facts(item, spec, training),
                 )
@@ -240,14 +259,13 @@ class EquipmentOptionEditor(GameSaveEditor):
         )
 
     def request(self, body, *, roll=False):
-        keys = {"id", "version", "revision"} if roll else {"id", "version", "revision", "options"}
-        if isinstance(body, dict) and "lockedValues" in body:
-            keys.add("lockedValues")
-        if roll and isinstance(body, dict) and "group" in body:
-            keys.add("group")
+        required = {"id", "version", "revision"}
+        optional = {"lockedValues", "group"} if roll else {"lockedValues", "options", "progression"}
         if (
             not isinstance(body, dict)
-            or set(body) != keys
+            or not required <= body.keys() <= required | optional
+            or (not roll and not ({"options", "progression"} & body.keys()))
+            or (not roll and "lockedValues" in body and "options" not in body)
             or (roll and body.get("group", "sub") not in ("basic", "sub"))
             or not integer(body["id"], minimum=1)
             or not integer(body["revision"], MAX_REVISION)
@@ -270,13 +288,35 @@ class EquipmentOptionEditor(GameSaveEditor):
         if (
             len(matches) != 1
             or body["revision"] > user["Cas"]
-            or self.option_version(user, matches[0], "Options") != body["version"]
+            or self.option_version(user, matches[0], *EDIT_FIELDS) != body["version"]
         ):
             return 409, {"error": "This equipment changed. Review its current options again."}
         item = matches[0]
         spec = self.specs.get(item["ItemId"])
         pending = item["Id"] in self.pending_items(db, "weapon_option_proposals")
-        reason = unavailable(item, spec, pending)
+        if pending:
+            raise ValueError("This copy has a pending in-game option change.")
+        changes = {}
+        if "progression" in body:
+            changes = self.progression.changes(
+                item, self.catalog.specs.get(item["ItemId"], {}), body["progression"]
+            )
+        if roll or "options" in body:
+            result = self.edit_options(item, spec, body, roll=roll)
+            if roll:
+                return 200, {"options": result}
+            if result != (item.get("Options") or []):
+                changes["Options"] = result
+        if changes:
+            if not integer(user["Cas"], MAX_REVISION - 1):
+                raise ValueError("The game save revision has reached its limit.")
+            item.update(changes)
+            save_profile(db, profile)
+        return 200, {"revision": user["Cas"]}
+
+    @staticmethod
+    def edit_options(item, spec, body, *, roll):
+        reason = unavailable(item, spec, False)
         if reason:
             raise ValueError(reason)
         rows = item.get("Options") or []
@@ -287,8 +327,8 @@ class EquipmentOptionEditor(GameSaveEditor):
         )
         if roll:
             if body.get("group") == "basic":
-                return 200, {"options": roll_basics(spec, locked)}
-            return 200, {"options": generate(spec, rows, locked)}
+                return roll_basics(spec, locked)
+            return generate(spec, rows, locked)
         levels = read_levels(spec, body["options"])
         if not legal_levels(spec, levels):
             raise ValueError("Choose allowed effects, count and values for this exact item.")
@@ -303,9 +343,4 @@ class EquipmentOptionEditor(GameSaveEditor):
             for i in spec["options"]
             if i in levels and i not in by_id
         )
-        if new != rows:
-            if not integer(user["Cas"], MAX_REVISION - 1):
-                raise ValueError("The game save revision has reached its limit.")
-            item["Options"] = new
-            save_profile(db, profile)
-        return 200, {"revision": user["Cas"]}
+        return new

@@ -3,6 +3,10 @@
 .live-equipment .hero-art { width:86px; height:86px; }
 .live-equipment .item-info { padding-top:12px; }
 #option-editor { border-top:1px solid var(--line); padding-top:10px; }
+#weapon-progression { min-width:0; margin:0 0 12px; padding:4px 9px 9px; border:1px solid var(--line); border-radius:5px; }
+#weapon-progression legend { padding:0 4px; font-size:.85rem; font-weight:650; }
+#weapon-progression label { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:8px; margin-top:6px; font-size:.83rem; }
+#weapon-progression select { justify-self:end; max-width:100%; border:1px solid #72849a; border-radius:4px; }
 #option-editor summary { cursor:pointer; font-size:.83rem; color:var(--muted); }
 #basic-stats { margin-top:7px; }
 .option-heading { display:flex; gap:8px; align-items:center; justify-content:space-between; }

@@ -5,6 +5,11 @@ const api = "/api/game/equipment";
 export function equipmentOptions(reload) {
   let catalog, item, rules, before = {}, draft = {}, savedLocks = new Set(), locked = new Set();
   let writable = false, busy = false, check = 0;
+  const progression = weaponProgression(() => { message(); state(); }, format, name);
+
+  function optionsChanged() {
+    return Object.keys(rules?.options ?? {}).some(id => draft[id] !== before[id] || locked.has(id) !== savedLocks.has(id));
+  }
 
   function format(id, level) {
     if (level == null) return "Not selected";
@@ -46,11 +51,12 @@ export function equipmentOptions(reload) {
     const optional = entries.filter(([,r]) => r.probability < 1).map(([id]) => id);
     const count = Object.keys(draft).length;
     const initialized = required.every(id => draft[id] != null);
-    const changed = entries.some(([id]) => draft[id] !== before[id] || locked.has(id) !== savedLocks.has(id));
+    const changed = optionsChanged();
     const editable = !!rules && !item.unavailable;
     const allowed = rules?.counts ?? [];
     $("basic-options").hidden = !required.length;
-    $("apply-options").disabled = busy || !writable || !editable || !initialized || !allowed.includes(count) || !changed;
+    const invalid = changed && (!editable || !initialized || !allowed.includes(count));
+    $("apply-options").disabled = busy || !writable || invalid || (!changed && !progression.changes());
     $("roll-count").textContent = editable && optional.length ? optional.filter(id => draft[id] != null).length + " selected" : "";
     const subCounts = allowed.map(n => n - required.length);
     let hint = item.unavailable;
@@ -114,13 +120,19 @@ export function equipmentOptions(reload) {
     before=Object.fromEntries(item.options.map(o=>[o.OptionId,o.Level])); draft={...before};
     savedLocks=new Set(item.options.filter(o=>o.Locked).map(o=>String(o.OptionId)));
     locked=new Set(savedLocks);
+    progression.select(item);
     message(); draw();
   }
   async function apply() {
     if (!item || busy || $("apply-options").disabled) return;
     busy=true; ++check; $("workspace").inert=true; state();
-    const body={id:item.id,version:item.version,revision:catalog.revision,options:draft};
-    body.lockedValues=Object.fromEntries(Array.from(locked,id=>[id,draft[id]]));
+    const body={id:item.id,version:item.version,revision:catalog.revision};
+    if (optionsChanged()) {
+      body.options = draft;
+      body.lockedValues = Object.fromEntries(Array.from(locked,id=>[id,draft[id]]));
+    }
+    const upgrades = progression.changes();
+    if (upgrades) body.progression = upgrades;
     try {
       const res=await fetch(api,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
       const result=await res.json();
@@ -137,4 +149,67 @@ export function equipmentOptions(reload) {
     load(data) { catalog=data; ++check; access(data.writable); },
     select,
   };
+}
+
+function weaponProgression(onChange, format, name) {
+  const breaks = $("break-count"), count = $("engrave-count"), tier = $("engrave-tier");
+  let item, rules, engraving;
+
+  function choices(select, values, label, selected) {
+    select.replaceChildren(...values.map(value => new Option(label(value), value)));
+    select.value = values.includes(selected) ? selected : values[0];
+    select.disabled = values.length <= 1;
+  }
+
+  function drawTier() {
+    const target = Number(count.value);
+    const current = target === engraving.count;
+    const levels = current ? [engraving.level] : engraving.tiers[target];
+    const label = value => value ? name(engraving.optionId) + " · " + format(engraving.optionId, value) : "Not engraved";
+    choices(tier, levels, label, Number(tier.value));
+  }
+
+  function drawEngraving() {
+    $("engraving-controls").hidden = !engraving;
+    if (!engraving) return;
+    const maxBreaks = Number(breaks.value) === rules.maxBreaks;
+    const targets = maxBreaks ? Object.keys(engraving.tiers).map(Number) : [];
+    choices(count, [engraving.count, ...targets], n => n + " / " + engraving.maxCount, Number(count.value));
+    drawTier();
+    const hint = !maxBreaks ? "Reach maximum limit breaks to engrave this weapon."
+      : !engraving.enoughExperience ? "Level up this weapon to unlock engraving."
+      : engraving.locked ? "This engraving option is locked."
+      : engraving.level === engraving.highest || engraving.count === engraving.maxCount ? "Engraving complete."
+      : "";
+    $("engrave-hint").textContent = hint;
+    $("engrave-hint").hidden = !hint;
+  }
+
+  function select(row) {
+    item = row;
+    rules = row?.progression;
+    $("weapon-progression").hidden = !rules;
+    if (!rules) return;
+    const values = Array.from({length: rules.maxBreaks - row.breaks + 1}, (_, i) => row.breaks + i);
+    choices(breaks, values, n => n + " / " + rules.maxBreaks, row.breaks);
+    engraving = rules.engraving;
+    count.replaceChildren();
+    tier.replaceChildren();
+    drawEngraving();
+  }
+
+  function changes() {
+    if (!rules) return null;
+    const result = {};
+    if (Number(breaks.value) !== item.breaks) result.breaks = Number(breaks.value);
+    if (engraving && Number(count.value) !== engraving.count) {
+      result.engraving = {count: Number(count.value), level: Number(tier.value)};
+    }
+    return Object.keys(result).length ? result : null;
+  }
+
+  breaks.onchange = () => { drawEngraving(); onChange(); };
+  count.onchange = () => { drawTier(); onChange(); };
+  tier.onchange = onChange;
+  return { select, changes };
 }

@@ -283,6 +283,9 @@ class WeaponEngraveTests(VillageFixture, unittest.TestCase):
         self.write_other_catalogs()
         self.call(self.request)
         before = self.store.account.profile()
+        # Imported clients also retain native metadata on the engraving row.
+        self.target(before)["EngraveOptions"][0].update(OptionSource=0, Locked=False)
+        self.save_profile(before)
         request = {"TargetWeaponId": 1, "SourceItems": {"60": 10}, "discountBuff": False}
         self.call(request, "/item/enhance-weapon", 162)
         expected = copy.deepcopy(before)
