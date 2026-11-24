@@ -16,6 +16,7 @@ LIMIT_BREAK_TYPES = {
     "staff",
     "gauntlet",
     "claw",
+    "shield",
     "accessory",
 }
 
@@ -71,15 +72,15 @@ class WeaponProgression:
             return None
         if (saved or count) and breaks != self.max_breaks:
             return None
-        accessory = spec["WeaponType"] == "accessory"
-        engraving = None if accessory else self.engraving_choices(item, spec, count, saved)
+        supports_engraving = spec["WeaponType"] not in {"shield", "accessory"}
+        engraving = self.engraving_choices(item, spec, count, saved) if supports_engraving else None
         result = {"maxBreaks": self.max_breaks, "engraving": engraving}
         # An existing engraving must match the exact item's catalog before it earns the bonus.
         if engraving or not (saved or count):
             levels = self.level_targets(base, spec.get("Rarity"), breaks, engraving)
             if levels:
                 result["levels"] = levels
-        if accessory and breaks == self.max_breaks:
+        if not supports_engraving and breaks == self.max_breaks:
             cap = result.get("levels", {}).get("byBreaks", {}).get(breaks)
             if cap is None or item["Experience"] >= self.thresholds[cap - 2]:
                 return None

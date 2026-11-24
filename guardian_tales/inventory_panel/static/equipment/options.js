@@ -162,6 +162,12 @@ export function equipmentOptions(reload, onAccess) {
   };
 }
 
+const upgradeHeadings = {shield: "Shield upgrades", accessory: "Accessory upgrades"};
+
+export function showLimitBreakFact(item) {
+  return !item.progression || (Object.hasOwn(upgradeHeadings, item.kind) && item.breaks === item.progression.maxBreaks);
+}
+
 function weaponProgression(onChange, format, name) {
   const breaks = $("break-count"), count = $("engrave-count"), tier = $("engrave-tier");
   const maxLevel = $("max-level");
@@ -220,8 +226,8 @@ function weaponProgression(onChange, format, name) {
     rules = row?.progression;
     $("weapon-progression").hidden = !rules;
     if (!rules) return;
-    $("break-label").hidden = row.kind === "accessory" && row.breaks === rules.maxBreaks;
-    $("upgrades-heading").textContent = row.kind === "accessory" ? "Accessory upgrades" : "Weapon upgrades";
+    $("break-label").hidden = showLimitBreakFact(row);
+    $("upgrades-heading").textContent = upgradeHeadings[row.kind] ?? "Weapon upgrades";
     const values = Array.from({length: rules.maxBreaks - row.breaks + 1}, (_, i) => row.breaks + i);
     choices(breaks, values, n => n + " / " + rules.maxBreaks, row.breaks);
     engraving = rules.engraving;

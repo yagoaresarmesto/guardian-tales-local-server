@@ -33,6 +33,7 @@ def prepare_inventory(root):
                 Id=8, Name="limitbreak_hammer_epic", Type="limitbreakhammer", Rarity=4, MaxCount=6
             ),
             dict(Id=9, Name="hammer_box", Type="gachaitem"),
+            dict(Id=10, Name="test_shield", Type="weapon", WeaponType="shield", Rarity=4),
             dict(Id=70014, Name="spiritStone", Type="goods"),
             dict(
                 Id=110007,
@@ -668,11 +669,14 @@ class InventoryPanelTests(unittest.TestCase):
             ring, sword = user["ItemWeapons"]
             ring["LimitBreaks"] = 3
             myth = dict(sword, Id=99, ItemId=50)
-            user["ItemWeapons"].append(myth)
+            shield = dict(ring, Id=100, ItemId=10, LimitBreaks=1, Options=None)
+            user["ItemWeapons"].extend([myth, shield])
             db.execute("UPDATE local_account SET profile=?", (json.dumps(original),))
 
         for item, upgrades, level in [
             (ring, {}, 109),
+            (shield, {}, 103),
+            (shield, dict(breaks=3), 109),
             (sword, dict(breaks=3, engraving=dict(count=1, level=9)), 124),
             (myth, dict(breaks=3), 129),
             (myth, dict(engraving=dict(count=1, level=9)), 144),
@@ -681,6 +685,8 @@ class InventoryPanelTests(unittest.TestCase):
             state = self.call(path)
             row = next(r for r in state["rows"] if r["id"] == item["Id"])
             changes = dict(upgrades)
+            if item is shield:
+                self.assertIsNone(row["progression"]["engraving"])
             if level:
                 targets = row["progression"]["levels"]
                 offered = (
@@ -708,6 +714,8 @@ class InventoryPanelTests(unittest.TestCase):
             user["Cas"] += 1
             saved = next(r for r in self.call(path)["rows"] if r["id"] == item["Id"])
             self.assertEqual(saved["level"], level or 144)
+            if item is shield and level == 109:
+                self.assertIsNone(saved["progression"])
         with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
             self.assertEqual(
                 json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), original

@@ -1,5 +1,5 @@
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
-import { equipmentOptions } from "/equipment-options.js";
+import { equipmentOptions, showLimitBreakFact } from "/equipment-options.js";
 import { quantityEditor, quantityFormat } from "/quantity-editor.js";
 
 const preview = location.pathname === "/equipment/preview";
@@ -129,7 +129,7 @@ function drawDetails() {
     return;
   }
   $("facts").replaceChildren(
-    fact("Catalog ID", item.spec), ...(!item.progression || (item.kind === "accessory" && item.breaks === item.progression.maxBreaks) ? [fact("Limit breaks", item.breaks)] : []),
+    fact("Catalog ID", item.spec), ...(showLimitBreakFact(item) ? [fact("Limit breaks", item.breaks)] : []),
     fact("Equipped", item.equipped ? "Yes" : "No"),
     fact("Protection", item.locked ? "Locked" : "Unlocked"),
   );
