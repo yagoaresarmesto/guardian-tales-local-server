@@ -1,4 +1,4 @@
-import { $, el, maxSubOptions } from "/inventory-dom.js";
+import { $, el, maxSelectedOptions } from "/inventory-dom.js";
 
 const api = "/api/game/equipment";
 
@@ -6,7 +6,8 @@ export function equipmentOptions(reload, onAccess) {
   let catalog, item, rules, before = {}, draft = {}, savedLocks = new Set(), locked = new Set();
   let writable = false, busy = false, check = 0;
   const progression = weaponProgression(() => { message(); state(); }, format, name);
-  const refreshMaxSubOptions = maxSubOptions($("max-sub-options"), $("sub-stats"));
+  const refreshMaxBasicOptions = maxSelectedOptions($("max-basic-options"), $("basic-stats"));
+  const refreshMaxSubOptions = maxSelectedOptions($("max-sub-options"), $("sub-stats"));
 
   function optionsChanged() {
     return Object.keys(rules?.options ?? {}).some(id => draft[id] !== before[id] || locked.has(id) !== savedLocks.has(id));
@@ -63,6 +64,7 @@ export function equipmentOptions(reload, onAccess) {
     const cap = Math.max(...subCounts);
     const selected = optional.filter(id => draft[id] != null).length;
     $("sub-options").hidden = !optional.length;
+    refreshMaxBasicOptions();
     refreshMaxSubOptions();
     $("roll-count").textContent = editable && optional.length ? selected + " / " + cap + " selected" : "";
     let hint = item.unavailable;
@@ -77,8 +79,8 @@ export function equipmentOptions(reload, onAccess) {
     const required = rule.probability === 1;
     const row = el("div","sub-row"), stat = el("div","stat-label"), label = el("label","",name(id)), select = el("select");
     label.htmlFor = select.id = "equipment-option-" + id;
+    select.dataset.optionLevel = "";
     if (!required) {
-      select.dataset.subLevel = "";
       select.add(new Option(format(id,null),""));
     } else if (draft[id] == null) {
       const prompt = new Option("Choose a value","");

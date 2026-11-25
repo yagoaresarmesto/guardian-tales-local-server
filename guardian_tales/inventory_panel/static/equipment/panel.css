@@ -71,7 +71,9 @@
 #lock { padding: 9px 10px; border: 1px solid #748aa455; border-radius: 4px; background: #263b54; font-size: .85rem; font-weight: 650; width: calc(100% - 2 * var(--inspector-inset)); margin: 12px var(--inspector-inset); }
 
 #basic-options summary { margin: 0; font-size: .91rem; line-height: 1.35; font-weight: 650; }
-#basic-options { min-width: 0; }
+#basic-options { min-width: 0; position: relative; }
+#basic-options[open] summary { min-height: 28px; padding: 4px 7em 0 0; }
+#basic-options > .max-options { position: absolute; top: 0; right: 0; }
 #basic-options summary { cursor: pointer; list-style: none; }
 #basic-options summary::-webkit-details-marker { display: none; }
 #basic-options summary::after {

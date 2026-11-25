@@ -115,8 +115,8 @@ h1 { font:italic 900 clamp(2.2rem,3.5vw,3.4rem)/1 "Barlow Condensed","Arial Narr
 .inspector-editor { display: grid; gap: 16px; padding: 16px var(--inspector-inset) 0; }
 .inspector-editor h4 { margin: 0; font-size: .91rem; line-height: 1.35; font-weight: 650; }
 .option-heading { display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; }
-#max-sub-options { margin-left:auto; padding:4px 8px; border:1px solid #52667d; border-radius:5px; background:var(--control); color:#def0fc; font-size:.8rem; }
-#max-sub-options:hover:enabled { border-color:#83a4be; }
+.max-options { margin-left:auto; padding:4px 8px; border:1px solid #52667d; border-radius:5px; background:var(--control); color:#def0fc; font-size:.8rem; }
+.max-options:hover:enabled { border-color:#83a4be; }
 .editor-note { color: var(--muted); font-size: .73rem; line-height: 1.4; }
 .edit-diff { color: #a4e6c7; font-size: .75rem; line-height: 1.4; }
 .option-group { margin-top: 8px; border-radius: 7px; background: #1f3043; }

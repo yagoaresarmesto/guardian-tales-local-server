@@ -19,11 +19,13 @@
           </dl>
           <form class="inspector-editor" id="editor">
             <section aria-labelledby="basic-heading">
-              <h4 id="basic-heading">Basic options</h4><div class="option-group" id="basic"></div>
+              <div class="option-heading"><h4 id="basic-heading">Basic options</h4>
+                <button type="button" class="max-options" id="max-basic-options" aria-controls="basic" disabled>Max selected</button></div>
+              <div class="option-group" id="basic"></div>
             </section>
             <section aria-labelledby="sub-heading">
               <div class="option-heading"><h4 id="sub-heading">Sub-options</h4>
-                <button type="button" id="max-sub-options" aria-controls="slots" disabled>Max selected</button></div>
+                <button type="button" class="max-options" id="max-sub-options" aria-controls="slots" disabled>Max selected</button></div>
               <div class="option-group" id="slots"></div>
               <p id="unavailable" class="editor-note" hidden></p>
             </section>

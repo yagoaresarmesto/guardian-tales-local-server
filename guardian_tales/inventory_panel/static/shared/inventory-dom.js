@@ -13,9 +13,9 @@ export function image(url) {
 }
 
 // The level pickers list the current effect's legal values from lowest to highest.
-export function maxSubOptions(button, container) {
+export function maxSelectedOptions(button, container) {
   function belowMaximum() {
-    return Array.from(container.querySelectorAll("select[data-sub-level]:enabled"))
+    return Array.from(container.querySelectorAll("select[data-option-level]:enabled"))
       .filter(select => select.value !== "" && select.selectedIndex < select.options.length - 1);
   }
   button.onclick = () => {
