@@ -347,8 +347,8 @@ main > #message.error { border-color: #ff997b; }
 
 .copy-actions, .delete-identity { display:flex; align-items:center; gap:10px; }
 .copy-actions { gap:6px; flex-wrap:wrap; justify-content:flex-end; }
-#unlock-copy { border:1px solid #58748a; border-radius:5px; padding:4px 10px; background:#253b4b; color:#cbe8f7; font-weight:650; }
-#unlock-copy:hover:enabled { background:#314f65; }
+#copy-protection { border:1px solid #58748a; border-radius:5px; padding:4px 10px; background:#253b4b; color:#cbe8f7; font-weight:650; }
+#copy-protection:hover:enabled { background:#314f65; }
 .delete-copy-button { border:1px solid #a7676a; border-radius:5px; background:#3b2933; color:#ffbfc0; padding:4px 10px; font-weight:650; }
 .delete-copy-button:hover:enabled { background:#60343f; color:#fff; }
 .delete-dialog { width:min(370px,94vw); }

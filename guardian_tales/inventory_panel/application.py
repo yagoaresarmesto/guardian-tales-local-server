@@ -14,7 +14,7 @@ from .equipment_grants import EquipmentGrants
 from .equipment_options import EquipmentOptionEditor
 from .hero_portraits import HeroPortraits
 from .mastery import MasteryEditor
-from .owned_copies import CopyRemoval, CopyUnlock
+from .owned_copies import CopyProtection, CopyRemoval
 from .preview import Sandbox
 from .relic_grants import RelicGrants
 from .relics import RelicEditor
@@ -67,14 +67,22 @@ class InventoryApplication:
             "/api/game/equipment": self.equipment.request,
             "/api/game/equipment/add": self.equipment_grants.write,
             "/api/game/equipment/delete": CopyRemoval(database, "ItemWeapons").write,
-            "/api/game/equipment/unlock": CopyUnlock(database, "ItemWeapons").write,
+            "/api/game/equipment/lock": CopyProtection(database, "ItemWeapons", locked=True).write,
+            "/api/game/equipment/unlock": CopyProtection(
+                database, "ItemWeapons", locked=False
+            ).write,
             "/api/game/equipment/roll": partial(self.equipment.request, roll=True),
             "/api/game/equipment/hammers": self.equipment.hammers.write,
             "/api/game/mastery": self.mastery.write,
             "/api/game/mastery/preview": self.mastery.preview,
             "/api/game/relics": self.relics.apply,
             "/api/game/relics/add": self.relic_grants.write,
-            "/api/game/relics/unlock": CopyUnlock(database, "ItemMiscs", self.relics.specs).write,
+            "/api/game/relics/lock": CopyProtection(
+                database, "ItemMiscs", self.relics.specs, locked=True
+            ).write,
+            "/api/game/relics/unlock": CopyProtection(
+                database, "ItemMiscs", self.relics.specs, locked=False
+            ).write,
             "/api/game/relics/delete": CopyRemoval(database, "ItemMiscs", self.relics.specs).write,
         }
 

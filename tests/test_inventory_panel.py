@@ -621,7 +621,7 @@ class InventoryPanelTests(unittest.TestCase):
             db.execute("SELECT item_id FROM relic_option_proposals").fetchall(), [(25,)]
         )
 
-    def test_unlock_preserves_equipped_copies_option_locks_jewels_and_duplicate_items(self):
+    def test_lock_and_unlock_preserve_equipped_copies_option_locks_jewels_and_duplicate_items(self):
         profile = self.seed_wallet()
         db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
         user = profile["User"]
@@ -630,38 +630,40 @@ class InventoryPanelTests(unittest.TestCase):
         weapon["Options"][0]["Locked"] = True
         relic.update(Locked=True, JewelSlots=[300])
         relic["RelicOptions"][0]["Locked"] = True
-        user.update(Characters=[{"Weapon1": 11, "Relic": 12}], ItemIdCounter=25)
-        user["ItemWeapons"].append(dict(weapon, Id=24))
-        user["ItemMiscs"].append(dict(relic, Id=25))
+        user.update(Characters=[{"Weapon1": 11, "Relic": 12}], ItemIdCounter=27)
+        user["ItemWeapons"].extend((dict(weapon, Id=24), dict(weapon, Id=26, Locked=False)))
+        user["ItemMiscs"].extend((dict(relic, Id=25), dict(relic, Id=27, Locked=False)))
         with db:
             db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
         for section, row in (("equipment", weapon), ("relics", relic)):
-            with self.subTest(section=section):
-                api = "/api/game/" + section
-                payload = dict(
-                    id=row["Id"], spec=row["ItemId"], version=self.call(api)["inventoryVersion"]
-                )
-                with StateLock(self.root), self.assertRaises(HTTPError) as locked:
-                    self.call(api + "/unlock", payload)
-                self.assertEqual(locked.exception.code, 423)
-                locked.exception.close()
-                result = self.call(api + "/unlock", payload)
-                user["Cas"] += 1
-                row["Locked"] = False
-                self.assertEqual(result["revision"], user["Cas"])
-                self.assertEqual(result["inventoryVersion"], self.call(api)["inventoryVersion"])
-                with self.assertRaises(HTTPError) as stale:
-                    self.call(api + "/unlock", payload)
-                self.assertEqual(stale.exception.code, 409)
-                stale.exception.close()
-                self.assertEqual(
-                    self.call(api + "/unlock", dict(payload, version=result["inventoryVersion"])),
-                    result,
-                )
-                self.assertEqual(
-                    json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]),
-                    profile,
-                )
+            api = "/api/game/" + section
+            for action, protected in (("unlock", False), ("lock", True)):
+                with self.subTest(section=section, action=action):
+                    path = api + "/" + action
+                    payload = dict(
+                        id=row["Id"], spec=row["ItemId"], version=self.call(api)["inventoryVersion"]
+                    )
+                    with StateLock(self.root), self.assertRaises(HTTPError) as busy:
+                        self.call(path, payload)
+                    self.assertEqual(busy.exception.code, 423)
+                    busy.exception.close()
+                    result = self.call(path, payload)
+                    user["Cas"] += 1
+                    row["Locked"] = protected
+                    self.assertIs(result["locked"], protected)
+                    self.assertEqual(result["revision"], user["Cas"])
+                    self.assertEqual(result["inventoryVersion"], self.call(api)["inventoryVersion"])
+                    with self.assertRaises(HTTPError) as stale:
+                        self.call(path, payload)
+                    self.assertEqual(stale.exception.code, 409)
+                    stale.exception.close()
+                    self.assertEqual(
+                        self.call(path, dict(payload, version=result["inventoryVersion"])), result
+                    )
+                    self.assertEqual(
+                        json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]),
+                        profile,
+                    )
 
     def test_panel_unlock_checks_inventory_spec_and_unambiguous_owned_id(self):
         profile = self.seed_wallet()

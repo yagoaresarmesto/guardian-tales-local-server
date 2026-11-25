@@ -41,12 +41,17 @@ class CopyRemoval(OwnedCopyEditor):
         return {"id": ident, "revision": profile["User"]["Cas"]}
 
 
-class CopyUnlock(OwnedCopyEditor):
+class CopyProtection(OwnedCopyEditor):
+    def __init__(self, database, inventory, specs=None, *, locked):
+        super().__init__(database, inventory, specs)
+        self.locked = locked
+
     def change(self, db, profile, ident):
-        set_item_protection(db, profile, [ident], locked=False)
+        set_item_protection(db, profile, [ident], locked=self.locked)
         user = profile["User"]
         return {
             "id": ident,
+            "locked": self.locked,
             "revision": user["Cas"],
             "inventoryVersion": self.inventory_version(user),
         }

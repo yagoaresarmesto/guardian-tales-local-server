@@ -1,4 +1,4 @@
-import { copyUnlock } from "/unlock-copy.js";
+import { copyProtection } from "/copy-protection.js";
 import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 
@@ -12,7 +12,7 @@ let selected = Number(initialQuery.get("id")), family = initialQuery.get("type")
 let page = 0, data, visible = [], draft = [], saving = false, grantDialog;
 const relicApi = "/api/game/relics";
 let writable = false, statusRequest = 0;
-const unlock = copyUnlock(relicApi, () => data.inventoryVersion, result => {
+const protection = copyProtection(relicApi, () => data.inventoryVersion, result => {
   data.revision = result.revision;
   data.inventoryVersion = result.inventoryVersion;
   drawGrid();
@@ -107,7 +107,7 @@ function setAccess(available, message = "") {
   writable = available === true;
   grantDialog?.setWritable(writable);
   deletion.setWritable(writable);
-  unlock.setWritable(writable);
+  protection.setWritable(writable);
   $("access").hidden = writable;
   const text = message || "Apply is locked while the game save is in use. Close Guardian Tales and stop the backend to enable it.";
   if (!writable && $("access").textContent !== text) $("access").textContent = text;
@@ -167,7 +167,7 @@ function slotEditor(row, entry) {
   return section;
 }
 function showProtection(row) {
-  unlock.select(row);
+  protection.select(row);
   $("protection").textContent = row?.locked ? "Locked" : "Unlocked";
 }
 function drawEditor() {

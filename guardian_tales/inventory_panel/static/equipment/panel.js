@@ -1,4 +1,4 @@
-import { copyUnlock } from "/unlock-copy.js";
+import { copyProtection } from "/copy-protection.js";
 import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
 import { equipmentOptions, showLimitBreakFact } from "/equipment-options.js";
@@ -10,7 +10,7 @@ const hammerEditor = preview ? null : quantityEditor($("hammer-editor"), {
   lock: () => editor.lock(), reload: load, saved: () => draw(),
 });
 let grantDialog, listing, writable = false;
-const unlock = preview ? null : copyUnlock("/api/game/equipment", () => listing.inventoryVersion, result => {
+const protection = preview ? null : copyProtection("/api/game/equipment", () => listing.inventoryVersion, result => {
   listing.revision = result.revision;
   listing.inventoryVersion = result.inventoryVersion;
   draw();
@@ -27,7 +27,7 @@ const editor = preview ? null : equipmentOptions(load, allowed => {
   writable = allowed;
   hammerEditor.setWritable(allowed);
   deletion.setWritable(allowed);
-  unlock.setWritable(allowed);
+  protection.setWritable(allowed);
   grantDialog?.setWritable(allowed);
 });
 document.body.classList.toggle("live-equipment", !preview);
@@ -174,7 +174,7 @@ function drawDetails() {
   $("copy-id").textContent = item ? "#" + item.id : "";
   const enhance = kind === "enhance";
   deletion?.show(item && !enhance);
-  unlock?.select(enhance ? null : item);
+  protection?.select(enhance ? null : item);
   $("details-heading").textContent = enhance ? "Hammer details" : "Equipment details";
   $("collection-heading").textContent = enhance ? "Enhance" : "Equipment";
   $("empty").textContent = enhance ? "No owned hammers match these filters." : "No equipment matches these filters.";
