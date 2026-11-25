@@ -10,13 +10,23 @@ from pathlib import Path
 
 from guardian_tales.panel_common.views import CSS, DASHBOARD, JS, render_layout
 
-from .. import orbital_levels
+from .. import orbital_boards, orbital_levels
 from ..expedition_levels import LevelSelectionChanged
 from ..guild_raid import RaidSelectionChanged
 from ..guild_war_static import WarSelectionChanged
 from ..kamazone import SeasonSelectionChanged
 from ..punchking_static import ArenaSelectionChanged
-from .artwork import BOSSES, ELEMENT_FRAMES, EXPEDITION, KAMAZONE, TETIS, TETIS_ARTIFACTS, UI, WAR
+from .artwork import (
+    BOSSES,
+    CHARACTERS,
+    ELEMENT_FRAMES,
+    EXPEDITION,
+    KAMAZONE,
+    TETIS,
+    TETIS_ARTIFACTS,
+    UI,
+    WAR,
+)
 from .dka import adapter as dka
 from .dka import sprites
 from .expedition import adapter as expedition
@@ -101,6 +111,9 @@ MODES = (
 )
 PAGES = {mode.path: mode for mode in MODES}
 API = {f"/api/{mode.slug}": mode.editor for mode in MODES}
+API["/api/orbital-lift/boards"] = Editor(
+    orbital_boards.state, orbital_boards.apply, orbital_levels.LevelChanged
+)
 API["/api/orbital-lift/enemy-level"] = Editor(
     orbital_levels.state, orbital_levels.apply, orbital_levels.LevelChanged
 )
@@ -109,6 +122,7 @@ FILES["/dashboard.css"] = (DASHBOARD / "dashboard.css", CSS)
 FILES["/backend.js"] = (ROOT / "shared/backend.js", JS)
 FILES["/tetis-specialty.js"] = (ROOT / "tetis/specialty.js", JS)
 FILES["/services.css"] = (ROOT / "shared/services.css", CSS)
+FILES["/orbital-board.js"] = (ROOT / "orbital_lift/board.js", JS)
 FILES["/tetis-loadout.js"] = (ROOT / "tetis/loadout.js", JS)
 FILES["/tetis-loadout.css"] = (ROOT / "tetis/loadout.css", CSS)
 for mode in MODES:
@@ -149,6 +163,11 @@ MEDIA = {
 
 
 def media_resource(path):
+    portrait = re.fullmatch(r"/orbital-lift/enemies/([a-zA-Z0-9_.-]{1,100})\.png", path)
+    if portrait:
+        if portrait[1] == "boss_shadow_beast":
+            return partial(BOSSES.read, frame="boss_shadow_beast_b"), "image/png"
+        return partial(CHARACTERS.read, frame=portrait[1]), "image/png"
     artifact = re.fullmatch(r"/tetis/artifacts/(rc_[a-z0-9_]{1,60})\.png", path)
     if artifact:
         return partial(TETIS_ARTIFACTS.read, frame=artifact[1]), "image/png"

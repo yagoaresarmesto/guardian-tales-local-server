@@ -13,6 +13,8 @@ from guardian_tales.inventory_panel.http import InventoryHandler
 from guardian_tales.panel_common.services import service_request
 from guardian_tales.panel_common.views import HTML
 
+from .. import orbital_boards
+from ..orbital import LAST_SELECTABLE_FLOOR
 from .orbital_lift.adapter import OrbitalEditor
 from .routes import API, FILES, PAGES, media_resource, render_page
 from .tetis.adapter import TetisEditor
@@ -102,6 +104,17 @@ class PanelHandler(InventoryHandler):
             elif path in FILES:
                 path, mime = FILES[path]
                 self.reply(200, mime, path.read_bytes())
+            elif path.startswith("/api/orbital-lift/boards/"):
+                number = path.removeprefix("/api/orbital-lift/boards/")
+                if (
+                    not number.isascii()
+                    or not number.isdecimal()
+                    or len(number) > 4
+                    or not 1 <= int(number) <= LAST_SELECTABLE_FLOOR
+                ):
+                    self.json(400, {"error": "Choose a floor from 1 to 1500."})
+                    return
+                self.json(200, orbital_boards.state(self.server.references, int(number)))
             elif path in API:
                 mode = API[path]
                 self.json(200, mode.state(getattr(self.server, mode.source)))

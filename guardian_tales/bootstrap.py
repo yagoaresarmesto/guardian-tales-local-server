@@ -1007,8 +1007,8 @@ class BootstrapSession:
                     filename,
                     body,
                     tetis_seed,
-                    orbital_levels.selection,
-                    orbital_levels.prepare,
+                    orbital_levels.bootstrap_selection,
+                    orbital_levels.prepare_selection,
                 )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc

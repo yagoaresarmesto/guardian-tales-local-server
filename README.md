@@ -289,8 +289,20 @@ Orbital Lift table. With Guardian Tales closed, choose a level and click
 floor's own difficulty. The backend can keep running. Reopen the game to load
 the new settings. This edit affects the tables served by the backend and is
 independent of the saved floor, enemy lineups and elite modifiers.
-The served floor data and restoration have been checked against the 3.57.0 EU
-pack. The displayed combat level still needs confirmation in the Android client.
+Under **Enemy board**, enter any floor from **1 to 1,500** and click **Open floor**.
+Choose a cell and an enemy, then click **Place enemy**. Drag an occupied cell
+onto another to move or swap, or use **Move or swap** and select a destination.
+The board matches the enemy side in the game. Moving an original enemy keeps
+its elite modifiers. A replacement starts with its own base stats.
+
+Leave **Floor enemy level** blank to follow the global setting or the original
+floor level. An explicit level (1–200) takes precedence for that floor.
+**Save floor** and **Restore original floor** affect only the open board.
+Close and reopen the game after saving. Opening a floor in the editor leaves
+your saved progress intact. The roster comes from the enemies actually used
+by the installed mode. The stock formations use five to seven enemies.
+Larger or smaller formations, previously unused cells and converting a record
+room to a normal encounter by placing enemies there are experimental.
 
 Run selectors against the **same reference directory as the backend**, outside
 battle. After changing seasons, variants or Guild War settings, **fully close

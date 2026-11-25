@@ -6,6 +6,7 @@ from guardian_tales.panel_common.artwork import Atlas
 from guardian_tales.panel_common.artwork import frame_png as frame_png
 
 BOSSES = Atlas("spritesheets/bosses", "bosses")
+CHARACTERS = Atlas("spritesheets/heroes", "characters")
 WAR = Atlas("ondemand/guild_war/ui", "guildWar")
 KAMAZONE = Atlas("ondemand/ancientmall/ui", "roguelike_mall_bg")
 EXPEDITION = Atlas("ondemand/expedition/ui", "expedition_bg_forest_night")

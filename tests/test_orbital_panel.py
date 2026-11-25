@@ -133,6 +133,103 @@ class OrbitalPanelTests(unittest.TestCase):
         self.assertEqual(path.read_bytes(), source)
         self.assertEqual(self.profile(), self.original)
 
+    def test_custom_boards_persist_and_restore_independently_over_global_levels(self):
+        stock = [
+            {"Position": 4, "MonsterId": 10, "Options": [{"OptionId": 15, "Level": 2}]},
+            {"Position": 3, "MonsterId": 11},
+        ]
+        floors = [
+            {
+                "Floor": f,
+                "FloorType": "RecordRoom" if f == 51 else "Normal",
+                "StandardLevel": 199 if f == 1501 else 49,
+                "Monsters": [] if f == 51 else stock,
+            }
+            for f in range(1, 1502)
+        ]
+        tables = {
+            "infinitytowerfloors": floors,
+            "exps2": {"LevelExps": list(range(220))},
+            "infinitytowermonsters": [{"MonsterId": i, "SpecId": i} for i in (10, 11, 12)],
+            "monsters": [{"Id": i, "Name": f"it_foe_{i}"} for i in (10, 11, 12)],
+            "__checksum__": "stock",
+        }
+        texts = {name: json.dumps(data) for name, data in tables.items()}
+        source = compress(
+            "".join(f"{k}\n{v}\n7\n{digest(v.encode())}\n" for k, v in texts.items()).encode()
+        )
+        path = self.root / "static_data_get.bin"
+        path.write_bytes(source)
+        conn = self.enterContext(closing(sqlite3.connect(":memory:")))
+        game = BootstrapSession(GuestStore(conn, self.root))
+
+        def served():
+            body = game.handle(packet_request("/static-data/get", {})).body
+            fields = records(decode(body))[1]
+            reply = game.handle(
+                packet_request("/static-data/check-update", {"Checksum": fields["__checksum__"][1]})
+            )
+            self.assertTrue(json.loads(reply.body)["UpToDate"])
+            return json.loads(fields["infinitytowerfloors"][1])
+
+        def choose(floor, revision, board):
+            return self.api({"floor": floor, "revision": revision, "board": board}, "/boards")
+
+        view = self.api(suffix="/boards")
+        self.assertEqual(view["floor"]["type"], "Normal")
+        self.assertEqual({e["id"] for e in view["enemies"]}, {10, 11})
+        # Preserve settings from installations that predate custom boards.
+        (self.root / SELECTION).write_text(json.dumps({"revision": 1, "level": 100}))
+        for invalid_floor in (0, 1501):
+            with self.assertRaises(HTTPError) as invalid:
+                choose(invalid_floor, 1, None)
+            self.assertEqual(invalid.exception.code, 400)
+            invalid.exception.close()
+        units = [{"position": 20, "enemy": 10, "origin": 4}, {"position": 4, "enemy": 10}]
+        for bad in (
+            [],
+            [units[0], units[0]],
+            [{"position": 21, "enemy": 10}],
+            [{"position": 1, "enemy": 12}],
+            [{"position": 1, "enemy": 10, "origin": 3}],
+            [{"position": True, "enemy": 10}],
+            [{"position": 1, "enemy": 10, "Options": []}],
+        ):
+            with self.subTest(bad=bad), self.assertRaises(HTTPError) as rejected:
+                choose(1, 1, {"units": bad, "level": None})
+            self.assertEqual(rejected.exception.code, 400)
+            rejected.exception.close()
+        with self.assertRaises(HTTPError) as stale:
+            choose(1500, 0, {"units": units, "level": 200})
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        choose(1500, 1, {"units": units, "level": 200})
+        choose(51, 2, {"units": [units[1]], "level": None})
+        choose(1, 3, {"units": view["floor"]["units"], "level": 1})
+        self.assertEqual(self.api(suffix="/boards/1")["custom"], {"units": None, "level": 1})
+        active = served()
+        self.assertEqual(
+            active[1499]["Monsters"],
+            [dict(stock[0], Position=20), {"Position": 4, "MonsterId": 10}],
+        )
+        self.assertEqual(
+            [active[i]["StandardLevel"] for i in (0, 1, 50, 1499, 1500)], [0, 99, 99, 199, 199]
+        )
+        self.assertEqual(active[50]["FloorType"], "Normal")
+        self.assertEqual(active[1500], floors[1500])
+        self.api({"revision": 4, "level": 80}, "/enemy-level")
+        choose(51, 5, None)
+        active = served()
+        self.assertEqual(active[50], dict(floors[50], StandardLevel=79))
+        self.assertEqual(active[1499]["StandardLevel"], 199)
+        choose(1500, 6, None)
+        choose(1, 7, None)
+        self.assertIsNone(self.api(suffix="/boards/1500")["custom"])
+        self.api({"revision": 8, "level": None}, "/enemy-level")
+        self.assertEqual(served(), floors)
+        self.assertEqual(path.read_bytes(), source)
+        self.assertEqual(self.profile(), self.original)
+
     def test_choose_next_floor_preserves_save_and_survives_reopening(self):
         state = self.api()
         self.assertEqual((state["clearedFloor"], state["nextFloor"]), (1340, 1341))

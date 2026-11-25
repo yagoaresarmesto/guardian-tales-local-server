@@ -1,4 +1,5 @@
 import { $, feedback } from "/panel.js";
+import { startBoard } from "/orbital-board.js";
 
 const endpoint = "/api/orbital-lift";
 const format = new Intl.NumberFormat("en");
@@ -56,7 +57,7 @@ $("editor").onsubmit = async event => {
     $("reload").disabled = false;
   }
 };
-load();
+load().then(() => startBoard(saved?.nextFloor, () => loadLevels().catch(error => showLevelMessage(error.message, true))));
 
 const levelEndpoint = endpoint + "/enemy-level";
 const levelInput = $("enemy-level");
@@ -84,8 +85,8 @@ async function loadLevels() {
   levelInput.value = data.level ?? "";
   $("level-range").textContent = "1–" + data.maxLevel;
   $("level-status").textContent = data.level == null
-    ? "Each floor uses its original level."
-    : "All floors use enemy level " + data.level + ".";
+    ? "Default: each floor’s original level."
+    : "Default enemy level: " + data.level + ".";
   levelButtons();
   $("level-controls").disabled = false;
 }
@@ -102,6 +103,7 @@ async function saveLevel(level) {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Could not save enemy levels.");
     await loadLevels();
+    document.dispatchEvent(new Event("orbital-global-level"));
     showLevelMessage("Saved. Close and reopen Guardian Tales to load the enemy levels.");
   } catch (error) {
     showLevelMessage(error.message + " Reload the page to try again.", true);

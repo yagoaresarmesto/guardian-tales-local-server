@@ -18,22 +18,41 @@ class LevelChanged(ValueError):
     pass
 
 
-def selection(references):
+def settings(references):
     path = references.directory / SELECTION
     if not path.exists():
-        return None, 0
-    if path.stat().st_size > 256:
+        return {"level": None, "revision": 0, "boards": {}}
+    if path.stat().st_size > 2 * 1024 * 1024:
         raise ValueError("Invalid Orbital Lift enemy level settings.")
     data = json.loads(path.read_bytes())
     if (
         not isinstance(data, dict)
-        or set(data) != {"level", "revision"}
+        or set(data) not in ({"level", "revision"}, {"level", "revision", "boards"})
+        or not isinstance(data.get("boards", {}), dict)
         or not integer(data["revision"], minimum=1)
         or data["level"] is not None
         and not integer(data["level"], minimum=1)
     ):
         raise ValueError("Invalid Orbital Lift enemy level settings.")
+    data.setdefault("boards", {})
+    return data
+
+
+def selection(references):
+    data = settings(references)
     return data["level"], data["revision"]
+
+
+def bootstrap_selection(references):
+    data = settings(references)
+    return (
+        data["level"],
+        json.dumps(data["boards"], sort_keys=True) if data["boards"] else "",
+    ), data["revision"]
+
+
+def prepare_selection(source, value, revision):
+    return prepare(source, value[0], revision, value[1])
 
 
 def floor_data(tables):
@@ -79,15 +98,19 @@ def state(references):
 
 
 @lru_cache(maxsize=2)
-def prepare(source, level, revision):
+def prepare(source, level, revision, boards=""):
     lines, tables = records(decode(source))
     floors, maximum = floor_data(tables)
     check_level(level, maximum)
     content = tables[TABLE][1]
-    if level is not None:
+    if level is not None or boards:
         for row in floors:
-            if row["Floor"] <= LAST_SELECTABLE_FLOOR:
+            if level is not None and row["Floor"] <= LAST_SELECTABLE_FLOOR:
                 row["StandardLevel"] = level - 1
+        if boards:
+            from .orbital_boards import apply_overrides
+
+            apply_overrides(floors, json.loads(boards), tables, maximum)
         content = json.dumps(floors, ensure_ascii=False, separators=(",", ":"))
     checksum = digest(
         f"orbital-enemy-level-v1/{revision}/{tables['__checksum__'][1]}\n".encode()
@@ -104,6 +127,15 @@ def prepare(source, level, revision):
     return compress("".join(lines).encode()), checksum
 
 
+def publish(references, source, data):
+    data["revision"] += 1
+    boards = json.dumps(data["boards"], sort_keys=True) if data["boards"] else ""
+    prepare(source, data["level"], data["revision"], boards)
+    atomic_write(
+        references.directory / SELECTION, json.dumps(data, separators=(",", ":")).encode() + b"\n"
+    )
+
+
 def apply(references, body):
     if (
         not isinstance(body, dict)
@@ -113,15 +145,11 @@ def apply(references, body):
         raise ValueError("Choose a level or restore the original enemy levels.")
     level = body["level"]  # null restores the individual floors' original levels.
     with StateLock(references.directory, filename=".orbital_enemy_level.lock"):
-        current, revision = selection(references)
-        if body["revision"] != revision:
+        data = settings(references)
+        if body["revision"] != data["revision"]:
             raise LevelChanged("Enemy levels changed. Reload before applying.")
         source = references.read_bytes("static_data_get.bin")
         check_level(level, max_level(source))
-        if level != current:
-            revision += 1
-            prepare(source, level, revision)
-            atomic_write(
-                references.directory / SELECTION,
-                json.dumps({"level": level, "revision": revision}).encode() + b"\n",
-            )
+        if level != data["level"]:
+            data["level"] = level
+            publish(references, source, data)

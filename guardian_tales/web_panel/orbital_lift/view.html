@@ -42,5 +42,40 @@
         <p id="level-feedback" role="status" hidden></p>
       </form>
     </section>
+    <section class="surface board-section" aria-labelledby="board-heading">
+      <header class="panel-heading"><span class="section-icon stack" aria-hidden="true"></span><h2 id="board-heading">Enemy board</h2></header>
+      <div class="board-body">
+        <form id="board-picker">
+          <label for="board-floor">Floor to edit</label>
+          <input id="board-floor" type="number" min="1" max="1500" value="1" required>
+          <button id="board-open" disabled>Open floor</button>
+          <span id="board-title"></span>
+        </form>
+        <fieldset id="board-controls" disabled>
+          <div class="board-layout">
+            <div id="board-grid" role="group" aria-label="Enemy formation"></div>
+            <div class="board-tools">
+              <h3 id="cell-title">Selected cell</h3>
+              <label for="board-enemy">Enemy</label>
+              <select id="board-enemy"></select>
+              <div class="board-buttons">
+                <button type="button" id="board-place">Place enemy</button>
+                <button type="button" id="board-move">Move or swap</button>
+                <button type="button" id="board-remove">Remove</button>
+              </div>
+              <label for="board-level">Floor enemy level</label>
+              <input id="board-level" type="number" min="1" step="1">
+              <small id="board-inherit"></small>
+              <p id="board-hint"></p>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="primary-action" id="board-save" type="button" disabled>Save floor</button>
+            <button type="button" id="board-restore" disabled>Restore original floor</button>
+          </div>
+        </fieldset>
+        <p id="board-message" role="status"></p>
+      </div>
+    </section>
   </div>
 </main>
