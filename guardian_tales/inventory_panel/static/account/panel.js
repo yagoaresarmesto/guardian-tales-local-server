@@ -6,7 +6,7 @@ const controls = new Map();
 const materialPickers = {
   "Hero Evolution Stones": {
     id: "evolution-stone-picker", label: "Evolution stone", all: "All evolution stones",
-    region: "Evolution stone balances", groupByCatalogUse: true,
+    region: "Evolution stone balances",
   },
   "Hero Myth Stones": {
     id: "myth-stone-picker", label: "Myth hero", all: "All heroes", region: "Myth stone balances",
@@ -99,7 +99,6 @@ function balanceRow(item, setTotal) {
   icon.src = "/icon/" + item.id + ".png";
   const detail = el("div");
   detail.append(el("strong", "", item.choice || item.label));
-  if (item.catalogOnly) detail.append(el("small", "", "Catalog only"));
   if (item.limit !== null) detail.append(el("small", "", "Max " + number.format(item.limit)));
   identity.append(icon, detail);
   const saved = el("div", "wallet-saved");
@@ -170,17 +169,7 @@ function materialPicker(config, entries, previous) {
   select.id = config.id;
   label.htmlFor = select.id;
   select.add(new Option(config.all, ""));
-  const option = item => new Option(item.choice, item.key, false, item.key === previous);
-  if (config.groupByCatalogUse) {
-    for (const [catalogOnly, title] of [[false, "Used for hero evolution"], [true, "Catalog only"]]) {
-      const group = el("optgroup");
-      group.label = title;
-      group.append(...entries.filter(item => item.catalogOnly === catalogOnly).map(option));
-      if (group.childElementCount) select.append(group);
-    }
-  } else {
-    select.append(...entries.map(option));
-  }
+  for (const item of entries) select.add(new Option(item.choice, item.key, false, item.key === previous));
   field.append(label, select);
   return field;
 }
@@ -196,6 +185,8 @@ function renderMaterials(items) {
   const groups = new Map();
   const common = [];
   for (const item of items) {
+    // An already running game backend can still serve the previous Account catalog.
+    if (item.catalogOnly) continue;
     if (!item.group) {
       common.push(item);
       continue;

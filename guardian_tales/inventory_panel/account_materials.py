@@ -70,15 +70,18 @@ def account_materials(catalog, tables):
         extra = {}
         stone_type = spec.get("StoneType")
         if spec.get("Type") == "evolve_stone" and stone_type in HERO_STONES:
+            origins = heroes_by_stone.get(ident, ())
+            if stone_type == "HeroEvolve" and not origins:
+                continue
             group, prefix, suffix = HERO_STONES[stone_type]
             fallback = name.removeprefix(prefix).replace("_", " ").title()
             label = catalog.names.get(ident) or f"{fallback} {suffix}"
-            origins = heroes_by_stone.get(ident, ())
             names = catalog.equipment.hero_names
             hero_names = sorted({names[origin] for origin in origins if origin in names})
             choice = " / ".join(hero_names) or label.removesuffix(" " + suffix)
             if stone_type == "HeroEvolve":
-                extra = dict(catalogOnly=not origins)
+                # Older open Account pages group the valid options by this flag.
+                extra["catalogOnly"] = False
                 if len(origins) > 1:
                     choice = label
                     extra["searchAliases"] = hero_names
