@@ -3,6 +3,7 @@ import { $, el } from "/inventory-dom.js";
 const api = "/api/game/account";
 const number = new Intl.NumberFormat("en-GB");
 const controls = new Map();
+const evolutionGroup = "Hero Evolution Stones";
 let account, writable = false, saving = false, stale = false, statusRequest = 0;
 let groupsBeforeSearch = null;
 
@@ -87,6 +88,7 @@ function balanceRow(item, setTotal) {
   icon.src = "/icon/" + item.id + ".png";
   const detail = el("div");
   detail.append(el("strong", "", item.choice || item.label));
+  if (item.catalogOnly) detail.append(el("small", "", "Catalog only"));
   if (item.limit !== null) detail.append(el("small", "", "Max " + number.format(item.limit)));
   identity.append(icon, detail);
   const saved = el("div", "wallet-saved");
@@ -108,7 +110,8 @@ function balanceRow(item, setTotal) {
   field.append(label, input);
   row.append(identity, saved, field, after, note);
   if (item.key.startsWith("material-")) {
-    row.dataset.search = [item.label, item.group, item.choice].filter(Boolean).join(" ").toLowerCase();
+    row.dataset.search = [item.label, item.group, item.choice, ...(item.searchAliases || [])].filter(Boolean).join(" ").toLowerCase();
+    if (item.group === evolutionGroup) row.dataset.stone = item.key;
   }
   controls.set(item.key, {item, input, result, note, setTotal, row});
   return row;
@@ -121,8 +124,12 @@ function expandedGroups() {
 function filterMaterials() {
   const words = $("material-search").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (words.length && !groupsBeforeSearch) groupsBeforeSearch = expandedGroups();
+  const picker = $("evolution-stone-picker");
+  if (picker) picker.parentElement.hidden = words.length > 0;
+  const selectedStone = words.length ? "" : picker?.value;
   for (const row of $("materials").querySelectorAll("[data-search]")) {
-    row.hidden = !words.every(word => row.dataset.search.includes(word));
+    const otherStone = selectedStone && row.dataset.stone && row.dataset.stone !== selectedStone;
+    row.hidden = otherStone || !words.every(word => row.dataset.search.includes(word));
   }
   const groups = $("material-groups");
   for (const group of groups.children) {
@@ -139,9 +146,29 @@ function filterMaterials() {
   $("material-empty").hidden = !(common.hidden && groups.hidden);
 }
 
+function evolutionPicker(entries, previous) {
+  const field = el("div", "stone-picker");
+  const label = el("label", "", "Evolution stone");
+  const select = el("select");
+  select.id = "evolution-stone-picker";
+  label.htmlFor = select.id;
+  select.add(new Option("All evolution stones", ""));
+  for (const [catalogOnly, title] of [[false, "Used for hero evolution"], [true, "Catalog only"]]) {
+    const group = el("optgroup");
+    group.label = title;
+    for (const item of entries.filter(item => item.catalogOnly === catalogOnly)) {
+      group.append(new Option(item.choice, item.key, false, item.key === previous));
+    }
+    if (group.childElementCount) select.append(group);
+  }
+  field.append(label, select);
+  return field;
+}
+
 function renderMaterials(items) {
   const container = $("material-groups");
   const expanded = groupsBeforeSearch || expandedGroups();
+  const previousStone = $("evolution-stone-picker")?.value;
   const compare = new Intl.Collator("en", {numeric: true}).compare;
   const groups = new Map();
   const common = [];
@@ -167,7 +194,15 @@ function renderMaterials(items) {
     summary.append(el("small", "", number.format(entries.length)));
     const list = el("div", "balance-list");
     list.append(balanceColumns("Set total"), ...entries.map(item => balanceRow(item, true)));
-    section.append(summary, list);
+    section.append(summary);
+    if (group === evolutionGroup) {
+      section.append(evolutionPicker(entries, previousStone));
+      list.classList.add("evolution-stone-list");
+      list.tabIndex = 0;
+      list.setAttribute("role", "region");
+      list.setAttribute("aria-label", "Evolution stone balances");
+    }
+    section.append(list);
     container.append(section);
   }
   filterMaterials();
@@ -206,8 +241,10 @@ async function load() {
 }
 
 $("account-form").oninput = event => {
-  if (event.target === $("material-search")) {
+  if (event.target === $("material-search") || event.target.id === "evolution-stone-picker") {
     filterMaterials();
+    const stones = document.querySelector(".evolution-stone-list");
+    if (stones) stones.scrollTop = 0;
     return;
   }
   if (!stale) $("message").textContent = "";

@@ -56,6 +56,9 @@ def prepare_inventory(root):
             dict(Id=71002, Name="purple_coin_2", Type="goods"),
             dict(Id=76005, Name="coop_expedition_coin_2", Type="goods"),
             dict(Id=77004, Name="ic_rogue_chess_coin_01_4", Type="goods"),
+            dict(Id=80001, Name="evolve_stone_archer", Type="evolve_stone", StoneType="HeroEvolve"),
+            dict(Id=80002, Name="evolve_stone_knight", Type="evolve_stone", StoneType="HeroEvolve"),
+            dict(Id=81000, Name="evolve_stone_rare", Type="evolve_stone", StoneType="HeroEvolve"),
             dict(Id=85001, Name="myth_stone_archer", Type="evolve_stone", StoneType="HeroMyth"),
             dict(Id=85002, Name="myth_stone_knight", Type="evolve_stone", StoneType="HeroMyth"),
             dict(
@@ -104,10 +107,39 @@ def prepare_inventory(root):
             ),
         ],
         "heroes": [
-            dict(Id=1, OriginId=1, Rank=2, PortraitAssetName="swordsman"),
+            dict(
+                Id=1,
+                OriginId=1,
+                Rank=2,
+                PortraitAssetName="swordsman",
+                Playable=True,
+                EvolvingStoneId=81000,
+            ),
             dict(Id=2, OriginId=1, Rank=6, PortraitAssetName="swordsman_myth"),
-            dict(Id=3, OriginId=1, Rank=4, PortraitAssetName="swordsman"),
-            dict(Id=4, OriginId=4, Rank=2, PortraitAssetName="archer"),
+            dict(
+                Id=3,
+                OriginId=1,
+                Rank=4,
+                PortraitAssetName="swordsman",
+                Playable=True,
+                EvolvingStoneId=81000,
+            ),
+            dict(
+                Id=4,
+                OriginId=4,
+                Rank=2,
+                PortraitAssetName="archer",
+                Playable=True,
+                EvolvingStoneId=80001,
+            ),
+            dict(
+                Id=5,
+                OriginId=5,
+                Rank=2,
+                PortraitAssetName="healer",
+                Playable=True,
+                EvolvingStoneId=81000,
+            ),
         ],
         "buffs": [],
         "options": [
@@ -651,6 +683,29 @@ class InventoryPanelTests(unittest.TestCase):
         self.call(path, body | {"version": result["version"], "set": totals})
         balances = {i["key"]: i["balance"] for i in self.call(path)["materials"]}
         self.assertEqual({key: balances[key] for key in totals}, totals)
+
+    def test_account_edits_personal_and_shared_evolution_stones_independently(self):
+        self.seed_wallet()
+        path = "/api/game/account"
+        view = self.call(path)
+        stones = {
+            row["id"]: row for row in view["materials"] if row["group"] == "Hero Evolution Stones"
+        }
+        self.assertEqual(set(stones), {80001, 80002, 81000})
+        self.assertEqual(stones[80001]["choice"], "Archer")
+        self.assertFalse(stones[80001]["catalogOnly"])
+        self.assertTrue(stones[80002]["catalogOnly"])
+        self.assertEqual(stones[81000]["choice"], "Rare Evolution Stone")
+        self.assertEqual(stones[81000]["limit"], 100_000)
+        request = dict(name=view["name"], tag=view["tag"], version=view["version"], add={})
+        totals = {"material-80001": 100_000, "material-81000": 35, "material-85001": 9}
+        with self.assertRaises(HTTPError) as invalid:
+            self.call(path, request | {"set": totals | {"material-80001": 100_001}})
+        self.assertEqual(invalid.exception.code, 400)
+        saved = self.call(path, request | {"set": totals})
+        self.call(path, request | {"version": saved["version"], "set": {"material-80001": 0}})
+        balances = {row["key"]: row["balance"] for row in self.call(path)["materials"]}
+        self.assertEqual({key: balances[key] for key in totals}, totals | {"material-80001": 0})
 
     def test_account_keeps_legacy_balances_and_checks_guild_owner(self):
         profile = self.seed_wallet()

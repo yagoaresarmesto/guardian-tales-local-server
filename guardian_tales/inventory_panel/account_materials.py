@@ -7,6 +7,10 @@ from collections import defaultdict
 
 DEFAULT_ITEM_LIMIT = 100_000
 ITEM_LIMITS = {"experience": 1_000_000_000, "jewel_powder": 1_000_000_000}
+HERO_STONES = {
+    "HeroEvolve": ("Hero Evolution Stones", "evolve_stone_", "Evolution Stone"),
+    "HeroMyth": ("Hero Myth Stones", "myth_stone_", "Myth Stone"),
+}
 GOODS = {
     "jewel_powder": "Jewel Powder",
     "herocrystal": "Hero Crystal",
@@ -53,18 +57,31 @@ def account_materials(catalog, tables):
     heroes_by_stone = defaultdict(set)
     if "heroes" in tables:
         for hero in json.loads(tables["heroes"][1]):
-            hero_name = catalog.equipment.hero_names.get(hero["Id"])
-            if hero.get("Playable") and hero.get("MythStoneId") and hero_name:
-                heroes_by_stone[hero["MythStoneId"]].add(hero_name)
+            if not hero.get("Playable"):
+                continue
+            for stone in (hero.get("EvolvingStoneId"), hero.get("MythStoneId")):
+                if stone:
+                    heroes_by_stone[stone].add(hero.get("OriginId") or hero["Id"])
     materials = []
+    evolution_choices = defaultdict(list)
     for ident, spec in catalog.specs.items():
         name = spec.get("Name", "")
         group = choice = None
-        if spec.get("Type") == "evolve_stone" and spec.get("StoneType") == "HeroMyth":
-            group = "Hero Myth Stones"
-            fallback = name.removeprefix("myth_stone_").replace("_", " ").title()
-            label = catalog.names.get(ident) or f"{fallback} Myth Stone"
-            choice = " / ".join(sorted(heroes_by_stone[ident])) or label.removesuffix(" Myth Stone")
+        extra = {}
+        stone_type = spec.get("StoneType")
+        if spec.get("Type") == "evolve_stone" and stone_type in HERO_STONES:
+            group, prefix, suffix = HERO_STONES[stone_type]
+            fallback = name.removeprefix(prefix).replace("_", " ").title()
+            label = catalog.names.get(ident) or f"{fallback} {suffix}"
+            origins = heroes_by_stone.get(ident, ())
+            names = catalog.equipment.hero_names
+            hero_names = sorted({names[origin] for origin in origins if origin in names})
+            choice = " / ".join(hero_names) or label.removesuffix(" " + suffix)
+            if stone_type == "HeroEvolve":
+                extra = dict(catalogOnly=not origins)
+                if len(origins) > 1:
+                    choice = label
+                    extra["searchAliases"] = hero_names
         elif spec.get("Type") != "goods":
             continue
         elif name in GOODS:
@@ -91,6 +108,15 @@ def account_materials(catalog, tables):
                 choice=choice,
                 preferred=ident in preferred,
                 limit=item_balance_limit(spec),
+                **extra,
             )
         )
+        if group == HERO_STONES["HeroEvolve"][0]:
+            evolution_choices[choice].append(materials[-1])
+    # Alternate versions can share a short hero name but use different stones.
+    for variants in evolution_choices.values():
+        if len(variants) > 1:
+            for item in variants:
+                item.setdefault("searchAliases", []).append(item["choice"])
+                item["choice"] = item["label"].removesuffix(" Evolution Stone")
     return materials
