@@ -71,12 +71,12 @@
 .material-group[open] > summary { background: #24344b; }
 .stone-picker { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 10px var(--inset); color: var(--muted); font-size: .85rem; }
 .stone-picker select { flex: 1 1 12rem; color: #eff5ff; }
-.evolution-stone-list {
+.stone-balance-list {
   max-height: min(52vh, 26rem); overflow-y: auto; scrollbar-gutter: stable;
   scroll-padding-block: 2.25rem .5rem;
 }
-.evolution-stone-list > .balance-columns { position: sticky; top: 0; z-index: 1; }
-.evolution-stone-list:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.stone-balance-list > .balance-columns { position: sticky; top: 0; z-index: 1; }
+.stone-balance-list:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
 #material-edits, #material-empty { padding: 13px var(--inset); font-size: .86rem; }
 #material-edits { color: var(--gold); border-top: 1px solid var(--line); }
 .account-actions {
