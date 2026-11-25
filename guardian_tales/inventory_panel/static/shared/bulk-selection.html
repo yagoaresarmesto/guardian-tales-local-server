@@ -1,0 +1,23 @@
+    <section id="bulk-toolbar" aria-label="Selection actions" hidden>
+      <div class="bulk-controls">
+        <strong id="bulk-count" aria-live="polite">0 selected</strong>
+        <button type="button" id="bulk-page">Select page</button>
+        <button type="button" id="bulk-clear">Clear</button>
+        <div class="bulk-actions">
+          <button type="button" id="bulk-lock">Lock</button>
+          <button type="button" id="bulk-unlock">Unlock</button>
+          <button type="button" id="bulk-delete" class="delete-copy-button" aria-haspopup="dialog">Delete</button>
+        </div>
+      </div>
+      <p id="bulk-status" role="status" hidden></p>
+    </section>
+    <dialog id="bulk-dialog" class="item-catalog delete-dialog" aria-labelledby="bulk-heading" aria-describedby="bulk-warning">
+      <header class="section-bar"><h2 id="bulk-heading">Delete selected copies?</h2></header>
+      <div class="delete-body">
+        <p id="bulk-warning"></p>
+        <ul id="bulk-review"></ul>
+        <p id="bulk-problem" role="status" hidden></p>
+      </div>
+      <footer><button type="button" id="bulk-cancel" autofocus>Cancel</button>
+        <button type="button" class="delete-copy-button" id="bulk-confirm">Delete copies</button></footer>
+    </dialog>

@@ -23,6 +23,7 @@ FILES = {
     "/equipment-options.js": (STATIC / "equipment/options.js", JS),
     "/equipment-add.js": (STATIC / "equipment/add.js", JS),
     "/copy-protection.js": (STATIC / "shared/copy-protection.js", JS),
+    "/bulk-selection.js": (STATIC / "shared/bulk-selection.js", JS),
     "/delete-copy.js": (STATIC / "shared/delete-copy.js", JS),
     "/catalog-picker.js": (STATIC / "shared/catalog-picker.js", JS),
 }
@@ -48,6 +49,7 @@ def render_page(slug):
             type_label="Relic family" if slug == "relics" else "Equipment type",
         )
         dialog += (STATIC / "shared/delete-copy.html").read_text(encoding="utf-8")
+        dialog += (STATIC / "shared/bulk-selection.html").read_text(encoding="utf-8")
     return render_layout(
         directory / "view.html",
         tabs=(("/" + key, key.capitalize()) for key in TITLES),

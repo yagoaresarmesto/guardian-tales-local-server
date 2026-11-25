@@ -665,6 +665,87 @@ class InventoryPanelTests(unittest.TestCase):
                         profile,
                     )
 
+    def test_bulk_actions_validate_every_copy_and_commit_each_selection_once(self):
+        profile = self.seed_wallet()
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        user = profile["User"]
+        user.update(TrainingSlots={}, Characters=[{"Weapon1": 11, "Relic": 12}], ItemIdCounter=27)
+        for bucket, duplicate, sibling in (("ItemWeapons", 24, 26), ("ItemMiscs", 25, 27)):
+            first = user[bucket][0]
+            first["Locked"] = False
+            user[bucket].extend((dict(first, Id=duplicate, Locked=True), dict(first, Id=sibling)))
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY, startup_reads TEXT)")
+
+        def saved():
+            return json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+
+        for tab, bucket, field, duplicate in (
+            ("equipment", "ItemWeapons", "Weapon1", 24),
+            ("relics", "ItemMiscs", "Relic", 25),
+        ):
+            with self.subTest(tab=tab):
+                api = "/api/game/" + tab
+                first = user[bucket][0]
+                selected = [first, next(r for r in user[bucket] if r["Id"] == duplicate)]
+                copies = [dict(id=r["Id"], spec=r["ItemId"]) for r in selected]
+                payload = dict(copies=copies, version=self.call(api)["inventoryVersion"])
+
+                def reject(action, body, status):
+                    with self.assertRaises(HTTPError) as error:
+                        self.call(api + "/" + action, body)
+                    self.assertEqual(error.exception.code, status)
+                    error.exception.close()
+                    self.assertEqual(saved(), profile)
+
+                reject("delete", payload, 400)  # Last selected copy is locked.
+                reject("lock", dict(payload, copies=[copies[0], copies[0]]), 400)
+                reject("lock", dict(payload, copies=[copies[0], dict(copies[1], spec=999)]), 400)
+                with StateLock(self.root):
+                    reject("unlock", payload, 423)
+                for action, locked in (("lock", True), ("unlock", False)):
+                    old_token = payload["version"]
+                    result = self.call(api + "/" + action, payload)
+                    user["Cas"] += 1
+                    for row in selected:
+                        row["Locked"] = locked
+                    self.assertEqual(result["ids"], [r["Id"] for r in selected])
+                    self.assertIs(result["locked"], locked)
+                    self.assertEqual(result["revision"], user["Cas"])
+                    self.assertEqual(saved(), profile)
+                    payload["version"] = result["inventoryVersion"]
+                    reject("delete", dict(payload, version=old_token), 409)
+
+                result = self.call(api + "/delete", payload)
+                user["Cas"] += 1
+                user[bucket] = [r for r in user[bucket] if r not in selected]
+                user["Characters"][0][field] = None
+                self.assertEqual(result["revision"], user["Cas"])
+                self.assertEqual(result["inventoryVersion"], self.call(api)["inventoryVersion"])
+                self.assertEqual(saved(), profile)
+                reject("delete", payload, 409)
+
+    def test_batch_larger_than_a_page_fits_in_one_protection_request(self):
+        profile = self.seed_wallet()
+        user = profile["User"]
+        rows = [dict(user["ItemWeapons"][0], Id=i, Locked=False) for i in range(100, 300)]
+        user["ItemWeapons"].extend(rows)
+        user["ItemIdCounter"] = 299
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        api = "/api/game/equipment"
+        result = self.call(
+            api + "/lock",
+            dict(
+                copies=[dict(id=row["Id"], spec=row["ItemId"]) for row in rows],
+                version=self.call(api)["inventoryVersion"],
+            ),
+        )
+        self.assertEqual(result["ids"], [row["Id"] for row in rows])
+        self.assertEqual(result["revision"], user["Cas"] + 1)
+        self.assertTrue(all(row["locked"] for row in self.call(api)["rows"] if row["id"] >= 100))
+
     def test_panel_unlock_checks_inventory_spec_and_unambiguous_owned_id(self):
         profile = self.seed_wallet()
         db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))

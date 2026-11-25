@@ -148,16 +148,16 @@ def remove_owned_items(db, profile, quantities, *, extractable=None):
         ):
             raise ValueError("Removal requires sufficient unlocked items outside protected uses")
         if row["Locked"]:
-            raise ValueError("Unlock this copy first.")
+            raise ValueError(f"Unlock copy #{key} first.")
         if row["Id"] in protected:
             raise ValueError(
-                "Remove this copy from presets, Training Room or equipment costumes first."
+                f"Remove copy #{key} from presets, Training Room or equipment costumes first."
             )
         sockets = row.get("JewelSlots")
         if sockets is not None and (
             not isinstance(sockets, list) or any(jewel not in (None, 0) for jewel in sockets)
         ):
-            raise ValueError("Detach socketed jewels in the game first.")
+            raise ValueError(f"Detach the jewels from copy #{key} in the game first.")
         targets.append((row, count))
     if user["Cas"] == MAX_REVISION:
         raise ValueError("Sale revision overflow")

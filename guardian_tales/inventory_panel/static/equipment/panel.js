@@ -1,3 +1,4 @@
+import { bulkSelection } from "/bulk-selection.js";
 import { copyProtection } from "/copy-protection.js";
 import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
@@ -10,12 +11,18 @@ const hammerEditor = preview ? null : quantityEditor($("hammer-editor"), {
   lock: () => editor.lock(), reload: load, saved: () => draw(),
 });
 let grantDialog, listing, writable = false;
-const protection = preview ? null : copyProtection("/api/game/equipment", () => listing.inventoryVersion, result => {
+function protectionChanged(result) {
   listing.revision = result.revision;
   listing.inventoryVersion = result.inventoryVersion;
   draw();
-}, load, note);
-const deletion = preview ? null : copyDeletion("/api/game/equipment", () => {
+}
+const equipmentApi = "/api/game/equipment";
+const protection = preview ? null : copyProtection(equipmentApi, () => listing.inventoryVersion, protectionChanged, load, note);
+const bulk = preview ? null : bulkSelection({
+  api: equipmentApi, version: () => listing.inventoryVersion, focusId: () => selected,
+  describe: row => row, onProtection: protectionChanged, reload: load,
+});
+const deletion = preview ? null : copyDeletion(equipmentApi, () => {
   const index = visible.findIndex(row => row.id === selected);
   if (index < 0 || kind === "enhance") return null;
   return {...visible[index], version: listing.inventoryVersion, nextId: visible[index + 1]?.id ?? visible[index - 1]?.id};
@@ -28,6 +35,7 @@ const editor = preview ? null : equipmentOptions(load, allowed => {
   hammerEditor.setWritable(allowed);
   deletion.setWritable(allowed);
   protection.setWritable(allowed);
+  bulk.setWritable(allowed);
   grantDialog?.setWritable(allowed);
 });
 document.body.classList.toggle("live-equipment", !preview);
@@ -210,7 +218,9 @@ function drawDetails() {
 }
 function draw() {
   const start = page * pageSize;
-  $("tiles").replaceChildren(...visible.slice(start, start + pageSize).map(item => tile(item, item.id === selected)));
+  const pageRows = visible.slice(start, start + pageSize);
+  $("tiles").replaceChildren(...pageRows.map(item => tile(item, item.id === selected)));
+  bulk?.page(pageRows, kind !== "enhance");
   $("empty").hidden = !!visible.length;
   $("range").textContent = visible.length
     ? (start + 1) + "–" + Math.min(start + pageSize, visible.length) + " of " + visible.length + " items"
@@ -241,6 +251,7 @@ async function load() {
   if (!res.ok) throw new Error("Could not load the equipment inventory.");
   const data = await res.json();
   listing = data;
+  bulk?.reset();
   hasIcons = data.hasIcons;
   if (!preview) $("open-equipment-catalog").disabled = false;
   items = preview ? data.rows.filter(item => item.group === "Equipment") : data.rows;
@@ -295,7 +306,7 @@ $("types").onclick = e => {
 $("mobile-types").onchange = e => applyType(e.target.value);
 $("tiles").onclick = e => {
   const btn = e.target.closest("button[data-id]");
-  if (!btn) return;
+  if (!btn || bulk?.toggle(Number(btn.dataset.id))) return;
   selected = Number(btn.dataset.id);
   for (const other of $("tiles").children) other.setAttribute("aria-pressed", String(other === btn));
   note(); drawDetails(); updateUrl();

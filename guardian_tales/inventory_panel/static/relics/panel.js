@@ -1,3 +1,4 @@
+import { bulkSelection } from "/bulk-selection.js";
 import { copyProtection } from "/copy-protection.js";
 import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
@@ -12,12 +13,17 @@ let selected = Number(initialQuery.get("id")), family = initialQuery.get("type")
 let page = 0, data, visible = [], draft = [], saving = false, grantDialog;
 const relicApi = "/api/game/relics";
 let writable = false, statusRequest = 0;
-const protection = copyProtection(relicApi, () => data.inventoryVersion, result => {
+function protectionChanged(result) {
   data.revision = result.revision;
   data.inventoryVersion = result.inventoryVersion;
   drawGrid();
   showProtection(current());
-}, load, note);
+}
+const protection = copyProtection(relicApi, () => data.inventoryVersion, protectionChanged, load, note);
+const bulk = bulkSelection({
+  api: relicApi, version: () => data.inventoryVersion, focusId: () => selected,
+  describe: row => data.specs[row.spec], onProtection: protectionChanged, reload: load,
+});
 const deletion = copyDeletion(relicApi, () => {
   const row = current();
   if (!row) return null;
@@ -80,7 +86,9 @@ function tile(r, pressed, idLabel) {
 }
 function drawGrid() {
   const start = page * size;
-  $("tiles").replaceChildren(...visible.slice(start, start + size).map(r => tile(r, selected === r.id)));
+  const pageRows = visible.slice(start, start + size);
+  $("tiles").replaceChildren(...pageRows.map(r => tile(r, selected === r.id)));
+  bulk.page(pageRows);
   $("empty").hidden = !!visible.length;
   $("range").textContent = visible.length ? (start + 1) + "–" + Math.min(start + size,visible.length) + " of " + visible.length + " relics" : "0 relics";
   $("prev").disabled = page === 0; $("next").disabled = start + size >= visible.length;
@@ -108,6 +116,7 @@ function setAccess(available, message = "") {
   grantDialog?.setWritable(writable);
   deletion.setWritable(writable);
   protection.setWritable(writable);
+  bulk.setWritable(writable);
   $("access").hidden = writable;
   const text = message || "Apply is locked while the game save is in use. Close Guardian Tales and stop the backend to enable it.";
   if (!writable && $("access").textContent !== text) $("access").textContent = text;
@@ -208,7 +217,7 @@ function filter() {
 async function load() {
   const response = await fetch(relicApi, {cache:"no-store"});
   if (!response.ok) throw new Error("Could not load your relics.");
-  data = await response.json(); drawFamilies(); filter(); setAccess(data.writable);
+  data = await response.json(); bulk.reset(); drawFamilies(); filter(); setAccess(data.writable);
   $("open-relics-catalog").disabled = false;
 }
 $("open-relics-catalog").onclick = async () => {
@@ -241,7 +250,8 @@ function navigate(action) {
   action(); note();
 }
 $("tiles").onclick = e => {
-  const btn = e.target.closest("button[data-id]"); if (!btn || selected === Number(btn.dataset.id)) return;
+  const btn = e.target.closest("button[data-id]");
+  if (!btn || bulk.toggle(Number(btn.dataset.id)) || selected === Number(btn.dataset.id)) return;
   navigate(() => {
     selected = Number(btn.dataset.id);
     for (const other of $("tiles").children) other.setAttribute("aria-pressed", String(other === btn));
