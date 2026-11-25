@@ -4,9 +4,9 @@
 import json
 from functools import lru_cache
 
-from .characters import owned_character
+from .characters import hero_resource, owned_character
+from .hero_catalog import growth_tables
 from .hero_stones import spend_hero_stones
-from .raid_static import decode, records
 from .village import INT_MAX, MAX_REVISION, integer
 
 ROUTE = "/user/myth-character/v2"
@@ -21,14 +21,14 @@ def create_tables(db):
 
 @lru_cache(maxsize=2)
 def rules(body):
-    tables = records(decode(body))[1]
+    tables = growth_tables(body)
     try:
-        constants = json.loads(tables["constants"][1])
+        constants = json.loads(tables["constants"])
         rank = constants["MythCharacterRank"]
         rate = constants["DreamMythStoneExchangeRate"]
-        exp = json.loads(tables["exps2"][1])
+        exp = json.loads(tables["exps2"])
         maximum = exp["Constants"]["MaxLimitBreak"]
-        items = json.loads(tables["items"][1])
+        items = json.loads(tables["items"])
         (dream,) = (
             i["Id"]
             for i in items
@@ -48,7 +48,7 @@ def rules(body):
                 if category in prices or not integer(cost, minimum=1):
                     raise ValueError("Invalid Myth stone price")
                 prices[category] = cost
-        heroes = {h["Id"]: h for h in json.loads(tables["heroes"][1]) if h.get("Playable") is True}
+        heroes = {h["Id"]: h for h in json.loads(tables["heroes"]) if h.get("Playable") is True}
         forms = {}
         for ident, source in heroes.items():
             link = source.get("MythTo") or {}
@@ -97,7 +97,7 @@ def promote(account, body, operation_id):
         if previous:
             if tuple(previous) != (ident, budget):
                 raise ValueError("Myth identity already belongs to another request")
-            return {"User": user, "UserRecord": record}
+            return {"User": hero_resource(user, "Assets", "ItemStackables"), "UserRecord": record}
         hero = owned_character(user, ident)
         forms, maximum, dream, rate = rules(account.references.read_bytes("static_data_get.bin"))
         form = forms.get(hero.get("CharacterId"))
@@ -132,4 +132,4 @@ def promote(account, body, operation_id):
             (json.dumps(profile, separators=(",", ":")),),
         )
         db.execute("INSERT INTO hero_myth_requests VALUES(?,?,?)", (operation_id, ident, budget))
-    return {"User": user, "UserRecord": record}
+    return {"User": hero_resource(user, "Assets", "ItemStackables"), "UserRecord": record}

@@ -4,9 +4,9 @@
 import json
 from functools import lru_cache
 
-from .characters import owned_character
+from .characters import hero_resource, owned_character
+from .hero_catalog import growth_tables
 from .hero_stones import spend_hero_stones
-from .raid_static import decode, records
 from .village import INT_MAX, MAX_REVISION, integer
 
 ROUTE = "/user/evolve-character/v2"
@@ -27,17 +27,17 @@ def create_tables(db):
 
 @lru_cache(maxsize=2)
 def rules(body):
-    tables = records(decode(body))[1]
+    tables = growth_tables(body)
     try:
-        heroes = {h["Id"]: h for h in json.loads(tables["heroes"][1]) if h.get("Playable") is True}
-        items = json.loads(tables["items"][1])
+        heroes = {h["Id"]: h for h in json.loads(tables["heroes"]) if h.get("Playable") is True}
+        items = json.loads(tables["items"])
         stones = {i["Id"] for i in items if i.get("Type") == "evolve_stone"}
         (dream,) = (
             i["Id"]
             for i in items
             if i.get("Name") == "dream_spiritstone" and i.get("Type") == "goods"
         )
-        constants = json.loads(tables["constants"][1])
+        constants = json.loads(tables["constants"])
         rates = {category: constants[key] for category, key in RATE_KEYS.items()}
         if not integer(dream, minimum=1) or not all(
             integer(rate, minimum=1) for rate in rates.values()
@@ -56,7 +56,7 @@ def rules(body):
             ):
                 forms[ident] = (hero["Rank"], target["Id"], hero["EvolvingStoneId"], rate)
         steps = {}
-        for row in json.loads(tables["exps2"][1])["Evolves"]:
+        for row in json.loads(tables["exps2"])["Evolves"]:
             rank_steps = steps.setdefault(row["Rank"], {})
             if (
                 row["Upgrade"] in rank_steps
@@ -111,7 +111,7 @@ def evolve(account, body, operation_id):
         if previous:
             if tuple(previous) != (ident, count, budget):
                 raise ValueError("Evolution identity already belongs to another request")
-            return {"User": user, "UserRecord": record}
+            return {"User": hero_resource(user, "Assets", "ItemStackables"), "UserRecord": record}
         hero = owned_character(user, ident)
         forms, steps, dream = rules(account.references.read_bytes("static_data_get.bin"))
         form = forms.get(hero["CharacterId"])
@@ -148,4 +148,4 @@ def evolve(account, body, operation_id):
             "INSERT INTO hero_evolution_requests VALUES(?,?,?,?)",
             (operation_id, ident, count, budget),
         )
-    return {"User": user, "UserRecord": record}
+    return {"User": hero_resource(user, "Assets", "ItemStackables"), "UserRecord": record}

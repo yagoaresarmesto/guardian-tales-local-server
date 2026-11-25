@@ -4,6 +4,14 @@
 from .village import integer
 
 
+def hero_resource(user, *payment_fields):
+    # User.Apply merges supplied collections. Include the full roster and any
+    # payment collections, even when spending the last stack leaves an empty list.
+    resource = {key: user[key] for key in ("Id", "Cas", "Characters")}
+    resource.update((key, user[key]) for key in payment_fields if key in user)
+    return resource
+
+
 def owned_character(user, ident):
     roster = user.get("Characters")
     if not isinstance(roster, list) or any(

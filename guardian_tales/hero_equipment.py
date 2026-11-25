@@ -4,6 +4,7 @@
 import json
 from functools import lru_cache
 
+from .characters import hero_resource as resource
 from .head_hunter_static import active_spec as head_hunter_spec
 from .raid_static import decode, records
 from .test_item_static import active_specs
@@ -41,12 +42,6 @@ def catalog(body):
             raise ValueError("Hero equipment requires matching unambiguous hero/item tables")
         result.append({r["Id"]: r for r in rows})
     return tuple(result)
-
-
-def resource(user):
-    # Send the complete current roster, including displaced holders and explicit
-    # null slots. Do not replace inventories, presets, currencies or progression.
-    return {key: user[key] for key in ("Id", "Cas", "Characters")}
 
 
 def selection(route, body):

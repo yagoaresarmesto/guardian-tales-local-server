@@ -93,7 +93,10 @@ class HeroEvolutionTests(VillageFixture, unittest.TestCase):
         user["ItemStackables"].pop(0)
         record["Cas"] += 1
         record["EvolveCharacterCount"] += 1
-        self.assertEqual(result, {"User": user, "UserRecord": record})
+        roster_update = {
+            k: user[k] for k in ("Id", "Cas", "Characters", "Assets", "ItemStackables")
+        }
+        self.assertEqual(result, {"User": roster_update, "UserRecord": record})
         self.assertEqual(self.store.account.profile(), expected)
         self.db.close()
         self.db = sqlite3.connect(self.state / "server.sqlite3")

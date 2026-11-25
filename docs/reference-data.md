@@ -625,6 +625,12 @@ the matching catalog.
 
 ## Hero evolution
 
+The backend prepares the shared hero catalog at startup. Evolution, Limit Break,
+Blessing, Myth and Awakening reuse those verified tables. Each successful reply
+includes the full roster and the currency or material collections used by that
+action. This keeps equipment inventories out of the reply. Reconnecting still
+loads the full saved profile.
+
 In **Heroes → Evolution**, select zero Dream Evolution Stones to pay entirely
 with the selected hero's own stones. With a positive selection, the backend
 spends Dream Stones first, up to the cost of the requested steps, and charges

@@ -5,11 +5,13 @@ import copy
 import json
 import sqlite3
 import unittest
+from unittest.mock import patch
 
 from guardian_tales.characters import new_character
-from guardian_tales.hero_limit_break import ROUTE
+from guardian_tales.hero_catalog import growth_tables, warm_growth_tables
+from guardian_tales.hero_limit_break import ROUTE, rules
 from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, digest
+from guardian_tales.raid_static import compress, decode, digest
 from guardian_tales.village import MAX_REVISION
 from tests.test_village_harvest import VillageFixture
 
@@ -58,6 +60,21 @@ class HeroLimitBreakTests(VillageFixture, unittest.TestCase):
     def run_break(self, who=1, count=1, seq=51):
         return self.call({"CharacterId": who, "LimitBreakCount": count}, ROUTE, sequence=seq)
 
+    def test_warmed_tables_follow_pack_content_and_still_reject_invalid_records(self):
+        growth_tables.cache_clear()
+        rules.cache_clear()
+        with patch("guardian_tales.hero_catalog.decode", wraps=decode) as unpack:
+            warm_growth_tables(self.store.references)
+            self.assertEqual(self.run_break()["User"]["Assets"][0]["Amount"], 40)
+            self.assertEqual(unpack.call_count, 1)
+            # Replace the pack under the same filename; even unused tables need valid checksums.
+            raw = decode(self.static.read_bytes()) + b"unrelated\n[]\n1\ninvalid\n"
+            self.static.write_bytes(compress(raw))
+            warm_growth_tables(self.store.references)
+            with self.assertRaises(PacketError):
+                self.run_break(seq=52)
+            self.assertEqual(self.store.account.profile()["User"]["Assets"][0]["Amount"], 40)
+
     def test_single_then_bulk_only_charge_new_steps_and_retry_after_reconnect(self):
         expected = copy.deepcopy(self.profile)
         user, record = expected["User"], expected["UserRecord"]
@@ -69,7 +86,8 @@ class HeroLimitBreakTests(VillageFixture, unittest.TestCase):
             record["LimitBreakCharacterCount"] += count
             user["Cas"] += 1
             record["Cas"] += 1
-            self.assertEqual(result, {"User": user, "UserRecord": record})
+            roster_update = {k: user[k] for k in ("Id", "Cas", "Characters", "Assets")}
+            self.assertEqual(result, {"User": roster_update, "UserRecord": record})
             self.assertEqual(self.store.account.profile(), expected)
         with self.assertRaises(PacketError):
             self.run_break(seq=53)

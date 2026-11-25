@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 from .bootstrap import BOOTSTRAP_ROUTES, BootstrapSession, GuestStore
+from .hero_catalog import warm_growth_tables
 from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
 from .protocol import PacketError, decode_frame, encode_wire, frame_length, make_pong
@@ -114,6 +115,7 @@ class LocalServer:
             context.set_servername_callback(
                 lambda connection, name, ctx: self.bump("tls_client_hellos")
             )
+            warm_growth_tables(self.guests.references)
             for name, handler in (("api", self.handle), ("auth", self.platform_http)):
                 listener = await asyncio.start_server(
                     handler,

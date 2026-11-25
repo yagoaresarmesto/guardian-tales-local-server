@@ -5,7 +5,7 @@ import json
 from dataclasses import dataclass
 from functools import lru_cache
 
-from .raid_static import decode, records
+from .hero_catalog import growth_tables
 from .village import integer
 
 
@@ -96,10 +96,10 @@ def build_tree(config, packed_nodes, layout, drawing, prices):
 
 @lru_cache(maxsize=2)
 def catalog(body):
-    tables = records(decode(body))[1]
+    tables = growth_tables(body)
 
     def read(name):
-        return json.loads(tables[name][1])
+        return json.loads(tables[name])
 
     try:
         prices = {}

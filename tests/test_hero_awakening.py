@@ -111,6 +111,7 @@ class HeroAwakeningTests(VillageFixture, unittest.TestCase):
         user["Characters"][0]["AwakeningTree"] = prefix + "|AA=="
         self.save_profile(self.profile)
         after = self.awaken([3])
+        self.assertEqual(set(after), {"Id", "Cas", "Characters", "Assets", "ItemStackables"})
         self.assertEqual(after["Characters"][0]["AwakeningTree"], prefix + "|CAA=")
         self.assertEqual(after["Assets"][0], dict(Id=GOLD, Amount=690, Spent=-110))
         self.assertEqual(after["ItemStackables"][0]["Amount"], 98)

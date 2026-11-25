@@ -65,7 +65,8 @@ class HeroBlessingTests(VillageFixture, unittest.TestCase):
         user["Cas"] += 1
         record["Misc"]["BlessCharacterCount"] += 1
         record["Cas"] += 1
-        self.assertEqual(self.call(self.body, ONE), {"User": user, "UserRecord": record})
+        roster_update = {k: user[k] for k in ("Id", "Cas", "Characters", "ItemStackables")}
+        self.assertEqual(self.call(self.body, ONE), {"User": roster_update, "UserRecord": record})
         self.assertEqual(self.store.account.profile(), expected)
         user["Characters"][0]["BlessLevel"] = 3
         user["ItemStackables"][0]["Amount"] -= 19
@@ -73,7 +74,8 @@ class HeroBlessingTests(VillageFixture, unittest.TestCase):
         record["Misc"]["BlessCharacterCount"] += 2
         record["Cas"] += 1
         result = self.call(self.body, ALL, sequence=52)
-        self.assertEqual(result, {"User": user, "UserRecord": record})
+        roster_update = {k: user[k] for k in ("Id", "Cas", "Characters", "ItemStackables")}
+        self.assertEqual(result, {"User": roster_update, "UserRecord": record})
         self.db.close()
         self.db = sqlite3.connect(self.state / "server.sqlite3")
         self.open_session(reconnect=True)

@@ -4,8 +4,8 @@
 import json
 from functools import lru_cache
 
-from .characters import owned_character
-from .raid_static import decode, records
+from .characters import hero_resource, owned_character
+from .hero_catalog import growth_tables
 from .summon_payment import spend_tickets
 from .village import INT_MAX, MAX_REVISION, integer
 
@@ -24,10 +24,10 @@ def create_tables(db):
 
 @lru_cache(maxsize=2)
 def rules(body):
-    tables = records(decode(body))[1]
+    tables = growth_tables(body)
     try:
         costs = {}
-        for row in json.loads(tables["exps2"][1])["HeroBlessing"]:
+        for row in json.loads(tables["exps2"])["HeroBlessing"]:
             level = int(row["BlessingLevel"])
             cost = row["BlessingCosts"]
             if level in costs or not integer(level) or not integer(cost, minimum=1):
@@ -37,7 +37,7 @@ def rules(body):
         if not prices:
             raise ValueError("Missing blessing levels")
         caps = {}
-        for spec in json.loads(tables["heroes"][1]):
+        for spec in json.loads(tables["heroes"]):
             tiers = spec.get("BlessingLevelOptions")
             if spec.get("Playable") is True and tiers:
                 if not isinstance(tiers, list) or not all(isinstance(t, list) and t for t in tiers):
@@ -45,12 +45,10 @@ def rules(body):
                 caps[spec["Id"]] = min(len(prices), len(tiers))
         (ticket,) = (
             s["Id"]
-            for s in json.loads(tables["items"][1])
+            for s in json.loads(tables["items"])
             if s.get("Type") == "ticket" and s.get("Name") == "hero_blessing_ticket"
         )
-        (unlock,) = (
-            r for r in json.loads(tables["unlockfeature"][1]) if r["Id"] == BLESSING_FEATURE
-        )
+        (unlock,) = (r for r in json.loads(tables["unlockfeature"]) if r["Id"] == BLESSING_FEATURE)
         region = unlock["Value"]
         quest = region.get("KakaoGlobal", region.get("Default"))
         if (
@@ -88,7 +86,7 @@ def bless(account, route, body, operation_id):
         if previous:
             if tuple(previous) != (route, ident):
                 raise ValueError("Blessing identity already belongs to another request")
-            return {"User": user, "UserRecord": record}
+            return {"User": hero_resource(user, "ItemStackables"), "UserRecord": record}
         hero = owned_character(user, ident)
         caps, prices, ticket, quest = rules(account.references.read_bytes("static_data_get.bin"))
         if not any(
@@ -127,4 +125,4 @@ def bless(account, route, body, operation_id):
             (json.dumps(profile, separators=(",", ":")),),
         )
         db.execute("INSERT INTO hero_blessing_requests VALUES(?,?,?)", (operation_id, route, ident))
-    return {"User": user, "UserRecord": record}
+    return {"User": hero_resource(user, "ItemStackables"), "UserRecord": record}

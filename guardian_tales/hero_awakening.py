@@ -8,7 +8,7 @@ from collections import Counter
 from datetime import datetime, timezone
 
 from .awakening_catalog import catalog
-from .characters import owned_character
+from .characters import hero_resource, owned_character
 from .summon_payment import spend_tickets as spend_stackables
 from .village import GOLD, INT_MAX, MAX_REVISION, integer
 
@@ -112,7 +112,7 @@ def awaken(account, body, operation_id):
         if prior:
             if prior[0] != selection:
                 raise ValueError("Awakening identity already belongs to another selection")
-            return {"User": user}
+            return {"User": hero_resource(user, "Assets", "ItemStackables")}
         hero = owned_character(user, ident)
         slots = user.get("TrainingSlots", {})
         if not isinstance(slots, dict) or any(
@@ -131,4 +131,4 @@ def awaken(account, body, operation_id):
             (json.dumps(profile, separators=(",", ":")),),
         )
         db.execute("INSERT INTO hero_awakening_requests VALUES(?,?)", (operation_id, selection))
-    return {"User": user}
+    return {"User": hero_resource(user, "Assets", "ItemStackables")}

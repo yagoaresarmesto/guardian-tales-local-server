@@ -4,8 +4,8 @@
 import json
 from functools import lru_cache
 
-from .characters import owned_character
-from .raid_static import decode, records
+from .characters import hero_resource, owned_character
+from .hero_catalog import growth_tables
 from .village import INT_MAX, MAX_REVISION, integer
 
 ROUTE = "/user/limitbreak-character/v2"
@@ -20,9 +20,9 @@ def create_tables(db):
 
 @lru_cache(maxsize=2)
 def rules(body):
-    tables = records(decode(body))[1]
+    tables = growth_tables(body)
     try:
-        exp = json.loads(tables["exps2"][1])
+        exp = json.loads(tables["exps2"])
         maximum = exp["Constants"]["MaxLimitBreak"]
         rows = exp["LimitBreaks"]
         if not integer(maximum, minimum=1) or len(rows) != maximum:
@@ -36,14 +36,14 @@ def rules(body):
             raise ValueError("Invalid limit break price")
         heroes = {
             h["Id"]: costs[h["SummonCategory"]]
-            for h in json.loads(tables["heroes"][1])
+            for h in json.loads(tables["heroes"])
             if h.get("Playable") is True
             and integer(h.get("Rank"), minimum=4)
             and h.get("SummonCategory") in costs
         }
         (crystal,) = (
             i["Id"]
-            for i in json.loads(tables["items"][1])
+            for i in json.loads(tables["items"])
             if i.get("Name") == "herocrystal" and i.get("Type") == "goods"
         )
         if not integer(crystal, minimum=1):
@@ -77,7 +77,7 @@ def limit_break(account, body, operation_id):
         if prior:
             if tuple(prior) != (ident, count):
                 raise ValueError("Limit break identity already belongs to another request")
-            return {"User": user, "UserRecord": record}
+            return {"User": hero_resource(user, "Assets"), "UserRecord": record}
         hero = owned_character(user, ident)
         heroes, crystal = rules(account.references.read_bytes("static_data_get.bin"))
         prices = heroes.get(hero.get("CharacterId"), ())
@@ -116,4 +116,4 @@ def limit_break(account, body, operation_id):
         db.execute(
             "INSERT INTO hero_limit_break_requests VALUES(?,?,?)", (operation_id, ident, count)
         )
-    return {"User": user, "UserRecord": record}
+    return {"User": hero_resource(user, "Assets"), "UserRecord": record}

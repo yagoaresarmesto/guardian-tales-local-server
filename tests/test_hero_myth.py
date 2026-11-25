@@ -98,7 +98,10 @@ class HeroMythTests(VillageFixture, unittest.TestCase):
         record["Cas"] += 1
         record["Misc"]["MythCharacterCount"] += 1
         result = self.myth(dream=10)
-        self.assertEqual(result, {"User": user, "UserRecord": record})
+        roster_update = {
+            k: user[k] for k in ("Id", "Cas", "Characters", "Assets", "ItemStackables")
+        }
+        self.assertEqual(result, {"User": roster_update, "UserRecord": record})
         self.assertEqual(self.store.account.profile(), expected)
         with self.assertRaises(PacketError):
             self.myth(seq=52)
