@@ -15,6 +15,7 @@ from .equipment_options import EquipmentOptionEditor
 from .hero_portraits import HeroPortraits
 from .mastery import MasteryEditor
 from .preview import Sandbox
+from .relic_grants import RelicGrants
 from .relics import RelicEditor
 from .stack_quantities import CONSUMABLES, StackQuantityEditor
 from .weapon_progression import WeaponProgression
@@ -41,7 +42,8 @@ class InventoryApplication:
             )
         self.mastery = MasteryEditor(database, references)
         self.account_editor = AccountEditor(database, references, self.catalog, tables)
-        self.relics = RelicEditor(database, self.catalog)
+        self.relics = RelicEditor(database, self.catalog, tables)
+        self.relic_grants = RelicGrants(database, self.catalog, self.relics.specs, tables)
         self.equipment = EquipmentOptionEditor(database, self.catalog, tables, progression)
         self.equipment_grants = EquipmentGrants(
             database, self.catalog, body, tables, self.equipment.specs
@@ -55,6 +57,7 @@ class InventoryApplication:
             "/api/game/equipment/catalog": self.equipment_grants.info,
             "/api/game/mastery": self.mastery.info,
             "/api/game/relics": self.relics.info,
+            "/api/game/relics/catalog": self.relic_grants.info,
         }
         self.edits = {
             "/api/lock": self.preview_change,
@@ -67,6 +70,7 @@ class InventoryApplication:
             "/api/game/mastery": self.mastery.write,
             "/api/game/mastery/preview": self.mastery.preview,
             "/api/game/relics": self.relics.apply,
+            "/api/game/relics/add": self.relic_grants.write,
         }
 
     def _preview(self):

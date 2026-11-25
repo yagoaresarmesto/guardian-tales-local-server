@@ -105,6 +105,7 @@ def prepare_inventory(root):
             dict(
                 Id=4,
                 Name="test_relic",
+                NameWithoutRarity="relic_scripture",
                 Type="relic",
                 OriginRarity=4,
                 BaseOptions=[[pool]],
@@ -163,7 +164,7 @@ def prepare_inventory(root):
             ),
         ],
         "buffs": [],
-        "constants": {"DefaultInventoryLimit": 8},
+        "constants": {"DefaultInventoryLimit": 8, "DefaultRelicInventoryLimit": 3},
         "options": [
             dict(
                 Id=10,
@@ -212,6 +213,16 @@ def prepare_inventory(root):
         ]
     )
     sword["EvolveTo"] = {"Default": 50, "KakaoGlobal": 56}
+    relic = next(item for item in catalog["items"] if item["Id"] == 4)
+    catalog["items"].extend(
+        [
+            dict(
+                relic, Id=61, Name="scripture_normal", OriginRarity=0, BaseOptions=[[pool], [], []]
+            ),
+            dict(relic, Id=62, Name="internal_relic", NameWithoutRarity="internal"),
+            dict(relic, Id=63, Name="future_relic", VersionFrom={"KakaoGlobal": "v999.0"}),
+        ]
+    )
     records = []
     for key, value in catalog.items():
         content = json.dumps(value)
@@ -476,6 +487,53 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertTrue(self.call("/inventory-dom.js"))
         self.assertTrue(self.call("/equipment-options.js"))
         self.assertTrue(self.call("/equipment-add.js"))
+        self.assertTrue(self.call("/catalog-picker.js"))
+
+    def test_add_relic_uses_native_star_slots_and_separate_capacity(self):
+        original = self.seed_wallet()["User"]
+        api = "/api/game/relics"
+        catalog = self.call(api + "/catalog")
+        self.assertEqual({i["spec"]: i["stars"] for i in catalog["items"]}, {4: 5, 61: 1})
+        body = dict(spec=61, version=catalog["version"])
+        for spec in (3, 62, 63, True):
+            with self.subTest(spec=spec), self.assertRaises(HTTPError) as rejected:
+                self.call(api + "/add", dict(body, spec=spec))
+            self.assertEqual(rejected.exception.code, 400)
+            rejected.exception.close()
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(api + "/add", body)
+        self.assertEqual(locked.exception.code, 423)
+        locked.exception.close()
+        self.assertEqual(self.call(api + "/add", body), {"id": 21, "spec": 61})
+        with self.assertRaises(HTTPError) as stale:
+            self.call(api + "/add", body)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        version = self.call(api + "/catalog")["version"]
+        self.assertEqual(self.call(api + "/add", dict(spec=4, version=version))["id"], 22)
+        listing = self.call(api)
+        new = {r["id"]: r for r in listing["copies"]}[21]
+        self.assertEqual(
+            (new["spec"], new["locked"], new["equipped"], new["jewels"]), (61, False, False, 0)
+        )
+        for source, group in [(1, "main"), (2, "bonus")]:
+            (row,) = new[group]
+            self.assertEqual(
+                (row["OptionSource"], row["OptionId"], row["Locked"]), (source, 7, False)
+            )
+            self.assertIn(row["Level"], range(1, 4))
+        catalog = self.call(api + "/catalog")
+        self.assertFalse(catalog["spaceAvailable"])
+        with self.assertRaises(HTTPError) as full:
+            self.call(api + "/add", dict(body, version=catalog["version"]))
+        self.assertEqual(full.exception.code, 400)
+        full.exception.close()
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            user = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])["User"]
+        self.assertEqual(user["ItemMiscs"][:-2], original["ItemMiscs"])
+        self.assertEqual((user["ItemIdCounter"], user["Cas"]), (22, original["Cas"] + 2))
+        for field in ("ItemWeapons", "ItemStackables", "Assets", "Characters"):
+            self.assertEqual(user[field], original[field])
 
     def test_add_standard_equipment_and_reject_replayed_or_unlisted_grants(self):
         original = self.seed_wallet()["User"]

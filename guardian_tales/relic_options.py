@@ -70,6 +70,13 @@ def load_catalog(references):
     return value
 
 
+def roll_slot(pool):
+    ids = sorted(pool, key=int)
+    key = ids[randbelow(len(ids))]
+    low, high = pool[key]
+    return {"OptionId": int(key), "Level": low + randbelow(high - low + 1)}
+
+
 def valid_rows(rows):
     # Repeated option IDs are legitimate in different relic slots.
     return (
@@ -196,10 +203,7 @@ def change_or_apply(account, body, operation_id, route):
             pool = pools[source][counts[source]]
             counts[source] += 1
             if option["OptionSource"] == body["OptionType"] and not option["Locked"]:
-                ids = sorted(pool, key=int)
-                key = ids[randbelow(len(ids))]
-                low, high = pool[key]
-                option.update(OptionId=int(key), Level=low + randbelow(high - low + 1))
+                option.update(roll_slot(pool))
         with account.db:
             account.db.execute(
                 "INSERT OR REPLACE INTO relic_option_proposals VALUES(?,?,?,?,?,?,?)",

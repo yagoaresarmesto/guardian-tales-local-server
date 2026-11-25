@@ -9,6 +9,8 @@
 .relic-page .tile[data-stars="5"] { --edge: #648157; }
 .relic-page .tile[data-stars="3"] { --edge: #89764c; }
 .relic-page .tile-stars { color: #d4ec95; }
+.relic-page #catalog-items .tile { grid-template-rows:minmax(0,1fr) 1.85rem 1rem; }
+.relic-page #catalog-items .tile-header { display:none; }
 @container (max-width: 275px) {
   .slot-controls { grid-template-columns: minmax(0, 1fr); }
 }

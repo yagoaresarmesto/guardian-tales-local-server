@@ -4,15 +4,13 @@
 import json
 from datetime import datetime, timezone
 
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.challenges import allocate_reward_item
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.test_item_static import item_definitions
-from guardian_tales.village import MAX_REVISION, integer
+from guardian_tales.village import integer
 
+from .catalog_grants import CatalogGrants
 from .equipment_options import generate
 from .equipment_ribbons import available_in_client
-from .game_save import GameSaveEditor
 from .stack_quantities import HAMMERS
 from .weapon_progression import LIMIT_BREAK_TYPES
 
@@ -52,7 +50,9 @@ def standard_variants(body, catalog):
             spec = native.get(link.get("KakaoGlobal", link.get("Default")))
 
 
-class EquipmentGrants(GameSaveEditor):
+class EquipmentGrants(CatalogGrants):
+    inventory = "ItemWeapons"
+
     def __init__(self, database, catalog, body, tables, rules):
         super().__init__(database)
         self.rules = rules
@@ -83,35 +83,8 @@ class EquipmentGrants(GameSaveEditor):
         )
         return len(user["ItemWeapons"]) + hammer_slots < self.base_capacity + adjustment
 
-    def info(self):
-        with self.reader() as db:
-            user = self.profile(db)["User"]
-        return {
-            "items": list(self.items.values()),
-            "version": f"{user['Id']}:{user['Cas']}",
-            "spaceAvailable": self.space_available(user),
-            **self.status(),
-        }
-
-    def apply_locked(self, db, body):
-        if (
-            not isinstance(body, dict)
-            or body.keys() != {"spec", "version"}
-            or not integer(body["spec"], minimum=1)
-            or body["spec"] not in self.items
-        ):
-            raise ValueError("Select standard equipment from the catalog.")
-        profile = self.profile(db)
-        user = profile["User"]
-        if body["version"] != f"{user['Id']}:{user['Cas']}":
-            return 409, {"error": "Your inventory changed since you opened the catalog."}
-        if not self.space_available(user):
-            raise ValueError("An available equipment slot is required.")
-        if user["Cas"] == MAX_REVISION:
-            raise ValueError("The save revision has reached its limit.")
-        ident = body["spec"]
-        item = allocate_reward_item(user, ident)
-        rules = self.rules.get(ident)
+    def initialize_copy(self, item):
+        rules = self.rules.get(item["ItemId"])
         if rules:
             levels = generate(rules, [], {})
             item["Options"] = [
@@ -119,6 +92,3 @@ class EquipmentGrants(GameSaveEditor):
                 for key in rules["options"]
                 if key in levels
             ]
-        user["ItemWeapons"].append(item)
-        save_profile(db, profile)
-        return 200, {"id": item["Id"], "spec": ident}

@@ -7,7 +7,7 @@ const groups = {
 };
 const initialQuery = new URLSearchParams(location.hash.slice(1));
 let selected = Number(initialQuery.get("id")), family = initialQuery.get("type") || "";
-let page = 0, data, visible = [], draft = [], saving = false;
+let page = 0, data, visible = [], draft = [], saving = false, grantDialog;
 const relicApi = "/api/game/relics";
 let writable = false, statusRequest = 0;
 $("search").value = initialQuery.get("q") || "";
@@ -46,19 +46,23 @@ function drawFamilies() {
     iconUrl: spec ? "/icon/" + spec + ".png" : "/type-icon/all.png",
   })));
 }
-function tile(r) {
+function relicIcon(spec, familyName) {
+  const icon = image("/icon/" + spec + ".png");
+  icon.onerror = () => icon.replaceWith(el("span", "fallback", familyName.slice(0, 2)));
+  return icon;
+}
+function tile(r, pressed, idLabel) {
   const spec = data.specs[r.spec];
-  const art = el("span", "tile-art"), icon = image("/icon/" + r.spec + ".png");
-  icon.onerror = () => art.replaceChildren(el("span","fallback",spec.family.slice(0,2)));
-  art.append(icon);
-  const button = inventoryTile({ ...r, name: spec.name, stars: spec.stars, art,
-    socketed: r.jewels > 0, selected: selected === r.id });
+  const art = el("span", "tile-art");
+  art.append(relicIcon(r.spec, spec.family));
+  const button = inventoryTile({ ...r, idLabel, name: spec.name, stars: spec.stars, art,
+    socketed: r.jewels > 0, selected: pressed });
   button.dataset.stars = spec.stars;
   return button;
 }
 function drawGrid() {
   const start = page * size;
-  $("tiles").replaceChildren(...visible.slice(start, start + size).map(tile));
+  $("tiles").replaceChildren(...visible.slice(start, start + size).map(r => tile(r, selected === r.id)));
   $("empty").hidden = !!visible.length;
   $("range").textContent = visible.length ? (start + 1) + "–" + Math.min(start + size,visible.length) + " of " + visible.length + " relics" : "0 relics";
   $("prev").disabled = page === 0; $("next").disabled = start + size >= visible.length;
@@ -83,6 +87,7 @@ function updateApplyButton() {
 }
 function setAccess(available, message = "") {
   writable = available === true;
+  grantDialog?.setWritable(writable);
   $("access").hidden = writable;
   const text = message || "Apply is locked while the game save is in use. Close Guardian Tales and stop the backend to enable it.";
   if (!writable && $("access").textContent !== text) $("access").textContent = text;
@@ -148,9 +153,7 @@ function drawEditor() {
   draft = Object.keys(groups).flatMap(group => row[group].map((o, slot) =>
     ({group, slot, option:o.OptionId, level:o.Level})));
   const spec = data.specs[row.spec];
-  const portrait = image("/icon/" + row.spec + ".png");
-  portrait.onerror = () => portrait.replaceWith(el("span", "fallback", spec.family.slice(0, 2)));
-  $("portrait").replaceChildren(portrait);
+  $("portrait").replaceChildren(relicIcon(row.spec, spec.family));
   $("family").textContent = spec.family; $("name").textContent = spec.name; $("stars").textContent = "★".repeat(spec.stars);
   $("stars").setAttribute("aria-label", spec.stars + " stars");
   $("equipped").textContent = row.equipped ? "Yes" : "No";
@@ -181,7 +184,34 @@ async function load() {
   const response = await fetch(relicApi, {cache:"no-store"});
   if (!response.ok) throw new Error("Could not load your relics.");
   data = await response.json(); drawFamilies(); filter(); setAccess(data.writable);
+  $("open-relics-catalog").disabled = false;
 }
+$("open-relics-catalog").onclick = async () => {
+  try {
+    const { itemCatalog } = await import("/catalog-picker.js");
+    grantDialog ??= itemCatalog({
+      section: "relics", tile,
+      drawArt: (target, item) => target.replaceChildren(relicIcon(item.spec, item.kind)),
+      onAdded: async (id, item) => {
+        selected = id;
+        family = item.kind;
+        $("show").value = "all";
+        $("search").value = "";
+        try {
+          await load();
+          note(item.name + " added to inventory. Relic #" + id + " is selected.");
+        } catch {
+          $("error").hidden = false;
+          $("error").textContent = item.name + " was added as relic #" + id + ". Reload Relics to see it.";
+        }
+      },
+    });
+    grantDialog.open(family, writable);
+  } catch {
+    $("error").hidden = false;
+    $("error").textContent = "Could not open the relic catalog. Reload Relics and try again.";
+  }
+};
 function navigate(action) {
   action(); note();
 }

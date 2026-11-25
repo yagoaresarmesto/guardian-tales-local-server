@@ -6,7 +6,6 @@ from threading import Lock
 
 from guardian_tales.admin_test_items import save_profile
 from guardian_tales.item_sell import gear_references
-from guardian_tales.raid_static import decode, records
 from guardian_tales.relic_options import target_item
 from guardian_tales.village import MAX_REVISION, integer
 
@@ -61,11 +60,10 @@ def display_effect(spec):
 
 
 class RelicEditor(GameSaveEditor):
-    def __init__(self, database, catalog):
+    def __init__(self, database, catalog, tables):
         super().__init__(database)
         self.guard = Lock()
         self.initial = {}
-        tables = records(decode(catalog.refs.read_bytes("static_data_get.bin")))[1]
         self.effects = {
             s["Id"]: effect
             for s in json.loads(tables["options"][1])

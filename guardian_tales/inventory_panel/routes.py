@@ -2,6 +2,7 @@
 """Inventory tabs, public asset URLs and page rendering."""
 
 from pathlib import Path
+from string import Template
 
 from guardian_tales.panel_common.views import CSS, JS, render_layout
 
@@ -21,6 +22,7 @@ FILES = {
     "/quantity-editor.js": (STATIC / "shared/quantity-editor.js", JS),
     "/equipment-options.js": (STATIC / "equipment/options.js", JS),
     "/equipment-add.js": (STATIC / "equipment/add.js", JS),
+    "/catalog-picker.js": (STATIC / "shared/catalog-picker.js", JS),
 }
 
 
@@ -35,6 +37,14 @@ for slug in TITLES:
 
 def render_page(slug):
     directory = STATIC / slug
+    dialog = ""
+    if slug in ("equipment", "relics"):
+        dialog = Template((STATIC / "shared/catalog.html").read_text(encoding="utf-8")).substitute(
+            section=slug,
+            noun="relic" if slug == "relics" else "equipment",
+            plural=slug,
+            type_label="Relic family" if slug == "relics" else "Equipment type",
+        )
     return render_layout(
         directory / "view.html",
         tabs=(("/" + key, key.capitalize()) for key in TITLES),
@@ -44,6 +54,7 @@ def render_page(slug):
         base_css="/equipment.css",
         brand_icon='<img class="brand-icon" src="/brand.png" alt="">',
         inventory=True,
+        body_suffix=dialog,
         stylesheet=stylesheet(slug),
         body_attributes=' class="relic-page"' if slug == "relics" else "",
         preview_controls=(

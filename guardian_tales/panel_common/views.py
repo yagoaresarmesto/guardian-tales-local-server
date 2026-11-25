@@ -13,7 +13,7 @@ JS = "text/javascript; charset=utf-8"
 DASHBOARD = Path(__file__).parent / "static"
 
 
-def render_layout(view, *, tabs, active_path, inventory=False, **fields):
+def render_layout(view, *, tabs, active_path, inventory=False, body_suffix="", **fields):
     links = []
     for path, label in tabs:
         current = ' aria-current="page"' if path == active_path else ""
@@ -24,6 +24,6 @@ def render_layout(view, *, tabs, active_path, inventory=False, **fields):
         mode_section="" if inventory else ' aria-current="true"',
         inventory_section=' aria-current="true"' if inventory else "",
         section_name="Inventory" if inventory else "Game modes",
-        body=view.read_text(encoding="utf-8"),
+        body=view.read_text(encoding="utf-8") + body_suffix,
         **fields,
     ).encode()

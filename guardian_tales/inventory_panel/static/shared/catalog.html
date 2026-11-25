@@ -1,0 +1,34 @@
+    <dialog id="$section-catalog" class="item-catalog" aria-labelledby="catalog-heading">
+      <header class="section-bar"><h2 id="catalog-heading">Add $noun</h2>
+        <button type="button" id="catalog-close" aria-label="Close $noun catalog">×</button>
+      </header>
+      <div class="catalog-body">
+        <div class="catalog-filters">
+          <label>Search <input id="catalog-search" type="search" placeholder="Name or catalog ID" autofocus></label>
+          <label>$type_label <select id="catalog-type"></select></label>
+        </div>
+        <div id="catalog-ratings" role="group" aria-label="Filter by stars"></div>
+        <div class="catalog-picker">
+          <div class="catalog-rack">
+            <div id="catalog-items" role="group" aria-label="Matching $plural"></div>
+            <p id="catalog-empty" hidden>No matching $plural.</p>
+            <div class="pager">
+              <span id="catalog-range" aria-live="polite"></span>
+              <button type="button" id="catalog-previous" aria-label="Previous catalog page" disabled>‹</button>
+              <button type="button" id="catalog-next" aria-label="Next catalog page" disabled>›</button>
+            </div>
+          </div>
+          <div class="catalog-preview" id="catalog-preview" hidden>
+            <div class="hero-art" id="catalog-art"></div>
+            <strong id="catalog-name"></strong>
+            <span class="hero-stars" id="catalog-stars"></span>
+            <span id="catalog-kind"></span>
+            <span id="catalog-facts"></span>
+            <span id="catalog-extra" hidden></span>
+          </div>
+        </div>
+      </div>
+      <footer><p id="catalog-status" role="status"></p>
+        <button type="button" id="catalog-add" class="apply-button" disabled>Add to inventory</button>
+      </footer>
+    </dialog>
