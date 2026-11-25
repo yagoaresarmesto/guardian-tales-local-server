@@ -3,19 +3,24 @@ import { $ } from "/panel.js";
 const api = "/api/orbital-lift/boards";
 const positions = Array.from({length: 20}, (_, i) => i - i % 4 + 4 - i % 4);
 const message = text => { $("board-message").textContent = text; };
+const elementNames = {None: "Basic", Darkness: "Dark", Ice: "Water", Nebula: "Space"};
 
-function portrait(enemy, lazy = false) {
+function artwork(src, className, lazy = false) {
   const image = document.createElement("img");
+  image.className = className;
   image.alt = "";
   image.draggable = false;
   image.loading = lazy ? "lazy" : "eager";
   image.onerror = () => { image.hidden = true; };
-  image.src = "/orbital-lift/enemies/" + encodeURIComponent(enemy.sprite) + ".png";
+  image.src = src;
   return image;
 }
 
+function portrait(enemy, lazy = false) {
+  return artwork("/orbital-lift/enemies/" + encodeURIComponent(enemy.sprite) + ".png", "enemy-portrait", lazy);
+}
+
 function enemyChooser(onPick) {
-  const elementNames = {None: "Basic", Darkness: "Dark", Ice: "Water", Nebula: "Space"};
   const dialog = $("enemy-picker"), gallery = $("enemy-choices");
   const search = $("enemy-search"), element = $("enemy-element");
   let roster, renderedRoster;
@@ -158,11 +163,12 @@ export function startBoard(nextFloor, onSave) {
     for (const button of cells) {
       const pos = Number(button.dataset.position);
       const enemy = enemies.get(unitAt(pos)?.enemy);
+      const element = elementNames[enemy?.element] ?? enemy?.element;
       button.draggable = Boolean(enemy);
       button.dataset.occupied = String(button.draggable);
       button.setAttribute("aria-pressed", String(pos === selected));
       button.setAttribute("aria-haspopup", moving === null ? "dialog" : "false");
-      button.title = "Cell " + pos + " · " + (enemy?.name ?? "Empty");
+      button.title = ["Cell " + pos, enemy?.name ?? "Empty", element, enemy?.boss ? "Boss" : ""].filter(Boolean).join(" · ");
       button.setAttribute("aria-label", button.title);
       const ident = String(enemy?.id ?? "");
       if (button.dataset.enemy === ident) continue;
@@ -174,7 +180,13 @@ export function startBoard(nextFloor, onSave) {
       label.className = "cell-name";
       label.textContent = enemy?.name ?? "+";
       button.replaceChildren(number);
-      if (enemy?.sprite) button.append(portrait(enemy));
+      if (enemy) {
+        if (enemy.sprite) button.append(portrait(enemy));
+        if (element) button.append(artwork("/elements/" + encodeURIComponent(element.toLowerCase()) + ".png", "cell-element"));
+        if (enemy.boss) button.append(artwork("/orbital-lift/boss-crown.png", "cell-crown"));
+      } else {
+        button.append(artwork("/orbital-lift/empty-cell.png", "empty-emblem"));
+      }
       button.append(label);
     }
     $("board-count").textContent = units.length + (units.length === 1 ? " enemy" : " enemies");

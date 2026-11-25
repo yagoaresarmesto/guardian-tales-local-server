@@ -150,7 +150,11 @@ class OrbitalPanelTests(unittest.TestCase):
         tables = {
             "infinitytowerfloors": floors,
             "exps2": {"LevelExps": list(range(220))},
-            "infinitytowermonsters": [{"MonsterId": i, "SpecId": i} for i in (10, 11, 12)],
+            "infinitytowermonsters": [
+                {"MonsterId": 10, "SpecId": 10, "Class": "boss"},
+                {"MonsterId": 11, "SpecId": 11},
+                {"MonsterId": 12, "SpecId": 12},
+            ],
             "monsters": [{"Id": i, "Name": f"it_foe_{i}"} for i in (10, 11, 12)],
             "__checksum__": "stock",
         }
@@ -178,6 +182,7 @@ class OrbitalPanelTests(unittest.TestCase):
         view = self.api(suffix="/boards")
         self.assertEqual(view["floor"]["type"], "Normal")
         self.assertEqual({e["id"] for e in view["enemies"]}, {10, 11})
+        self.assertEqual([e["id"] for e in view["enemies"] if e["boss"]], [10])
         # Preserve settings from installations that predate custom boards.
         (self.root / SELECTION).write_text(json.dumps({"revision": 1, "level": 100}))
         for invalid_floor in (0, 1501):

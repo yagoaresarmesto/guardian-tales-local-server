@@ -28,7 +28,7 @@ def roster(floors, tables):
     for spec in json.loads(tables["infinitytowermonsters"][1]):
         enemy = spec["MonsterId"]
         if enemy in used:
-            result[enemy] = monsters[spec["SpecId"]]
+            result[enemy] = (spec, monsters[spec["SpecId"]])
     if used != result.keys():
         raise ValueError("The Orbital Lift monster catalog is incomplete.")
     return result
@@ -39,12 +39,12 @@ def catalog(source, directory):
     _, tables = records(decode(source))
     floors, maximum = levels.floor_data(tables)
     monsters = roster(floors, tables)
-    names = {enemy: model["Name"].removeprefix("it_") for enemy, model in monsters.items()}
+    names = {enemy: model["Name"].removeprefix("it_") for enemy, (_, model) in monsters.items()}
     labels = english_labels(
         ReferenceData(directory), hashlib.sha256(source).hexdigest(), set(names.values())
     )
     choices = []
-    for enemy, model in monsters.items():
+    for enemy, (spec, model) in monsters.items():
         name = names[enemy]
         sprite = (
             (model.get("SpriteName") or {}).get("default")
@@ -56,6 +56,7 @@ def catalog(source, directory):
                 "id": enemy,
                 "name": labels.get(name) or name.replace("_", " ").title(),
                 "element": model.get("ElementalType"),
+                "boss": spec.get("Class") == "boss",
                 "sprite": sprite.split(":")[-1].split("#")[-1],
             }
         )

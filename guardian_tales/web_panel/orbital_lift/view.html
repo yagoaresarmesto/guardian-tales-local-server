@@ -1,5 +1,5 @@
 <main>
-  <section class="banner"><h1>Orbital <em>Lift</em></h1></section>
+  <section class="banner lift-banner"><h1>Orbital <em>Lift</em></h1></section>
   <div class="lift-workspace">
     <section class="surface board-section" aria-labelledby="board-heading">
       <header class="panel-heading">
@@ -13,20 +13,25 @@
           <button id="board-open" disabled>Open floor</button>
         </form>
         <fieldset id="board-controls" disabled>
-          <div class="board-strip">
-            <h3 id="board-title">Formation</h3><span id="board-count"></span>
-          </div>
-          <p id="board-hint" role="status">Select a cell to add or change its enemy.</p>
-          <button type="button" id="board-cancel-move" hidden>Cancel move</button>
-          <div id="board-grid" role="group" aria-label="Enemy formation"></div>
-          <div class="board-level-field">
-            <label for="board-level">Floor enemy level</label>
-            <input id="board-level" type="number" min="1" step="1" aria-describedby="board-inherit">
-            <small id="board-inherit"></small>
-          </div>
-          <div class="actions">
-            <button class="primary-action" id="board-save" type="button" disabled>Save floor</button>
-            <button type="button" id="board-restore" disabled>Restore original floor</button>
+          <div class="formation-layout">
+            <div class="formation-summary">
+              <h3 id="board-title">Formation</h3>
+              <span id="board-count"></span>
+              <p id="board-hint" role="status">Select a cell to add or change its enemy.</p>
+              <button type="button" id="board-cancel-move" hidden>Cancel move</button>
+            </div>
+            <div id="board-grid" role="group" aria-label="Enemy formation"></div>
+            <div class="formation-tools">
+              <div class="board-level-field">
+                <label for="board-level">Floor enemy level</label>
+                <input id="board-level" type="number" min="1" step="1" aria-describedby="board-inherit">
+                <small id="board-inherit"></small>
+              </div>
+              <div class="board-actions">
+                <button class="primary-action" id="board-save" type="button" disabled>Save floor</button>
+                <button type="button" id="board-restore" disabled>Restore original floor</button>
+              </div>
+            </div>
           </div>
         </fieldset>
         <p id="board-message" role="status"></p>

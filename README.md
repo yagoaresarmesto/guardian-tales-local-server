@@ -295,8 +295,12 @@ element. Click a portrait to add or replace the enemy in that cell. Press
 **Escape** to close the picker. To reposition an enemy, drag it to another
 cell or choose **Move or swap** and click the destination. **Remove enemy**
 clears the selected cell. Click **Save floor** when the formation is ready.
-The board matches the enemy side in the game. Moving an original enemy keeps
-its elite modifiers. A replacement starts with its own base stats.
+The board mirrors the enemy side in the game with four columns and five rows
+of square cells. Occupied cells show their element, and a red crown marks a
+boss from the Orbital Lift catalog. Hover over or focus a cell to see its
+enemy's name. The header and tile artwork come from the installed resource
+pack. Moving an original enemy keeps its elite modifiers. A replacement
+starts with its own base stats.
 
 Leave **Floor enemy level** blank to follow the global setting or the original
 floor level. An explicit level (1–200) takes precedence for that floor.
