@@ -1,7 +1,7 @@
 import { bulkSelection } from "/bulk-selection.js";
 import { copyProtection } from "/copy-protection.js";
 import { copyDeletion } from "/delete-copy.js";
-import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, maxSubOptions, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 
 let size = 24;
 const groups = {
@@ -12,6 +12,7 @@ const initialQuery = new URLSearchParams(location.hash.slice(1));
 let selected = Number(initialQuery.get("id")), family = initialQuery.get("type") || "";
 let page = 0, data, visible = [], draft = [], saving = false, grantDialog;
 const relicApi = "/api/game/relics";
+const refreshMaxSubOptions = maxSubOptions($("max-sub-options"), $("slots"));
 let writable = false, statusRequest = 0;
 function protectionChanged(result) {
   data.revision = result.revision;
@@ -110,6 +111,7 @@ function editable(row, entry) {
 }
 function updateApplyButton() {
   $("save").disabled = saving || !writable || !changedSlots().length;
+  refreshMaxSubOptions();
 }
 function setAccess(available, message = "") {
   writable = available === true;
@@ -147,6 +149,7 @@ function slotEditor(row, entry) {
     section.append(el("span","slot-summary",summary(source.OptionId, source.Level))); return section;
   }
   const controls = el("div","slot-controls"), effect = el("select"), value = el("select");
+  if (group === "bonus") value.dataset.subLevel = "";
   const slotName = (group === "main" ? "basic slot " : "bonus slot ") + (index + 1);
   effect.setAttribute("aria-label","Effect for " + slotName);
   value.setAttribute("aria-label","Value for " + slotName);

@@ -12,6 +12,21 @@ export function image(url) {
   return img;
 }
 
+// The level pickers list the current effect's legal values from lowest to highest.
+export function maxSubOptions(button, container) {
+  function belowMaximum() {
+    return Array.from(container.querySelectorAll("select[data-sub-level]:enabled"))
+      .filter(select => select.value !== "" && select.selectedIndex < select.options.length - 1);
+  }
+  button.onclick = () => {
+    for (const select of belowMaximum()) {
+      select.selectedIndex = select.options.length - 1;
+      select.dispatchEvent(new Event("change"));
+    }
+  };
+  return () => { button.disabled = belowMaximum().length === 0; };
+}
+
 export function sizeItemSprite(img, maxScale = 1) {
   // A 45px sprite fills its allotted space. Keep tiny artwork legible on narrow cards.
   const nativeEdge = Math.max(img.naturalWidth, img.naturalHeight);
