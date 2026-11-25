@@ -1,0 +1,9 @@
+.lift-progress { margin: 0; padding: var(--inset); }
+.lift-progress div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 0; }
+.lift-progress div + div { border-top: 1px solid var(--line); }
+.lift-progress dt, #range { color: var(--muted); }
+.lift-progress dd { margin: 0; font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+#next { color: var(--gold); }
+#floor { width: min(100%, 12rem); font-variant-numeric: tabular-nums; }
+#preview, #access { margin-top: 14px; line-height: 1.45; }
+#access { color: var(--gold); }

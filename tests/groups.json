@@ -49,7 +49,7 @@
   },
   "orbital": {
     "description": "Orbital entry, progress and completion",
-    "modules": ["test_orbital", "test_orbital_completion", "test_orbital_formation"]
+    "modules": ["test_orbital", "test_orbital_completion", "test_orbital_formation", "test_orbital_panel"]
   },
   "android": {
     "description": "Temporary Android bridge routing and restoration",

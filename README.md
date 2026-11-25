@@ -274,6 +274,13 @@ returns you to Equipment.
 
 ## Practice commands
 
+Under **Game modes → Orbital Lift**, choose the floor you want to play (1–1,500).
+The panel shows the highest cleared floor before and after the edit. Choosing
+floor 1,341, for example, saves 1,340 as cleared and leaves 1,341 ready to play.
+To apply, close the game, stop the backend and use the
+[standalone dashboard](http://127.0.0.1:17661/orbital-lift). The selector supports
+moving forward and backward. Changing progress grants no floor rewards.
+
 Run selectors against the **same reference directory as the backend**, outside
 battle. After changing seasons, variants or Guild War settings, **fully close
 and reopen the game** to reload its cached static data. Reconnect alone may

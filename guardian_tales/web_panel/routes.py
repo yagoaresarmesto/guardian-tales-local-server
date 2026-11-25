@@ -22,6 +22,7 @@ from .expedition import adapter as expedition
 from .guild_war import adapter as guild_war
 from .kamazone import adapter as kamazone
 from .kamazone.season_art import SEASONS as KAMAZONE_SEASONS
+from .orbital_lift.adapter import OrbitalChanged, OrbitalEditor
 from .raid import adapter as raid
 from .tetis import sprites as tetis_sprites
 from .tetis.adapter import TetisChanged, TetisEditor
@@ -76,6 +77,16 @@ MODES = (
         expedition.state,
         expedition.apply,
         LevelSelectionChanged,
+    ),
+    Mode(
+        "orbital-lift",
+        "/orbital-lift",
+        "Orbital Lift",
+        "Orbital Lift",
+        OrbitalEditor.state,
+        OrbitalEditor.write,
+        OrbitalChanged,
+        "orbital",
     ),
     Mode(
         "tetis",

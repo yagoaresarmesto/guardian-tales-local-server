@@ -13,6 +13,7 @@ from guardian_tales.inventory_panel.http import InventoryHandler
 from guardian_tales.panel_common.services import service_request
 from guardian_tales.panel_common.views import HTML
 
+from .orbital_lift.adapter import OrbitalEditor
 from .routes import API, FILES, PAGES, media_resource, render_page
 from .tetis.adapter import TetisEditor
 
@@ -37,6 +38,12 @@ class WebPanel(ThreadingHTTPServer):
         self.tetis = TetisEditor(references, database)
         self.brand_image = art_dir / "brand.png" if art_dir is not None else None
         super().__init__(("127.0.0.1", port), PanelHandler)
+
+    @property
+    def orbital(self):
+        if self.database is None:
+            raise ValueError("This dashboard has no working game save.")
+        return OrbitalEditor(self.database, self.references)
 
     @property
     def inventory(self):
@@ -144,7 +151,7 @@ class PanelHandler(InventoryHandler):
             self.server.restart()
             return
         try:
-            mode.apply(getattr(self.server, mode.source), body)
+            result = mode.apply(getattr(self.server, mode.source), body)
         except mode.conflict as error:
             self.json(409, {"error": str(error)})
         except RuntimeError:
@@ -156,4 +163,7 @@ class PanelHandler(InventoryHandler):
         except (OSError, sqlite3.Error) as error:
             self.json(503, {"error": f"Could not save the selection: {error}"})
         else:
-            self.json(200, {"applied": True})
+            if result is None:
+                self.json(200, {"applied": True})
+            else:
+                self.json(*result)
