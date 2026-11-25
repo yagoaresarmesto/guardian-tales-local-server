@@ -9,9 +9,9 @@ from guardian_tales.campaign import FREE_GEMS, RESERVE_STAMINA
 from guardian_tales.challenges import allocate_reward_item
 from guardian_tales.stamina_purchase import load_purchase_catalog
 from guardian_tales.summon_payment import PAID_GEMS, spend_tickets
-from guardian_tales.village import GOLD, INT_MAX, MAX_REVISION, integer
+from guardian_tales.village import GOLD, MAX_REVISION, integer
 
-from .account_materials import account_materials
+from .account_materials import account_materials, item_balance_limit
 from .game_save import GameSaveEditor
 
 WALLET_CAP = 100_000_000
@@ -97,7 +97,7 @@ class AccountEditor(GameSaveEditor):
                 key=key,
                 id=item_id,
                 label=label,
-                limit=min(specs[item_id].get("MaxCount", INT_MAX), INT_MAX),
+                limit=item_balance_limit(specs[item_id]),
             )
             for key, (item_id, label) in SUMMONING.items()
             if item_id in specs

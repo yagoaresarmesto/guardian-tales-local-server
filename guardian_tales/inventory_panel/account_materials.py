@@ -5,7 +5,8 @@ import json
 import re
 from collections import defaultdict
 
-MATERIAL_LIMIT = 100_000
+DEFAULT_ITEM_LIMIT = 100_000
+ITEM_LIMITS = {"experience": 1_000_000_000, "jewel_powder": 1_000_000_000}
 GOODS = {
     "jewel_powder": "Jewel Powder",
     "herocrystal": "Hero Crystal",
@@ -17,6 +18,11 @@ GOODS = {
     "dream_spiritstone": "Dream Evolution Stone",
     "starpiece": "Star Piece",
 }
+
+
+def item_balance_limit(spec):
+    limit = ITEM_LIMITS.get(spec.get("Name"), DEFAULT_ITEM_LIMIT)
+    return min(spec.get("MaxCount", limit), limit)
 
 
 def season_choices(tables):
@@ -84,7 +90,7 @@ def account_materials(catalog, tables):
                 group=group,
                 choice=choice,
                 preferred=ident in preferred,
-                limit=min(spec.get("MaxCount", MATERIAL_LIMIT), MATERIAL_LIMIT),
+                limit=item_balance_limit(spec),
             )
         )
     return materials
