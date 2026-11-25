@@ -1,30 +1,109 @@
-.arena-banner img { position: absolute; inset: 0 0 0 auto; width: 55%; height: 100%; object-fit: cover; object-position: 50% 55%; z-index: -1; mask-image: linear-gradient(90deg, transparent, #000 55%); }
-.arena-days { margin-top: 20px; }
-#days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(122px, 100%), 1fr)); gap: 8px; }
+/* Keep the opponent on the arena floor as the banner changes aspect ratio. */
+.arena-banner {
+  min-height: clamp(235px, 19vw, 300px);
+  padding: clamp(20px, 2.6vw, 40px);
+  background: repeating-linear-gradient(123deg, transparent 0 63px, #c3e0ff08 64px, transparent 65px 85px),
+    linear-gradient(110deg, #253b53, #182537 53%, #101926);
+}
+.arena-banner::after { background: var(--tone); width: 12%; }
+.arena-stage {
+  position: absolute; inset: 0 0 0 42%; isolation: isolate; pointer-events: none;
+  background: radial-gradient(ellipse at 60% 62%, color-mix(in srgb, var(--tone) 22%, transparent), transparent 58%);
+  mask-image: linear-gradient(90deg, transparent, #000 27%);
+}
+#arena-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 64%; }
+.arena-stage::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(0deg, #11192978, transparent 38%), linear-gradient(90deg, #172437, transparent 42%);
+}
+.arena-fighter {
+  position: absolute; z-index: 1; left: 56%; bottom: 12%; transform: translateX(-50%);
+  width: clamp(136px, 14vw, 210px); aspect-ratio: 1;
+}
+.arena-fighter:has(.slime:not([hidden]))::before {
+  content: ""; position: absolute; inset: 84% 0 0; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--tone) 68%, transparent);
+  background: radial-gradient(ellipse, #0b102ed9 18%, color-mix(in srgb, var(--tone) 34%, transparent) 62%, transparent 72%);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--tone) 35%, transparent);
+}
+.slime { display: block; width: 100%; height: 100%; object-fit: contain; }
+#preview-art { position: relative; filter: drop-shadow(0 6px 7px #151025a8); }
+.arena-banner .banner-copy { max-width: 61%; }
+.arena-banner h1 { font-size: clamp(2.25rem, 3.9vw, 3.9rem); line-height: .94; margin-block: 10px 17px; }
+.arena-banner h1 em { display: block; color: var(--gold); }
+#encounter-preview { display: flex; flex-wrap: wrap; align-items: end; gap: 8px 18px; }
+#encounter-preview small, .saved-selection small {
+  display: block; margin: 0 0 3px; font-size: .75rem; color: #c1cfe0;
+}
+#preview-name { display: flex; align-items: center; gap: 7px; color: var(--tone); font-size: clamp(1.05rem, 1.5vw, 1.35rem); }
+.encounter-weakness { padding-left: 18px; border-left: 1px solid #667b91; }
+#preview-weakness { font-size: .95rem; }
+
+.rotation { margin-top: 16px; }
+.arena-page #editor { padding: 0; }
+.rotation-heading, .rotation-footer {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 20px;
+  padding: 14px var(--inset);
+}
+.rotation-heading { background: var(--heading); border-bottom: 1px solid var(--line); }
+.rotation-heading h2 { display: flex; align-items: center; gap: 10px; font-size: 1.12rem; }
+.rotation-heading h2::before { content: ""; width: 3px; height: 1em; background: var(--gold); border-radius: 2px; }
+.variant-picker, .rotation-actions, .saved-selection { display: flex; align-items: center; gap: 10px; }
+.variant-picker label, .rotation-actions span { color: var(--muted); font-size: .85rem; }
+.variant-picker select { width: auto; min-width: 13rem; height: 36px; }
+.arena-days { padding: var(--inset); }
+#days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: clamp(6px, .75vw, 12px); }
 #days label { position: relative; min-width: 0; }
 .day-card {
-  display: grid; grid-template-rows: auto 64px 1fr auto; justify-items: center; align-items: center;
-  gap: 6px; height: 100%; padding: 10px 8px; text-align: center;
-  cursor: pointer; border: 1px solid var(--line); border-radius: 6px;
-  background: radial-gradient(ellipse at 50% 30%, color-mix(in srgb, var(--tone) 10%, transparent), transparent 80%), var(--tile);
+  position: relative; display: grid; grid-template-rows: auto minmax(60px, 1fr) auto auto;
+  justify-items: center; align-items: center; gap: 4px; height: 100%; padding: 10px 9px 14px; cursor: pointer;
+  border: 1px solid #41536a; border-radius: 8px;
+  background: radial-gradient(ellipse at 50% 44%, color-mix(in srgb, var(--tone) 17%, transparent), transparent 67%),
+    linear-gradient(160deg, #24344b, #152236); text-align: center;
 }
-.day-card .day-number { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: 4px; color: var(--muted); font-size: .79rem; font-weight: 650; }
-.day-card .slime { grid-row: 2; width: 64px; height: 64px; }
-.day-card strong { grid-row: 3; font-size: .9rem; }
-.day-card small { grid-row: 4; margin: 0; }
-.day-card:has(.slime[hidden]) { grid-template-rows: auto 0 1fr auto; }
-#days input:checked + .day-card { border-color: var(--gold); box-shadow: inset 0 -3px var(--gold); }
+.day-heading { align-self: start; display: flex; align-items: center; gap: 4px; width: 100%; }
+.day-number { font-size: .75rem; font-weight: 700; color: var(--muted); }
+.day-heading .element-icon { width: 21px; height: 21px; margin-left: auto; }
+.saved-marker { border-radius: 4px; padding: 1px 4px; color: #e4eff9; background: #32455d; font-size: .68rem; }
+.day-art { display: block; width: clamp(58px, 5.8vw, 88px); aspect-ratio: 1; max-width: 100%; margin-block: 4px; }
+.day-art img { filter: drop-shadow(0 4px 3px #101526a6); }
+.day-card strong { font-size: clamp(.85rem, 1vw, 1.01rem); line-height: 1.2; }
+.day-card small { font-size: .77rem; margin: 0; }
+#days input:checked + .day-card {
+  border-color: var(--gold); box-shadow: inset 0 -3px var(--gold);
+  background: radial-gradient(ellipse at 50% 40%, color-mix(in srgb, var(--tone) 28%, transparent), transparent 72%), #243449;
+}
 #days input:checked + .day-card .day-number { color: var(--gold); }
 #days input:focus-visible + .day-card { outline: 2px solid var(--ice); outline-offset: 2px; }
 .day-card:hover { border-color: var(--tone); }
-.slime { width: 76px; max-width: 100%; height: 72px; object-fit: contain; image-rendering: pixelated; flex: none; }
-.arena-saved { padding: var(--inset); }
-#saved-status, #saved-weakness { color: var(--muted); font-size: .94rem; }
-#saved-encounter { display: flex; align-items: center; gap: 15px; padding-top: 16px; margin-top: 14px; border-top: 1px solid var(--line); }
-#saved-slime { display: flex; align-items: center; gap: 6px; color: var(--tone); font-size: 1.3rem; margin-bottom: 3px; }
-@media (min-width: 1360px) {
-  #days { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+#days:not(:has(.slime:not([hidden]))) .day-art { display: none; }
+#days:not(:has(.slime:not([hidden]))) .day-card { grid-template-rows: auto 1fr auto; }
+.rotation-footer { background: #152232; border-top: 1px solid var(--line); }
+.saved-selection { min-width: 0; }
+.saved-selection #reload { margin: 0; flex: none; }
+.saved-selection p { font-size: .9rem; font-weight: 600; }
+.rotation-actions { gap: 14px; }
+
+@media (max-width: 990px) and (min-width: 601px) {
+  #days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
-@media (max-width: 540px) {
-  .arena-banner img { width: 68%; opacity: .45; }
+@media (max-width: 600px) {
+  .arena-banner { min-height: 214px; padding: 18px 14px; }
+  .arena-banner .banner-copy { max-width: 69%; }
+  .arena-banner h1 { font-size: clamp(1.65rem, 6.8vw, 2.3rem); }
+  .arena-fighter { left: 64%; bottom: 27%; width: 75%; max-width: 144px; }
+  #encounter-preview { gap: 6px 10px; }
+  .encounter-weakness { padding-left: 10px; }
+  #days { grid-template-columns: 1fr; }
+  .day-card { grid-template-columns: 48px minmax(0, 1fr) auto; grid-template-rows: auto auto; gap: 0 9px; padding: 7px 10px; text-align: left; }
+  .day-heading { grid-area: 1 / 2; justify-self: start; width: auto; }
+  .day-heading .element-icon { width: 17px; height: 17px; }
+  .day-art { grid-area: 1 / 1 / 3; width: 46px; margin: 0; }
+  .day-card strong { grid-area: 2 / 2; justify-self: start; }
+  .day-card small { grid-area: 1 / 3 / 3; }
+  #days:not(:has(.slime:not([hidden]))) .day-card { grid-template-columns: 0 minmax(0, 1fr) auto; grid-template-rows: auto auto; }
+  .rotation-heading { align-items: stretch; }
+  .variant-picker { flex: 1 1 100%; }
+  .variant-picker select { flex: 1; min-width: 0; }
+  .rotation-actions { flex: 1 1 100%; justify-content: space-between; }
 }

@@ -347,7 +347,7 @@ running service in its existing terminal on its original ports. After updating
 from an older version, relaunch each service once in its usual terminal to
 register its button. Reopen Guardian Tales after a game or content update.
 
-The backend panel uses the inventory editor's two-column layout. Raid, DKA,
+DKA previews the selected opponent above its seven-day rotation. Raid,
 Guild Wars and Kama-ZONE show the saved selection beside the editor. In
 Expedition, select a stage from the table to open its level settings.
 Open the [Tetis tab](http://127.0.0.1:17658/tetis) to edit each season's highest
@@ -367,9 +367,11 @@ With the backend running, open the [Guild Raid panel](http://127.0.0.1:17658/)
 on the host PC. View the active lineup, select an original season or configure
 four boss/element pairs and the HP per bar. Click **Apply rotation**, then fully
 close and reopen the game. The [DKA tab](http://127.0.0.1:17658/dka) lists the three
-arena variants and their seven daily slimes. Choose a variant and day, then
-click **Apply selection** and reopen the game. Both tabs share selections with
-their respective CLI commands below.
+arena variants and their seven daily slimes. Choose a day to preview the slime
+and its weakness in the arena. **Saved** marks the current day in its variant.
+The panel calls the Space-element opponent **Void Slime**. Click **Apply selection**
+and reopen the game to use your choice. Both tabs share selections with their
+respective CLI commands below.
 
 For original Raid boss portraits, DKA slimes and elemental icons, install the
 optional decoder with `python -m pip install ".[panel-art]"`. The panel reads

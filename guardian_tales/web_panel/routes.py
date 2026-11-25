@@ -155,6 +155,7 @@ MEDIA = {
     "/orbital-lift/empty-cell.png": (partial(UI.read, frame="ic_hero_00"), "image/png"),
     "/orbital-lift/boss-crown.png": (partial(UI.read, frame="ic_crown_red_00"), "image/png"),
     "/arena.jpg": (lambda refs: dka.arena_image(refs).read_bytes(), "image/jpeg"),
+    "/dka/arena-backdrop.jpg": (dka.backdrop_jpeg, "image/jpeg"),
     **{
         f"/dka/slimes/{element}.png": (partial(BOSSES.read, frame=frame), "image/png")
         for element, frame in sprites.FRAMES.items()

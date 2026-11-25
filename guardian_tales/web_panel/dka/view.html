@@ -1,52 +1,56 @@
-<main>
+<main class="arena-page">
   <section class="banner arena-banner" aria-labelledby="page-title">
-    <img id="arena-art" alt="" hidden>
+    <div class="arena-stage" aria-hidden="true">
+      <img id="arena-art" alt="" fetchpriority="high" hidden>
+      <div class="arena-fighter"><img id="preview-art" class="slime" alt="" fetchpriority="high" hidden></div>
+    </div>
     <div class="banner-copy">
       <p class="season-status">Practice · No rewards</p>
       <h1 id="page-title">Dungeon Kingdom <em>Arena</em></h1>
+      <div id="encounter-preview" aria-live="polite" aria-atomic="true" hidden>
+        <div class="encounter-name">
+          <small id="preview-day"></small>
+          <h2 id="preview-name"></h2>
+        </div>
+        <div class="encounter-weakness"><small>Weak to</small><strong id="preview-weakness"></strong></div>
+      </div>
     </div>
   </section>
-  <div class="workspace">
-    <section class="surface collection" aria-labelledby="editor-title">
-      <header class="panel-heading">
-        <span class="section-icon sliders" aria-hidden="true"></span><h2 id="editor-title">Practice rotation</h2>
-      </header>
-      <form id="editor">
-        <fieldset id="controls" disabled>
-          <legend class="sr">Arena settings</legend>
-          <label class="label" for="variant">Variant</label>
-          <select id="variant" required></select>
-          <fieldset class="arena-days">
-            <legend class="label">Day and slime</legend>
-            <div id="days"></div>
-          </fieldset>
-          <div class="actions">
-            <button id="apply" type="submit">Apply selection</button>
-            <span>Reopen the game after applying.</span>
+
+  <section class="surface rotation" aria-labelledby="editor-title">
+    <form id="editor">
+      <fieldset id="controls" disabled>
+        <legend class="sr">Arena settings</legend>
+        <div class="rotation-heading">
+          <h2 id="editor-title">Practice rotation</h2>
+          <div class="variant-picker">
+            <label for="variant">Variant</label>
+            <select id="variant" required></select>
           </div>
-        </fieldset>
-      </form>
-      <p id="feedback" role="status" hidden></p>
-    </section>
-    <aside class="surface inspector" aria-labelledby="active-title">
-      <header class="panel-heading">
-        <span class="section-icon stack" aria-hidden="true"></span><h2 id="active-title">Saved selection</h2>
-        <button type="button" id="reload" aria-label="Reload saved selection" title="Reload saved selection">↻</button>
-      </header>
-      <div class="arena-saved">
-        <p id="saved-status">Loading selection…</p>
-        <div id="saved-encounter" hidden>
-          <img class="slime" alt="" hidden>
-          <div><strong id="saved-slime"></strong><p id="saved-weakness"></p></div>
         </div>
-      </div>
-    </aside>
-  </div>
+        <fieldset class="arena-days">
+          <legend class="sr">Day and slime</legend>
+          <div id="days"></div>
+        </fieldset>
+      </fieldset>
+      <footer class="rotation-footer">
+        <div class="saved-selection">
+          <button type="button" id="reload" aria-label="Reload saved selection" title="Reload saved selection">↻</button>
+          <div><small>Saved selection</small><p id="saved-status">Loading selection…</p></div>
+        </div>
+        <div class="rotation-actions">
+          <span>Reopen the game after applying.</span>
+          <button id="apply" type="submit" disabled>Apply selection</button>
+        </div>
+      </footer>
+    </form>
+    <p id="feedback" role="status" hidden></p>
+  </section>
 </main>
 <template id="day-card">
   <span class="day-card">
-    <span class="day-number"></span>
-    <img class="slime" alt="" hidden>
+    <span class="day-heading"><span class="day-number"></span><span class="saved-marker" hidden>Saved</span></span>
+    <span class="day-art"><img class="slime" alt="" hidden></span>
     <strong></strong>
     <small></small>
   </span>

@@ -75,6 +75,22 @@ class RaidPanelTests(unittest.TestCase):
         with urlopen(request, timeout=5) as response:
             return json.load(response) if path == "/api/raid" else response.read()
 
+    @unittest.skipUnless(find_spec("PIL"), "Pillow is optional")
+    def test_dka_backdrop_serves_local_art_as_jpeg(self):
+        from PIL import Image
+
+        artwork = self.root / "arena.png"
+        with patch("guardian_tales.web_panel.dka.adapter.arena_backdrop", return_value=artwork):
+            with self.assertRaises(HTTPError) as missing:
+                self.call("/dka/arena-backdrop.jpg")
+            self.assertEqual(missing.exception.code, 404)
+            missing.exception.close()
+            Image.new("RGB", (40, 23), "navy").save(artwork)
+            original = artwork.read_bytes()
+            with Image.open(BytesIO(self.call("/dka/arena-backdrop.jpg"))) as preview:
+                self.assertEqual((preview.format, preview.size), ("JPEG", (40, 23)))
+            self.assertEqual(artwork.read_bytes(), original)
+
     def test_default_stock_custom_cli_readback_and_restore(self):
         original = self.source.read_bytes()
         listing = self.call()
