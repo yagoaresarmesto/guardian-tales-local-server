@@ -164,6 +164,7 @@ class SnapshotTests(unittest.TestCase):
                 "/user/guardian-mastery-level-up",
                 "/user/limitbreak-character/v2",
                 "/user/mark-tutorial",
+                "/user/myth-character/v2",
                 "/user/recall-character-growth/v2",
                 "/user/reset-guardian-mastery-level",
                 "/user/save-party-member/v2",

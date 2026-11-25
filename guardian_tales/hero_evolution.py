@@ -5,8 +5,8 @@ import json
 from functools import lru_cache
 
 from .characters import owned_character
+from .hero_stones import spend_hero_stones
 from .raid_static import decode, records
-from .summon_payment import spend_tickets as spend_stackables
 from .village import INT_MAX, MAX_REVISION, integer
 
 ROUTE = "/user/evolve-character/v2"
@@ -82,22 +82,6 @@ def price(steps, current, count):
     return total, evolves
 
 
-def pay(user, dream, budget, stone, rate, cost):
-    dream_count = min(budget, (cost + rate - 1) // rate)
-    if dream_count:
-        balances = [a for a in user["Assets"] if a["Id"] == dream]
-        if len(balances) != 1 or not integer(balances[0].get("Amount"), minimum=dream_count):
-            raise ValueError("Insufficient Dream Evolution Stones")
-        asset = balances[0]
-        if not integer(asset.get("Spent"), MAX_REVISION - dream_count):
-            raise ValueError("Invalid saved Dream Evolution Stone spending counter")
-        asset["Amount"] -= dream_count
-        asset["Spent"] += dream_count
-    remainder = cost - dream_count * rate
-    if remainder > 0:
-        spend_stackables(user, stone, remainder)
-
-
 def evolve(account, body, operation_id):
     if (
         not isinstance(body, dict)
@@ -153,7 +137,7 @@ def evolve(account, body, operation_id):
             hero["CharacterId"] = target
             record["EvolveCharacterCount"] = record.get("EvolveCharacterCount", 0) + 1
             record["Cas"] += 1
-        pay(user, dream, budget, stone, rate, cost)
+        spend_hero_stones(user, dream, budget, stone, rate, cost)
         hero["RankUpgrade"] = 0 if evolves else current + count
         user["Cas"] += 1
         db.execute(

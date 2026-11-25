@@ -23,6 +23,7 @@ from . import (
     hero_blessing,
     hero_evolution,
     hero_limit_break,
+    hero_myth,
     hero_reset,
     jewel_socket,
     kamazone,
@@ -84,6 +85,13 @@ from .story_quests import handle as handle_story_quest
 from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
 from .test_item_static import bootstrap_seed as test_item_bootstrap_seed
 from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
+
+HERO_GROWTH_HANDLERS = {
+    hero_evolution.ROUTE: hero_evolution.evolve,
+    hero_limit_break.ROUTE: hero_limit_break.limit_break,
+    hero_myth.ROUTE: hero_myth.promote,
+    hero_reset.ROUTE: hero_reset.reset,
+}
 
 BOOTSTRAP_ROUTES = (
     "/auth/get-server-info",
@@ -518,25 +526,14 @@ class BootstrapSession:
                     return json_response(request, self.store.account.charge_stamina(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route in (
-                *hero_blessing.ROUTES,
-                hero_reset.ROUTE,
-                hero_evolution.ROUTE,
-                hero_limit_break.ROUTE,
-            ):
+            if route in HERO_GROWTH_HANDLERS or route in hero_blessing.ROUTES:
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
-                    if route == hero_reset.ROUTE:
-                        result = hero_reset.reset(self.store.account, body, operation_id)
-                    elif route == hero_evolution.ROUTE:
-                        result = hero_evolution.evolve(self.store.account, body, operation_id)
-                    elif route == hero_limit_break.ROUTE:
-                        result = hero_limit_break.limit_break(
-                            self.store.account, body, operation_id
-                        )
-                    else:
+                    if route in hero_blessing.ROUTES:
                         result = hero_blessing.bless(self.store.account, route, body, operation_id)
+                    else:
+                        result = HERO_GROWTH_HANDLERS[route](self.store.account, body, operation_id)
                     return json_response(request, result)
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

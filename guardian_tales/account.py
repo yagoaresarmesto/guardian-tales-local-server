@@ -16,6 +16,7 @@ from . import (
     hero_blessing,
     hero_evolution,
     hero_limit_break,
+    hero_myth,
     hero_reset,
     multi_presets,
     story_interactions,
@@ -226,6 +227,7 @@ ACCOUNT_ROUTES = (
     *hero_blessing.ROUTES,
     hero_evolution.ROUTE,
     hero_limit_break.ROUTE,
+    hero_myth.ROUTE,
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/guild/red-dot",
@@ -363,6 +365,7 @@ class AccountStore:
         hero_blessing.create_tables(db)
         hero_evolution.create_tables(db)
         hero_limit_break.create_tables(db)
+        hero_myth.create_tables(db)
         create_representative_character_tables(db)
         create_account_name_tables(db)
         create_weapon_summon_tables(db)

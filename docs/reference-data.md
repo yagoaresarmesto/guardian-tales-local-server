@@ -653,6 +653,22 @@ and the number of additional steps in `LimitBreakCount`. Backend tests check
 single and bulk purchases, rarity pricing, the cap, insufficient crystals
 and retries. The payment and mission counter commit with the hero's new break count.
 
+## Hero Myth
+
+In **Heroes → Myth**, a hero needs all five permanent limit breaks and an
+official Myth target for its current form. The EU 3.57.0 catalog links 39
+five-star Unique forms and three ascended Story forms (including both Knights).
+The server resolves the regional `MythTo` link and checks the target's origin
+and rank. [Official Myth overview](https://www.guardiantales.com/news/4662)
+
+The client sends the owned `CharacterId` and `DreamMythStoneUsageAmount` to
+`/user/myth-character/v2`. Select zero to spend only the hero's Myth Stones.
+Each selected Dream Myth Stone covers one personal stone in this build. The
+catalog price is 400 for a Unique hero and 200 for an eligible ascended Story
+hero. The same inventory hero keeps its gear, XP and existing awakening nodes.
+Backend tests cover regional eligibility, all three payment combinations,
+insufficient materials and retries after reconnecting.
+
 ## Hero Blessing
 
 **Blessing** advances one level. **Max Blessing** advances from the hero's

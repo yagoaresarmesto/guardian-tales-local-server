@@ -16,8 +16,8 @@
     "modules": ["test_campaign", "test_campaign_complete", "test_completion", "test_discovery", "test_monsters", "test_story", "test_story_interactions", "test_play_menu", "test_expedition", "test_expedition_levels", "test_classic_coop"]
   },
   "heroes": {
-    "description": "Hero experience, evolution, limit breaks, resets, blessings, equipment, training caps and saved Training Room slots",
-    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room", "test_hero_equipment", "test_hero_reset", "test_hero_blessing", "test_hero_evolution", "test_hero_limit_break"]
+    "description": "Hero experience, evolution, Myth, limit breaks, resets, blessings, equipment, training caps and saved Training Room slots",
+    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room", "test_hero_equipment", "test_hero_reset", "test_hero_blessing", "test_hero_evolution", "test_hero_limit_break", "test_hero_myth"]
   },
   "inventory": {
     "description": "Item protection/sales/extraction, weapons, relic options and jewels",
