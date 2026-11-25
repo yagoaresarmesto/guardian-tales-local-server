@@ -27,6 +27,13 @@ main { max-width: 1240px; }
 .board-body { padding: var(--inset); }
 #board-picker, .picker-footer { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
 #board-picker { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+#modified-floors { margin: 12px 0; padding: 12px; border: 1px solid var(--line); border-radius: 7px; background: #152235; }
+#modified-heading { margin: 0 0 8px; font-size: .92rem; }
+#modified-count { margin-left: 4px; color: var(--gold); font-variant-numeric: tabular-nums; }
+#modified-list { display: flex; flex-wrap: wrap; gap: 5px; max-height: 9rem; overflow-y: auto; padding: 3px; color: var(--muted); font-size: .84rem; }
+#modified-list button { padding: .35rem .65rem; font-variant-numeric: tabular-nums; }
+#modified-list button[aria-current="true"] { border-color: var(--gold); background: #40372b; color: var(--gold); }
+#modified-global { margin: 6px 3px 0; font-size: .8rem; color: var(--muted); }
 #board-floor, #board-level { width: 6.5rem; }
 .board-body button:not(.primary-action, .board-cell), #enemy-picker button:not(.enemy-card) {
   padding: .55rem .8rem; color: var(--ink); background: var(--field); border: 1px solid #526580; border-radius: 5px;

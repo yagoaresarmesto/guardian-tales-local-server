@@ -12,6 +12,11 @@
           <input id="board-floor" type="number" min="1" max="1500" value="1" required>
           <button id="board-open" disabled>Open floor</button>
         </form>
+        <fieldset id="modified-floors" aria-labelledby="modified-heading" disabled hidden>
+          <h3 id="modified-heading">Modified floors <span id="modified-count"></span></h3>
+          <div id="modified-list"></div>
+          <p id="modified-global" hidden></p>
+        </fieldset>
         <fieldset id="board-controls" disabled>
           <div class="formation-layout">
             <div class="formation-summary">

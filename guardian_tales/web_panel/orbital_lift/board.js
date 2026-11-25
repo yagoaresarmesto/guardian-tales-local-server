@@ -234,9 +234,34 @@ export function startBoard(nextFloor, onSave) {
     render();
   }
 
+  function showModifiedFloors() {
+    const floors = state.modifiedFloors;
+    $("modified-floors").hidden = !floors;
+    if (!floors) return;
+    $("modified-count").textContent = floors.length;
+    const list = $("modified-list");
+    list.replaceChildren(...floors.map(number => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = "Floor " + number;
+      if (number === current) button.setAttribute("aria-current", "true");
+      button.onclick = () => {
+        if (number !== current) requestFloor(number);
+        else {
+          picker.value = current;
+          busy(false);
+        }
+      };
+      return button;
+    }));
+    if (!floors.length) list.textContent = "No floors have individual changes.";
+    $("modified-global").hidden = state.globalLevel == null;
+    $("modified-global").textContent = "Global enemy level: " + state.globalLevel;
+  }
+
   function busy(value) {
     if (value) chooser.close();
-    $("board-controls").disabled = $("board-open").disabled = picker.disabled = value;
+    $("modified-floors").disabled = $("board-controls").disabled = $("board-open").disabled = picker.disabled = value;
   }
 
   async function refresh(keepDraft = false, number = current) {
@@ -251,6 +276,7 @@ export function startBoard(nextFloor, onSave) {
     enemies = new Map(data.enemies.map(enemy => [enemy.id, enemy]));
     chooser.setRoster(data.enemies);
     openFloor(number);
+    showModifiedFloors();
     if (pending) { units = pending[0]; level.value = pending[1]; render(); }
     busy(false);
   }
@@ -272,16 +298,22 @@ export function startBoard(nextFloor, onSave) {
     }
   }
 
-  $("board-picker").onsubmit = event => {
-    event.preventDefault();
-    if (picker.disabled || !picker.validity.valid) return;
+  function requestFloor(number) {
     if (draft() !== originalDraft && !window.confirm("Discard the unsaved board changes?")) {
       picker.value = current;
-      $("board-controls").disabled = false;
+      busy(false);
       return;
     }
-    refresh(false, picker.valueAsNumber).catch(error => message(error.message));
     message("");
+    refresh(false, number).catch(error => {
+      picker.value = current;
+      busy(false);
+      message(error.message);
+    });
+  }
+  $("board-picker").onsubmit = event => {
+    event.preventDefault();
+    if (!picker.disabled && picker.validity.valid) requestFloor(picker.valueAsNumber);
   };
   picker.oninput = () => {
     $("board-controls").disabled = picker.valueAsNumber !== current;

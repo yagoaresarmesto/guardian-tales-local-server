@@ -188,6 +188,7 @@ class OrbitalPanelTests(unittest.TestCase):
         self.assertEqual({e["id"]: e["elites"] for e in view["enemies"]}, {10: [15, 18], 11: []})
         # Preserve settings from installations that predate custom boards.
         (self.root / SELECTION).write_text(json.dumps({"revision": 1, "level": 100}))
+        self.assertEqual(self.api(suffix="/boards")["modifiedFloors"], [])
         for invalid_floor in (0, 1501):
             with self.assertRaises(HTTPError) as invalid:
                 choose(invalid_floor, 1, None)
@@ -218,6 +219,7 @@ class OrbitalPanelTests(unittest.TestCase):
         choose(1500, 1, {"units": units, "level": 200})
         choose(51, 2, {"units": [units[1]], "level": None})
         choose(1, 3, {"units": view["floor"]["units"], "level": 1})
+        self.assertEqual(self.api(suffix="/boards/52")["modifiedFloors"], [1, 51, 1500])
         self.assertEqual(self.api(suffix="/boards/1")["custom"], {"units": None, "level": 1})
         active = served()
         self.assertEqual(
@@ -231,6 +233,7 @@ class OrbitalPanelTests(unittest.TestCase):
         self.assertEqual(active[1500], floors[1500])
         self.api({"revision": 4, "level": 80}, "/enemy-level")
         choose(51, 5, None)
+        self.assertEqual(self.api(suffix="/boards/51")["modifiedFloors"], [1, 1500])
         active = served()
         self.assertEqual(active[50], dict(floors[50], StandardLevel=79))
         self.assertEqual(active[1499]["StandardLevel"], 199)
@@ -256,6 +259,7 @@ class OrbitalPanelTests(unittest.TestCase):
             {"Position": 1, "MonsterId": 10, "Options": [{"OptionId": 18, "Level": 1}]},
         )
         choose(1, 11, None)
+        self.assertEqual(self.api(suffix="/boards")["modifiedFloors"], [])
         self.assertEqual(served(), floors)
         self.assertEqual(path.read_bytes(), source)
         self.assertEqual(self.profile(), self.original)

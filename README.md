@@ -313,6 +313,9 @@ or swapping an enemy carries its modifier. A replacement starts with none.
 Leave **Floor enemy level** blank to follow the global setting or the original
 floor level. An explicit level (1–200) takes precedence for that floor.
 **Save floor** and **Restore original floor** affect only the open board.
+**Modified floors** lists every saved floor override in numerical order. Click
+a floor number to open its board. Restoring a floor removes it from the list.
+The global enemy level appears separately when active.
 Close and reopen the game after saving. Opening a floor in the editor leaves
 your saved progress intact. The roster comes from the enemies actually used
 by the installed mode. The stock formations use five to seven enemies.

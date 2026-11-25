@@ -116,6 +116,7 @@ def state(references, floor=1):
     return {
         "floor": view["floors"][floor],
         "custom": data["boards"].get(str(floor)),
+        "modifiedFloors": sorted(map(int, data["boards"])),
         "enemies": view["enemies"],
         "eliteNames": view["eliteNames"],
         "maxLevel": view["maxLevel"],
