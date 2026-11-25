@@ -6,7 +6,7 @@ import json
 from functools import lru_cache
 
 from .punchking_static import atomic_write
-from .raid_static import compress, decode, digest, records
+from .raid_static import compress, decode, digest, records, selected_static_seed
 from .reference import ReferenceData
 from .state_lock import StateLock
 from .village import integer
@@ -76,21 +76,7 @@ def prepare(body, enabled, generation):
 
 
 def bootstrap_seed(references, filename, request, parent):
-    if filename in ("static_data_check.bin", "static_data_get.bin"):
-        enabled, generation = selection(references)
-        if generation:
-            source = parent(references, "static_data_get.bin", request)
-            body, checksum = prepare(source, enabled, generation)
-            if filename == "static_data_get.bin":
-                return body
-            return json.dumps(
-                {
-                    "UpToDate": isinstance(request, dict) and request.get("Checksum") == checksum,
-                    "Checksum": checksum,
-                    "QuitGameWhenStaticDataUpdateNeeded": False,
-                }
-            ).encode()
-    return parent(references, filename, request)
+    return selected_static_seed(references, filename, request, parent, selection, prepare)
 
 
 def configure(references, enabled):

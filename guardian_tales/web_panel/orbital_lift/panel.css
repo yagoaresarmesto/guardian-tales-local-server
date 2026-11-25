@@ -7,3 +7,12 @@
 #floor { width: min(100%, 12rem); font-variant-numeric: tabular-nums; }
 #preview, #access { margin-top: 14px; line-height: 1.45; }
 #access { color: var(--gold); }
+.enemy-levels { grid-column: 2; }
+#level-editor { padding: var(--inset); }
+#level-status { margin-bottom: 14px; color: var(--ice); }
+#enemy-level { width: min(100%, 12rem); }
+#restore-level { padding: 9px 12px; border: 1px solid #526580; border-radius: 5px; color: var(--ink); background: var(--field); }
+#restore-level:disabled { opacity: .55; }
+#level-feedback { margin-top: 24px; }
+#level-feedback[data-error="true"] { color: #ffb8a7; }
+@media (max-width: 740px) { .enemy-levels { grid-column: 1; } }

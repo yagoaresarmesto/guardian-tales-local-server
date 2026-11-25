@@ -105,9 +105,9 @@ small { color: var(--muted); font-size: .78rem; font-weight: 400; margin-left: 6
   margin: 18px calc(-1 * var(--inset)) calc(-1 * var(--inset)); padding: 12px var(--inset);
   background: #152232; border-top: 1px solid var(--line);
 }
-#apply { min-height: 40px; padding: 8px 22px; border: 1px solid #ffe4a5; border-bottom: 3px solid #c38d3c; border-radius: 5px; color: #32250f; font-size: .96rem; font-weight: 800; background: linear-gradient(175deg, #ffe399, #ffc561); }
-#apply:hover:enabled { background: #ffe0a0; } #apply:active:enabled { transform: translateY(1px); }
-#apply:disabled { color: #a4b5c6; background: #273748; border: 1px solid #384b5d; }
+:is(#apply, .primary-action) { min-height: 40px; padding: 8px 22px; border: 1px solid #ffe4a5; border-bottom: 3px solid #c38d3c; border-radius: 5px; color: #32250f; font-size: .96rem; font-weight: 800; background: linear-gradient(175deg, #ffe399, #ffc561); }
+:is(#apply, .primary-action):hover:enabled { background: #ffe0a0; } :is(#apply, .primary-action):active:enabled { transform: translateY(1px); }
+:is(#apply, .primary-action):disabled { color: #a4b5c6; background: #273748; border: 1px solid #384b5d; }
 .actions > span { color: var(--muted); font-size: .8rem; }
 fieldset:disabled { opacity: .66; }
 #feedback { margin: 12px var(--inset); padding: 10px 12px; color: #a8e7ff; background: #111c2e; border-left: 3px solid currentColor; font-size: .9rem; }

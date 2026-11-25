@@ -281,6 +281,17 @@ To apply, close the game, stop the backend and use the
 [standalone dashboard](http://127.0.0.1:17661/orbital-lift). The selector supports
 moving forward and backward. Changing progress grants no floor rewards.
 
+In the same tab, **Enemy levels** sets one visible level for floors 1–1,500 and
+their enemies, including elite and boss encounters. The 3.57.0 Global panel
+offers levels **1–200**, capped at the highest level represented in the original
+Orbital Lift table. With Guardian Tales closed, choose a level and click
+**Apply to all floors**, or click **Restore original levels** to recover each
+floor's own difficulty. The backend can keep running. Reopen the game to load
+the new settings. This edit affects the tables served by the backend and is
+independent of the saved floor, enemy lineups and elite modifiers.
+The served floor data and restoration have been checked against the 3.57.0 EU
+pack. The displayed combat level still needs confirmation in the Android client.
+
 Run selectors against the **same reference directory as the backend**, outside
 battle. After changing seasons, variants or Guild War settings, **fully close
 and reopen the game** to reload its cached static data. Reconnect alone may

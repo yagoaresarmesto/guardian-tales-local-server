@@ -9,6 +9,8 @@ from .snapshots import CLIENT
 ORBITAL_ENTRY_ROUTE = "/tower-infinity/start-stage"
 ORBITAL_EXIT_ROUTE = "/tower-infinity/end-stage"
 ORBITAL_FORMATION_ROUTE = "/tower-infinity/save-formation"
+# Floor 1501 is the final record room in the 3.57.0 catalog.
+LAST_SELECTABLE_FLOOR = 1500
 # The pinned client keeps four party-slot positions on a 20-cell deployment grid.
 FORMATION_SIZE = 4
 FORMATION_CELLS = 20

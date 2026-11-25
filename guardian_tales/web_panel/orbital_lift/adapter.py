@@ -4,11 +4,8 @@
 import json
 
 from ...inventory_panel.game_save import GameSaveEditor
-from ...orbital import load_entry_floors
+from ...orbital import LAST_SELECTABLE_FLOOR, load_entry_floors
 from ...village import INT_MAX, MAX_REVISION, integer
-
-# Floor 1501 is the final record room in the 3.57.0 catalog.
-LAST_SELECTABLE_FLOOR = 1500
 
 
 class OrbitalChanged(ValueError):

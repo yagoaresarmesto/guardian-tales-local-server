@@ -25,6 +25,7 @@ from . import (
     kamazone_preview,
     kamazone_run,
     multi_presets,
+    orbital_levels,
     story_interactions,
     story_rewards,
     story_world_pass,
@@ -62,6 +63,7 @@ from .punchking import START as PUNCHKING_START
 from .punchking import handle as handle_punchking
 from .punchking_static import bootstrap_override as punchking_bootstrap_override
 from .raid_static import bootstrap_override as raid_bootstrap_override
+from .raid_static import selected_static_seed
 from .reference import compressed_empty_list
 from .representative_character import ROUTE as REPRESENTATIVE_CHARACTER_ROUTE
 from .snapshots import (
@@ -997,8 +999,16 @@ class BootstrapSession:
                 def practice(references, name, value):
                     return kamazone_practice.bootstrap_seed(references, name, value, calendar)
 
-                seed = tetis_map_trial.bootstrap_seed(
-                    self.store.references, filename, body, practice
+                def tetis_seed(references, name, value):
+                    return tetis_map_trial.bootstrap_seed(references, name, value, practice)
+
+                seed = selected_static_seed(
+                    self.store.references,
+                    filename,
+                    body,
+                    tetis_seed,
+                    orbital_levels.selection,
+                    orbital_levels.prepare,
                 )
             except ValueError as exc:
                 raise PacketError(str(exc)) from exc

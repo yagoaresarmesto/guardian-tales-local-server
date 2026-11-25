@@ -10,12 +10,16 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from guardian_tales.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.orbital_levels import SELECTION
+from guardian_tales.raid_static import compress, decode, digest, records
 from guardian_tales.reference import ReferenceData
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.state_lock import StateLock
 from guardian_tales.village import MAX_REVISION
 from guardian_tales.web_panel.server import WebPanel
 from tests.test_inventory_panel import prepare_inventory
+from tests.test_snapshots import request as packet_request
 
 
 class OrbitalPanelTests(unittest.TestCase):
@@ -43,14 +47,91 @@ class OrbitalPanelTests(unittest.TestCase):
         with self.db:
             self.db.execute("UPDATE local_account SET profile=?", (json.dumps(self.original),))
 
-    def api(self, body=None):
+    def api(self, body=None, suffix=""):
         request = Request(
-            self.origin + "/api/orbital-lift",
+            self.origin + "/api/orbital-lift" + suffix,
             data=None if body is None else json.dumps(body).encode(),
             headers={"Origin": self.origin, "Content-Type": "application/json"},
         )
         with urlopen(request, timeout=5) as response:
             return json.load(response)
+
+    def test_global_enemy_levels_reach_bootstrap_and_restore_each_floor(self):
+        floors = [
+            {
+                "Floor": floor,
+                "StandardLevel": min(199, 49 + floor // 10),
+                "Monsters": [] if floor % 50 == 1 else [{"Options": [{"Level": 3}]}],
+            }
+            for floor in range(1, 1502)
+        ]
+        tables = {
+            "infinitytowerfloors": floors,
+            "infinitytowermonsters": [{"MonsterId": 2, "SpecId": 42}],
+            "exps2": {"LevelExps": [{"Level": i} for i in range(220)]},
+            "__checksum__": "stock",
+        }
+        texts = {name: json.dumps(data) for name, data in tables.items()}
+        source = compress(
+            "".join(f"{k}\n{v}\n7\n{digest(v.encode())}\n" for k, v in texts.items()).encode()
+        )
+        path = self.root / "static_data_get.bin"
+        path.write_bytes(source)
+        conn = self.enterContext(closing(sqlite3.connect(":memory:")))
+        session = BootstrapSession(GuestStore(conn, self.root))
+
+        def level_api(body=None):
+            return self.api(body, "/enemy-level")
+
+        def game(route, body):
+            return session.handle(packet_request("/static-data/" + route, body)).body
+
+        self.assertEqual(level_api(), {"level": None, "maxLevel": 200, "revision": 0})
+        self.assertEqual(game("get", {}), source)
+        for bad in (False, 0, -1, 201, 220, 1.5, "200"):
+            with self.subTest(bad=bad), self.assertRaises(HTTPError) as rejected:
+                level_api({"level": bad, "revision": 0})
+            self.assertEqual(rejected.exception.code, 400)
+            rejected.exception.close()
+        self.assertFalse((self.root / SELECTION).exists())
+        last_checksum = texts["__checksum__"]
+        for revision, level in enumerate((200, 1, None)):
+            body = {"revision": revision, "level": level}
+            # Only progress editing takes the backend's save lock.
+            with StateLock(self.root):
+                level_api(body)
+            self.assertEqual(
+                level_api(), {"level": level, "maxLevel": 200, "revision": revision + 1}
+            )
+            with self.assertRaises(HTTPError) as stale:
+                level_api(body)
+            self.assertEqual(stale.exception.code, 409)
+            stale.exception.close()
+            level_api(dict(body, revision=revision + 1))
+            self.assertEqual(level_api()["revision"], revision + 1)
+            _, served = records(decode(game("get", {})))
+            check = json.loads(game("check-update", {"Checksum": last_checksum}))
+            self.assertFalse(check["UpToDate"])
+            last_checksum = served["__checksum__"][1]
+            self.assertEqual(check["Checksum"], last_checksum)
+            self.assertTrue(
+                json.loads(game("check-update", {"Checksum": last_checksum}))["UpToDate"]
+            )
+            for name in ("exps2", "infinitytowermonsters"):
+                self.assertEqual(served[name][1:], (texts[name], 7))
+            self.assertEqual(served["infinitytowerfloors"][2], 8 + revision)
+            expected = [
+                (
+                    dict(row, StandardLevel=level - 1)
+                    if level is not None and row["Floor"] <= 1500
+                    else row
+                )
+                for row in floors
+            ]
+            self.assertEqual(json.loads(served["infinitytowerfloors"][1]), expected)
+        self.assertEqual(served["infinitytowerfloors"][1], texts["infinitytowerfloors"])
+        self.assertEqual(path.read_bytes(), source)
+        self.assertEqual(self.profile(), self.original)
 
     def test_choose_next_floor_preserves_save_and_survives_reopening(self):
         state = self.api()

@@ -10,6 +10,7 @@ from pathlib import Path
 
 from guardian_tales.panel_common.views import CSS, DASHBOARD, JS, render_layout
 
+from .. import orbital_levels
 from ..expedition_levels import LevelSelectionChanged
 from ..guild_raid import RaidSelectionChanged
 from ..guild_war_static import WarSelectionChanged
@@ -31,15 +32,20 @@ ROOT = Path(__file__).parent
 
 
 @dataclass(frozen=True)
+class Editor:
+    state: Callable
+    apply: Callable
+    conflict: type[ValueError]
+    source: str = "references"
+
+
+@dataclass(frozen=True)
 class Mode:
     slug: str
     path: str
     label: str
     title: str
-    state: Callable
-    apply: Callable
-    conflict: type[ValueError]
-    source: str = "references"
+    editor: Editor
 
     @property
     def directory(self):
@@ -47,60 +53,57 @@ class Mode:
 
 
 MODES = (
-    Mode("raid", "/raid", "Raid", "Guild Raid", raid.state, raid.apply, RaidSelectionChanged),
     Mode(
-        "dka", "/dka", "DKA", "Dungeon Kingdom Arena", dka.state, dka.apply, ArenaSelectionChanged
+        "raid", "/raid", "Raid", "Guild Raid", Editor(raid.state, raid.apply, RaidSelectionChanged)
+    ),
+    Mode(
+        "dka",
+        "/dka",
+        "DKA",
+        "Dungeon Kingdom Arena",
+        Editor(dka.state, dka.apply, ArenaSelectionChanged),
     ),
     Mode(
         "guild-war",
         "/guild-war",
         "Guild Wars",
         "Guild Wars",
-        guild_war.state,
-        guild_war.apply,
-        WarSelectionChanged,
+        Editor(guild_war.state, guild_war.apply, WarSelectionChanged),
     ),
     Mode(
         "kamazone",
         "/kamazone",
         "Kama-ZONE",
         "Kama-ZONE",
-        kamazone.state,
-        kamazone.apply,
-        SeasonSelectionChanged,
+        Editor(kamazone.state, kamazone.apply, SeasonSelectionChanged),
     ),
     Mode(
         "expedition",
         "/expedition",
         "Expedition",
         "Expedition",
-        expedition.state,
-        expedition.apply,
-        LevelSelectionChanged,
+        Editor(expedition.state, expedition.apply, LevelSelectionChanged),
     ),
     Mode(
         "orbital-lift",
         "/orbital-lift",
         "Orbital Lift",
         "Orbital Lift",
-        OrbitalEditor.state,
-        OrbitalEditor.write,
-        OrbitalChanged,
-        "orbital",
+        Editor(OrbitalEditor.state, OrbitalEditor.write, OrbitalChanged, "orbital"),
     ),
     Mode(
         "tetis",
         "/tetis",
         "Tetis",
         "The Tale of the Tetis Hero",
-        TetisEditor.state,
-        TetisEditor.apply,
-        TetisChanged,
-        "tetis",
+        Editor(TetisEditor.state, TetisEditor.apply, TetisChanged, "tetis"),
     ),
 )
 PAGES = {mode.path: mode for mode in MODES}
-API = {f"/api/{mode.slug}": mode for mode in MODES}
+API = {f"/api/{mode.slug}": mode.editor for mode in MODES}
+API["/api/orbital-lift/enemy-level"] = Editor(
+    orbital_levels.state, orbital_levels.apply, orbital_levels.LevelChanged
+)
 FILES = {"/panel.css": (ROOT / "shared/panel.css", CSS), "/panel.js": (ROOT / "shared/ui.js", JS)}
 FILES["/dashboard.css"] = (DASHBOARD / "dashboard.css", CSS)
 FILES["/backend.js"] = (ROOT / "shared/backend.js", JS)

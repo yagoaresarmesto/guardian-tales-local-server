@@ -57,3 +57,61 @@ $("editor").onsubmit = async event => {
   }
 };
 load();
+
+const levelEndpoint = endpoint + "/enemy-level";
+const levelInput = $("enemy-level");
+let levelState;
+
+function showLevelMessage(text, error = false) {
+  const node = $("level-feedback");
+  node.textContent = text;
+  node.hidden = !text;
+  node.dataset.error = String(error);
+}
+
+function levelButtons() {
+  $("apply-level").disabled = !levelInput.validity.valid || levelInput.valueAsNumber === levelState.level;
+  $("restore-level").disabled = levelState.level == null;
+}
+
+async function loadLevels() {
+  $("level-controls").disabled = true;
+  const response = await fetch(levelEndpoint, {cache: "no-store"});
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Could not load enemy levels.");
+  levelState = data;
+  levelInput.max = data.maxLevel;
+  levelInput.value = data.level ?? "";
+  $("level-range").textContent = "1–" + data.maxLevel;
+  $("level-status").textContent = data.level == null
+    ? "Each floor uses its original level."
+    : "All floors use enemy level " + data.level + ".";
+  levelButtons();
+  $("level-controls").disabled = false;
+}
+
+async function saveLevel(level) {
+  if ($("level-controls").disabled) return;
+  $("level-controls").disabled = true;
+  showLevelMessage("Saving…");
+  try {
+    const response = await fetch(levelEndpoint, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({level, revision: levelState.revision}),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Could not save enemy levels.");
+    await loadLevels();
+    showLevelMessage("Saved. Close and reopen Guardian Tales to load the enemy levels.");
+  } catch (error) {
+    showLevelMessage(error.message + " Reload the page to try again.", true);
+  }
+}
+
+levelInput.oninput = levelButtons;
+$("level-editor").onsubmit = event => {
+  event.preventDefault();
+  if (!$("apply-level").disabled) saveLevel(levelInput.valueAsNumber);
+};
+$("restore-level").onclick = () => saveLevel(null);
+loadLevels().catch(error => showLevelMessage(error.message + " Reload the page to try again.", true));

@@ -38,6 +38,25 @@ def record_bytes(name, content):
     return base64.b64decode(content, validate=True) if name.endswith("-bin") else content.encode()
 
 
+def selected_static_seed(references, filename, request, parent, selection, prepare):
+    """Serve matching get/check responses for a revisioned local selection."""
+    if filename in ("static_data_check.bin", "static_data_get.bin"):
+        value, revision = selection(references)
+        if revision:
+            source = parent(references, "static_data_get.bin", request)
+            body, checksum = prepare(source, value, revision)
+            if filename == "static_data_get.bin":
+                return body
+            return json.dumps(
+                {
+                    "UpToDate": isinstance(request, dict) and request.get("Checksum") == checksum,
+                    "Checksum": checksum,
+                    "QuitGameWhenStaticDataUpdateNeeded": False,
+                }
+            ).encode()
+    return parent(references, filename, request)
+
+
 def compress(data):
     """Encode a bounded raw LZ4 block with a fixed-size match table."""
     if not 0 < len(data) <= MAX_STATIC:

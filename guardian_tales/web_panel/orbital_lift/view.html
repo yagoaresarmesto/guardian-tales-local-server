@@ -26,5 +26,21 @@
       </form>
       <p id="feedback" role="status" hidden></p>
     </section>
+    <section class="surface enemy-levels" aria-labelledby="enemy-heading">
+      <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="enemy-heading">Enemy levels</h2></header>
+      <form id="level-editor">
+        <p id="level-status" aria-live="polite"></p>
+        <fieldset id="level-controls" disabled>
+          <label class="label" for="enemy-level">Enemy level for all floors</label>
+          <input type="number" id="enemy-level" min="1" step="1" required aria-describedby="level-range">
+          <small id="level-range"></small>
+          <div class="actions">
+            <button type="submit" id="apply-level" class="primary-action" disabled>Apply to all floors</button>
+            <button type="button" id="restore-level" disabled>Restore original levels</button>
+          </div>
+        </fieldset>
+        <p id="level-feedback" role="status" hidden></p>
+      </form>
+    </section>
   </div>
 </main>
