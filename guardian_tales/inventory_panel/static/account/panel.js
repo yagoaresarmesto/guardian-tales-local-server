@@ -3,8 +3,18 @@ import { $, el } from "/inventory-dom.js";
 const api = "/api/game/account";
 const number = new Intl.NumberFormat("en-GB");
 const controls = new Map();
-const evolutionGroup = "Hero Evolution Stones";
-const mythGroup = "Hero Myth Stones";
+const materialPickers = {
+  "Hero Evolution Stones": {
+    id: "evolution-stone-picker", label: "Evolution stone", all: "All evolution stones",
+    region: "Evolution stone balances", groupByCatalogUse: true,
+  },
+  "Hero Myth Stones": {
+    id: "myth-stone-picker", label: "Myth hero", all: "All heroes", region: "Myth stone balances",
+  },
+  "Purple Coins": {
+    id: "purple-coin-picker", label: "World", all: "All worlds", region: "Purple Coin balances by world",
+  },
+};
 let account, writable = false, saving = false, stale = false, statusRequest = 0;
 let groupsBeforeSearch = null;
 
@@ -138,7 +148,7 @@ function filterMaterials() {
   if (words.length && !groupsBeforeSearch) groupsBeforeSearch = expandedGroups();
   const groups = $("material-groups");
   for (const group of groups.children) {
-    const picker = group.querySelector(".stone-picker select");
+    const picker = group.querySelector(".material-picker select");
     if (picker) picker.parentElement.hidden = words.length > 0;
     const count = filterBalances(group, words, words.length ? "" : picker?.value);
     group.hidden = !count;
@@ -153,16 +163,15 @@ function filterMaterials() {
   $("material-empty").hidden = !(common.hidden && groups.hidden);
 }
 
-function stonePicker(groupName, entries, previous) {
-  const evolution = groupName === evolutionGroup;
-  const field = el("div", "stone-picker");
-  const label = el("label", "", evolution ? "Evolution stone" : "Myth hero");
+function materialPicker(config, entries, previous) {
+  const field = el("div", "material-picker");
+  const label = el("label", "", config.label);
   const select = el("select");
-  select.id = evolution ? "evolution-stone-picker" : "myth-stone-picker";
+  select.id = config.id;
   label.htmlFor = select.id;
-  select.add(new Option(evolution ? "All evolution stones" : "All heroes", ""));
+  select.add(new Option(config.all, ""));
   const option = item => new Option(item.choice, item.key, false, item.key === previous);
-  if (evolution) {
+  if (config.groupByCatalogUse) {
     for (const [catalogOnly, title] of [[false, "Used for hero evolution"], [true, "Catalog only"]]) {
       const group = el("optgroup");
       group.label = title;
@@ -179,9 +188,9 @@ function stonePicker(groupName, entries, previous) {
 function renderMaterials(items) {
   const container = $("material-groups");
   const expanded = groupsBeforeSearch || expandedGroups();
-  const previousStones = new Map();
-  for (const picker of container.querySelectorAll(".stone-picker select")) {
-    previousStones.set(picker.closest("details").dataset.group, picker.value);
+  const previousSelections = new Map();
+  for (const picker of container.querySelectorAll(".material-picker select")) {
+    previousSelections.set(picker.id, picker.value);
   }
   const compare = new Intl.Collator("en", {numeric: true}).compare;
   const groups = new Map();
@@ -209,12 +218,13 @@ function renderMaterials(items) {
     const list = el("div", "balance-list");
     list.append(balanceColumns("Set total"), ...entries.map(item => balanceRow(item, true)));
     section.append(summary);
-    if (group === evolutionGroup || group === mythGroup) {
-      section.append(stonePicker(group, entries, previousStones.get(group)));
-      list.classList.add("stone-balance-list");
+    const config = materialPickers[group];
+    if (config) {
+      section.append(materialPicker(config, entries, previousSelections.get(config.id)));
+      list.classList.add("material-balance-list");
       list.tabIndex = 0;
       list.setAttribute("role", "region");
-      list.setAttribute("aria-label", group === evolutionGroup ? "Evolution stone balances" : "Myth stone balances");
+      list.setAttribute("aria-label", config.region);
     }
     section.append(list);
     container.append(section);
@@ -255,10 +265,10 @@ async function load() {
 }
 
 $("account-form").oninput = event => {
-  if (event.target === $("material-search") || event.target.matches(".stone-picker select")) {
+  if (event.target === $("material-search") || event.target.matches(".material-picker select")) {
     filterMaterials();
     const scope = event.target.closest(".material-group") || $("materials");
-    for (const list of scope.querySelectorAll(".stone-balance-list")) list.scrollTop = 0;
+    for (const list of scope.querySelectorAll(".material-balance-list")) list.scrollTop = 0;
     return;
   }
   if (!stale) $("message").textContent = "";
