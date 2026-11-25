@@ -22,6 +22,7 @@ function update() {
   preview.hidden = !identityChanged;
   preview.textContent = !validName ? "Enter a valid nickname." : !validTag ? "Enter five letters or digits." : "After applying: " + name + "#" + tag;
   let valid = validName && validTag, changed = identityChanged;
+  const materialEdits = [];
   for (const {item, input, result, note, setTotal} of controls.values()) {
     const ok = input.disabled || input.validity.valid;
     const total = setTotal ? (input.value === "" ? item.balance : input.valueAsNumber)
@@ -34,7 +35,12 @@ function update() {
       : "Enter a whole amount between 0 and " + number.format(Number(input.max)) + ".";
     valid &&= ok;
     changed ||= ok && total !== item.balance;
+    if (item.key.startsWith("material-") && (!ok || total !== item.balance)) {
+      materialEdits.push(item.label + " → " + (ok ? number.format(total) : "check amount"));
+    }
   }
+  $("material-edits").hidden = !materialEdits.length;
+  $("material-edits").textContent = materialEdits.length ? "Pending: " + materialEdits.join(" · ") : "";
   $("apply").disabled = !changed || !valid || !account.ready || !writable || saving || stale;
 }
 
@@ -59,35 +65,68 @@ async function checkAccess() {
   }
 }
 
-function renderBalances(container, items, setTotal) {
-  container.replaceChildren();
+function balanceRow(item, setTotal) {
+  const row = el("div", "wallet-row");
+  const identity = el("div", "wallet-item"), icon = image("/icon/" + item.id + ".png");
+  icon.onerror = () => icon.remove();
+  const detail = el("div");
+  detail.append(el("strong", "", item.label), el("small", "", "Saved: " + number.format(item.balance)));
+  if (item.limit !== null) detail.append(el("small", "", "Limit: " + number.format(item.limit)));
+  identity.append(icon, detail);
+  const action = setTotal ? "Set total" : "Add";
+  const field = el("div", "wallet-input"), label = el("label", "", action), input = el("input");
+  input.id = (setTotal ? "set-" : "add-") + item.key; label.htmlFor = input.id;
+  input.type = "number"; input.inputMode = "numeric"; input.required = !setTotal;
+  input.min = 0; input.step = 1;
+  input.max = setTotal ? item.limit : Math.max(0, item.limit - item.balance);
+  input.value = setTotal ? (item.balance <= item.limit ? item.balance : "") : 0;
+  input.placeholder = String(item.balance);
+  input.disabled = !setTotal && Number(input.max) === 0;
+  input.setAttribute("aria-label", setTotal ? item.label + " total" : "Add " + item.label.toLowerCase());
+  const note = el("p", "field-note");
+  note.id = input.id + "-note"; input.setAttribute("aria-describedby", note.id);
+  const after = el("div", "wallet-result"), result = el("strong");
+  after.append(el("small", "", "After applying"), result);
+  field.append(label, input);
+  row.append(identity, field, after, note);
+  controls.set(item.key, {item, input, result, note, setTotal, row});
+  return row;
+}
+
+function renderMaterials(items) {
+  const picker = $("material"), variant = $("material-variant");
+  const previous = picker.value, previousVariant = variant.value;
+  const groups = new Map();
   for (const item of items) {
-    const row = el("div", "wallet-row");
-    const identity = el("div", "wallet-item"), icon = image("/icon/" + item.id + ".png");
-    icon.onerror = () => icon.remove();
-    const detail = el("div");
-    detail.append(el("strong", "", item.label), el("small", "", "Saved: " + number.format(item.balance)));
-    if (item.limit !== null) detail.append(el("small", "", "Limit: " + number.format(item.limit)));
-    identity.append(icon, detail);
-    const action = setTotal ? "Set total" : "Add";
-    const field = el("div", "wallet-input"), label = el("label", "", action), input = el("input");
-    input.id = (setTotal ? "set-" : "add-") + item.key; label.htmlFor = input.id;
-    input.type = "number"; input.inputMode = "numeric"; input.required = !setTotal;
-    input.min = 0; input.step = 1;
-    input.max = setTotal ? item.limit : Math.max(0, item.limit - item.balance);
-    input.value = setTotal ? (item.balance <= item.limit ? item.balance : "") : 0;
-    input.placeholder = String(item.balance);
-    input.disabled = !setTotal && Number(input.max) === 0;
-    input.setAttribute("aria-label", setTotal ? item.label + " total" : "Add " + item.label.toLowerCase());
-    const note = el("p", "field-note");
-    note.id = input.id + "-note"; input.setAttribute("aria-describedby", note.id);
-    const after = el("div", "wallet-result"), result = el("strong");
-    after.append(el("small", "", "After applying"), result);
-    field.append(label, input);
-    row.append(identity, field, after, note);
-    container.append(row);
-    controls.set(item.key, {item, input, result, note, setTotal});
+    const group = item.group || item.label;
+    if (!groups.has(group)) groups.set(group, []);
+    groups.get(group).push(item);
   }
+  $("materials-section").hidden = !items.length;
+  const compare = new Intl.Collator("en", {numeric: true}).compare;
+  picker.replaceChildren(...Array.from(groups.keys()).sort(compare).map(label => new Option(label, label)));
+  if (!groups.size) return;
+  if (groups.has(previous)) picker.value = previous;
+  const selected = new Map([[previous, previousVariant]]);
+  function showBalance() {
+    const item = groups.get(picker.value).find(candidate => candidate.key === variant.value);
+    selected.set(picker.value, item.key);
+    $("material-balance").replaceChildren(controls.get(item.key)?.row || balanceRow(item, true));
+    update();
+  }
+  function chooseGroup() {
+    const options = groups.get(picker.value);
+    options.sort((a, b) => compare(a.choice || a.label, b.choice || b.label));
+    variant.replaceChildren(...options.map(item => new Option(item.choice || item.label, item.key)));
+    const initial = options.find(item => item.key === selected.get(picker.value)) || options.find(item => item.preferred);
+    if (initial) variant.value = initial.key;
+    $("variant-field").hidden = !options[0].group;
+    $("variant-label").textContent = ({"Hero Myth Stones": "Hero", "Purple Coins": "World"})[picker.value] || "Coin";
+    showBalance();
+  }
+  picker.onchange = chooseGroup;
+  variant.onchange = showBalance;
+  chooseGroup();
 }
 
 function render(data) {
@@ -96,10 +135,11 @@ function render(data) {
   $("tag").value = data.tag;
   $("saved-identity").textContent = data.name + "#" + data.tag;
   controls.clear();
-  renderBalances($("wallet"), data.wallet, false);
+  $("wallet").replaceChildren(...data.wallet.map(item => balanceRow(item, false)));
   const summoning = data.summoning || [];
-  renderBalances($("summoning"), summoning, true);
+  $("summoning").replaceChildren(...summoning.map(item => balanceRow(item, true)));
   $("summoning-section").hidden = !summoning.length;
+  renderMaterials(data.materials || []);
   $("reload").hidden = true;
   stale = false;
   access(data.writable);

@@ -48,6 +48,15 @@ def prepare_inventory(root):
             dict(Id=9, Name="hammer_box", Type="gachaitem"),
             dict(Id=10, Name="test_shield", Type="weapon", WeaponType="shield", Rarity=4),
             dict(Id=70014, Name="spiritStone", Type="goods"),
+            dict(Id=70004, Name="experience", Type="goods"),
+            dict(Id=70028, Name="jewel_powder", Type="goods", MaxCount=800),
+            dict(Id=70034, Name="dream_mythstone", Type="goods"),
+            dict(Id=71001, Name="purple_coin_1", Type="goods"),
+            dict(Id=71002, Name="purple_coin_2", Type="goods"),
+            dict(Id=76005, Name="coop_expedition_coin_2", Type="goods"),
+            dict(Id=77004, Name="ic_rogue_chess_coin_01_4", Type="goods"),
+            dict(Id=85001, Name="myth_stone_archer", Type="evolve_stone", StoneType="HeroMyth"),
+            dict(Id=85002, Name="myth_stone_knight", Type="evolve_stone", StoneType="HeroMyth"),
             dict(
                 Id=110007,
                 Name="summon_ticket",
@@ -539,6 +548,76 @@ class InventoryPanelTests(unittest.TestCase):
             self.call(path, body)
         self.assertEqual(early.exception.code, 400)
         self.assertFalse(self.call(path)["ready"])
+
+    def test_account_material_edits_preserve_other_worlds_stones_progress_and_legacy_balances(self):
+        profile = self.seed_wallet()
+        user = profile["User"]
+        user["Assets"].extend(
+            [
+                dict(Id=70004, Amount=2_000_000, Spent=25),
+                dict(Id=71001, Amount=50, Spent=12),
+            ]
+        )
+        user["ItemStackables"].extend(
+            [
+                dict(Id=21, ItemId=85001, Amount=30, Locked=True),
+                dict(Id=22, ItemId=85001, Amount=80, Locked=False),
+            ]
+        )
+        user["ItemIdCounter"] = 22
+        profile["PurpleCoins"] = {"10001": "collected"}
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        path = "/api/game/account"
+        view = self.call(path)
+        materials = {i["id"]: i for i in view["materials"]}
+        self.assertEqual(materials[71002]["choice"], "World 2")
+        self.assertEqual(materials[85001]["choice"], "Archer")
+        self.assertEqual(materials[70004]["balance"], 2_000_000)
+        self.assertEqual(materials[85001]["balance"], 110)
+        self.assertEqual(materials[70028]["limit"], 800)
+        self.assertNotIn(70014, materials)
+        body = dict(version=view["version"], name=view["name"], tag=view["tag"], add={})
+        totals = {
+            "material-71002": 100_000,
+            "material-85001": 50,
+            "material-85002": 33,
+            "material-70034": 45,
+            "material-76005": 24,
+            "material-77004": 14,
+        }
+        for invalid in (
+            {"material-70028": 801},
+            {"material-85002": 100_001},
+            {"material-70004": -1},
+            {"material-70034": True},
+            {"material-70014": 1},
+        ):
+            with self.subTest(invalid=invalid), self.assertRaises(HTTPError) as rejected:
+                self.call(path, body | {"set": totals | invalid})
+            self.assertEqual(rejected.exception.code, 400)
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(path, body | {"set": totals})
+        self.assertEqual(locked.exception.code, 423)
+        self.assertEqual(self.call(path), view)
+        result = self.call(path, body | {"set": totals})
+        with self.assertRaises(HTTPError) as stale:
+            self.call(path, body | {"set": totals})
+        self.assertEqual(stale.exception.code, 409)
+        balances = {i["key"]: i["balance"] for i in self.call(path)["materials"]}
+        self.assertEqual({key: balances[key] for key in totals}, totals)
+        self.assertEqual(balances["material-70004"], 2_000_000)
+        self.assertEqual(balances["material-71001"], 50)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+        self.assertEqual(saved["PurpleCoins"], profile["PurpleCoins"])
+        self.assertEqual(saved["User"]["Assets"][: len(user["Assets"])], user["Assets"])
+        self.assertEqual(saved["User"]["ItemStackables"][-2]["Id"], 22)
+        self.assertEqual(saved["User"]["ItemStackables"][-1]["Id"], 23)
+        result = self.call(
+            path, body | {"version": result["version"], "set": {"material-85001": 0}}
+        )
+        self.assertEqual(next(i["balance"] for i in result["materials"] if i["id"] == 85001), 0)
 
     def test_account_keeps_legacy_balances_and_checks_guild_owner(self):
         profile = self.seed_wallet()

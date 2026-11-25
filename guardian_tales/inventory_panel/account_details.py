@@ -11,6 +11,7 @@ from guardian_tales.stamina_purchase import load_purchase_catalog
 from guardian_tales.summon_payment import PAID_GEMS, spend_tickets
 from guardian_tales.village import GOLD, INT_MAX, MAX_REVISION, integer
 
+from .account_materials import account_materials
 from .game_save import GameSaveEditor
 
 WALLET_CAP = 100_000_000
@@ -45,11 +46,10 @@ def account_ready(db):
     return any(db.execute(f"SELECT 1 FROM {table} WHERE id=1").fetchone() for table in tables)
 
 
-def wallet_rows(user):
+def wallet_rows(user, ids):
     rows = {}
     if not isinstance(user.get("Assets"), list):
         raise ValueError("The saved wallet is unavailable.")
-    ids = {asset_id for asset_id, _ in WALLET.values()} | {MILEAGE}
     for row in user["Assets"]:
         if isinstance(row, dict) and row.get("Id") in ids:
             if row["Id"] in rows or not integer(row.get("Amount")):
@@ -65,20 +65,20 @@ def set_asset(user, rows, asset_id, amount):
     rows[asset_id]["Amount"] = amount
 
 
-def controller_stacks(user, item_id):
+def item_stacks(user, item_id):
     stacks = [item for item in user["ItemStackables"] if item["ItemId"] == item_id]
     if any(not integer(s.get("Amount")) or not integer(s.get("Id"), minimum=1) for s in stacks):
-        raise ValueError("Invalid saved Summon Controller stack.")
+        raise ValueError("Invalid saved item stack.")
     if len({s["Id"] for s in stacks}) != len(stacks):
-        raise ValueError("Duplicate saved Summon Controller stack.")
+        raise ValueError("Duplicate saved item stack.")
     return stacks
 
 
-def adjust_controllers(user, item_id, delta):
+def adjust_stacks(user, item_id, delta):
     if delta < 0:
         spend_tickets(user, item_id, -delta)
         return
-    stacks = controller_stacks(user, item_id)
+    stacks = item_stacks(user, item_id)
     if stacks:
         min(stacks, key=lambda s: s["Id"])["Amount"] += delta
     else:
@@ -88,13 +88,29 @@ def adjust_controllers(user, item_id, delta):
 
 
 class AccountEditor(GameSaveEditor):
-    def __init__(self, database, references, specs):
+    def __init__(self, database, references, catalog, tables):
         super().__init__(database)
         self.references = references
-        self.summon_limits = {
-            key: min(specs[item_id].get("MaxCount", INT_MAX), INT_MAX)
-            for key, (item_id, _) in SUMMONING.items()
+        specs = catalog.specs
+        summoning = [
+            dict(
+                key=key,
+                id=item_id,
+                label=label,
+                limit=min(specs[item_id].get("MaxCount", INT_MAX), INT_MAX),
+            )
+            for key, (item_id, label) in SUMMONING.items()
             if item_id in specs
+        ]
+        self.sections = {
+            "summoning": summoning,
+            "materials": account_materials(catalog, tables),
+        }
+        self.asset_ids = {asset_id for asset_id, _ in WALLET.values()} | {
+            item["id"]
+            for section in self.sections.values()
+            for item in section
+            if specs[item["id"]].get("Type") == "goods"
         }
 
     def snapshot(self, user, rows):
@@ -102,6 +118,16 @@ class AccountEditor(GameSaveEditor):
         coffee_cap = None
         if (self.references.directory / "stamina_purchase_catalog.json").is_file():
             coffee_cap = load_purchase_catalog(self.references)["max_storage"]
+        balances = {}
+        for section, items in self.sections.items():
+            balances[section] = []
+            for item in items:
+                ident = item["id"]
+                if ident in self.asset_ids:
+                    amount = rows.get(ident, {}).get("Amount", 0)
+                else:
+                    amount = sum(stack["Amount"] for stack in item_stacks(user, ident))
+                balances[section].append(dict(item, balance=amount))
         return {
             "name": user["Name"],
             "tag": user["HashTag"],
@@ -116,28 +142,14 @@ class AccountEditor(GameSaveEditor):
                 )
                 for key, (asset_id, label) in WALLET.items()
             ],
-            "summoning": [
-                dict(
-                    key=key,
-                    label=label,
-                    id=item_id,
-                    balance=(
-                        rows.get(MILEAGE, {}).get("Amount", 0)
-                        if item_id == MILEAGE
-                        else sum(s["Amount"] for s in controller_stacks(user, item_id))
-                    ),
-                    limit=self.summon_limits[key],
-                )
-                for key, (item_id, label) in SUMMONING.items()
-                if key in self.summon_limits
-            ],
+            **balances,
         }
 
     def info(self):
         with self.reader() as db:
             user = self.profile(db)["User"]
             return {
-                **self.snapshot(user, wallet_rows(user)),
+                **self.snapshot(user, wallet_rows(user, self.asset_ids)),
                 "ready": account_ready(db),
                 **self.status(),
             }
@@ -149,7 +161,7 @@ class AccountEditor(GameSaveEditor):
             raise ValueError("Complete the prologue or import an account before editing.")
         profile = self.profile(db)
         user = profile["User"]
-        rows = wallet_rows(user)
+        rows = wallet_rows(user, self.asset_ids)
         current = self.snapshot(user, rows)
         if body["version"] != current["version"]:
             return 409, {"error": "Your save changed. Reload the account before applying."}
@@ -179,22 +191,21 @@ class AccountEditor(GameSaveEditor):
             set_asset(user, rows, item["id"], item["balance"] + amount)
             changed = True
         totals = body.get("set", {})
-        if not isinstance(totals, dict) or totals.keys() - self.summon_limits.keys():
-            raise ValueError("Choose a supported summoning balance.")
-        for item in current["summoning"]:
-            if item["key"] not in totals:
-                continue
-            total = totals[item["key"]]
+        available = {item["key"]: item for section in self.sections for item in current[section]}
+        if not isinstance(totals, dict) or totals.keys() - available.keys():
+            raise ValueError("Choose a supported account balance.")
+        for key, total in totals.items():
+            item = available[key]
             if not integer(total, item["limit"]):
                 raise ValueError(
                     f"Enter a whole {item['label']} balance from 0 to {item['limit']:,}."
                 )
             if total == item["balance"]:
                 continue
-            if item["id"] == MILEAGE:
-                set_asset(user, rows, MILEAGE, total)
+            if item["id"] in self.asset_ids:
+                set_asset(user, rows, item["id"], total)
             else:
-                adjust_controllers(user, item["id"], total - item["balance"])
+                adjust_stacks(user, item["id"], total - item["balance"])
             changed = True
         if changed:
             if user["Cas"] == MAX_REVISION:

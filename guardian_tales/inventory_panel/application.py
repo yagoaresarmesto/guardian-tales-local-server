@@ -39,7 +39,7 @@ class InventoryApplication:
                 tables,
             )
         self.mastery = MasteryEditor(database, references)
-        self.account_editor = AccountEditor(database, references, self.catalog.specs)
+        self.account_editor = AccountEditor(database, references, self.catalog, tables)
         self.relics = RelicEditor(database, self.catalog)
         self.equipment = EquipmentOptionEditor(database, self.catalog, tables, progression)
         self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)
