@@ -142,6 +142,7 @@ class OrbitalPanelTests(unittest.TestCase):
             {
                 "Floor": f,
                 "FloorType": "RecordRoom" if f == 51 else "Normal",
+                "Rewards": [{"ItemId": 70003, "Amount": 500}] if f == 51 else [],
                 "StandardLevel": 199 if f == 1501 else 49,
                 "Monsters": [] if f == 51 else stock,
             }
@@ -181,6 +182,13 @@ class OrbitalPanelTests(unittest.TestCase):
             return self.api({"floor": floor, "revision": revision, "board": board}, "/boards")
 
         view = self.api(suffix="/boards")
+        previews = self.api(suffix="/map")
+        self.assertEqual(len(previews["floors"]), 1500)
+        kind, level, rewards = previews["floors"][50]
+        self.assertEqual(
+            (kind, level, previews["rewardSets"][rewards]), ("RecordRoom", 50, [[70003, 500]])
+        )
+        self.assertEqual(self.profile(), self.original)
         self.assertEqual(view["floor"]["type"], "Normal")
         self.assertEqual({e["id"] for e in view["enemies"]}, {10, 11})
         self.assertEqual([e["id"] for e in view["enemies"] if e["boss"]], [10])

@@ -1,9 +1,11 @@
 import { $, feedback } from "/panel.js";
 import { startBoard } from "/orbital-board.js";
+import { startTower } from "/orbital-tower.js";
 
 const endpoint = "/api/orbital-lift";
 const format = new Intl.NumberFormat("en");
 const floor = $("floor");
+const tower = startTower();
 let saved, allowed = new Set();
 
 function preview() {
@@ -22,6 +24,7 @@ async function load(message = "") {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Could not load Orbital Lift progress.");
     saved = data;
+    tower.setProgress(data);
     allowed = new Set(data.floors);
     $("cleared").textContent = format.format(data.clearedFloor);
     $("next").textContent = data.nextFloor == null ? "—" : format.format(data.nextFloor);
@@ -57,7 +60,7 @@ $("editor").onsubmit = async event => {
     $("reload").disabled = false;
   }
 };
-load().then(() => startBoard(saved?.nextFloor, () => loadLevels().catch(error => showLevelMessage(error.message, true))));
+load().then(() => startBoard(saved?.nextFloor, () => loadLevels().catch(error => showLevelMessage(error.message, true)), tower.setEditor));
 
 const levelEndpoint = endpoint + "/enemy-level";
 const levelInput = $("enemy-level");

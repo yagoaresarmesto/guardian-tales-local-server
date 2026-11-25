@@ -106,7 +106,7 @@ function enemyChooser(onPick) {
   };
 }
 
-export function startBoard(nextFloor, onSave) {
+export function startBoard(nextFloor, onSave, setTowerEditor) {
   let state, enemies, units, originalDraft, selected = positions[0], moving = null;
   let current = nextFloor >= 1 && nextFloor <= 1500 ? nextFloor : 1;
   const level = $("board-level"), picker = $("board-floor");
@@ -261,6 +261,7 @@ export function startBoard(nextFloor, onSave) {
 
   function busy(value) {
     if (value) chooser.close();
+    setTowerEditor(value || !state ? null : openFromTower);
     $("modified-floors").disabled = $("board-controls").disabled = $("board-open").disabled = picker.disabled = value;
   }
 
@@ -298,18 +299,35 @@ export function startBoard(nextFloor, onSave) {
     }
   }
 
-  function requestFloor(number) {
+  async function requestFloor(number) {
     if (draft() !== originalDraft && !window.confirm("Discard the unsaved board changes?")) {
       picker.value = current;
       busy(false);
-      return;
+      return false;
     }
     message("");
-    refresh(false, number).catch(error => {
+    try {
+      await refresh(false, number);
+      return true;
+    } catch (error) {
       picker.value = current;
       busy(false);
       message(error.message);
-    });
+      return false;
+    }
+  }
+  async function openFromTower(number, reveal) {
+    if (number !== current) {
+      if (!(await requestFloor(number))) return current;
+    } else {
+      picker.value = current;
+      busy(false);
+    }
+    if (reveal) {
+      $("board-heading").focus({preventScroll: true});
+      $("board-heading").scrollIntoView({block: "start"});
+    }
+    return number;
   }
   $("board-picker").onsubmit = event => {
     event.preventDefault();

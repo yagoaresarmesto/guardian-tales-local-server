@@ -36,6 +36,7 @@ from .guild_war import adapter as guild_war
 from .kamazone import adapter as kamazone
 from .kamazone.season_art import SEASONS as KAMAZONE_SEASONS
 from .orbital_lift import artwork as orbital_art
+from .orbital_lift import tower
 from .orbital_lift.adapter import OrbitalChanged, OrbitalEditor
 from .raid import adapter as raid
 from .tetis import sprites as tetis_sprites
@@ -126,6 +127,9 @@ FILES["/backend.js"] = (ROOT / "shared/backend.js", JS)
 FILES["/tetis-specialty.js"] = (ROOT / "tetis/specialty.js", JS)
 FILES["/services.css"] = (ROOT / "shared/services.css", CSS)
 FILES["/orbital-board.js"] = (ROOT / "orbital_lift/board.js", JS)
+FILES["/orbital-tower.js"] = (ROOT / "orbital_lift/tower.js", JS)
+FILES["/orbital-tower-scene.js"] = (ROOT / "orbital_lift/scene.js", JS)
+FILES["/orbital-tower.css"] = (ROOT / "orbital_lift/tower.css", CSS)
 FILES["/expedition-map.js"] = (ROOT / "expedition/map.js", JS)
 FILES["/expedition-map.css"] = (ROOT / "expedition/map.css", CSS)
 FILES["/tetis-loadout.js"] = (ROOT / "tetis/loadout.js", JS)
@@ -188,6 +192,12 @@ MEDIA = {
         }.items()
     },
     "/orbital-lift/elevator.jpg": (orbital_art.banner, "image/jpeg"),
+    "/orbital-lift/tower.webp": (tower.scene, "image/webp"),
+    "/orbital-lift/tower.json": (partial(tower.scene, name="frames"), "application/json"),
+    **{
+        f"/orbital-lift/scenery/{name}.webp": (partial(tower.scene, name=name), "image/webp")
+        for name in tower.SCENERY
+    },
     "/orbital-lift/empty-cell.png": (partial(UI.read, frame="ic_hero_00"), "image/png"),
     "/orbital-lift/boss-crown.png": (partial(UI.read, frame="ic_crown_red_00"), "image/png"),
     "/arena.jpg": (lambda refs: dka.arena_image(refs).read_bytes(), "image/jpeg"),

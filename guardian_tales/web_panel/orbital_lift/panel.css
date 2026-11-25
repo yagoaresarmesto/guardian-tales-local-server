@@ -1,3 +1,5 @@
+@import url("/orbital-tower.css");
+
 .lift-progress { margin: 0; padding: var(--inset); }
 .lift-progress div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 0; }
 .lift-progress div + div { border-top: 1px solid var(--line); }
@@ -15,12 +17,6 @@
 #level-feedback { margin-top: 24px; }
 #level-feedback[data-error="true"] { color: #ffb8a7; }
 main { max-width: 1240px; }
-.lift-banner {
-  min-height: clamp(110px, 12vw, 152px);
-  background: linear-gradient(90deg, #121c35 0%, #162641d9 22%, #1626410a 66%),
-    url("/orbital-lift/elevator.jpg") 80% 50% / cover no-repeat, #213851;
-}
-.lift-banner h1 { text-shadow: 0 3px 9px #071220; }
 .lift-workspace { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(290px, 1fr); gap: 16px; align-items: start; margin-top: 16px; }
 .lift-settings { display: grid; min-width: 0; gap: 16px; }
 .board-section { container-type: inline-size; }

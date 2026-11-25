@@ -1,9 +1,39 @@
 <main>
-  <section class="banner lift-banner"><h1>Orbital <em>Lift</em></h1></section>
+  <section class="lift-atlas surface" aria-labelledby="lift-heading">
+    <div class="lift-console">
+      <h1 id="lift-heading">Orbital <em>Lift</em></h1>
+      <div class="shaft-switch" role="group" aria-label="Lift shaft">
+        <button id="shaft-tetis" type="button" aria-pressed="true">Tetis <small>1–1000 ↑</small></button>
+        <button id="shaft-colony" type="button" aria-pressed="false">Colony <small>1001–1500 ↓</small></button>
+      </div>
+      <div class="shaft-readout">
+        <p id="lift-floor-state"></p>
+        <h2 id="lift-floor-title">Floor 1</h2>
+        <p id="lift-encounter"></p>
+        <ul id="lift-rewards" aria-label="Floor rewards"></ul>
+      </div>
+      <form id="lift-jump">
+        <label for="lift-destination">Go to floor</label>
+        <div><input id="lift-destination" type="number" min="1" max="1500" required><button>Go</button></div>
+      </form>
+      <button id="lift-edit" class="primary-action" type="button" disabled>Edit enemy board</button>
+    </div>
+    <div class="shaft-frame">
+      <canvas id="lift-scene" aria-hidden="true"></canvas>
+      <div id="lift-scroll" role="slider" tabindex="0" aria-label="Explore lift floors" aria-orientation="vertical"
+        aria-valuemin="1" aria-valuemax="1000" aria-valuenow="1" aria-describedby="lift-instructions">
+        <div id="lift-track"></div>
+      </div>
+      <div class="shaft-hud">
+        <span id="lift-instructions">Scroll to explore · Select a floor to edit</span>
+        <button id="lift-locate" type="button" disabled>◎ &nbsp;Current location</button>
+      </div>
+    </div>
+  </section>
   <div class="lift-workspace">
     <section class="surface board-section" aria-labelledby="board-heading">
       <header class="panel-heading">
-        <span class="section-icon stack" aria-hidden="true"></span><h2 id="board-heading">Enemy board</h2>
+        <span class="section-icon stack" aria-hidden="true"></span><h2 id="board-heading" tabindex="-1">Enemy board</h2>
         <span id="board-dirty" hidden>Unsaved changes</span>
       </header>
       <div class="board-body">

@@ -283,7 +283,17 @@ returns you to Equipment.
 
 ## Practice commands
 
-Under **Game modes → Orbital Lift**, choose the floor you want to play (1–1,500).
+Under **Game modes → Orbital Lift**, scroll the tower or enter a floor under
+**Go to floor**. Tetis ascends from 1 to 1,000. Colony starts at the terminal
+on 1,001 and descends to 1,500. With the tower focused, the up and down keys
+move one cabin in the indicated direction. **Current location** recenters the
+view on the saved floor. The tower uses the installed elevator sprites and
+displays the original room types, levels and reward previews. Click a cabin
+or press Enter on the focused tower to load its formation into **Enemy board**
+below. **Edit enemy board** also takes you directly to the editor. Browsing
+is read-only.
+
+Under **Set next floor**, choose the floor you want to play (1–1,500).
 The panel shows the highest cleared floor before and after the edit. Choosing
 floor 1,341, for example, saves 1,340 as cleared and leaves 1,341 ready to play.
 To apply, close the game, stop the backend and use the

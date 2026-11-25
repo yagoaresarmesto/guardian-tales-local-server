@@ -16,6 +16,7 @@ from guardian_tales.panel_common.views import HTML
 
 from .. import orbital_boards
 from ..orbital import LAST_SELECTABLE_FLOOR
+from .orbital_lift import tower
 from .orbital_lift.adapter import OrbitalEditor
 from .routes import API, FILES, PAGES, media_resource, render_page
 from .tetis.adapter import TetisEditor
@@ -113,6 +114,8 @@ class PanelHandler(InventoryHandler):
             elif path in FILES:
                 path, mime = FILES[path]
                 self.reply(200, mime, path.read_bytes())
+            elif path == "/api/orbital-lift/map":
+                self.list_json(tower.encounters(self.server.references))
             elif path.startswith("/api/orbital-lift/boards/"):
                 number = path.removeprefix("/api/orbital-lift/boards/")
                 if (
