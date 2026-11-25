@@ -2,6 +2,7 @@
 """Loopback HTTP transport for registered panel modes."""
 
 import json
+import socket
 import sqlite3
 import uuid
 from http.server import ThreadingHTTPServer
@@ -26,6 +27,14 @@ class WebPanel(ThreadingHTTPServer):
     # Inventory grids load dozens of separate artwork requests as a page opens.
     request_queue_size = 64
     inventory_home = False
+    # On Windows SO_REUSEADDR lets two live dashboards serve the same endpoint.
+    allow_reuse_address = not hasattr(socket, "SO_EXCLUSIVEADDRUSE")
+    allow_reuse_port = False
+
+    def server_bind(self):
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
     def __init__(
         self, references, port, *, art_dir=None, database=None, restart=None, prepare_inventory=None

@@ -13,7 +13,7 @@ from threading import Event
 
 from guardian_tales.panel_common.artwork import decoder_available
 from guardian_tales.reference import ReferenceData
-from guardian_tales.service_control import register, restart_worker
+from guardian_tales.service_control import active_services, register, restart_worker
 from guardian_tales.web_panel.server import WebPanel
 
 # Also declared by the panel-art extra. Bare checkouts lack installed package metadata.
@@ -106,6 +106,15 @@ def main(argv=None):
         parser.error(
             f"Working save not found: {database}. Set --data-dir to your existing save directory."
         )
+    if args.port and any(
+        port == args.port for port, _, _ in active_services("inventory", database)
+    ):
+        address = f"http://127.0.0.1:{args.port}/"
+        print(f"Inventory server already running at {address}", flush=True)
+        print("To load project updates, choose Services > Inventory server > Restart.")
+        if args.open and not args.restart_worker:
+            webbrowser.open(address)
+        return
     ensure_display_readers()
     try:
         server = InventoryServer(

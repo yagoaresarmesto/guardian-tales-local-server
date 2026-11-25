@@ -242,6 +242,10 @@ your imported game resources. The panel also reads the game's UI atlas for
 icons such as the Selectable Summon Controller. In each tab, search by name or ID, filter
 by type and use the page arrows to browse. Select an item to see its details.
 
+Running the command again for the same save and port opens the existing dashboard.
+After updating the project, choose **Services → Inventory server → Restart** and
+reload the page to load the new account features.
+
 For English equipment names, the panel looks up the item's shared name key in the
 game's English text table. Content packs can include the decoded
 `reference/strings-bin-enUS`. With an older pack, copy `cache/strings-bin-enUS`

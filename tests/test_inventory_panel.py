@@ -28,6 +28,7 @@ from guardian_tales.inventory_panel.equipment_ribbons import (
 from guardian_tales.inventory_panel.server import InventoryServer
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
+from guardian_tales.service_control import register
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.state_lock import StateLock
 from guardian_tales.web_panel.server import WebPanel
@@ -281,6 +282,30 @@ class InventoryPanelTests(unittest.TestCase):
         )
         with urlopen(request, timeout=5) as response:
             return json.load(response) if path.startswith("/api/") else response.read()
+
+    def test_dashboard_port_has_one_listener(self):
+        with (
+            self.assertRaises(OSError),
+            WebPanel(ReferenceData(self.root), self.server.server_port),
+        ):
+            self.fail("A second dashboard bound the active inventory port")
+        self.assertEqual(self.call("/api/backend")["instance"], self.server.instance)
+
+    def test_open_reuses_the_running_inventory_service_for_this_save(self):
+        with (
+            register("inventory", self.server.database, self.server.server_port, lambda: None),
+            patch.object(server, "InventoryServer") as create,
+            patch.object(server, "ensure_display_readers") as prepare,
+            patch.object(server.webbrowser, "open") as launch,
+            redirect_stdout(StringIO()) as output,
+        ):
+            server.main(
+                ["--data-dir", str(self.root), "--port", str(self.server.server_port), "--open"]
+            )
+        create.assert_not_called()
+        prepare.assert_not_called()
+        launch.assert_called_once_with(self.origin + "/")
+        self.assertIn("already running", output.getvalue())
 
     def test_exclusive_hero_is_independent_of_weapon_copy_rarity(self):
         with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
