@@ -14,7 +14,7 @@ class CatalogGrants(GameSaveEditor):
             user = self.profile(db)["User"]
         return {
             "items": list(self.items.values()),
-            "version": f"{user['Id']}:{user['Cas']}",
+            "version": self.inventory_version(user),
             "spaceAvailable": self.space_available(user),
             **self.status(),
         }
@@ -29,7 +29,7 @@ class CatalogGrants(GameSaveEditor):
             raise ValueError("Select a standard item from this catalog.")
         profile = self.profile(db)
         user = profile["User"]
-        if body["version"] != f"{user['Id']}:{user['Cas']}":
+        if body["version"] != self.inventory_version(user):
             return 409, {"error": "Your inventory changed since you opened the catalog."}
         if not self.space_available(user):
             raise ValueError("An available inventory slot is required.")

@@ -130,7 +130,13 @@ class RelicEditor(GameSaveEditor):
                     pending=ident in pending,
                 )
             )
-        return dict(copies=copies, specs=self.specs, effects=self.effects, revision=user["Cas"])
+        return dict(
+            copies=copies,
+            specs=self.specs,
+            effects=self.effects,
+            revision=user["Cas"],
+            inventoryVersion=self.inventory_version(user),
+        )
 
     def apply(self, body):
         if (

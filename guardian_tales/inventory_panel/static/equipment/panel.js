@@ -1,3 +1,4 @@
+import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
 import { equipmentOptions, showLimitBreakFact } from "/equipment-options.js";
 import { quantityEditor, quantityFormat } from "/quantity-editor.js";
@@ -7,10 +8,19 @@ const hammerEditor = preview ? null : quantityEditor($("hammer-editor"), {
   api: "/api/game/equipment/hammers", accessId: "equipment-access",
   lock: () => editor.lock(), reload: load, saved: () => draw(),
 });
-let grantDialog, writable = false;
+let grantDialog, inventoryVersion, writable = false;
+const deletion = preview ? null : copyDeletion("/api/game/equipment", () => {
+  const index = visible.findIndex(row => row.id === selected);
+  if (index < 0 || kind === "enhance") return null;
+  return {...visible[index], version: inventoryVersion, nextId: visible[index + 1]?.id ?? visible[index - 1]?.id};
+}, async nextId => {
+  if (nextId != null) selected = nextId;
+  await load();
+}, note);
 const editor = preview ? null : equipmentOptions(load, allowed => {
   writable = allowed;
   hammerEditor.setWritable(allowed);
+  deletion.setWritable(allowed);
   grantDialog?.setWritable(allowed);
 });
 document.body.classList.toggle("live-equipment", !preview);
@@ -156,6 +166,7 @@ function drawDetails() {
   $("detail").hidden = !item; $("placeholder").hidden = !!item;
   $("copy-id").textContent = item ? "#" + item.id : "";
   const enhance = kind === "enhance";
+  deletion?.show(item && !enhance);
   $("details-heading").textContent = enhance ? "Hammer details" : "Equipment details";
   $("collection-heading").textContent = enhance ? "Enhance" : "Equipment";
   $("empty").textContent = enhance ? "No owned hammers match these filters." : "No equipment matches these filters.";
@@ -221,6 +232,7 @@ async function load() {
   const res = await fetch(preview ? "/api/inventory" : "/api/game/equipment", {cache: "no-store"});
   if (!res.ok) throw new Error("Could not load the equipment inventory.");
   const data = await res.json();
+  inventoryVersion = data.inventoryVersion;
   revision = data.revision; hasIcons = data.hasIcons;
   if (!preview) $("open-equipment-catalog").disabled = false;
   items = preview ? data.rows.filter(item => item.group === "Equipment") : data.rows;

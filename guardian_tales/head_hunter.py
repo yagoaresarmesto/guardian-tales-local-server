@@ -9,7 +9,6 @@ import sqlite3
 from contextlib import closing
 from datetime import datetime, timezone
 from pathlib import Path
-from types import SimpleNamespace
 
 from .admin import validate_grant_parameters
 from .admin_test_items import account_connection, backup_and_begin, save_profile
@@ -184,7 +183,7 @@ def remove(data_dir, operation_id):
         if rows:
             if rows[0].get("JewelSlots") and any(rows[0]["JewelSlots"]):
                 raise ValueError("Remove socketed jewels before retiring the trial weapon")
-            if value["inventory_id"] in protected_ids(SimpleNamespace(db=db), user):
+            if value["inventory_id"] in protected_ids(db, user):
                 raise ValueError("Remove this trial weapon from presets and Training Room first")
             user["ItemWeapons"].remove(rows[0])
             for hero in user["Characters"]:

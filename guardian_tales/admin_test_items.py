@@ -8,7 +8,6 @@ import uuid
 from contextlib import closing, contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from types import SimpleNamespace
 
 from .admin import MAX_USER_REVISION, validate_grant_parameters
 from .challenges import allocate_reward_item
@@ -197,7 +196,7 @@ def remove_test_pin(data_dir, operation_id):
         if rows:
             if rows[0].get("JewelSlots") and any(rows[0]["JewelSlots"]):
                 raise ValueError("Remove socketed jewels before retiring this test pin")
-            if value["inventory_id"] in protected_ids(SimpleNamespace(db=db), user):
+            if value["inventory_id"] in protected_ids(db, user):
                 raise ValueError(
                     "Remove the test pin from presets and Training Room before retiring it"
                 )

@@ -49,7 +49,7 @@ def gear_references(value):
     return result
 
 
-def protected_ids(account, user):
+def protected_ids(db, user):
     characters, training = user.get("Characters"), user.get("TrainingSlots")
     if not isinstance(characters, list) or any(not isinstance(c, dict) for c in characters):
         raise ValueError("Invalid saved character equipment")
@@ -65,7 +65,7 @@ def protected_ids(account, user):
         [{"EquipCostumes": character.get("EquipCostumes")} for character in characters]
     )
     protected.update(slot.get("ItemId", 0) for slot in training.values())
-    protected.update(gear_references(preserved_read(account.db, "/preset/get-presets")))
+    protected.update(gear_references(preserved_read(db, "/preset/get-presets")))
     return protected
 
 
@@ -105,6 +105,16 @@ def dispose(account, body, operation_id, *, route=ROUTE, native_request=None):
                 raise ValueError("Item-removal identity was reused for another route or selection")
             # Never repeat a debit or restore inventory/balances from an old request.
             return {"User": user}
+    extractable = load_catalog(account.references)["weapons"] if route == EXTRACT else None
+    with account.db:
+        remove_owned_items(account.db, profile, body["SellItems"], extractable=extractable)
+        account.db.execute(f"INSERT INTO {RECEIPTS[route]} VALUES(?,?)", (operation_id, encoded))
+    return {"User": user}
+
+
+def remove_owned_items(db, profile, quantities, *, extractable=None):
+    """Remove validated copies and their pending rolls in the caller's transaction."""
+    user = profile["User"]
     owned = {}
     for key in INVENTORIES:
         rows = user.get(key)
@@ -118,11 +128,10 @@ def dispose(account, body, operation_id, *, route=ROUTE, native_request=None):
             ):
                 raise ValueError("Sale inventory IDs must be globally unambiguous")
             owned[row["Id"]] = row
-    protected = protected_ids(account, user)
-    extractable = load_catalog(account.references)["weapons"] if route == EXTRACT else None
+    protected = protected_ids(db, user)
     weapon_ids = {row["Id"] for row in user["ItemWeapons"]}
     targets = []
-    for key, count in body["SellItems"].items():
+    for key, count in quantities.items():
         row = owned.get(int(key))
         if (
             row is None
@@ -130,21 +139,25 @@ def dispose(account, body, operation_id, *, route=ROUTE, native_request=None):
             or not integer(row.get("Amount"), minimum=1)
             or count > row["Amount"]
             or type(row.get("Locked")) is not bool
-            or row["Locked"]
-            or row["Id"] in protected
             or extractable is not None
             and (
                 row["Id"] not in weapon_ids
                 or row["Amount"] != 1
                 or extractable.get(str(row["ItemId"])) != 4
             )
-            or row.get("JewelSlots") is not None
-            and (
-                not isinstance(row["JewelSlots"], list)
-                or any(jewel not in (None, 0) for jewel in row["JewelSlots"])
-            )
         ):
             raise ValueError("Removal requires sufficient unlocked items outside protected uses")
+        if row["Locked"]:
+            raise ValueError("Unlock this copy in the game first.")
+        if row["Id"] in protected:
+            raise ValueError(
+                "Remove this copy from presets, Training Room or equipment costumes first."
+            )
+        sockets = row.get("JewelSlots")
+        if sockets is not None and (
+            not isinstance(sockets, list) or any(jewel not in (None, 0) for jewel in sockets)
+        ):
+            raise ValueError("Detach socketed jewels in the game first.")
         targets.append((row, count))
     if user["Cas"] == MAX_REVISION:
         raise ValueError("Sale revision overflow")
@@ -161,16 +174,13 @@ def dispose(account, body, operation_id, *, route=ROUTE, native_request=None):
                 # Explicit null clears the slot through native CharacterInfo.Apply.
                 character[field] = None
     user["Cas"] += 1
-    with account.db:
-        account.db.execute(
-            "UPDATE local_account SET profile=? WHERE id=1",
-            (json.dumps(profile, separators=(",", ":")),),
-        )
-        for table in ("weapon_option_proposals", "relic_option_proposals"):
-            account.db.executemany(
-                f"DELETE FROM {table} WHERE item_id=?", ((ident,) for ident in removed)
-            )
-        account.db.execute(f"INSERT INTO {RECEIPTS[route]} VALUES(?,?)", (operation_id, encoded))
-    # Explicit local policy: no gold, other rewards or mission credit are granted.
-    # Full current inventory arrays replace the client's lists, removing sold rows.
-    return {"User": user}
+    db.execute(
+        "UPDATE local_account SET profile=? WHERE id=1",
+        (json.dumps(profile, separators=(",", ":")),),
+    )
+    # Fresh imports may predate creation of the in-game option proposal tables.
+    for table in ("weapon_option_proposals", "relic_option_proposals"):
+        if db.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (table,)
+        ).fetchone():
+            db.executemany(f"DELETE FROM {table} WHERE item_id=?", ((ident,) for ident in removed))

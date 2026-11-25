@@ -579,6 +579,87 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertEqual(full.exception.code, 400)
         full.exception.close()
 
+    def test_delete_exact_equipped_copy_preserves_duplicates_and_clears_only_its_roll(self):
+        original = self.seed_wallet()
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        user = original["User"]
+        user.update(TrainingSlots={}, Characters=[{"Weapon1": 11, "Relic": 12}], ItemIdCounter=25)
+        user["ItemWeapons"][0]["Locked"] = False
+        user["ItemWeapons"].append(dict(user["ItemWeapons"][0], Id=24))
+        user["ItemMiscs"].append(dict(user["ItemMiscs"][0], Id=25))
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(original),))
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY, startup_reads TEXT)")
+            db.execute("CREATE TABLE relic_option_proposals (item_id INTEGER PRIMARY KEY)")
+            db.executemany("INSERT INTO relic_option_proposals VALUES(?)", [(12,), (25,)])
+        for section, ident, spec, bucket, field in (
+            ("equipment", 11, 3, "ItemWeapons", "Weapon1"),
+            ("relics", 12, 4, "ItemMiscs", "Relic"),
+        ):
+            with self.subTest(section=section):
+                api = "/api/game/" + section
+                payload = dict(id=ident, spec=spec, version=self.call(api)["inventoryVersion"])
+                with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+                    self.call(api + "/delete", payload)
+                self.assertEqual(locked.exception.code, 423)
+                locked.exception.close()
+                user["Cas"] += 1
+                self.assertEqual(
+                    self.call(api + "/delete", payload), {"id": ident, "revision": user["Cas"]}
+                )
+                with self.assertRaises(HTTPError) as replay:
+                    self.call(api + "/delete", payload)
+                self.assertEqual(replay.exception.code, 409)
+                replay.exception.close()
+                user[bucket] = [row for row in user[bucket] if row["Id"] != ident]
+                user["Characters"][0][field] = None
+                self.assertEqual(
+                    json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]),
+                    original,
+                )
+        self.assertEqual(
+            db.execute("SELECT item_id FROM relic_option_proposals").fetchall(), [(25,)]
+        )
+
+    def test_panel_delete_rejects_protected_wrong_section_stack_and_stale_selection(self):
+        profile = self.seed_wallet()
+        user = profile["User"]
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        user["TrainingSlots"] = {"2": {"ItemId": 15}}
+        user["ItemWeapons"][1]["Locked"] = False
+        user["ItemMiscs"][0]["JewelSlots"] = [300]
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY, startup_reads TEXT)")
+        version = self.call("/api/game/equipment")["inventoryVersion"]
+
+        def reject(section, ident, spec, status=400, token=version):
+            with self.assertRaises(HTTPError) as error:
+                self.call(
+                    "/api/game/" + section + "/delete", dict(id=ident, spec=spec, version=token)
+                )
+            self.assertEqual(error.exception.code, status)
+            error.exception.close()
+            self.assertEqual(
+                json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), profile
+            )
+
+        reject("equipment", 11, 3)  # Locked.
+        reject("equipment", 15, 5)  # Training Room.
+        reject("relics", 12, 4)  # Socketed jewel.
+        reject("relics", 12, 4, 409, "99:10")  # Same revision, different owner.
+        reject("equipment", 12, 4)
+        reject("relics", 11, 3)
+        reject("equipment", 13, 1)
+        user["ItemMiscs"][0]["JewelSlots"] = [None]
+        user["ItemMiscs"].append(dict(Id=23, ItemId=2, Amount=1, Locked=False))
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            presets = {"/preset/get-presets": {"value": {"Presets": [{"Relic": 12}]}}}
+            db.execute("INSERT INTO imported_account VALUES(1,?)", (json.dumps(presets),))
+        reject("relics", 12, 4)  # Saved preset.
+        reject("relics", 23, 2)  # Other miscellaneous inventory.
+
     def test_catalog_grants_the_selected_native_star_variant(self):
         self.seed_wallet()
         catalog = self.call("/api/game/equipment/catalog")

@@ -256,6 +256,7 @@ class EquipmentOptionEditor(GameSaveEditor):
             specs=used,
             effects=self.effects,
             revision=user["Cas"],
+            inventoryVersion=self.inventory_version(user),
             hasIcons=self.catalog.has_icons,
             **self.status(),
         )

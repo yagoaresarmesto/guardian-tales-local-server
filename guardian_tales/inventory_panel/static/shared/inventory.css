@@ -344,3 +344,16 @@ main > #message.error { border-color: #ff997b; }
   .catalog-preview .hero-art { grid-row:1 / span 5; align-self:center; width:60px; height:60px; }
   .item-catalog footer { padding:8px 12px; }
 }
+
+.copy-actions, .delete-identity { display:flex; align-items:center; gap:10px; }
+.delete-copy-button { border:1px solid #a7676a; border-radius:5px; background:#3b2933; color:#ffbfc0; padding:4px 10px; font-weight:650; }
+.delete-copy-button:hover:enabled { background:#60343f; color:#fff; }
+.delete-dialog { width:min(370px,94vw); }
+.delete-body { padding:16px; }
+.delete-identity img { width:54px; height:54px; object-fit:contain; image-rendering:pixelated; }
+.delete-identity strong, .delete-identity small { display:block; }
+.delete-identity small { color:var(--muted); }
+.delete-body p { margin:12px 0 0; font-size:.88rem; }
+#delete-status { color:#ffd294; }
+.delete-dialog footer { justify-content:flex-end; }
+#delete-cancel { padding:5px 11px; border:1px solid #52667b; border-radius:5px; background:var(--field); }

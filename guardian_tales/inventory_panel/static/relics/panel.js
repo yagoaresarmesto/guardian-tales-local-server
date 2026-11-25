@@ -1,3 +1,4 @@
+import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 
 let size = 24;
@@ -10,6 +11,16 @@ let selected = Number(initialQuery.get("id")), family = initialQuery.get("type")
 let page = 0, data, visible = [], draft = [], saving = false, grantDialog;
 const relicApi = "/api/game/relics";
 let writable = false, statusRequest = 0;
+const deletion = copyDeletion(relicApi, () => {
+  const row = current();
+  if (!row) return null;
+  const {name, stars} = data.specs[row.spec];
+  const index = visible.indexOf(row);
+  return {...row, name, stars, version: data.inventoryVersion, nextId: visible[index + 1]?.id ?? visible[index - 1]?.id};
+}, async nextId => {
+  if (nextId != null) selected = nextId;
+  await load();
+}, note);
 $("search").value = initialQuery.get("q") || "";
 if (["equipped", "imbued", "empty"].includes(initialQuery.get("show"))) $("show").value = initialQuery.get("show");
 
@@ -88,6 +99,7 @@ function updateApplyButton() {
 function setAccess(available, message = "") {
   writable = available === true;
   grantDialog?.setWritable(writable);
+  deletion.setWritable(writable);
   $("access").hidden = writable;
   const text = message || "Apply is locked while the game save is in use. Close Guardian Tales and stop the backend to enable it.";
   if (!writable && $("access").textContent !== text) $("access").textContent = text;
@@ -148,6 +160,7 @@ function slotEditor(row, entry) {
 }
 function drawEditor() {
   const row = current(); $("detail").hidden = !row; $("placeholder").hidden = !!row;
+  deletion.show(row);
   $("copy-id").textContent = row ? "#" + row.id : "";
   if (!row) { draft = []; return; }
   draft = Object.keys(groups).flatMap(group => row[group].map((o, slot) =>

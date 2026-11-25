@@ -10,6 +10,7 @@ from guardian_tales.raid_static import decode, records
 
 from .account_details import AccountEditor
 from .catalog import InventoryCatalog
+from .copy_removal import CopyRemoval
 from .equipment_grants import EquipmentGrants
 from .equipment_options import EquipmentOptionEditor
 from .hero_portraits import HeroPortraits
@@ -65,12 +66,14 @@ class InventoryApplication:
             "/api/game/consumables": self.consumables.write,
             "/api/game/equipment": self.equipment.request,
             "/api/game/equipment/add": self.equipment_grants.write,
+            "/api/game/equipment/delete": CopyRemoval(database, "ItemWeapons").write,
             "/api/game/equipment/roll": partial(self.equipment.request, roll=True),
             "/api/game/equipment/hammers": self.equipment.hammers.write,
             "/api/game/mastery": self.mastery.write,
             "/api/game/mastery/preview": self.mastery.preview,
             "/api/game/relics": self.relics.apply,
             "/api/game/relics/add": self.relic_grants.write,
+            "/api/game/relics/delete": CopyRemoval(database, "ItemMiscs", self.relics.specs).write,
         }
 
     def _preview(self):

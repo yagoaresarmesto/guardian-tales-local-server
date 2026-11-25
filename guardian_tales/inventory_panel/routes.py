@@ -22,6 +22,7 @@ FILES = {
     "/quantity-editor.js": (STATIC / "shared/quantity-editor.js", JS),
     "/equipment-options.js": (STATIC / "equipment/options.js", JS),
     "/equipment-add.js": (STATIC / "equipment/add.js", JS),
+    "/delete-copy.js": (STATIC / "shared/delete-copy.js", JS),
     "/catalog-picker.js": (STATIC / "shared/catalog-picker.js", JS),
 }
 
@@ -45,6 +46,7 @@ def render_page(slug):
             plural=slug,
             type_label="Relic family" if slug == "relics" else "Equipment type",
         )
+        dialog += (STATIC / "shared/delete-copy.html").read_text(encoding="utf-8")
     return render_layout(
         directory / "view.html",
         tabs=(("/" + key, key.capitalize()) for key in TITLES),
