@@ -109,6 +109,8 @@ from .item_sell import sell as sell_items
 from .items import inventory_item
 from .jewel_decompose import create_tables as create_jewel_decompose_tables
 from .jewel_decompose import decompose as decompose_jewels
+from .jewel_socket import ROUTE as JEWEL_SOCKET_ROUTE
+from .jewel_socket import create_tables as create_jewel_socket_tables
 from .jewel_upgrade import create_tables as create_jewel_upgrade_tables
 from .jewel_upgrade import upgrade as upgrade_jewel
 from .live_events import enter as enter_live_events
@@ -284,6 +286,7 @@ ACCOUNT_ROUTES = (
     ITEM_SELL_ROUTE,
     ITEM_EXTRACT_ROUTE,
     "/item/decompose-jewel",
+    JEWEL_SOCKET_ROUTE,
     "/item/upgrade-jewel",
     "/item/upgrade-jewel-from-relic",
     "/item/limitbreak-weapon/v2",
@@ -399,6 +402,7 @@ class AccountStore:
         )
         create_imported_training_tables(db)
         create_jewel_decompose_tables(db)
+        create_jewel_socket_tables(db)
         create_jewel_upgrade_tables(db)
         create_imported_knowledge_tables(db)
         create_challenge_tables(db)

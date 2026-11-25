@@ -20,6 +20,7 @@ from . import (
     classic_coop,
     colosseum,
     expedition,
+    jewel_socket,
     kamazone,
     kamazone_practice,
     kamazone_preview,
@@ -598,6 +599,15 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.upgrade_jewel(body, operation_id, route)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == jewel_socket.ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, jewel_socket.open_socket(self.store.account, body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

@@ -104,12 +104,16 @@ def pay(profile, catalog, body, references, kind):
 
 
 def spend_tickets(user, ticket, count):
-    stacks = [i for i in user["ItemStackables"] if i["ItemId"] == ticket]
+    stacks = [i for i in user["ItemStackables"] if i.get("ItemId") == ticket]
+    if any(not integer(i.get("Id"), minimum=1) for i in stacks) or len(
+        {i["Id"] for i in stacks}
+    ) != len(stacks):
+        raise ValueError("Invalid saved ticket stack IDs")
     if (
         any(not integer(i.get("Amount")) for i in stacks)
         or sum(i["Amount"] for i in stacks) < count
     ):
-        raise ValueError("Not enough summon tickets of the selected kind")
+        raise ValueError("Not enough tickets of the selected kind")
     left, depleted = count, set()
     for item in sorted(stacks, key=lambda i: i["Id"]):
         spent = min(left, item["Amount"])
@@ -118,5 +122,5 @@ def spend_tickets(user, ticket, count):
         if spent and item["Amount"] == 0:
             depleted.add(item["Id"])
     user["ItemStackables"] = [
-        i for i in user["ItemStackables"] if i["ItemId"] != ticket or i["Id"] not in depleted
+        i for i in user["ItemStackables"] if i.get("ItemId") != ticket or i["Id"] not in depleted
     ]

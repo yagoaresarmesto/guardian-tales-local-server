@@ -21,7 +21,7 @@
   },
   "inventory": {
     "description": "Item protection/sales/extraction, weapons, relic options and jewels",
-    "modules": ["test_inventory_panel", "test_item_lock", "test_item_sell", "test_item_extract", "test_weapon_enhance", "test_weapon_limit_break", "test_weapon_engrave", "test_weapon_options", "test_weapon_option_lock", "test_relic_options", "test_jewel_decompose", "test_jewel_upgrade", "test_head_hunter"]
+    "modules": ["test_inventory_panel", "test_item_lock", "test_item_sell", "test_item_extract", "test_weapon_enhance", "test_weapon_limit_break", "test_weapon_engrave", "test_weapon_options", "test_weapon_option_lock", "test_relic_options", "test_jewel_decompose", "test_jewel_socket", "test_jewel_upgrade", "test_head_hunter"]
   },
   "teams": {
     "description": "Normal parties, preset selection/editing and compact resources",

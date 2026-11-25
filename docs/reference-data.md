@@ -1116,6 +1116,20 @@ again, including after catalog removal or later source/reward edits. A changed
 batch under an already-used identity rejects. New requests still require their
 matching catalog, ownership, unlocked stock and sufficient saved quantities.
 
+## Opening a relic jewel socket
+
+In the forge, select an owned Epic relic and confirm **Inlay**. The native
+`/item/inlaid-jewelslot` request identifies the inventory copy with `RelicId`.
+The EU 3.57.0 static tables allow one socket on each Epic relic, at a cost of
+one Inlaying Ticket. The backend reads the permitted count and ticket prices
+from the regional `inlaid` table and the item definitions from `items`.
+
+Opening the socket appends an empty slot to the relic and increments
+`UserRecord.Misc.InlaidCount` in the same transaction as the ticket debit.
+Retries return the current state. The equipment assignment, protection and
+relic options are preserved. Automated coverage exercises the forge request,
+reconnect, insufficient tickets, ineligible relics and the socket limit.
+
 ## Guaranteed free jewel upgrades
 
 The two native routes are supported under a separate explicit local policy:
