@@ -6,6 +6,7 @@ import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from importlib.util import find_spec
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -14,6 +15,7 @@ from urllib.request import Request, urlopen
 from guardian_tales import guild_war
 from guardian_tales import guild_war_static as war
 from guardian_tales.reference import ReferenceData
+from guardian_tales.web_panel.artwork import WAR
 from guardian_tales.web_panel.server import WebPanel
 from tests.test_guild_raid import synthetic_catalog
 from tests.test_guild_war import synthetic_war_static
@@ -38,6 +40,24 @@ class GuildWarPanelTests(unittest.TestCase):
         )
         with urlopen(request, timeout=5) as response:
             return json.load(response)
+
+    @unittest.skipUnless(find_spec("PIL"), "Pillow is optional for the panel")
+    def test_banner_serves_each_native_illustration_as_jpeg(self):
+        from PIL import Image
+
+        source = io.BytesIO()
+        Image.new("RGBA", (12, 18), (120, 90, 60, 255)).save(source, "PNG")
+        with patch.object(type(WAR), "read", return_value=source.getvalue()) as read:
+            for name, frame in (
+                ("troops.jpg", "img_gvg_def_02.png"),
+                ("commander.jpg", "img_gvg_def_01.png"),
+                ("turret.jpg", "img_gvg_def_00.png"),
+            ):
+                with self.subTest(name=name), urlopen(self.origin + "/guild-war/" + name) as reply:
+                    with Image.open(io.BytesIO(reply.read())) as result:
+                        self.assertEqual((result.format, result.size), ("JPEG", (12, 18)))
+                    self.assertEqual(reply.headers.get_content_type(), "image/jpeg")
+                    read.assert_called_with(self.refs, frame=frame)
 
     def test_web_cli_round_trip_and_stale_disable(self):
         original = self.source.read_bytes()

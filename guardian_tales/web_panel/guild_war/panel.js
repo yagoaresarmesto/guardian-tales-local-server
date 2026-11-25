@@ -1,12 +1,58 @@
 import { $, feedback, setArtwork } from "/panel.js";
 
 const endpoint = "/api/guild-war";
-const phaseLabels = {
-  "coop-offense": "Cooperative attack", "coop-defense": "Cooperative defense",
-  "multi-offense": "Fortress siege", "multi-defense": "Fortress defense"
+const phases = {
+  "coop-offense": {group: "Cooperative", action: "Attack", art: "attack"},
+  "coop-defense": {group: "Cooperative", action: "Defense", art: "defense"},
+  "multi-offense": {group: "Fortress", action: "Siege", art: "outpost"},
+  "multi-defense": {group: "Fortress", action: "Defense", art: "fortress"}
 };
 const roundLabels = {auto: "Automatic", prep: "Preparation", combat: "Combat"};
+const editor = $("editor");
 let state;
+
+function phaseLabel(phase) {
+  return phases[phase].group + " " + phases[phase].action.toLowerCase();
+}
+
+function buildPhaseCards() {
+  $("phase-cards").replaceChildren(...state.phases.map(phase => {
+    const {group, action, art} = phases[phase];
+    const card = $("phase-card").content.firstElementChild.cloneNode(true);
+    card.dataset.phase = phase;
+    card.querySelector("input").value = phase;
+    card.querySelector("input").setAttribute("aria-label", phaseLabel(phase));
+    card.querySelector(".phase-group").textContent = group;
+    card.querySelector("strong").textContent = action;
+    setArtwork(card.querySelector(".tile-art img"), state.hasArt ? "/guild-war/" + art + ".png" : null);
+    return card;
+  }));
+}
+
+function draft() {
+  const phase = editor.elements.phase.value;
+  const fortress = isFortress(phase);
+  return {phase, round: fortress ? $("round").value : "auto",
+    castle: fortress ? Number($("castle").value) : 0, skipBasic: $("skip-basic").checked};
+}
+
+function preview() {
+  const {phase, round, castle, skipBasic} = draft();
+  const saved = state.selection;
+  const matchesCastle = !isFortress(phase) || (saved.round_mode === round
+    && (saved.local_attack_castle || saved.local_defense_castle || 0) === castle);
+  const active = saved.enabled && saved.phase_name === phase && matchesCastle
+    && saved.skip_basic_requirement === skipBasic;
+  $("preview-state").textContent = active ? "Active" : "Preview";
+  $("preview").dataset.active = String(active);
+  $("preview-phase").textContent = phaseLabel(phase);
+  const target = $("preview-target");
+  target.hidden = !isFortress(phase);
+  if (!target.hidden) {
+    target.textContent = roundLabels[round] + " · " + $("castle").selectedOptions[0].text;
+  }
+  $("preview").hidden = false;
+}
 
 function addDetail(label, value) {
   const row = document.createElement("div");
@@ -28,20 +74,20 @@ function isFortress(phase) {
 }
 
 function showPhase(phase, round = "auto", castle = 0) {
-  $("phase").value = phase;
+  editor.elements.phase.value = phase;
   $("dispute").hidden = !isFortress(phase);
   $("round").value = round;
   const attacking = phase === "multi-offense";
   $("castle-label").textContent = attacking ? "Siege target" : "Owned castle";
   $("castle").replaceChildren(new Option(attacking ? "No marked target" : "No owned castle", "0"));
   for (const row of state.castles) $("castle").add(new Option(castleLabel(row.id), row.id));
-  $("castle").value = String(castle);
+  $("castle").value = state.castles.some(row => row.id === castle) ? String(castle) : "0";
 }
 
 function display(next) {
   state = next;
   const saved = state.selection;
-  $("phase").replaceChildren(...state.phases.map(key => new Option(phaseLabels[key], key)));
+  buildPhaseCards();
   $("round").replaceChildren(...state.rounds.map(key => new Option(roundLabels[key], key)));
   $("skip-basic").checked = saved.skip_basic_requirement;
   const castle = saved.local_attack_castle || saved.local_defense_castle;
@@ -53,7 +99,7 @@ function display(next) {
   $("details").replaceChildren();
   $("details").hidden = !saved.enabled;
   if (saved.enabled) {
-    addDetail("Phase", phaseLabels[saved.phase_name]);
+    addDetail("Phase", phaseLabel(saved.phase_name));
     if (isFortress(saved.phase_name)) {
       addDetail("Round", roundLabels[saved.round_mode]);
       addDetail(saved.phase_name === "multi-offense" ? "Siege target" : "Owned castle", castle ? castleLabel(castle) : "None");
@@ -63,7 +109,10 @@ function display(next) {
   }
   $("apply").textContent = saved.enabled ? "Apply settings" : "Enable Guild Wars";
   $("defense-preset").disabled = !state.castles.some(row => row.id === 21);
-  setArtwork($("fortress-art"), state.hasArt ? "/guild-war/fortress.png" : null);
+  for (const image of document.querySelectorAll(".war-art [data-art]")) {
+    setArtwork(image, state.hasArt ? "/guild-war/" + image.dataset.art + ".jpg" : null);
+  }
+  preview();
 }
 
 function lockControls() {
@@ -91,12 +140,7 @@ async function refresh(message = "") {
 
 async function submit(action) {
   const body = {action, revision: state.revision};
-  if (action === "enable") {
-    body.phase = $("phase").value;
-    body.skipBasic = $("skip-basic").checked;
-    body.round = isFortress(body.phase) ? $("round").value : "auto";
-    body.castle = isFortress(body.phase) ? Number($("castle").value) : 0;
-  }
+  if (action === "enable") Object.assign(body, draft());
   lockControls();
   feedback("Saving Guild Wars settings…");
   try {
@@ -122,14 +166,18 @@ async function submit(action) {
 function preset(phase, castle) {
   showPhase(phase, "prep", castle);
   $("skip-basic").checked = true;
+  preview();
   feedback("Preset selected. Apply it to save.");
 }
 
 $("attack-preset").addEventListener("click", () => preset("multi-offense", 0));
 $("defense-preset").addEventListener("click", () => preset("multi-defense", 21));
-$("phase").addEventListener("change", () => showPhase($("phase").value));
-$("editor").addEventListener("change", () => feedback(""));
-$("editor").addEventListener("submit", event => {
+editor.addEventListener("change", event => {
+  if (event.target.name === "phase") showPhase(event.target.value);
+  preview();
+  feedback("");
+});
+editor.addEventListener("submit", event => {
   event.preventDefault();
   if (!$("controls").disabled) submit("enable");
 });

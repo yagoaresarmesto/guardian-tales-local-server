@@ -144,7 +144,23 @@ MEDIA = {
     },
     "/tetis/skill-tree.jpg": (TETIS.read, "image/jpeg"),
     "/map.png": (lambda refs: raid.map_image(refs).read_bytes(), "image/png"),
-    "/guild-war/fortress.png": (partial(WAR.read, frame="gvg_multi_castle_03.png"), "image/png"),
+    **{
+        f"/guild-war/{name}.jpg": (partial(guild_war.illustration, frame=frame), "image/jpeg")
+        for name, frame in {
+            "turret": "img_gvg_def_00.png",
+            "commander": "img_gvg_def_01.png",
+            "troops": "img_gvg_def_02.png",
+        }.items()
+    },
+    **{
+        f"/guild-war/{name}.png": (partial(WAR.read, frame=frame), "image/png")
+        for name, frame in {
+            "fortress": "gvg_multi_castle_03.png",
+            "outpost": "gvg_multi_castle_02.png",
+            "attack": "ic_ping_atk_00.png",
+            "defense": "ic_ping_def_00.png",
+        }.items()
+    },
     "/kamazone/lobby.jpg": (KAMAZONE.read, "image/jpeg"),
     **{
         f"/kamazone/seasons/{art.hero}.png": (art.read, "image/png")

@@ -1,51 +1,78 @@
-<main>
+<main class="war-page">
   <section class="banner war-banner" aria-labelledby="page-title">
     <div class="banner-copy">
       <p class="season-status">Season 1 · Local practice</p>
       <h1 id="page-title">Guild <em>Wars</em></h1>
-      <p class="war-intro">Practice battles award no score or rewards.</p>
+      <div class="phase-preview" id="preview" aria-live="polite" aria-atomic="true" hidden>
+        <span id="preview-state"></span>
+        <strong id="preview-phase"></strong>
+        <span id="preview-target" hidden></span>
+      </div>
     </div>
-    <div class="fortress" aria-hidden="true"><img id="fortress-art" alt="" hidden></div>
+    <div class="war-art" aria-hidden="true">
+      <div class="art-panel troops"><img data-art="troops" alt="" hidden></div>
+      <div class="art-panel commander"><img data-art="commander" alt="" hidden></div>
+      <div class="art-panel turret"><img data-art="turret" alt="" hidden></div>
+    </div>
   </section>
 
-  <div class="workspace">
-    <section class="surface collection" aria-labelledby="settings-title">
-      <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="settings-title">Practice settings</h2></header>
-      <form id="editor">
-        <fieldset id="controls" disabled>
-          <legend class="sr">Season settings</legend>
+  <section class="surface practice" aria-labelledby="settings-title">
+    <form id="editor">
+      <fieldset id="controls" disabled>
+        <legend class="sr">Guild Wars practice settings</legend>
+        <header class="practice-heading">
+          <h2 id="settings-title"><span class="section-icon sliders" aria-hidden="true"></span>Practice settings</h2>
           <fieldset class="presets">
-            <legend class="label">Practice presets</legend>
+            <legend class="sr">Practice presets</legend>
+            <span aria-hidden="true">Presets</span>
             <button type="button" id="attack-preset">Siege attack</button>
             <button type="button" id="defense-preset">Castle 21 defense</button>
           </fieldset>
-          <label class="label" for="phase">Phase</label>
-          <select id="phase" required></select>
+        </header>
+
+        <div class="practice-body">
+          <fieldset class="phase-picker">
+            <legend>Battle phase</legend>
+            <div id="phase-cards"></div>
+          </fieldset>
           <div id="dispute" class="war-fields" hidden>
-            <div><label class="label" for="round">Round</label><select id="round"></select></div>
-            <div><label class="label" id="castle-label" for="castle">Castle</label><select id="castle"></select></div>
+            <label for="round">Round<select id="round"></select></label>
+            <label for="castle"><span id="castle-label">Castle</span><select id="castle"></select></label>
           </div>
           <label class="basic-option"><input type="checkbox" id="skip-basic">Skip the basic-course requirement</label>
-          <div class="actions">
-            <button type="submit" id="apply">Enable Guild Wars</button>
-            <span>Apply outside battle, then fully reopen the game.</span>
-          </div>
-        </fieldset>
-      </form>
-      <p id="feedback" role="status" hidden></p>
-    </section>
+        </div>
+        <div class="actions">
+          <p>Practice battles award no score or rewards.</p>
+          <span>Apply outside battle, then fully reopen the game.</span>
+          <button type="submit" id="apply">Enable Guild Wars</button>
+        </div>
+      </fieldset>
+    </form>
+    <p id="feedback" role="status" hidden></p>
+  </section>
 
-    <aside class="surface inspector" aria-labelledby="status-title">
-      <header class="panel-heading">
-        <span class="section-icon stack" aria-hidden="true"></span><h2 id="status-title">Saved configuration</h2>
-        <button type="button" id="reload" aria-label="Reload saved settings" title="Reload saved settings">↻</button>
-      </header>
-      <div class="war-summary">
-        <strong id="war-status">Loading…</strong>
-        <p id="inactive-note" hidden>Raid and DKA use their own calendars.</p>
-        <dl id="details" hidden></dl>
-        <button type="button" id="disable" hidden>Disable Guild Wars</button>
+  <section class="surface saved" aria-label="Saved configuration">
+    <div class="saved-row">
+      <div class="saved-title"><span class="section-icon stack" aria-hidden="true"></span>
+        <h2>Saved configuration</h2><strong id="war-status">Loading…</strong>
       </div>
-    </aside>
-  </div>
+      <div class="saved-actions">
+        <button type="button" id="disable" hidden>Disable Guild Wars</button>
+        <button type="button" id="reload" aria-label="Reload saved settings" title="Reload saved settings">↻</button>
+      </div>
+    </div>
+    <p id="inactive-note" hidden>Raid and DKA use their own calendars.</p>
+    <dl id="details" hidden></dl>
+  </section>
 </main>
+
+<template id="phase-card">
+  <label class="phase-choice">
+    <input class="sr" type="radio" name="phase" required>
+    <span class="phase-tile">
+      <span class="tile-art" aria-hidden="true"><img alt="" hidden></span>
+      <span class="tile-copy"><span class="phase-group"></span><strong></strong></span>
+      <span class="radio-mark" aria-hidden="true"></span>
+    </span>
+  </label>
+</template>

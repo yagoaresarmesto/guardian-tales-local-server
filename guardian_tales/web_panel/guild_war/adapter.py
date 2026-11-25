@@ -1,9 +1,22 @@
 # SPDX-License-Identifier: Apache-2.0
 """Present the native Guild War season and forward edits to its CLI operations."""
 
+from io import BytesIO
+
 from ... import guild_war_static as war
 from ...guild_war import selection_status
 from ..artwork import WAR
+
+
+def illustration(references, *, frame):
+    """Encode the opaque Guild Wars card illustration for the panel banner."""
+    pixels = WAR.read(references, frame=frame)
+    from PIL import Image
+
+    with Image.open(BytesIO(pixels)) as image:
+        output = BytesIO()
+        image.convert("RGB").save(output, format="JPEG", quality=85)
+        return output.getvalue()
 
 
 def state(references):

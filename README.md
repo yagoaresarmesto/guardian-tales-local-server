@@ -348,9 +348,10 @@ from an older version, relaunch each service once in its usual terminal to
 register its button. Reopen Guardian Tales after a game or content update.
 
 Raid previews all four encounters on the map. DKA previews the selected
-opponent above its seven-day rotation. Guild Wars and Kama-ZONE show the saved
-selection beside the editor. In
-Expedition, select a stage from the table to open its level settings.
+opponent above its seven-day rotation. Guild Wars previews the phase above
+the editor and shows the saved configuration below. Kama-ZONE shows the saved
+selection beside the editor. In Expedition, select a stage from the table to
+open its level settings.
 Open the [Tetis tab](http://127.0.0.1:17658/tetis) to edit each season's highest
 cleared floor. Seasons 2 and 3 also have a shared Guardian Tactic Level for
 that season's heroes, total experience and a Season Specialty skill tree.
@@ -402,8 +403,11 @@ for catalog requirements, composition and limits.
 ### Guild War: recommended siege practice
 
 The [Guild Wars tab](http://127.0.0.1:17658/guild-war) shows the saved season-1
-settings. Choose a cooperative or fortress phase, set the basic-course option
-and, for fortress phases, choose the round and a castle from the deployment.
+settings. Select one of the four phase cards to preview a cooperative or
+fortress battle. With the panel-art extra, the tab displays the Guild Wars
+illustrations, attack and defense symbols, and castle sprites from the local
+game bundle. Set the basic-course option and, for fortress phases, choose
+the round and a castle from the deployment.
 **Siege attack** and **Castle 21 defense** fill in the practice commands below.
 Click **Enable Guild Wars** or **Apply settings** to save. **Disable Guild Wars**
 restores the parent calendars. Fully close and reopen the game after saving.
