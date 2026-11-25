@@ -68,6 +68,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/preset/reorder-preset",
         "/user/charge-stamina",
         "/user/add-character-experience",
+        "/user/bless-character",
+        "/user/bless-character-all",
         "/user/recall-character-growth/v2",
         "/mission/claim-challenge-all",
         "/mission/claim-challenge-all-step",

@@ -1,5 +1,19 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Construct a new owned level-one hero with empty optional equipment/progression."""
+"""Look up owned heroes and construct their initial progression and equipment."""
+
+from .village import integer
+
+
+def owned_character(user, ident):
+    roster = user.get("Characters")
+    if not isinstance(roster, list) or any(
+        not isinstance(hero, dict) or not integer(hero.get("Id"), minimum=1) for hero in roster
+    ):
+        raise ValueError("Invalid saved hero roster")
+    matches = [hero for hero in roster if hero["Id"] == ident]
+    if len(matches) != 1:
+        raise ValueError("Select one owned hero")
+    return matches[0]
 
 
 def new_character(inventory_id, spec_id, weapon1=None, weapon2=None):

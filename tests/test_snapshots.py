@@ -149,6 +149,8 @@ class SnapshotTests(unittest.TestCase):
                 "/tower-infinity/end-stage",
                 "/tower-infinity/save-formation",
                 "/user/add-character-experience",
+                "/user/bless-character",
+                "/user/bless-character-all",
                 "/user/change-accessory",
                 "/user/change-merch",
                 "/user/change-name",

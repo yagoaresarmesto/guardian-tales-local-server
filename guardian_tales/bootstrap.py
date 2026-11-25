@@ -20,6 +20,7 @@ from . import (
     classic_coop,
     colosseum,
     expedition,
+    hero_blessing,
     hero_reset,
     jewel_socket,
     kamazone,
@@ -515,13 +516,15 @@ class BootstrapSession:
                     return json_response(request, self.store.account.charge_stamina(body))
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == hero_reset.ROUTE:
+            if route in hero_blessing.ROUTES or route == hero_reset.ROUTE:
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
-                    return json_response(
-                        request, hero_reset.reset(self.store.account, body, operation_id)
-                    )
+                    if route == hero_reset.ROUTE:
+                        result = hero_reset.reset(self.store.account, body, operation_id)
+                    else:
+                        result = hero_blessing.bless(self.store.account, route, body, operation_id)
+                    return json_response(request, result)
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route in HERO_EQUIPMENT_ROUTES:

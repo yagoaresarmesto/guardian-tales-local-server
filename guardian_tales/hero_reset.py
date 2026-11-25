@@ -4,6 +4,7 @@
 import json
 
 from . import andras_trial
+from .characters import owned_character
 from .hero_equipment import catalog, resource
 from .village import MAX_REVISION, integer
 
@@ -71,15 +72,7 @@ def reset(account, body, operation_id):
             if tuple(prior) != (ident, body["ReceiveCrystal"]):
                 raise ValueError("Hero Reset identity was used for a different request")
             return {"User": resource(user), "AddedItems": []}
-        roster = user.get("Characters")
-        if not isinstance(roster, list) or any(
-            not isinstance(hero, dict) or not integer(hero.get("Id"), minimum=1) for hero in roster
-        ):
-            raise ValueError("Invalid saved hero roster")
-        matches = [hero for hero in roster if hero["Id"] == ident]
-        if len(matches) != 1:
-            raise ValueError("Select one owned hero to reset")
-        hero = matches[0]
+        hero = owned_character(user, ident)
         slots = user.get("TrainingSlots", {})
         if not isinstance(slots, dict) or any(
             not isinstance(slot, dict) or slot.get("CharacterId") == ident

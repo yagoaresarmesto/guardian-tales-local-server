@@ -623,6 +623,21 @@ reopening and that the stone remained in inventory. Separate host checks
 resolved the reset form for all 653 normal, story and unique hero forms in
 the matching catalog.
 
+## Hero Blessing
+
+**Blessing** advances one level. **Max Blessing** advances from the hero's
+current level to their last available blessing. Both buttons use the selected
+owned hero's `BlessingLevelOptions` and the `HeroBlessing` costs in `exps2`.
+In the EU 3.57.0 catalog, the successive levels cost 15, 15 and 20 Books of
+Blessing. For example, after paying 15 for level one, **Max Blessing** costs
+35. An insufficient balance leaves the full request unapplied.
+
+The routes `/user/bless-character` and `/user/bless-character-all` accept
+`CharacterId`. The backend checks the regional unlock quest and the hero's
+available levels. Temporary blessing boosts in the Training Room cannot be
+purchased as permanent levels. The book debit, saved blessing level, blessing
+mission counter and retry receipt commit together.
+
 ## Hero equipment changes
 
 These individual Hero-screen routes use the matching external `heroes` and
