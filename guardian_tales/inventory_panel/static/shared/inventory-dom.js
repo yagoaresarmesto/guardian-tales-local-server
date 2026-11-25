@@ -46,7 +46,7 @@ export function selectTypeFilter(rail, select, key) {
 }
 
 // The header, artwork, name and footer occupy the same tracks on every card.
-export function inventoryTile({ id, name, art, selected, level, stars, quantity,
+export function inventoryTile({ id, idLabel = "Copy #", name, art, selected, level, stars, quantity,
   locked, equipped, training, socketed }) {
   const button = el("button", "tile");
   button.type = "button";
@@ -86,15 +86,15 @@ export function inventoryTile({ id, name, art, selected, level, stars, quantity,
     : el("span", "tile-stars", rating ? "★".repeat(stars) : "");
   if (quantity != null) description.push("Quantity " + quantity);
   if (rating) description.push(stars + " stars");
-  description.push("Copy #" + id);
+  description.push(idLabel + id);
   button.title = description.join(" · ");
   button.setAttribute("aria-label", button.title);
   button.append(header, art, caption, footer);
   return button;
 }
 
-// Page through four complete rows at the current grid width.
-export function watchGridPageSize(grid, resizePage) {
+// Page through complete rows at the current grid width.
+export function watchGridPageSize(grid, resizePage, rows = 4) {
   let lastColumns = 0;
   function measure() {
     const tracks = getComputedStyle(grid).gridTemplateColumns;
@@ -102,7 +102,7 @@ export function watchGridPageSize(grid, resizePage) {
     const columns = tracks.split(/\s+/).length;
     if (columns !== lastColumns) {
       lastColumns = columns;
-      resizePage(columns * 4);
+      resizePage(columns * rows);
     }
   }
   measure();

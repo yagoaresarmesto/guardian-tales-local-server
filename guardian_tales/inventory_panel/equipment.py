@@ -74,19 +74,24 @@ class EquipmentDisplay:
             self.thresholds = thresholds or enhancement["level_total_exps"]
             self.hammer_exp = enhancement["hammer_exp"]
 
-    def facts(self, item, spec, training):
-        xp = item.get("Experience")
-        level = None
+    def catalog_facts(self, spec):
         rarity = spec.get("Rarity")
-        if isinstance(xp, int) and self.thresholds:
-            level = min(bisect_right(self.thresholds, xp) + 1, len(self.thresholds))
         hero = spec.get("ExclusiveCharacterId") or None
         return {
-            "level": level,
             "stars": rarity + 1 if isinstance(rarity, int) else None,
             "grade": spec.get("OriginRarity"),
             "exclusiveHero": hero,
             "exclusiveHeroName": self.hero_names.get(hero),
+        }
+
+    def facts(self, item, spec, training):
+        xp = item.get("Experience")
+        level = None
+        if isinstance(xp, int) and self.thresholds:
+            level = min(bisect_right(self.thresholds, xp) + 1, len(self.thresholds))
+        return {
+            **self.catalog_facts(spec),
+            "level": level,
             "ribbons": equipment_ribbons(item, spec, self.completed_books),
             "training": item["Id"] in training,
         }

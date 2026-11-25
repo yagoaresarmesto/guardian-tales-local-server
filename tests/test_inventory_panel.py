@@ -208,8 +208,10 @@ def prepare_inventory(root):
             dict(sword, Id=53, Name="npc_weapon", WeaponType="custom"),
             dict(sword, Id=54, Name="future_weapon", VersionFrom={"KakaoGlobal": "v999.0"}),
             dict(sword, Id=55, Name="invalid_weapon", MinOptions=3),
+            dict(sword, Id=56, Name="eu_myth_sword", Rarity=5, Summonable=False),
         ]
     )
+    sword["EvolveTo"] = {"Default": 50, "KakaoGlobal": 56}
     records = []
     for key, value in catalog.items():
         content = json.dumps(value)
@@ -478,7 +480,7 @@ class InventoryPanelTests(unittest.TestCase):
     def test_add_standard_equipment_and_reject_replayed_or_unlisted_grants(self):
         original = self.seed_wallet()["User"]
         catalog = self.call("/api/game/equipment/catalog")
-        self.assertEqual({i["spec"] for i in catalog["items"]}, {3, 5, 10})
+        self.assertEqual({i["spec"] for i in catalog["items"]}, {3, 5, 10, 56})
         path = "/api/game/equipment/add"
         payload = dict(spec=3, version=catalog["version"])
         for spec in (1, 50, 51, 52, 53, 54, 55, True):
@@ -518,6 +520,18 @@ class InventoryPanelTests(unittest.TestCase):
             self.call(path, dict(spec=5, version=catalog["version"]))
         self.assertEqual(full.exception.code, 400)
         full.exception.close()
+
+    def test_catalog_grants_the_selected_native_star_variant(self):
+        self.seed_wallet()
+        catalog = self.call("/api/game/equipment/catalog")
+        variants = {item["spec"]: item for item in catalog["items"]}
+        self.assertEqual((variants[5]["stars"], variants[56]["stars"]), (5, 6))
+        self.assertEqual(variants[56]["grade"], variants[5]["grade"])
+        self.assertEqual(variants[56]["exclusiveHero"], 1)
+        saved = self.call("/api/game/equipment/add", {"spec": 56, "version": catalog["version"]})
+        copies = {item["id"]: item for item in self.call("/api/game/equipment")["rows"]}
+        self.assertEqual((copies[saved["id"]]["spec"], copies[saved["id"]]["stars"]), (56, 6))
+        self.assertEqual((copies[15]["spec"], copies[15]["stars"]), (5, 5))
 
     def test_either_dashboard_serves_both_sections_on_the_same_save(self):
         game_panel = WebPanel(

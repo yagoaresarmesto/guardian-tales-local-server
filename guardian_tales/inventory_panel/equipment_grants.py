@@ -17,6 +17,41 @@ from .stack_quantities import HAMMERS
 from .weapon_progression import LIMIT_BREAK_TYPES
 
 
+def standard_variants(body, catalog):
+    native = {s["Id"]: s for s in item_definitions(body)}
+    version = tuple(map(int, CLIENT["version"].split(".")))
+    now = datetime.now(timezone.utc)
+    for origin in native.values():
+        grade = origin.get("OriginRarity")
+        if (
+            origin.get("Type") != "weapon"
+            or origin.get("WeaponType") not in LIMIT_BREAK_TYPES
+            or not integer(grade, 4)
+            or origin.get("Rarity") != grade
+            or not (origin.get("Summonable") is True or integer(origin.get("SortingNumber")))
+        ):
+            continue
+        # Only follow explicit EU evolutions of an eligible player item.
+        spec = origin
+        for rarity in range(grade, 6):
+            if (
+                not spec
+                or spec.get("Type") != "weapon"
+                or spec.get("WeaponType") != origin["WeaponType"]
+                or spec.get("OriginRarity") != grade
+                or spec.get("NameWithoutRarity") != origin.get("NameWithoutRarity")
+                or spec.get("Rarity") != rarity
+                or spec.get("Limited") is not False
+                or spec.get("SortingNumber") == -1
+                or not available_in_client(spec, version, now)
+                or spec != catalog.specs.get(spec["Id"])
+            ):
+                break
+            yield spec
+            link = spec.get("EvolveTo") or {}
+            spec = native.get(link.get("KakaoGlobal", link.get("Default")))
+
+
 class EquipmentGrants(GameSaveEditor):
     def __init__(self, database, catalog, body, tables, rules):
         super().__init__(database)
@@ -25,24 +60,8 @@ class EquipmentGrants(GameSaveEditor):
         self.hammers = {i for i, s in catalog.specs.items() if s.get("Type") in HAMMERS}
         constants = json.loads(tables["constants"][1]) if "constants" in tables else {}
         self.base_capacity = constants.get("DefaultInventoryLimit")
-        version = tuple(map(int, CLIENT["version"].split(".")))
-        now = datetime.now(timezone.utc)
-        for spec in item_definitions(body):
+        for spec in standard_variants(body, catalog):
             ident = spec["Id"]
-            grade = spec.get("OriginRarity")
-            # Standard drops and book-listed reward gear, in their original rarity.
-            if (
-                spec.get("Type") != "weapon"
-                or spec.get("WeaponType") not in LIMIT_BREAK_TYPES
-                or not integer(grade, 4)
-                or spec.get("Rarity") != grade
-                or spec.get("Limited") is not False
-                or spec.get("SortingNumber") == -1
-                or not (spec.get("Summonable") is True or integer(spec.get("SortingNumber")))
-                or not available_in_client(spec, version, now)
-                or spec != catalog.specs.get(ident)
-            ):
-                continue
             if rules.get(ident) is None and not (
                 spec.get("MinOptions") == spec.get("MaxOptions") == 0 and not spec.get("Options")
             ):
@@ -50,7 +69,7 @@ class EquipmentGrants(GameSaveEditor):
             self.items[ident] = {
                 "spec": ident,
                 "kind": spec["WeaponType"],
-                "stars": grade + 1,
+                **catalog.equipment.catalog_facts(spec),
                 "name": catalog.names.get(ident)
                 or (spec.get("NameWithoutRarity") or spec["Name"]).replace("_", " ").title(),
             }

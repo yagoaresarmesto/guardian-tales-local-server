@@ -131,8 +131,8 @@ function decorateEquipment(square, item) {
   }
   return labels.join(" · ");
 }
-function tile(item) {
-  const button = inventoryTile({ ...item, art: art(item, "tile-art"), selected: item.id === selected,
+function tile(item, pressed, idLabel) {
+  const button = inventoryTile({ ...item, idLabel, art: art(item, "tile-art"), selected: pressed,
     quantity: item.kind === "enhance" ? quantityFormat.format(item.amount) : null });
   button.dataset.grade = item.grade ?? "";
   const markers = decorateEquipment(button, item);
@@ -146,6 +146,10 @@ function fact(label, value) {
   const row = el("div", "fact");
   row.append(el("dt", "", label), el("dd", "", value));
   return row;
+}
+function drawEquipmentArt(target, item) {
+  target.replaceChildren(...art(item, "").childNodes);
+  target.title = decorateEquipment(target, item);
 }
 function drawDetails() {
   const item = visible.find(row => row.id === selected);
@@ -161,9 +165,7 @@ function drawDetails() {
   editor?.select(enhance ? null : item);
   hammerEditor?.select(enhance ? item : null);
   if (!item) return;
-  const detailArt = $("hero-art");
-  detailArt.replaceChildren(...art(item, "").childNodes);
-  detailArt.title = decorateEquipment(detailArt, item);
+  drawEquipmentArt($("hero-art"), item);
   $("hero-stars").textContent = stars(item);
   $("hero-stars").setAttribute("aria-label", item.stars ? item.stars + " stars" : "Star rating unavailable");
   $("detail-type").textContent = enhance ? item.rarityName : typeName(item.kind);
@@ -189,7 +191,7 @@ function drawDetails() {
 }
 function draw() {
   const start = page * pageSize;
-  $("tiles").replaceChildren(...visible.slice(start, start + pageSize).map(tile));
+  $("tiles").replaceChildren(...visible.slice(start, start + pageSize).map(item => tile(item, item.id === selected)));
   $("empty").hidden = !!visible.length;
   $("range").textContent = visible.length
     ? (start + 1) + "–" + Math.min(start + pageSize, visible.length) + " of " + visible.length + " items"
@@ -220,6 +222,7 @@ async function load() {
   if (!res.ok) throw new Error("Could not load the equipment inventory.");
   const data = await res.json();
   revision = data.revision; hasIcons = data.hasIcons;
+  if (!preview) $("open-equipment-catalog").disabled = false;
   items = preview ? data.rows.filter(item => item.group === "Equipment") : data.rows;
   hammers = data.hammers ?? [];
   editor?.load(data);
@@ -236,7 +239,7 @@ if (!preview) {
   opener.onclick = async () => {
     try {
       const { equipmentCatalog } = await import("/equipment-add.js");
-      grantDialog ??= equipmentCatalog(types, art, async (id, item) => {
+      grantDialog ??= equipmentCatalog(types, tile, drawEquipmentArt, async (id, item) => {
         selected = id;
         kind = item.kind;
         $("search").value = "";
