@@ -347,8 +347,9 @@ running service in its existing terminal on its original ports. After updating
 from an older version, relaunch each service once in its usual terminal to
 register its button. Reopen Guardian Tales after a game or content update.
 
-DKA previews the selected opponent above its seven-day rotation. Raid,
-Guild Wars and Kama-ZONE show the saved selection beside the editor. In
+Raid previews all four encounters on the map. DKA previews the selected
+opponent above its seven-day rotation. Guild Wars and Kama-ZONE show the saved
+selection beside the editor. In
 Expedition, select a stage from the table to open its level settings.
 Open the [Tetis tab](http://127.0.0.1:17658/tetis) to edit each season's highest
 cleared floor. Seasons 2 and 3 also have a shared Guardian Tactic Level for
@@ -365,8 +366,11 @@ chapters, floor limits and offline requests.
 
 With the backend running, open the [Guild Raid panel](http://127.0.0.1:17658/)
 on the host PC. View the active lineup, select an original season or configure
-four boss/element pairs and the HP per bar. Click **Apply rotation**, then fully
-close and reopen the game. The [DKA tab](http://127.0.0.1:17658/dka) lists the three
+four boss/element pairs and the HP per bar. Click a map marker or an encounter
+card to inspect the boss and its element. The map previews your edits as you
+make them. Expand **Active lineup** to compare with the saved bosses and HP.
+Click **Apply rotation**, then fully close and reopen the game.
+The [DKA tab](http://127.0.0.1:17658/dka) lists the three
 arena variants and their seven daily slimes. Choose a day to preview the slime
 and its weakness in the arena. **Saved** marks the current day in its variant.
 The panel calls the Space-element opponent **Void Slime**. Click **Apply selection**

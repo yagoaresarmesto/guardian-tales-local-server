@@ -1,13 +1,182 @@
 import { $, elementIcon, feedback, setArtwork } from "/panel.js";
 
-const modes = [...document.querySelectorAll('input[name="mode"]')];
+const editor = $("editor");
 const number = new Intl.NumberFormat("en-US");
 let data;
-let applying = false;
 let selectedEncounter = 0;
 
 function title(name) {
   return name.replace(/\b\w/g, char => char.toUpperCase());
+}
+
+function bossName(slot) {
+  if (slot.boss) return title(slot.boss);
+  return slot.stage ? "Stage " + slot.stage : "Choose a boss";
+}
+
+function slotNumber(index) {
+  return String(index + 1).padStart(2, "0");
+}
+
+function showPortrait(image, boss) {
+  const frame = data.bossPortraits[boss];
+  setArtwork(image, frame ? "/raid/bosses/" + encodeURIComponent(frame) + ".png" : null);
+}
+
+function showElement(container, element) {
+  if (container.dataset.element === element) return;
+  container.dataset.element = element || "";
+  container.replaceChildren();
+  if (element) container.append(elementIcon(element, data.hasElementIcons), title(element));
+}
+
+function isCustom() {
+  return editor.elements.mode.value === "custom";
+}
+
+function chosenSeason() {
+  return isCustom() ? data.seasons[0] : data.seasons.find(season => season.id === Number($("season").value));
+}
+
+function customLineup() {
+  return [...$("slots").children].map(card => ({
+    boss: card.querySelector('[name="boss"]').value,
+    element: card.querySelector('[name="element"]').value
+  }));
+}
+
+function draftBosses() {
+  return isCustom() ? customLineup() : chosenSeason().bosses;
+}
+
+function updateStatus() {
+  const custom = isCustom();
+  const season = chosenSeason();
+  const hp = $("hp");
+  const originalHp = hp.value === "" && !hp.validity.badInput;
+  const matchesActive = custom === data.custom && season.id === data.active.id && (!custom || (
+    customLineup().every((slot, i) => slot.boss === data.active.bosses[i].boss && slot.element === data.active.bosses[i].element)
+    && (originalHp ? !data.customHp : data.customHp && hp.valueAsNumber === data.active.hpPerBar)
+  ));
+  const status = matchesActive ? (data.prepared ? "Active lineup" : "Catalog default") : "Lineup preview";
+  $("season-status").textContent = status + " · Season " + season.id;
+  $("season-status").classList.toggle("preview", !matchesActive);
+}
+
+function inspect(index, bosses = draftBosses()) {
+  selectedEncounter = index;
+  const slot = bosses[index];
+  $("encounter-detail").hidden = false;
+  $("encounter-detail").dataset.element = slot.element || "";
+  $("encounter-meta").textContent = "Encounter " + slotNumber(index);
+  $("encounter-name").textContent = bossName(slot);
+  showPortrait($("encounter-art"), slot.boss);
+  showElement($("encounter-element"), slot.element);
+  [...$("slots").children].forEach((card, i) => {
+    const selected = i === index;
+    card.querySelector(".inspect").setAttribute("aria-pressed", String(selected));
+    $("map-pins").children[i].setAttribute("aria-pressed", String(selected));
+  });
+}
+
+function renderLineup() {
+  const custom = isCustom();
+  const season = chosenSeason();
+  const bosses = draftBosses();
+  $("stock").hidden = custom;
+  $("season").disabled = custom;
+  $("base").hidden = !custom;
+  $("hp-field").hidden = !custom;
+  $("hp").disabled = !custom;
+  $("stock-hp").hidden = custom;
+  $("stock-hp").querySelector("strong").textContent = number.format(season.hpPerBar);
+  bosses.forEach((slot, index) => {
+    const card = $("slots").children[index];
+    const pin = $("map-pins").children[index];
+    const label = "Encounter " + slotNumber(index) + ", " + bossName(slot) + (slot.element ? ", " + title(slot.element) : "");
+    card.dataset.element = pin.dataset.element = slot.element || "";
+    card.querySelector(".inspect").setAttribute("aria-label", label);
+    pin.setAttribute("aria-label", label);
+    pin.title = label;
+    showPortrait(pin.querySelector("img"), slot.boss);
+    showPortrait(card.querySelector("img"), slot.boss);
+    showElement(card.querySelector(".card-element"), slot.element);
+    const name = card.querySelector(".stock-name");
+    name.textContent = bossName(slot);
+    name.hidden = custom;
+    card.querySelector(".slot-fields").hidden = !custom;
+    card.querySelectorAll("select").forEach(select => { select.disabled = !custom; });
+  });
+  inspect(selectedEncounter, bosses);
+  updateStatus();
+}
+
+function populate(select, names, value) {
+  select.add(new Option("Choose " + select.name, ""));
+  names.forEach(name => select.add(new Option(title(name), name)));
+  select.value = value || "";
+}
+
+function buildEncounters() {
+  $("slots").replaceChildren();
+  $("map-pins").replaceChildren();
+  data.active.bosses.forEach((slot, index) => {
+    const order = slotNumber(index);
+    const card = $("encounter-card").content.firstElementChild.cloneNode(true);
+    card.querySelector(".slot-num b").textContent = order;
+    card.querySelector(".card-art").dataset.slot = order;
+    card.querySelector(".inspect").addEventListener("click", () => inspect(index));
+    const boss = card.querySelector('[name="boss"]');
+    const element = card.querySelector('[name="element"]');
+    populate(boss, data.bossNames, slot.boss);
+    populate(element, data.elementNames, slot.element);
+    for (const select of [boss, element]) {
+      select.setAttribute("aria-label", title(select.name) + " for encounter " + order);
+      select.addEventListener("focus", () => inspect(index));
+      select.addEventListener("change", () => { selectedEncounter = index; });
+    }
+    $("slots").append(card);
+    const pin = document.createElement("button");
+    pin.type = "button";
+    pin.className = "map-pin";
+    pin.setAttribute("aria-controls", "encounter-detail");
+    pin.addEventListener("click", () => inspect(index));
+    const image = document.createElement("img");
+    image.className = "boss-portrait";
+    image.alt = "";
+    image.hidden = true;
+    const badge = document.createElement("span");
+    badge.textContent = order;
+    pin.append(image, badge);
+    $("map-pins").append(pin);
+  });
+}
+
+function display(state) {
+  data = state;
+  const active = data.active;
+  $("active-season").textContent = "Season " + active.id + " · " + (data.custom ? "Custom lineup" : "Original season");
+  $("active-hp").textContent = number.format(active.hpPerBar);
+  $("active-bosses").replaceChildren(...active.bosses.map((slot, index) => {
+    const item = document.createElement("li");
+    const name = document.createElement("strong");
+    name.textContent = bossName(slot);
+    const element = document.createElement("span");
+    element.className = "element";
+    showElement(element, slot.element);
+    item.append(slotNumber(index), name, element);
+    return item;
+  }));
+  setArtwork($("map"), data.hasMap ? "/map.png" : null);
+  $("season").replaceChildren(...data.seasons.map(s => new Option("Season " + s.id, s.id)));
+  $("season").value = String(active.id);
+  const base = data.seasons[0];
+  $("base").querySelector("strong").textContent = "Season " + base.id;
+  $("hp").placeholder = "Original values (round 1: " + number.format(base.hpPerBar) + ")";
+  $("hp").value = data.customHp ? active.hpPerBar : "";
+  editor.elements.mode.value = data.custom ? "custom" : "stock";
+  buildEncounters();
+  renderLineup();
 }
 
 async function readState() {
@@ -15,164 +184,6 @@ async function readState() {
   const state = await response.json();
   if (!response.ok) throw new Error(state.error || "Could not load the Raid catalog.");
   return state;
-}
-
-function bossName(slot) {
-  return slot.boss ? title(slot.boss) : "Stage " + slot.stage;
-}
-
-function slotNumber(index) {
-  return String(index + 1).padStart(2, "0");
-}
-
-function portrait(boss) {
-  const image = document.createElement("img");
-  image.alt = "";
-  image.hidden = true;
-  image.className = "boss-portrait";
-  const frame = data.bossPortraits[boss];
-  if (frame) setArtwork(image, "/raid/bosses/" + encodeURIComponent(frame) + ".png");
-  return image;
-}
-
-function markEncounter(index) {
-  selectedEncounter = index;
-  const slot = data.active.bosses[index];
-  $("encounter-detail").hidden = false;
-  $("encounter-detail").dataset.element = slot.element || "";
-  $("encounter-art").replaceChildren(portrait(slot.boss));
-  $("encounter-element").replaceChildren(elementIcon(slot.element, data.hasElementIcons));
-  $("encounter-name").textContent = bossName(slot);
-  $("encounter-meta").textContent = "Encounter " + slotNumber(index) + (slot.element ? " · " + title(slot.element) : "");
-  for (const list of [$("map-pins"), $("active-bosses")]) {
-    list.querySelectorAll("button").forEach((button, i) => {
-      button.setAttribute("aria-pressed", String(index === i));
-    });
-  }
-}
-
-function encounterButton(slot, index) {
-  const button = document.createElement("button");
-  button.type = "button";
-  const label = "Encounter " + (index + 1) + ", " + bossName(slot) +
-    (slot.element ? ", " + title(slot.element) : "");
-  button.setAttribute("aria-label", label);
-  button.setAttribute("aria-controls", "encounter-detail");
-  button.addEventListener("click", () => markEncounter(index));
-  return button;
-}
-
-function showBosses(container, bosses, active = false) {
-  container.replaceChildren();
-  if (active) $("map-pins").replaceChildren();
-  bosses.forEach((slot, index) => {
-    const row = document.createElement("li");
-    const card = active ? encounterButton(slot, index) : document.createElement("div");
-    card.className = "boss-card";
-    card.dataset.element = slot.element || "";
-    const order = document.createElement("span");
-    order.className = "slot-num";
-    order.textContent = slotNumber(index);
-    const name = document.createElement("strong");
-    name.className = "boss-name";
-    name.textContent = bossName(slot);
-    card.append(order, portrait(slot.boss), name);
-    if (slot.element) {
-      const element = document.createElement("span");
-      element.className = "element";
-      element.append(elementIcon(slot.element, data.hasElementIcons), title(slot.element));
-      card.append(element);
-    }
-    row.append(card);
-    container.append(row);
-    if (active) {
-      const pin = encounterButton(slot, index);
-      pin.className = "map-pin";
-      pin.dataset.element = slot.element || "";
-      pin.title = pin.getAttribute("aria-label");
-      const number = document.createElement("span");
-      number.textContent = slotNumber(index);
-      pin.append(portrait(slot.boss), number);
-      $("map-pins").append(pin);
-    }
-  });
-}
-
-function choice(label, names, selected, index) {
-  const wrapper = document.createElement("label");
-  const text = document.createElement("span");
-  text.textContent = label;
-  const select = document.createElement("select");
-  select.setAttribute("aria-label", label + " for slot " + (index + 1));
-  select.required = true;
-  select.add(new Option("Choose " + label.toLowerCase(), ""));
-  names.forEach(name => select.add(new Option(title(name), name)));
-  select.value = selected || "";
-  wrapper.append(text, select);
-  return wrapper;
-}
-
-function renderEditor() {
-  const custom = modes.find(input => input.checked).value === "custom";
-  $("stock").hidden = custom;
-  $("custom").hidden = !custom;
-  $("hp").disabled = !custom;
-  $("season").disabled = custom;
-  $("slots").querySelectorAll("select").forEach(input => { input.disabled = !custom; });
-  const season = data.seasons.find(item => item.id === Number($("season").value));
-  showBosses($("preview"), season.bosses);
-}
-
-function display(state) {
-  data = state;
-  const active = data.active;
-  const kind = data.custom ? "Custom lineup" : "Original rotation";
-  $("season-status").textContent = (data.prepared ? "Active season " : "Catalog default · Season ") + active.id;
-  $("active-season").textContent = "Season " + active.id + " · " + kind;
-  $("active-hp").textContent = number.format(active.hpPerBar);
-  showBosses($("active-bosses"), active.bosses, true);
-  markEncounter(selectedEncounter);
-  if (data.hasMap && $("map").hidden) {
-    $("map").src = "/map.png";
-    $("map").hidden = false;
-  }
-  $("season").replaceChildren();
-  data.seasons.forEach(item => $("season").add(new Option("Season " + item.id, item.id)));
-  $("season").value = String(active.id);
-  const base = data.seasons[0];
-  $("base").textContent = "Custom rotations use Season " + base.id + " as their base.";
-  $("hp").placeholder = "Original values (round 1: " + number.format(base.hpPerBar) + ")";
-  $("hp").value = data.customHp ? active.hpPerBar : "";
-  $("slots").replaceChildren();
-  active.bosses.forEach((slot, index) => {
-    const row = document.createElement("div");
-    row.className = "slot-row";
-    const order = document.createElement("span");
-    order.className = "slot-num";
-    order.textContent = slotNumber(index);
-    const boss = choice("Boss", data.bossNames, slot.boss, index);
-    const element = choice("Element", data.elementNames, slot.element, index);
-    const bossSelect = boss.querySelector("select");
-    const elementSelect = element.querySelector("select");
-    const thumbnail = document.createElement("span");
-    thumbnail.className = "slot-art";
-    const updatePortrait = () => thumbnail.replaceChildren(portrait(bossSelect.value), order);
-    const iconSlot = document.createElement("span");
-    iconSlot.className = "select-icon";
-    const updateElement = () => {
-      row.dataset.element = elementSelect.value;
-      iconSlot.replaceChildren(elementIcon(elementSelect.value, data.hasElementIcons));
-    };
-    element.append(iconSlot);
-    bossSelect.addEventListener("change", updatePortrait);
-    elementSelect.addEventListener("change", updateElement);
-    updatePortrait();
-    updateElement();
-    row.append(thumbnail, boss, element);
-    $("slots").append(row);
-  });
-  modes[data.custom ? 1 : 0].checked = true;
-  renderEditor();
 }
 
 async function reload() {
@@ -189,27 +200,26 @@ async function reload() {
   }
 }
 
-modes.forEach(input => input.addEventListener("change", renderEditor));
-$("season").addEventListener("change", renderEditor);
+editor.addEventListener("change", event => {
+  if (event.target !== $("hp")) renderLineup();
+  feedback("");
+});
+$("hp").addEventListener("input", () => { updateStatus(); feedback(""); });
 $("reload").addEventListener("click", reload);
-$("editor").addEventListener("submit", async event => {
+editor.addEventListener("submit", async event => {
   event.preventDefault();
-  if (applying || !data) return;
-  const mode = modes.find(input => input.checked).value;
-  const body = {mode, revision: data.revision};
-  if (mode === "stock") {
-    body.season = Number($("season").value);
-  } else {
-    body.lineup = [...$("slots").children].map(row =>
-      [...row.querySelectorAll("select")].map(select => select.value));
+  if ($("controls").disabled || !data) return;
+  const body = {mode: editor.elements.mode.value, revision: data.revision};
+  if (isCustom()) {
+    body.lineup = customLineup().map(slot => [slot.boss, slot.element]);
     if (new Set(body.lineup.map(pair => JSON.stringify(pair))).size !== 4) {
       feedback("Each slot needs a different boss and element combination.", true);
       return;
     }
     body.hpPerBar = $("hp").value === "" ? null : $("hp").valueAsNumber;
+  } else {
+    body.season = Number($("season").value);
   }
-
-  applying = true;
   $("controls").disabled = true;
   $("reload").disabled = true;
   feedback("Preparing the Raid tables…");
@@ -232,7 +242,6 @@ $("editor").addEventListener("submit", async event => {
   } finally {
     $("controls").disabled = needsReload || (applied && $("feedback").dataset.error === "true");
     $("reload").disabled = false;
-    applying = false;
   }
 });
 

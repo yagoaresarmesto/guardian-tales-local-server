@@ -1,63 +1,76 @@
-<main>
+<main class="raid-page">
   <section class="banner raid-banner" aria-labelledby="page-title">
     <div class="banner-copy">
-      <p id="season-status" class="season-status">Loading selection…</p>
+      <p id="season-status" class="season-status">Loading lineup…</p>
       <h1 id="page-title">Guild <em>Raid</em></h1>
+      <div id="encounter-detail" class="encounter-detail" aria-live="polite" aria-atomic="true" hidden>
+        <div class="featured-art"><img class="boss-portrait" id="encounter-art" alt="" hidden></div>
+        <div class="featured-copy">
+          <span class="eyebrow" id="encounter-meta"></span>
+          <h2 id="encounter-name"></h2>
+          <span class="element" id="encounter-element"></span>
+        </div>
+      </div>
     </div>
-    <div id="encounter-detail" class="encounter-detail" aria-live="polite" hidden>
-      <span id="encounter-art"></span>
-      <div><div class="detail-meta"><span id="encounter-element"></span><p id="encounter-meta"></p></div><strong id="encounter-name"></strong></div>
+    <div class="map-stage">
+      <div class="battlefield" role="group" aria-label="Choose an encounter on the raid map">
+        <img id="map" alt="" hidden>
+        <div id="map-pins"></div>
+      </div>
     </div>
   </section>
 
-  <div class="workspace">
-    <section class="surface collection" aria-labelledby="editor-title">
-      <header class="panel-heading">
-        <span class="section-icon sliders" aria-hidden="true"></span>
-        <h2 id="editor-title">Rotation editor</h2>
-      </header>
-      <form id="editor">
-        <fieldset id="controls" disabled>
-          <legend class="sr">Raid rotation settings</legend>
+  <section class="surface rotation" aria-labelledby="editor-title">
+    <form id="editor">
+      <fieldset id="controls" disabled>
+        <legend class="sr">Raid rotation settings</legend>
+        <header class="rotation-heading">
+          <h2 id="editor-title"><span class="section-icon sliders" aria-hidden="true"></span>Rotation editor</h2>
           <div class="mode">
             <label><input type="radio" name="mode" value="stock" checked><span>Original season</span></label>
             <label><input type="radio" name="mode" value="custom"><span>Custom lineup</span></label>
           </div>
-          <div id="stock">
-            <label class="label" for="season">Season</label>
-            <select id="season"></select>
-            <p class="label subsection">Season encounters</p>
-            <ol class="encounters" id="preview"></ol>
-          </div>
-          <div id="custom" hidden>
-            <p class="mode-note" id="base"></p>
-            <div class="slot-list" id="slots"></div>
-            <div class="hp-field">
-              <label class="label" for="hp">HP per bar <small>All four bosses</small></label>
+        </header>
+        <div class="rotation-body">
+          <div class="settings">
+            <label id="stock" for="season">Season <select id="season"></select></label>
+            <p id="base" hidden><span>Base season</span><strong></strong></p>
+            <label id="hp-field" for="hp" hidden>HP per bar <small>All four bosses</small>
               <input id="hp" type="number" min="1" max="2147483647" step="1" placeholder="Use original HP" inputmode="numeric">
-            </div>
+            </label>
+            <div id="stock-hp" hidden><span>Round 1 · HP per bar</span><strong></strong></div>
           </div>
-          <div class="actions">
-            <button id="apply" type="submit">Apply rotation</button>
-            <span>Reopen the game after applying.</span>
-          </div>
-        </fieldset>
-      </form>
-      <p id="feedback" role="status" hidden></p>
-    </section>
-    <aside class="surface inspector" aria-labelledby="lineup-title">
-      <header class="panel-heading">
-        <span class="section-icon stack" aria-hidden="true"></span>
-        <h2 id="lineup-title">Active lineup</h2>
-        <button type="button" id="reload" aria-label="Reload active selection" title="Reload active selection">↻</button>
-      </header>
-      <p class="active-meta" id="active-season">Loading…</p>
-      <div class="battlefield" role="group" aria-label="Active encounters on the raid map">
-        <img id="map" alt="" hidden>
-        <div id="map-pins"></div>
-      </div>
-      <ol id="active-bosses" class="active-bosses"></ol>
-      <div class="active-hp"><span>HP per bar <small>Round 1</small></span><strong id="active-hp">—</strong></div>
-    </aside>
-  </div>
+          <ol class="encounters" id="slots" aria-label="Raid encounters"></ol>
+        </div>
+        <div class="actions">
+          <span>Reopen the game after applying.</span>
+          <button id="apply" type="submit">Apply rotation</button>
+        </div>
+      </fieldset>
+    </form>
+    <p id="feedback" role="status" hidden></p>
+  </section>
+
+  <section class="surface saved" aria-label="Saved rotation">
+    <details id="saved-lineup">
+      <summary><span>Active lineup</span><span id="active-season">Loading…</span></summary>
+      <ol id="active-bosses" aria-label="Active bosses"></ol>
+      <p class="saved-hp">Round 1 · HP per bar <strong id="active-hp">—</strong></p>
+    </details>
+    <button type="button" id="reload" aria-label="Reload active selection" title="Reload active selection">↻</button>
+  </section>
 </main>
+
+<template id="encounter-card">
+  <li class="encounter-card">
+    <button type="button" class="inspect" aria-controls="encounter-detail">
+      <span class="card-heading"><span class="slot-num"><span class="slot-prefix">Encounter </span><b></b></span><span class="card-element"></span></span>
+      <span class="card-art"><img class="boss-portrait" alt="" hidden></span>
+      <span class="stock-name"></span>
+    </button>
+    <div class="slot-fields">
+      <label>Boss<select name="boss" required></select></label>
+      <label>Element<select name="element" required></select></label>
+    </div>
+  </li>
+</template>
