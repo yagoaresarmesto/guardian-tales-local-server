@@ -8,6 +8,7 @@ import sqlite3
 import tempfile
 import unittest
 from contextlib import closing, redirect_stderr, redirect_stdout
+from importlib.util import find_spec
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
@@ -25,6 +26,8 @@ from guardian_tales.expedition_levels import (
 )
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.web_panel.expedition import artwork
+from guardian_tales.web_panel.routes import media_resource
 from guardian_tales.web_panel.server import WebPanel
 from tests.test_snapshots import request
 
@@ -113,6 +116,32 @@ class ExpeditionLevelTests(unittest.TestCase):
                 return json.load(reply)
 
         return api
+
+    @unittest.skipUnless(find_spec("PIL"), "Pillow is optional for the panel")
+    def test_panel_serves_distinct_journal_scenes_from_the_local_pack(self):
+        from PIL import Image
+
+        source = self.root / "static_data_get.bin"
+        sample = Image.new("RGBA", (200, 100), (23, 45, 67, 255))
+        for slug, texture, size in (
+            ("journey", "expedition_bg_event_clara_smile_set_01", (960, 370)),
+            ("camp", "expedition_bg_forest_night", (480, 180)),
+        ):
+            reader, mime = media_resource(f"/expedition/{slug}.jpg")
+            with self.subTest(slug=slug):
+                with self.assertRaises(FileNotFoundError):
+                    reader(self.refs)
+                with (
+                    patch.object(type(artwork.EXPEDITION), "available", return_value=True),
+                    patch.object(type(artwork.EXPEDITION), "path", return_value=source),
+                    patch.object(artwork, "bundle_texture", return_value=sample) as read,
+                ):
+                    with Image.open(io.BytesIO(reader(self.refs))) as image:
+                        self.assertEqual(
+                            (mime, image.format, image.size), ("image/jpeg", "JPEG", size)
+                        )
+                    reader(self.refs)
+                    read.assert_called_once_with(source, texture)
 
     def test_panel_and_cli_share_levels_revisions_and_distinct_originals(self):
         api = self.open_panel()

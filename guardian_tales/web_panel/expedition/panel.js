@@ -1,16 +1,24 @@
-import { $, feedback } from "/panel.js";
+import { $, feedback, setArtwork } from "/panel.js";
 
 const endpoint = "/api/expedition";
 let state;
+let areaFilter = "";
 
-function stageName(row) {
+function stageInfo(row) {
   const key = typeof row.name === "string" ? row.name : "";
   const match = /^expedition_battle_chosenone_(\d+)_(.+)$/.exec(key);
   if (match) {
-    const stage = /^\d+$/.test(match[2]) ? "Stage " + match[2] : titleWords(match[2]);
-    return "Area " + match[1] + " · " + stage;
+    const suffix = match[2];
+    const name = /^\d+$/.test(suffix) ? "Stage " + suffix : titleWords(suffix);
+    let kind = "stage";
+    if (suffix === "boss" || suffix === "unexplored") kind = suffix;
+    else if (suffix.startsWith("hidden_")) kind = "hidden";
+    return {area: "Area " + match[1], name, kind};
   }
-  return titleWords(key.replace(/^expedition_/, "")) || "Stage " + row.stage_id;
+  if (key.startsWith("expedition_event_")) {
+    return {area: "Events", name: titleWords(key.slice("expedition_event_".length)), kind: "event"};
+  }
+  return {area: "Other stages", name: titleWords(key.replace(/^expedition_/, "")) || "Stage " + row.stage_id, kind: "stage"};
 }
 
 function titleWords(key) {
@@ -40,46 +48,71 @@ function renderTarget() {
   $("apply").textContent = all ? "Apply to all " + selected.length + " stages" : "Apply to stage";
   $("restore").textContent = all ? "Restore all original levels" : "Restore original level";
   $("restore").disabled = !selected.some(row => row.overridden);
+  const row = selected[0];
+  $("target-area").textContent = all ? "All areas" : row?.area || "";
+  $("target-name").textContent = all ? selected.length + " stages" : row?.name || "No stage selected";
+  const rift = !all && row?.kind === "unexplored";
+  setArtwork($("target-art"), state.hasArt ? (rift ? "/expedition/rift.png" : "/expedition/camp.jpg") : null);
+  for (const card of $("rows").children) {
+    card.setAttribute("aria-pressed", String(!all && card.dataset.stage === $("stage").value));
+  }
+}
+
+function renderAreas() {
+  const areas = ["", ...new Set(state.stages.map(row => row.area))];
+  if (!areas.includes(areaFilter)) areaFilter = "";
+  $("areas").replaceChildren(...areas.map(area => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.dataset.area = area;
+    button.textContent = area || "All areas";
+    button.setAttribute("aria-pressed", String(areaFilter === area));
+    return button;
+  }));
 }
 
 function renderRows() {
-  const query = $("search").value.trim().toLowerCase();
+  const query = $("search").value.toLowerCase().replaceAll("·", " ").replace(/\s+/g, " ").trim();
   const filtered = state.stages.filter(row =>
-    [row.stage_id, row.name, stageName(row)].join(" ").toLowerCase().includes(query)
+    (!areaFilter || row.area === areaFilter) && (!$("only-custom").checked || row.overridden)
+    && [row.stage_id, row.key, row.area, row.name].join(" ").toLowerCase().includes(query)
   );
   const nodes = filtered.map(row => {
-    const tr = document.createElement("tr");
-    tr.toggleAttribute("data-custom", row.overridden);
-    const name = tr.insertCell();
-    const pick = document.createElement("button");
-    pick.type = "button";
-    pick.dataset.stage = row.stage_id;
-    pick.textContent = stageName(row);
-    pick.title = "Edit this stage";
-    const id = document.createElement("small");
-    id.textContent = row.stage_id;
-    name.append(pick, id);
-    tr.insertCell().textContent = row.original_level;
-    tr.insertCell().textContent = row.enemy_level;
-    return tr;
+    const card = $("stage-card").content.firstElementChild.cloneNode(true);
+    card.dataset.stage = row.stage_id;
+    card.dataset.kind = row.kind;
+    card.toggleAttribute("data-custom", row.overridden);
+    card.setAttribute("aria-pressed", String(!isGlobal() && String(row.stage_id) === $("stage").value));
+    const label = row.area + " · " + row.name;
+    card.setAttribute("aria-label", label + ", original level " + row.original_level + ", configured level " + row.enemy_level + (row.overridden ? ", customized" : ""));
+    card.title = label + " · " + row.stage_id;
+    card.querySelector("small").textContent = row.area;
+    card.querySelector("strong").textContent = row.name;
+    card.querySelector(".original").textContent = row.original_level;
+    card.querySelector(".stage-levels b").textContent = row.enemy_level;
+    return card;
   });
   $("rows").replaceChildren(...nodes);
+  $("rows").parentElement.scrollTop = 0;
   $("empty").hidden = filtered.length > 0;
-  const custom = state.stages.filter(row => row.overridden).length;
-  $("count").textContent = filtered.length + " of " + state.stages.length + " stages · " + custom + " customized";
+  $("count").textContent = filtered.length + " of " + state.stages.length + " stages";
 }
 
 function display(next) {
-  state = next;
+  state = {...next, stages: next.stages.map(row => ({...row, key: row.name, ...stageInfo(row)}))};
   const previous = $("stage").value;
-  $("stage").replaceChildren(...state.stages.map(row => new Option(stageName(row) + " · " + row.stage_id, row.stage_id)));
+  $("stage").replaceChildren(...state.stages.map(row => new Option(row.area + " · " + row.name + " · " + row.stage_id, row.stage_id)));
   if (state.stages.some(row => String(row.stage_id) === previous)) $("stage").value = previous;
   $("bounds").textContent = "(1–" + state.max_enemy_level + ")";
   $("level").max = state.max_enemy_level;
-  $("forest").hidden = !state.hasArt;
+  document.querySelector(".expedition-page").toggleAttribute("data-art", state.hasArt);
+  setArtwork($("journey"), state.hasArt ? "/expedition/journey.jpg" : null);
+  const custom = state.stages.filter(row => row.overridden).length;
+  $("overview").textContent = state.stages.length + " stages · " + custom + " customized";
   $("trial").textContent = state.trial_enabled ? "Expedition trial enabled" : "Trial disabled · Enable the Expedition trial to apply levels.";
-  renderTarget();
+  renderAreas();
   renderRows();
+  renderTarget();
 }
 
 async function refresh(message = "") {
@@ -122,7 +155,10 @@ async function save(action) {
 }
 
 $("editor").addEventListener("change", event => {
-  if (event.target.name === "scope" || event.target.id === "stage") renderTarget();
+  if (event.target.name === "scope" || event.target.id === "stage") {
+    renderTarget();
+    feedback("");
+  }
 });
 $("editor").addEventListener("submit", event => {
   event.preventDefault();
@@ -135,8 +171,17 @@ $("rows").addEventListener("click", event => {
   $("editor").elements.scope.value = "stage";
   $("stage").value = pick.dataset.stage;
   renderTarget();
+  feedback("");
   ($("level").disabled ? $("stage") : $("level")).focus();
 });
 $("reload").addEventListener("click", () => refresh());
+$("areas").addEventListener("click", event => {
+  const pick = event.target.closest("button[data-area]");
+  if (!pick) return;
+  areaFilter = pick.dataset.area;
+  for (const button of $("areas").children) button.setAttribute("aria-pressed", String(button === pick));
+  renderRows();
+});
+$("only-custom").addEventListener("change", () => { if (state) renderRows(); });
 $("search").addEventListener("input", () => { if (state) renderRows(); });
 refresh();

@@ -1,37 +1,104 @@
-#forest {
-  position: absolute; inset: 0 0 0 auto; width: 58%; z-index: -1;
-  background: url("/expedition/forest.jpg") 50% 65% / cover no-repeat;
-  mask-image: linear-gradient(90deg, transparent, #000 40%);
+.expedition-page { --exp-pad: clamp(14px, 1.5vw, 24px); --mint: #a9e3ce; }
+.expedition-banner {
+  min-height: 207px; padding: 26px clamp(20px, 3vw, 46px);
+  background: repeating-linear-gradient(-55deg, transparent 0 68px, #aedace0a 69px, transparent 70px 135px),
+    linear-gradient(110deg, #244d50, #18303e 51%, #15283a);
 }
-.expedition-banner h1 { margin-bottom: 4px; }
-#trial, .hint, #count, #empty { color: var(--muted); font-size: .86rem; }
-.scope { display: flex; flex-wrap: wrap; gap: 8px; }
-.scope label { display: flex; align-items: center; gap: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); border-radius: 5px; background: var(--field); }
-.scope label:has(:checked) { color: var(--gold); border-color: var(--gold); }
-.scope input { margin: 0; accent-color: var(--gold); }
+#journey {
+  position: absolute; inset: 0 0 0 auto; width: 60%; height: 100%; object-fit: cover; object-position: center 39%;
+  mask-image: linear-gradient(90deg, transparent, #000 32%);
+}
+.expedition-banner h1 { margin: 7px 0 18px; font-size: clamp(2.7rem, 4.5vw, 4.6rem); }
+.expedition-status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: .88rem; }
+#trial { font-weight: 650; color: var(--mint); }
+#overview { color: #d0e0e2; font-variant-numeric: tabular-nums; }
+.expedition-workspace {
+  display: grid; grid-template-columns: minmax(0, 1fr) clamp(305px, 26vw, 385px);
+  align-items: start; gap: 16px; margin-top: 16px;
+}
+.catalog, .settings #editor { padding: var(--exp-pad); }
+#areas, .tools, .catalog-meta, .custom-filter { display: flex; align-items: center; gap: 8px; }
+#areas { flex-wrap: wrap; margin-bottom: 14px; }
+#areas button, .scope span {
+  padding: 7px 12px; color: var(--muted); background: #162437; border: 1px solid #3f536a;
+  border-radius: 5px; font-size: .86rem; font-weight: 650;
+}
+#areas button:hover, .scope label:hover span, #restore:enabled:hover { border-color: var(--ice); color: var(--ink); }
+#areas [aria-pressed="true"], .scope :checked + span { border-color: #c49f56; color: #ffda8a; background: #33353a; }
+.tools { justify-content: space-between; gap: 10px 18px; }
+#search { max-width: 32rem; }
+.custom-filter { flex-shrink: 0; font-size: .88rem; cursor: pointer; }
+.custom-filter input { width: 1rem; height: 1rem; margin: 0; accent-color: var(--gold); }
+.catalog-meta {
+  justify-content: space-between; margin: 16px 0 9px; color: var(--muted); font-size: .78rem;
+}
+.stage-list { overflow: auto; max-height: 29rem; scrollbar-color: #566b7e #18273a; }
+#rows { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.7rem), 1fr)); gap: 8px; }
+.stage-card {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 7px 10px;
+  min-width: 0; min-height: 84px; padding: 10px 12px; border: 1px solid #3f5267; border-radius: 6px;
+  background: linear-gradient(125deg, #25394a, #1b293a); color: var(--ink); text-align: left;
+}
+.stage-card:hover { background: #2b4150; border-color: #91c7cc; }
+.stage-card[aria-pressed="true"] { background: linear-gradient(120deg, #394545, #25353f); border-color: var(--gold); box-shadow: inset 3px 0 var(--gold); }
+.stage-card:focus-visible { outline-offset: -3px; }
+.stage-symbol {
+  grid-row: span 2; width: 26px; height: 37px; background: center / contain no-repeat;
+}
+.expedition-page[data-art] .stage-symbol { background-image: url("/expedition/stage.png"); }
+.expedition-page[data-art] [data-kind="boss"] .stage-symbol { background-image: url("/expedition/boss.png"); }
+.expedition-page[data-art] :is([data-kind="event"], [data-kind="hidden"], [data-kind="unexplored"]) .stage-symbol { background-image: url("/expedition/emblem.png"); }
+.expedition-page:not([data-art]) .stage-symbol { display: none; }
+.expedition-page:not([data-art]) .stage-card { grid-template-columns: minmax(0, 1fr); }
+.stage-title, .target-copy { display: grid; gap: 2px; }
+.stage-title small, #target-area {
+  margin: 0; font-size: .68rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: #b2cfcc;
+}
+.stage-title strong { font-size: .96rem; line-height: 1.2; overflow-wrap: anywhere; }
+.stage-levels { display: flex; gap: 7px; align-items: center; color: var(--muted); font-size: .84rem; font-variant-numeric: tabular-nums; }
+.stage-levels .arrow { color: #94a9be; }
+.stage-levels b { color: var(--ink); }
+[data-custom] .stage-levels b { color: var(--gold); }
+#empty { padding: 24px 4px; color: var(--muted); }
+.scope { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; border-radius: 6px; background: #121e2e; }
+.scope label { cursor: pointer; }
+.scope span { display: block; text-align: center; background: transparent; border-color: transparent; }
+.scope input:focus-visible + span { outline: 2px solid var(--ice); }
+.target {
+  position: relative; display: flex; align-items: end; min-height: 98px; margin-block: 14px; padding: 12px 14px;
+  overflow: hidden; isolation: isolate; border: 1px solid #3f5662; border-radius: 6px; background: linear-gradient(110deg, #233d42, #23364c);
+}
+#target-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.target::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(75deg, #0b1829ed, #101c2b98 40%, transparent 95%); }
+#target-area { color: #dfeddf; }
+#target-name { font-size: 1.42rem; line-height: 1.15; }
 #stage-field { display: block; }
-.levels { display: flex; flex-wrap: wrap; gap: 12px 36px; padding-block: 12px; margin-block: 12px; border-block: 1px solid var(--line); }
-.levels dt { color: var(--muted); font-size: .83rem; }
-.levels dd { margin: 2px 0 0; font-size: 1.25rem; font-weight: 700; }
+.levels {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 14px 0; padding: 10px 0;
+  border-block: 1px solid var(--line);
+}
+.levels > div + div { border-left: 1px solid var(--line); padding-left: 16px; }
+.levels dt { font-size: .78rem; color: var(--muted); }
+.levels dd { margin: 2px 0 0; font-weight: 750; font-size: 1.22rem; font-variant-numeric: tabular-nums; }
 #current { color: var(--gold); }
-#level { width: 8rem; }
-#restore { padding: 9px 12px; border: 1px solid #526580; border-radius: 5px; color: var(--ink); background: var(--field); }
-#restore:hover { border-color: var(--ice); }
-.actions button:disabled { opacity: .55; }
-.hint { margin-top: var(--inset); padding-top: 10px; }
-.catalog { padding: var(--inset); }
-#search { width: 100%; }
-.stage-list { max-height: 21rem; overflow: auto; margin-top: 12px; }
-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-th, td { text-align: right; padding: 6px; border-bottom: 1px solid var(--line); }
-th { position: sticky; top: 0; background: #233249; color: var(--muted); font-size: .8rem; }
-th:first-child, td:first-child { text-align: left; }
-td small { display: block; margin: 2px 0 0; }
-td button { padding: 0; text-align: left; border: 0; color: var(--ice); background: none; }
-td button:hover { text-decoration: underline; }
-tr[data-custom] td:last-child { color: var(--gold); }
-#count, #empty { margin-top: 10px; }
-@media (max-width: 480px) {
-  .catalog { padding: 12px; }
-  #forest { width: 75%; opacity: .5; }
+.level-actions { display: grid; gap: 8px; margin-top: 14px; }
+#restore { min-height: 34px; border: 1px solid #53667b; border-radius: 5px; color: var(--ink); background: #19283a; font-size: .86rem; }
+#restore:disabled { opacity: .5; }
+.hint { margin-top: 14px; font-size: .8rem; line-height: 1.45; color: var(--muted); }
+@media (max-width: 840px) {
+  .expedition-workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .stage-list { max-height: 20rem; }
+  .expedition-banner { min-height: 165px; }
+}
+@media (max-width: 540px) {
+  .expedition-banner { min-height: 155px; padding: 18px 14px; }
+  #journey { width: 66%; opacity: .66; mask-image: linear-gradient(90deg, transparent, #000 70%); }
+  .expedition-banner h1 { font-size: 2.4rem; margin-bottom: 12px; }
+  .expedition-status { display: grid; gap: 2px; font-size: .78rem; }
+  #rows { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  .stage-card { min-height: 78px; padding: 8px; gap: 4px 6px; }
+  .stage-symbol { width: 18px; height: 28px; }
+  .tools { flex-wrap: wrap; }
+  #areas { gap: 5px; }
+  #areas button { padding: 6px 9px; }
 }

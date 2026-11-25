@@ -350,7 +350,7 @@ register its button. Reopen Guardian Tales after a game or content update.
 Raid previews all four encounters on the map. DKA previews the selected
 opponent above its seven-day rotation. Guild Wars previews the phase above
 the editor and shows the saved configuration below. Kama-ZONE shows the saved
-selection beside the editor. In Expedition, select a stage from the table to
+selection beside the editor. In Expedition, select a stage card to
 open its level settings.
 Open the [Tetis tab](http://127.0.0.1:17658/tetis) to edit each season's highest
 cleared floor. Seasons 2 and 3 also have a shared Guardian Tactic Level for
@@ -448,7 +448,11 @@ by that copy. It includes private receipts, backups and targeted removal.
 
 The [Expedition tab](http://127.0.0.1:17658/expedition) and
 [enemy-level commands](docs/reference-data.md#per-stage-enemy-levels) list
-original and configured enemy levels. Set a single stage or all stages to a
+original and configured enemy levels. Browse the panel by area, search by stage
+name or ID, or show only customized stages. The illustrations and stage markers
+load from the local Expedition UI bundle when available. The **All stages**
+action covers the full catalog even when the directory is filtered.
+Set a single stage or all stages to a
 visible level from 1 to 220 in the matching pack, or restore their original
 levels. Changes apply through external static overlays and preserve the saved account.
 

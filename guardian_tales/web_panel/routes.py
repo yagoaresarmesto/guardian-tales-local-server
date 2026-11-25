@@ -30,6 +30,7 @@ from .artwork import (
 from .dka import adapter as dka
 from .dka import sprites
 from .expedition import adapter as expedition
+from .expedition import artwork as expedition_art
 from .guild_war import adapter as guild_war
 from .kamazone import adapter as kamazone
 from .kamazone.season_art import SEASONS as KAMAZONE_SEASONS
@@ -167,6 +168,19 @@ MEDIA = {
         for art in KAMAZONE_SEASONS.values()
     },
     "/expedition/forest.jpg": (EXPEDITION.read, "image/jpeg"),
+    **{
+        f"/expedition/{name}.jpg": (partial(expedition_art.scene, name=name), "image/jpeg")
+        for name in expedition_art.SCENES
+    },
+    **{
+        f"/expedition/{name}.png": (partial(expedition_art.MARKERS.read, frame=frame), "image/png")
+        for name, frame in {
+            "stage": "ic_parish_stage_record_00.png",
+            "boss": "ic_expedition_mark_boss_00.png",
+            "emblem": "expedition_ic_parish_00.png",
+            "rift": "rift_banner_unexplored_1.png",
+        }.items()
+    },
     "/orbital-lift/elevator.jpg": (orbital_art.banner, "image/jpeg"),
     "/orbital-lift/empty-cell.png": (partial(UI.read, frame="ic_hero_00"), "image/png"),
     "/orbital-lift/boss-crown.png": (partial(UI.read, frame="ic_crown_red_00"), "image/png"),
