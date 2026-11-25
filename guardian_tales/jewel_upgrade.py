@@ -91,6 +91,27 @@ def target_row(user, inventory, item_id, kind):
     return matches[0]
 
 
+def return_one_jewel(user, inventory, spec_id, *, locked=False):
+    destinations = [r for r in user["ItemStackables"] if r.get("ItemId") == spec_id]
+    if len(destinations) > 1:
+        raise ValueError("Jewel destination stack is ambiguous")
+    if not destinations:
+        destination = allocate_reward_item(user, spec_id)
+        destination["Locked"] = locked
+        user["ItemStackables"].append(destination)
+        return
+    destination = destinations[0]
+    if (
+        not integer(destination.get("Id"), minimum=1)
+        or not integer(destination.get("ItemId"), minimum=1)
+        or sum(r.get("Id") == destination["Id"] for r in inventory) != 1
+        or type(destination.get("Locked")) is not bool
+        or not integer(destination.get("Amount"), INT_MAX - 1)
+    ):
+        raise ValueError("Invalid jewel destination or stack overflow")
+    destination["Amount"] += 1
+
+
 def upgrade(account, body, operation_id, route):
     fields = (
         {"RelicId", "SlotIndex", "UseJewelPowder"}
@@ -148,24 +169,7 @@ def upgrade(account, body, operation_id, route):
     if route == RELIC:
         slots[body["SlotIndex"]] = after
     else:
-        destinations = [r for r in user["ItemStackables"] if r.get("ItemId") == after]
-        if len(destinations) > 1:
-            raise ValueError("Upgraded jewel destination stack is ambiguous")
-        if destinations:
-            destination = destinations[0]
-            if (
-                not integer(destination.get("Id"), minimum=1)
-                or not integer(destination.get("ItemId"), minimum=1)
-                or sum(r.get("Id") == destination["Id"] for r in inventory) != 1
-                or type(destination.get("Locked")) is not bool
-                or not integer(destination.get("Amount"), INT_MAX - 1)
-            ):
-                raise ValueError("Invalid upgraded jewel destination or stack overflow")
-            destination["Amount"] += 1
-        else:
-            destination = allocate_reward_item(user, after)
-            destination["Locked"] = target["Locked"]
-            user["ItemStackables"].append(destination)
+        return_one_jewel(user, inventory, after, locked=target["Locked"])
         # One owned jewel changes grade; no extra source jewels are sacrificed.
         # Keep a zero source row so the native resource can clear its old count.
         target["Amount"] -= 1

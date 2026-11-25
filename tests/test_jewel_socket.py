@@ -7,7 +7,7 @@ import sqlite3
 import unittest
 
 from guardian_tales.items import inventory_item
-from guardian_tales.jewel_socket import ROUTE
+from guardian_tales.jewel_socket import ATTACH, DETACH, ROUTE, create_tables
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, digest
 from tests.test_village_harvest import NOW, VillageFixture
@@ -17,13 +17,15 @@ class JewelSocketTests(VillageFixture, unittest.TestCase):
     def setUp(self):
         super().setUp()
         self.rules = {
-            "constants": {"InlaidCount": {"KakaoGlobal": 1}},
+            "constants": {"InlaidCount": {"KakaoGlobal": 1}, "DetachCost": 300},
             "InlaidCount": [{"Count": 1, "CountUpNeeded": 1}, {"Count": 2, "CountUpNeeded": 3}],
         }
         self.items = [
             {"Id": 701, "Type": "relic", "OriginRarity": 4},
             {"Id": 702, "Type": "relic", "OriginRarity": 3},
             {"Id": 703, "Name": "inlaid_ticket", "Type": "ticket"},
+            {"Id": 901, "Type": "jewel", "GroupId": 1},
+            {"Id": 902, "Type": "jewel", "GroupId": 1},
         ]
         self.write_rules()
         profile = self.store.account.profile()
@@ -131,3 +133,108 @@ class JewelSocketTests(VillageFixture, unittest.TestCase):
         self.assertEqual(
             self.db.execute("SELECT COUNT(*) FROM jewel_socket_requests").fetchone(), (0,)
         )
+
+    def prepare_jewels(self, old=0, locked=False):
+        profile = self.store.account.profile()
+        user = profile["User"]
+        user["ItemMiscs"][-2].update(JewelSlots=[old], Locked=locked)
+        user["ItemStackables"].append(inventory_item(54, 902))
+        user["ItemIdCounter"] = 54
+        for ident, amount in ((70003, 240), (70002, 100)):
+            self.asset(profile, ident).update(Amount=amount, Spent=15)
+        self.save_profile(profile)
+        return profile
+
+    def test_attach_and_detach_uses_one_owned_unit_and_returns_to_same_stack(self):
+        before = self.prepare_jewels(locked=True)
+        socket = {"RelicId": 51, "SlotIndex": 0}
+        attach = dict(socket, JewelId=54, Destruction=False)
+        mounted = self.call(attach, ATTACH)
+        self.assertEqual(mounted["User"]["ItemMiscs"][-2]["JewelSlots"], [902])
+        self.assertEqual(mounted["User"]["ItemStackables"][-1]["Amount"], 0)
+        self.assertEqual(mounted["User"]["Assets"], before["User"]["Assets"])
+        self.assertEqual(
+            mounted["UserRecord"]["Misc"]["AttachJewelCount"],
+            before["UserRecord"]["Misc"]["AttachJewelCount"] + 1,
+        )
+        self.open_session(reconnect=True)
+        self.assertEqual(self.call(dict(socket, JewelId=54), ATTACH), mounted)
+        with self.assertRaises(PacketError):
+            self.call(socket, DETACH, sequence=52)
+        self.assertEqual(self.store.account.profile()["User"], mounted["User"])
+        profile = self.store.account.profile()
+        profile["User"]["ItemMiscs"][-2]["Locked"] = False
+        self.save_profile(profile)
+        returned = self.call(socket, DETACH, sequence=53)
+        self.assertEqual(returned["User"]["ItemMiscs"][-2]["JewelSlots"], [0])
+        self.assertEqual(returned["User"]["ItemStackables"], before["User"]["ItemStackables"])
+        self.assertEqual(returned["User"]["Characters"], before["User"]["Characters"])
+        self.assertEqual(
+            returned["UserRecord"]["Misc"]["DetachJewelCount"],
+            before["UserRecord"]["Misc"]["DetachJewelCount"] + 1,
+        )
+        for ident, amount, spent in ((70003, 0, 255), (70002, 40, 75)):
+            balance = self.asset(returned, ident)
+            self.assertEqual((balance["Amount"], balance["Spent"]), (amount, spent))
+        self.assertEqual(self.call(socket, DETACH, sequence=53), returned)
+        # Replaying the old attach must not re-equip the returned jewel.
+        self.assertEqual(self.call(attach, ATTACH), returned)
+
+    def test_replace_and_return_old_jewel_or_explicitly_destroy_it(self):
+        request = {"RelicId": 51, "SlotIndex": 0, "JewelId": 54}
+        initial = self.prepare_jewels(old=901)
+        for sequence, destroy in enumerate((False, True), start=60):
+            with self.subTest(destroy=destroy):
+                self.save_profile(initial)
+                result = self.call(dict(request, Destruction=destroy), ATTACH, sequence)
+                self.assertEqual(result["User"]["ItemMiscs"][-2]["JewelSlots"], [902])
+                matches = [r for r in result["User"]["ItemStackables"] if r["ItemId"] == 901]
+                self.assertEqual([r["Amount"] for r in matches], [] if destroy else [1])
+                self.assertEqual(self.asset(result, 70003)["Amount"], 240 if destroy else 0)
+                before = list(self.db.iterdump())
+                with self.assertRaises(PacketError):
+                    self.call(dict(request, Destruction=not destroy), ATTACH, sequence)
+                self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_rejected_jewel_actions_leave_slot_balances_and_counters_intact(self):
+        initial = self.prepare_jewels(old=901)
+        socket = {"RelicId": 51, "SlotIndex": 0}
+        attach = dict(socket, JewelId=54, Destruction=False)
+        for route, request, edit in (
+            (ATTACH, dict(attach, SlotIndex=1), None),
+            (ATTACH, dict(attach, JewelId=902), None),
+            (ATTACH, dict(attach, Destruction=1), None),
+            (ATTACH, attach, lambda p: p["User"]["ItemStackables"][-1].update(Locked=True)),
+            (ATTACH, attach, lambda p: p["User"]["ItemStackables"][-1].update(Amount=0)),
+            (ATTACH, attach, lambda p: self.asset(p, 70002).update(Amount=0)),
+            (DETACH, socket, lambda p: p["User"]["ItemMiscs"][-2].update(JewelSlots=[0])),
+            (DETACH, socket, lambda p: p["User"]["ItemMiscs"][-2].update(JewelSlots=[999])),
+            (DETACH, socket, lambda p: self.asset(p, 70002).update(Amount=0)),
+        ):
+            profile = copy.deepcopy(initial)
+            if edit:
+                edit(profile)
+            self.save_profile(profile)
+            before = list(self.db.iterdump())
+            with self.subTest(route=route, request=request), self.assertRaises(PacketError):
+                self.call(request, route)
+            self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_original_inlay_receipts_survive_upgrade_and_reject_other_actions(self):
+        self.call({"RelicId": 51})
+        with self.db:
+            self.db.execute("ALTER TABLE jewel_socket_requests RENAME TO new_receipts")
+            self.db.execute(
+                "CREATE TABLE jewel_socket_requests "
+                "(operation_id TEXT PRIMARY KEY, relic_id INTEGER NOT NULL)"
+            )
+            self.db.execute(
+                "INSERT INTO jewel_socket_requests SELECT operation_id,relic_id FROM new_receipts"
+            )
+            self.db.execute("DROP TABLE new_receipts")
+            create_tables(self.db)
+        before = list(self.db.iterdump())
+        self.call({"RelicId": 51})
+        with self.assertRaises(PacketError):
+            self.call({"RelicId": 51, "SlotIndex": 0}, DETACH)
+        self.assertEqual(list(self.db.iterdump()), before)

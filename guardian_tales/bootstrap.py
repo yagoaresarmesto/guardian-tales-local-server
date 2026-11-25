@@ -602,12 +602,12 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == jewel_socket.ROUTE:
+            if route in jewel_socket.ROUTES:
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
-                        request, jewel_socket.open_socket(self.store.account, body, operation_id)
+                        request, jewel_socket.handle(self.store.account, body, operation_id, route)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

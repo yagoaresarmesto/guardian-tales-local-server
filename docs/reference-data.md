@@ -1130,6 +1130,25 @@ Retries return the current state. The equipment assignment, protection and
 relic options are preserved. Automated coverage exercises the forge request,
 reconnect, insufficient tickets, ineligible relics and the socket limit.
 
+Verified in the EU 3.57.0 Android client: the forge opened a socket on the
+selected Epic relic, charged one ticket, and still showed the socket after
+the game was reopened.
+
+### Attaching, replacing and detaching jewels
+
+Select an open socket and a loose jewel in the forge. Attaching to an empty
+socket moves one unit of the selected inventory stack into the relic for free.
+Unlock the relic before removing an installed jewel. **Detach** returns one
+unit of the same jewel and grade to inventory and keeps the socket open.
+The EU 3.57.0 detachment price is 300 gems, using free gems first.
+
+For an occupied socket the client's replacement choice matters. **Detach and
+Attach** pays the detachment price and returns the old jewel. Choosing to
+destroy the old jewel consumes it and attaches the replacement for free.
+The native attach and detach routes save inventory, socket, gem spending and
+forge counters together. Automated tests cover both replacement choices,
+insufficient gems, locked relics, reconnects and retries.
+
 ## Guaranteed free jewel upgrades
 
 The two native routes are supported under a separate explicit local policy:

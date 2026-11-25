@@ -109,7 +109,7 @@ from .item_sell import sell as sell_items
 from .items import inventory_item
 from .jewel_decompose import create_tables as create_jewel_decompose_tables
 from .jewel_decompose import decompose as decompose_jewels
-from .jewel_socket import ROUTE as JEWEL_SOCKET_ROUTE
+from .jewel_socket import ROUTES as JEWEL_SOCKET_ROUTES
 from .jewel_socket import create_tables as create_jewel_socket_tables
 from .jewel_upgrade import create_tables as create_jewel_upgrade_tables
 from .jewel_upgrade import upgrade as upgrade_jewel
@@ -286,7 +286,7 @@ ACCOUNT_ROUTES = (
     ITEM_SELL_ROUTE,
     ITEM_EXTRACT_ROUTE,
     "/item/decompose-jewel",
-    JEWEL_SOCKET_ROUTE,
+    *JEWEL_SOCKET_ROUTES,
     "/item/upgrade-jewel",
     "/item/upgrade-jewel-from-relic",
     "/item/limitbreak-weapon/v2",

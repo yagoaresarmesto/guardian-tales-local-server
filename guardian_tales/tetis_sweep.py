@@ -6,8 +6,8 @@ from bisect import bisect_right
 from datetime import datetime, timedelta, timezone
 
 from .story_quests import grant
-from .summon_payment import FREE_GEMS, PAID_GEMS
-from .village import integer
+from .summon_payment import spend_gems
+from .village import INT_MAX, integer
 
 GOLD = 70001
 RNG = random.SystemRandom()
@@ -52,24 +52,6 @@ def _reward_floor(state, catalog):
     return max(rewards, key=lambda row: row["Floor"])
 
 
-def _pay_refills(user, cost):
-    assets = {row["Id"]: row for row in user["Assets"]}
-    for ident in (FREE_GEMS, PAID_GEMS):
-        if not cost:
-            return
-        row = assets.get(ident)
-        if not row:
-            continue
-        amount = min(cost, row["Amount"])
-        if not integer(row["Spent"], maximum=0x7FFFFFFF - amount):
-            raise ValueError("Invalid Tetis refill spending counter.")
-        row["Amount"] -= amount
-        row["Spent"] += amount
-        cost -= amount
-    if cost:
-        raise ValueError("Insufficient gems for additional Tetis sweeps.")
-
-
 def _draw_rewards(table):
     candidate = table["Candidate"]
     groups = [candidate] * RNG.randint(candidate["MinCount"], candidate["MaxCount"])
@@ -92,7 +74,7 @@ def sweep(account, profile, state, catalog, count, now=None):
     reward = _reward_floor(state, catalog)
     if extra:
         # The sweep popup quotes a fixed gem price per additional run.
-        _pay_refills(profile["User"], extra * spec["RefillCost"][0])
+        spend_gems(profile["User"], extra * spec["RefillCost"][0], max_spent=INT_MAX)
     drops = []
     artifact_ids = []
     data = state["seasonData"][str(catalog.current)]

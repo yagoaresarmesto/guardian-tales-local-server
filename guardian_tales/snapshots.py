@@ -35,6 +35,8 @@ IMPORTED_MUTATIONS = frozenset(
         "/item/enhance-weapon",
         "/item/decompose-jewel",
         "/item/inlaid-jewelslot",
+        "/item/attach-jewel",
+        "/item/detach-jewel",
         "/item/upgrade-jewel",
         "/item/upgrade-jewel-from-relic",
         "/item/engrave-weapon",

@@ -14,6 +14,29 @@ PAID_GEMS = 70002
 FREE_GEMS = 70003
 
 
+def spend_gems(user, cost, *, max_spent=MAX_REVISION):
+    """Pay from free gems first, then paid gems, within the caller's transaction."""
+    if not integer(cost):
+        raise ValueError("Invalid gem cost")
+    for ident in (FREE_GEMS, PAID_GEMS):
+        if not cost:
+            return
+        balances = [row for row in user["Assets"] if row["Id"] == ident]
+        if not balances:
+            continue
+        if len(balances) != 1 or not integer(balances[0].get("Amount")):
+            raise ValueError("Invalid saved gem balance")
+        row = balances[0]
+        amount = min(cost, row["Amount"])
+        if not integer(row.get("Spent"), maximum=max_spent - amount):
+            raise ValueError("Invalid saved gem spending counter")
+        row["Amount"] -= amount
+        row["Spent"] += amount
+        cost -= amount
+    if cost:
+        raise ValueError("Insufficient gems")
+
+
 def validate_request(body, regular=False):
     fields = {"Count", "SummonCostType"}
     if regular:
