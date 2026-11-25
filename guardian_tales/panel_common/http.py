@@ -1,25 +1,64 @@
 # SPDX-License-Identifier: Apache-2.0
 """HTTP response and request checks for local browser panels."""
 
+import hashlib
 import json
 from http.server import BaseHTTPRequestHandler
 
 
 class LocalPanelHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
     timeout = 8
 
-    def reply(self, status, mime, data):
+    def parse_request(self):
+        self.connection.settimeout(self.timeout)
+        return super().parse_request()
+
+    def end_headers(self):
+        # Only bodyless GETs can be followed by another request on this socket.
+        headers = getattr(self, "headers", {})
+        if (
+            self.server.closing
+            or self.command != "GET"
+            or "Transfer-Encoding" in headers
+            or "Content-Length" in headers
+        ):
+            self.send_header("Connection", "close")
+        super().end_headers()
+
+    def handle_one_request(self):
+        super().handle_one_request()
+        if not self.close_connection:
+            # Release idle browser sockets promptly on a service restart.
+            self.connection.settimeout(2)
+
+    def reply(self, status, mime, data, *, artwork=False, compressed=False):
+        cache = "no-store"
+        etag = None
+        if self.command == "GET" and status == 200 and (artwork or mime.startswith("image/")):
+            cache = "private, max-age=900"
+            etag = '"' + hashlib.sha256(data).hexdigest() + '"'
+            validators = self.headers.get("If-None-Match", "").split(",")
+            if any(value.strip().removeprefix("W/") in ("*", etag) for value in validators):
+                status = 304
         self.send_response(status)
-        self.send_header("Content-Type", mime)
-        self.send_header("Content-Length", str(len(data)))
-        self.send_header("Cache-Control", "no-store")
+        if status != 304:
+            self.send_header("Content-Type", mime)
+            self.send_header("Content-Length", str(len(data)))
+        self.send_header("Cache-Control", cache)
+        if etag:
+            self.send_header("ETag", etag)
+        if compressed:
+            self.send_header("Content-Encoding", "gzip")
+            self.send_header("Vary", "Accept-Encoding")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header(
             "Content-Security-Policy",
             "default-src 'self'; object-src 'none'; frame-ancestors 'none'; base-uri 'none'",
         )
         self.end_headers()
-        self.wfile.write(data)
+        if status != 304:
+            self.wfile.write(data)
 
     def json(self, status, value):
         self.reply(status, "application/json; charset=utf-8", json.dumps(value).encode())

@@ -2,7 +2,9 @@
 """Exercise the local panel against a synthetic catalog and disposable working save."""
 
 import base64
+import gzip
 import json
+import os
 import sqlite3
 import subprocess
 import sys
@@ -10,6 +12,7 @@ import tempfile
 import tomllib
 import unittest
 from contextlib import closing, redirect_stderr, redirect_stdout
+from http.client import HTTPConnection
 from io import StringIO
 from pathlib import Path
 from threading import Thread
@@ -26,6 +29,7 @@ from guardian_tales.inventory_panel.equipment_ribbons import (
     equipment_ribbons,
 )
 from guardian_tales.inventory_panel.server import InventoryServer
+from guardian_tales.panel_common.art_cache import cached_art
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
 from guardian_tales.service_control import register
@@ -322,6 +326,62 @@ class InventoryPanelTests(unittest.TestCase):
         ):
             self.fail("A second dashboard bound the active inventory port")
         self.assertEqual(self.call("/api/backend")["instance"], self.server.instance)
+
+    def test_artwork_on_reused_connection_after_gzipped_listing(self):
+        brand = self.root / "brand.png"
+        brand.write_bytes(b"first image")
+        connection = self.enterContext(
+            closing(HTTPConnection("127.0.0.1", self.server.server_port, timeout=5))
+        )
+
+        def get(path, headers=None):
+            connection.request("GET", path, headers=headers or {})
+            response = connection.getresponse()
+            return response, response.read()
+
+        listing, body = get("/api/game/equipment", {"Accept-Encoding": "gzip"})
+        self.assertIn("rows", json.loads(gzip.decompress(body)))
+        self.assertEqual(listing.getheader("Cache-Control"), "no-store")
+        socket = connection.sock
+        self.assertIsNotNone(socket)
+
+        image, body = get("/brand.png")
+        self.assertEqual(body, b"first image")
+        self.assertIsNone(image.getheader("Content-Encoding"))
+        self.assertEqual(image.getheader("Cache-Control"), "private, max-age=900")
+        etag = image.getheader("ETag")
+        validator = {"If-None-Match": '"other", W/' + etag}
+        fresh, body = get("/brand.png", validator)
+        self.assertEqual((fresh.status, body, fresh.getheader("ETag")), (304, b"", etag))
+
+        brand.write_bytes(b"new image")
+        changed, body = get("/brand.png", validator)
+        self.assertEqual((changed.status, body), (200, b"new image"))
+        self.assertNotEqual(etag, changed.getheader("ETag"))
+        state, _ = get("/api/game/equipment", {"If-None-Match": "*"})
+        self.assertEqual((state.status, state.getheader("Cache-Control")), (200, "no-store"))
+        missing, _ = get("/hero-face/999.png")
+        self.assertEqual((missing.status, missing.getheader("Cache-Control")), (404, "no-store"))
+        self.assertIs(socket, connection.sock)
+
+    def test_rendered_art_cache_survives_reopen_and_rebuilds_stale_or_damaged_entries(self):
+        source = self.root / "art.bundle"
+        directory = self.root / "cache"
+        with patch.dict(os.environ, LOCALAPPDATA=str(directory)):
+
+            def render(stamp, data):
+                return cached_art(source, "sprite", stamp, lambda: data)
+
+            self.assertEqual(render(1, b"original"), b"original")
+            self.assertEqual(render(1, b"unexpected"), b"original")
+            self.assertEqual(render(2, b"updated"), b"updated")
+            (entry,) = [path for path in directory.rglob("*") if path.is_file()]
+            entry.write_bytes(entry.read_bytes()[:-1])
+            self.assertEqual(render(2, b"repaired"), b"repaired")
+
+        source.touch()
+        with patch.dict(os.environ, LOCALAPPDATA=str(source)):
+            self.assertEqual(render(3, b"uncached"), b"uncached")
 
     def test_open_reuses_the_running_inventory_service_for_this_save(self):
         with (

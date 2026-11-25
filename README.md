@@ -242,6 +242,12 @@ your imported game resources. The panel also reads the game's UI atlas for
 icons such as the Selectable Summon Controller. In each tab, search by name or ID, filter
 by type and use the page arrows to browse. Select an item to see its details.
 
+The inventory and game-mode tabs reuse artwork for 15 minutes in the browser.
+The panel keeps rendered icons and scenes in the user's local cache under
+`guardian-tales-local/panel-art` so they can load from disk after a server
+restart. It rebuilds them when their source bundles change. Account data and
+editor settings are fetched fresh.
+
 Running the command again for the same save and port opens the existing dashboard.
 After updating the project, choose **Services → Inventory server → Restart** and
 reload the page to load the new account features.

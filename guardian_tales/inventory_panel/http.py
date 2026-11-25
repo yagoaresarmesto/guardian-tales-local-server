@@ -17,20 +17,14 @@ from .routes import FILES, PAGES, render_page
 
 
 class InventoryHandler(LocalPanelHandler):
-    def end_headers(self):
-        if getattr(self, "compressed_json", False):
-            self.send_header("Content-Encoding", "gzip")
-            self.send_header("Vary", "Accept-Encoding")
-        super().end_headers()
-
     def list_json(self, value):
         payload = json.dumps(value, separators=(",", ":")).encode()
-        self.compressed_json = "gzip" in {
+        compressed = "gzip" in {
             coding.strip().lower() for coding in self.headers.get("Accept-Encoding", "").split(",")
         }
-        if self.compressed_json:
+        if compressed:
             payload = gzip.compress(payload, compresslevel=2)
-        return self.reply(200, "application/json; charset=utf-8", payload)
+        return self.reply(200, "application/json; charset=utf-8", payload, compressed=compressed)
 
     def inventory_get(self, path):
         if path in ("/items", "/necklaces"):

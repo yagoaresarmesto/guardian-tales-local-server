@@ -28,6 +28,7 @@ class WebPanel(ThreadingHTTPServer):
     # Inventory grids load dozens of separate artwork requests as a page opens.
     request_queue_size = 64
     inventory_home = False
+    closing = False
     # On Windows SO_REUSEADDR lets two live dashboards serve the same endpoint.
     allow_reuse_address = not hasattr(socket, "SO_EXCLUSIVEADDRUSE")
     allow_reuse_port = False
@@ -75,6 +76,7 @@ class WebPanel(ThreadingHTTPServer):
                 self._inventory.close_preview()
 
     def server_close(self):
+        self.closing = True
         super().server_close()
         self.close_preview()
 
@@ -132,7 +134,7 @@ class PanelHandler(InventoryHandler):
                 self.json(200, mode.state(getattr(self.server, mode.source)))
             elif resource := media_resource(path):
                 reader, mime = resource
-                self.reply(200, mime, reader(self.server.references))
+                self.reply(200, mime, reader(self.server.references), artwork=True)
             else:
                 self.inventory_get(path)
         except (ConnectionResetError, ConnectionAbortedError, BrokenPipeError):

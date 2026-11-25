@@ -11,13 +11,14 @@ def service_request(handler):
     post = handler.command == "POST" and handler.path == "/api/services/restart"
     if not (get or post):
         return False
-    if not handler.allowed_host() or (post and not handler.allowed_origin()):
-        handler.json(403, {"error": "Use the dashboard's local address."})
-        return True
     db = handler.server.database
     scopes = {"game": db, "inventory": db, "cdn": handler.server.references.directory.parent}
     try:
-        if get:
+        # Consume the bounded body before closing, even when rejecting its origin or type.
+        raw = handler.read_body(512, "Invalid restart request size.") if post else None
+        if not handler.allowed_host() or (post and not handler.allowed_origin()):
+            handler.json(403, {"error": "Use the dashboard's local address."})
+        elif get:
             rows = []
             for kind, label in NAMES.items():
                 workers = active_services(kind, scopes[kind])
@@ -29,7 +30,7 @@ def service_request(handler):
         elif handler.headers.get_content_type() != "application/json":
             handler.json(415, {"error": "Expected a JSON restart request."})
         else:
-            body = json.loads(handler.read_body(512, "Invalid restart request size."))
+            body = json.loads(raw)
             if (
                 not isinstance(body, dict)
                 or set(body) != {"id", "instance"}

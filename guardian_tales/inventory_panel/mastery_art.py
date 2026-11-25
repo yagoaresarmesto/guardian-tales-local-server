@@ -4,6 +4,7 @@
 from functools import lru_cache
 from io import BytesIO
 
+from guardian_tales.panel_common.art_cache import cached_art
 from guardian_tales.panel_common.artwork import decoder_available
 
 _BASE_POSE = (
@@ -74,12 +75,23 @@ def training_banner(references):
     if not lobby.is_file() or not decoder_available():
         raise FileNotFoundError("The imported training room artwork is unavailable.")
     bundles = (root / "characters" / name for name in _ACTORS)
-    actors = tuple((path, path.stat().st_mtime_ns) for path in bundles if path.is_file())
-    return _banner(lobby, lobby.stat().st_mtime_ns, actors)
+    actors = []
+    for path in bundles:
+        if path.is_file():
+            stat = path.stat()
+            actors.append((path, stat.st_mtime_ns, stat.st_size))
+    stat = lobby.stat()
+    revision = (stat.st_mtime_ns, stat.st_size, [(p.name, m, s) for p, m, s in actors])
+    return cached_art(
+        lobby,
+        "mastery-training",
+        revision,
+        lambda: _banner(lobby, stat.st_mtime_ns, stat.st_size, tuple(actors)),
+    )
 
 
 @lru_cache(maxsize=2)
-def _banner(lobby, lobby_revision, actors):
+def _banner(lobby, lobby_revision, lobby_size, actors):
     import UnityPy
     from PIL import Image
 
@@ -152,7 +164,7 @@ def _banner(lobby, lobby_revision, actors):
         ],
     )
     place(capsule, 924, 169, 1.47)
-    for path, _ in actors:
+    for path, _, _ in actors:
         hero = path.name
         direction, layers, center, floor, scale = _ACTORS[hero]
         sheets_for_hero = sheets(path, {hero, hero + ".atlas"})

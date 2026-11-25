@@ -6,6 +6,7 @@ from functools import lru_cache
 from io import BytesIO
 from threading import Lock
 
+from guardian_tales.panel_common.art_cache import cached_art
 from guardian_tales.panel_common.artwork import Atlas
 
 WORLD = Atlas("ondemand/expedition/worldmap", "expedition_worldmap")
@@ -17,9 +18,13 @@ def resource(references, *, layout=False):
         raise FileNotFoundError("The local Expedition world map is unavailable")
     path = WORLD.path(references)
     stat = path.stat()
-    with _lock:
-        image, districts = _render(path, stat.st_mtime_ns, stat.st_size)
-    return districts if layout else image
+
+    def render():
+        with _lock:
+            image, districts = _render(path, stat.st_mtime_ns, stat.st_size)
+        return districts if layout else image
+
+    return cached_art(path, ("expedition-map", layout), (stat.st_mtime_ns, stat.st_size), render)
 
 
 def _world_point(transform, transforms, point):

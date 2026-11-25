@@ -9,6 +9,7 @@ from threading import Lock
 
 from guardian_tales.orbital import LAST_SELECTABLE_FLOOR
 from guardian_tales.orbital_levels import floor_data
+from guardian_tales.panel_common.art_cache import cached_art
 from guardian_tales.panel_common.artwork import decoder_available
 from guardian_tales.panel_common.labels import english_labels
 from guardian_tales.raid_static import decode, records
@@ -45,8 +46,12 @@ def scene(references, *, name="tower"):
     if not path.is_file() or not decoder_available():
         raise FileNotFoundError("Orbital Lift scene artwork unavailable")
     stat = path.stat()
-    with _lock:
-        return _atlas(path, stat.st_mtime_ns, stat.st_size)[name]
+
+    def render():
+        with _lock:
+            return _atlas(path, stat.st_mtime_ns, stat.st_size)[name]
+
+    return cached_art(path, ("orbital-lift", name), (stat.st_mtime_ns, stat.st_size), render)
 
 
 def _webp(image, *, quality=84, lossless=False):
@@ -72,7 +77,7 @@ def _atlas(path, mtime, size):
     frames = {}
     x = y = row_height = 0
     width = 1024
-    for name, image in sorted(pixels.items(), key=lambda item: -item[1].height):
+    for name, image in sorted(pixels.items(), key=lambda item: (-item[1].height, item[0])):
         if x + image.width > width:
             x, y, row_height = 0, y + row_height + 2, 0
         frames[name] = (x, y, image.width, image.height)

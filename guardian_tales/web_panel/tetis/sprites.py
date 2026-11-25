@@ -4,6 +4,7 @@
 from functools import lru_cache
 from threading import Lock
 
+from ...panel_common.art_cache import cached_art
 from ...panel_common.artwork import decoder_available, frame_png
 
 _lock = Lock()
@@ -60,5 +61,10 @@ def read(references, *, atlas, frame):
             "Install the Tetis UI bundle and panel-art extra to view specialties"
         )
     stat = path.stat()
-    with _lock:
-        return _png(path, (stat.st_mtime_ns, stat.st_size), atlas, frame)
+    stamp = (stat.st_mtime_ns, stat.st_size)
+
+    def render():
+        with _lock:
+            return _png(path, stamp, atlas, frame)
+
+    return cached_art(path, ("tetis", atlas, frame), stamp, render)

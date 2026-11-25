@@ -4,6 +4,8 @@
 from importlib.util import find_spec
 from io import BytesIO
 
+from guardian_tales.panel_common.art_cache import cached_art
+
 from ... import punchking, punchking_static
 from ..artwork import BOSSES, UI
 
@@ -25,10 +27,16 @@ def backdrop_jpeg(references):
     except ImportError as error:
         raise FileNotFoundError("Arena backdrop decoder unavailable") from error
 
-    with Image.open(arena_backdrop(references)) as image:
-        output = BytesIO()
-        image.convert("RGB").save(output, "JPEG", quality=85)
-        return output.getvalue()
+    path = arena_backdrop(references)
+    stat = path.stat()
+
+    def render():
+        with Image.open(path) as image:
+            output = BytesIO()
+            image.convert("RGB").save(output, "JPEG", quality=85)
+            return output.getvalue()
+
+    return cached_art(path, "arena-backdrop", (stat.st_mtime_ns, stat.st_size), render)
 
 
 def state(references):

@@ -4,6 +4,7 @@
 from functools import lru_cache
 from io import BytesIO
 
+from guardian_tales.panel_common.art_cache import cached_art
 from guardian_tales.panel_common.artwork import Atlas, bundle_texture
 
 from ..artwork import EXPEDITION
@@ -20,7 +21,8 @@ def scene(references, *, name):
         raise FileNotFoundError("The local Expedition UI bundle and panel-art extra are required")
     path = EXPEDITION.path(references)
     stat = path.stat()
-    return _scene(path, stat.st_mtime_ns, stat.st_size, name)
+    stamp = (stat.st_mtime_ns, stat.st_size)
+    return cached_art(path, ("journal", name), stamp, lambda: _scene(path, *stamp, name))
 
 
 @lru_cache(maxsize=4)

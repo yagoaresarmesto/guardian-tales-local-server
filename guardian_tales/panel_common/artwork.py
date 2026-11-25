@@ -8,6 +8,8 @@ from importlib import import_module
 from io import BytesIO
 from threading import Lock
 
+from .art_cache import cached_art
+
 
 def decoder_available():
     try:
@@ -35,9 +37,7 @@ class Atlas:
             raise FileNotFoundError("The local sprite atlas and panel-art extra are required")
         path = self.path(references)
         stat = path.stat()
-        # Concurrent image requests share one decoded sheet per bundle version.
-        with _lock:
-            return _read_image(path, self.sheet, stat.st_mtime_ns, stat.st_size, frame)
+        return _read_image(path, self.sheet, stat.st_mtime_ns, stat.st_size, frame)
 
 
 UI = Atlas("spritesheets/ui/main_s3", "MainUiS3")
@@ -97,11 +97,16 @@ def _read_sheet(path, sheet, mtime_ns, size):
 
 @lru_cache(maxsize=64)
 def _read_image(path, sheet, mtime_ns, size, frame):
-    pixels, frames = _read_sheet(path, sheet, mtime_ns, size)
-    if frame is None:
-        output = BytesIO()
-        pixels.convert("RGB").save(output, format="JPEG", quality=85)
-        return output.getvalue()
-    if frame not in frames:
-        raise FileNotFoundError("Frame unavailable in the local atlas")
-    return frame_png(pixels, frames[frame])
+    def render():
+        # Decode a sheet once. Independent frames can then encode concurrently.
+        with _lock:
+            pixels, frames = _read_sheet(path, sheet, mtime_ns, size)
+        if frame is None:
+            output = BytesIO()
+            pixels.convert("RGB").save(output, format="JPEG", quality=85)
+            return output.getvalue()
+        if frame not in frames:
+            raise FileNotFoundError("Frame unavailable in the local atlas")
+        return frame_png(pixels, frames[frame])
+
+    return cached_art(path, ("atlas", sheet, frame), (mtime_ns, size), render)
