@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 
 from . import (
     colosseum,
+    hero_reset,
     multi_presets,
     story_interactions,
     story_loot,
@@ -218,6 +219,7 @@ ACCOUNT_ROUTES = (
     PROFILE_BADGE_ROUTE,
     "/user/save-party-member/v2",
     *HERO_EQUIPMENT_ROUTES,
+    hero_reset.ROUTE,
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/guild/red-dot",
@@ -351,6 +353,7 @@ class AccountStore:
         colosseum.create_tables(db)
         create_party_member_tables(db)
         create_hero_equipment_tables(db)
+        hero_reset.create_tables(db)
         create_representative_character_tables(db)
         create_account_name_tables(db)
         create_weapon_summon_tables(db)

@@ -600,6 +600,29 @@ Placing/removing items or heroes, unlocking slots and paying to reactivate them
 remain separate unsupported operations. After updating, close the game and restart
 only the backend; CDN and bridge can remain running.
 
+## Hero Reset
+
+In **Heroes → Hero Reset**, the local server resets the selected inventory hero
+to level 1, clears awakening, limit breaks and blessing, and keeps their owned
+ID, equipment, parties and claimed knowledge. The server looks up the playable
+forms in the installed hero catalog. Unique heroes return to their original
+form, including Myth heroes such as Astoria. Normal and rare heroes retain
+ordinary evolution up to five stars. A hero assigned to the Training Room must
+leave its slot first. Disable the optional Andras trial before resetting its
+underlying hero.
+
+The local reset costs zero stones and awards zero items for either choice on
+the reward screen. The 3.57.0 client calculates the preview itself and checks
+for a Hero Reset Stone before it sends the request. A single stone can be
+reused. The `/user/recall-character-growth/v2` request takes an owned
+`CharacterId` and a boolean `ReceiveCrystal`. Repeating a committed request
+returns the current roster, including any growth added after the reset.
+
+The player verified in the 3.57.0 APK that Astoria's reset persisted after
+reopening and that the stone remained in inventory. Separate host checks
+resolved the reset form for all 653 normal, story and unique hero forms in
+the matching catalog.
+
 ## Hero equipment changes
 
 These individual Hero-screen routes use the matching external `heroes` and
