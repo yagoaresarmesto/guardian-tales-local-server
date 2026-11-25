@@ -75,6 +75,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/mission/claim-challenge-all-step",
         "/user/charge-stamina-by-gem",
         "/user/claim-daily-attendance",
+        "/user/evolve-character/v2",
         "/lobby-village/harvest-all",
         "/lobby-village/harvest-basecamp",
         "/lobby-village/prepare-dispatch",

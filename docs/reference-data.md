@@ -623,6 +623,22 @@ reopening and that the stone remained in inventory. Separate host checks
 resolved the reset form for all 653 normal, story and unique hero forms in
 the matching catalog.
 
+## Hero evolution
+
+In **Heroes → Evolution**, select zero Dream Evolution Stones to pay entirely
+with the selected hero's own stones. With a positive selection, the backend
+spends Dream Stones first, up to the cost of the requested steps, and charges
+the remainder to the stone item specified by that hero's current form. In the
+EU 3.57.0 catalog one Dream Stone covers one Unique, two Rare (Story) or five
+Normal evolution stones. [Guardian Tales update notes](https://guardiantales.com/news/4705)
+
+The 3.57.0 request to `/user/evolve-character/v2` carries the owned
+`CharacterId`, an `UpgradeCount` within the current rank, and the selected
+`DreamSpiritStoneUsageAmount`. The backend follows the steps in `exps2.Evolves`
+and the hero's `EvolveTo` link. The final step grants the next star and resets
+the step counter. Tests cover individual and bulk upgrades, split payments,
+insufficient balances and reconnects. Retrying the same request charges once.
+
 ## Hero Blessing
 
 **Blessing** advances one level. **Max Blessing** advances from the hero's

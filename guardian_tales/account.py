@@ -14,6 +14,7 @@ from datetime import datetime, timezone
 from . import (
     colosseum,
     hero_blessing,
+    hero_evolution,
     hero_reset,
     multi_presets,
     story_interactions,
@@ -222,6 +223,7 @@ ACCOUNT_ROUTES = (
     *HERO_EQUIPMENT_ROUTES,
     hero_reset.ROUTE,
     *hero_blessing.ROUTES,
+    hero_evolution.ROUTE,
     "/guild/list-item-request",
     "/guild/get-my-guild",
     "/guild/red-dot",
@@ -357,6 +359,7 @@ class AccountStore:
         create_hero_equipment_tables(db)
         hero_reset.create_tables(db)
         hero_blessing.create_tables(db)
+        hero_evolution.create_tables(db)
         create_representative_character_tables(db)
         create_account_name_tables(db)
         create_weapon_summon_tables(db)
