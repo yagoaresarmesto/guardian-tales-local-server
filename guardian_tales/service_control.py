@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Cooperative restarts for the local game, inventory and content services."""
+"""Cooperative lifecycle controls for local game, inventory and content services."""
 
 import hashlib
 import os
@@ -42,21 +42,35 @@ def active_services(kind, scope):
             # The unique marker was published after acquiring the lease. A free
             # lease here means that worker exited without finishing its cleanup.
             lock.release()
-            for suffix in (".ready", ".restart", ".lock"):
+            for suffix in (".ready", ".restart", ".stop", ".lock"):
                 with suppress(PermissionError):
                     marker.with_suffix(suffix).unlink(missing_ok=True)
     return sorted(running)
 
 
+def service_state(marker):
+    try:
+        return marker.read_text(encoding="ascii").strip()
+    except FileNotFoundError:
+        return ""
+
+
 @contextmanager
-def register(kind, scope, port, request_restart):
+def register(kind, scope, port, request_restart, request_stop=None):
     folder = directory(scope)
     marker = folder / f"{kind}-{port}-{uuid.uuid4().hex}.ready"
     signal = marker.with_suffix(".restart")
+    stop_signal = marker.with_suffix(".stop")
     done = Event()
+
+    def mark_stopped():
+        marker.write_text("stopped", encoding="ascii")
 
     def watch():
         while not done.wait(0.3):
+            if request_stop is not None and stop_signal.exists():
+                stop_signal.unlink(missing_ok=True)
+                request_stop()
             if signal.exists():
                 request_restart()
                 return
@@ -66,20 +80,22 @@ def register(kind, scope, port, request_restart):
         try:
             folder.mkdir(mode=0o700, parents=True, exist_ok=True)
             resources.enter_context(StateLock(folder, filename=lock_path.name))
-            marker.touch(exist_ok=False)
+            with marker.open("x", encoding="ascii") as ready:
+                ready.write("running" if request_stop is not None else "")
         except (OSError, RuntimeError) as error:
             print(f"{NAMES[kind]} dashboard restart unavailable: {error}", file=sys.stderr)
-            yield
+            yield lambda: None
             return
         thread = Thread(target=watch, name=f"{kind} restart control", daemon=True)
         thread.start()
         try:
-            yield
+            yield mark_stopped
         finally:
             marker.unlink(missing_ok=True)
             done.set()
             thread.join()
             signal.unlink(missing_ok=True)
+            stop_signal.unlink(missing_ok=True)
     with suppress(PermissionError):
         lock_path.unlink(missing_ok=True)
 

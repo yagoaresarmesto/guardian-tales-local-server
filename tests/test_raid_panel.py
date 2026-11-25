@@ -238,10 +238,93 @@ class RaidPanelTests(unittest.TestCase):
             folder = directory(scope)
             folder.mkdir(parents=True)
             marker = folder / ("game-12345-" + "0" * 32 + ".ready")
-            for suffix in (".ready", ".lock", ".restart"):
+            for suffix in (".ready", ".lock", ".restart", ".stop"):
                 marker.with_suffix(suffix).touch()
             self.assertEqual(active_services("game", scope), [])
             self.assertEqual(list(folder.iterdir()), [])
+
+    def test_game_stop_keeps_restart_control_and_rejects_foreign_or_stale_requests(self):
+        db = self.root / "save.sqlite3"
+        self.server.database = db
+        stopped, restarted, foreign = Event(), Event(), Event()
+        endpoint = "/api/services/stop"
+        with (
+            patch.dict(os.environ, {"LOCALAPPDATA": str(self.root / "cache")}),
+            register("game", self.root / "other.sqlite3", 11111, foreign.set, foreign.set),
+            register("inventory", db, 12347, foreign.set),
+            register("game", db, 12346, restarted.set, stopped.set) as mark_stopped,
+        ):
+
+            def game_row():
+                return next(
+                    row
+                    for row in json.loads(self.call("/api/services"))["services"]
+                    if row["id"] == "game"
+                )
+
+            row = game_row()
+            self.assertTrue(row["canStop"])
+            self.assertFalse(row["stopped"])
+            good = {"id": "game", "instance": row["instance"]}
+            foreign_token = active_services("game", self.root / "other.sqlite3")[0][1]
+            for payload, headers, status in (
+                ({**good, "instance": foreign_token}, {}, 409),
+                (good, {"Origin": "https://elsewhere.invalid"}, 403),
+                (good, {"Host": "elsewhere.invalid"}, 403),
+                (good, {"Content-Type": "text/plain"}, 415),
+                ({**good, "id": "inventory"}, {}, 400),
+                ({**good, "extra": True}, {}, 400),
+            ):
+                with (
+                    self.subTest(payload=payload, headers=headers),
+                    self.assertRaises(HTTPError) as error,
+                ):
+                    self.call(endpoint, payload, **headers)
+                self.assertEqual(error.exception.code, status)
+                error.exception.close()
+            self.assertFalse(stopped.is_set())
+            self.assertEqual(json.loads(self.call(endpoint, good)), {"stopping": True})
+            self.assertTrue(stopped.wait(2))
+            self.assertFalse(restarted.is_set())
+            mark_stopped()
+            row = game_row()
+            self.assertTrue(row["stopped"])
+            self.assertFalse(row["canStop"])
+            self.assertEqual(row["instance"], good["instance"])
+            with self.assertRaises(HTTPError) as duplicate:
+                self.call(endpoint, good)
+            self.assertEqual(duplicate.exception.code, 409)
+            duplicate.exception.close()
+            self.assertEqual(
+                json.loads(self.call("/api/services/restart", good)), {"restarting": True}
+            )
+            self.assertTrue(restarted.wait(2))
+            self.assertFalse(foreign.is_set())
+        self.assertEqual(active_services("game", db), [])
+        with self.assertRaises(HTTPError) as stale:
+            self.call(endpoint, good)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+
+    def test_older_service_registration_requires_relaunch_before_stop(self):
+        db = self.root / "save.sqlite3"
+        self.server.database = db
+        restarted = Event()
+        with (
+            patch.dict(os.environ, {"LOCALAPPDATA": str(self.root / "cache")}),
+            register("game", db, 12346, restarted.set),
+        ):
+            row = next(
+                row
+                for row in json.loads(self.call("/api/services"))["services"]
+                if row["id"] == "game"
+            )
+            self.assertFalse(row["canStop"])
+            with self.assertRaises(HTTPError) as old:
+                self.call("/api/services/stop", {"id": "game", "instance": row["instance"]})
+            self.assertEqual(old.exception.code, 409)
+            old.exception.close()
+            self.assertFalse(restarted.is_set())
 
     def test_service_runs_even_if_dashboard_registration_is_unavailable(self):
         unavailable = self.root / "file-in-place-of-cache"

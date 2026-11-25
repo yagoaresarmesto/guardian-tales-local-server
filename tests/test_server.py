@@ -10,8 +10,12 @@ import sys
 import tempfile
 import time
 import unittest
+from argparse import Namespace
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
+from urllib.request import Request, urlopen
 
 from guardian_tales.bootstrap import read_json_body
 from guardian_tales.packet_reader import parse_packet
@@ -25,7 +29,9 @@ from guardian_tales.protocol import (
     make_pong,
 )
 from guardian_tales.reference import default_cert_dir
-from guardian_tales.server import LocalServer
+from guardian_tales.server import LocalServer, run
+from guardian_tales.state_lock import StateLock
+from guardian_tales.web_panel.server import WebPanel
 
 NETWORK_AUDIT = []
 
@@ -377,6 +383,89 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(await asyncio.wait_for(reader.read(1), 3), b"")
         self.assertFalse(self.server.status()["game_state_implemented"])
         await self.finish(writer)
+
+    async def test_dashboard_stop_releases_save_and_keeps_dashboard_until_manual_restart(self):
+        data_dir = Path(self.temp.name) / "controlled"
+        args = Namespace(
+            data_dir=data_dir,
+            api_port=0,
+            auth_port=0,
+            status_port=0,
+            cert_dir=default_cert_dir(),
+            reference_dir=None,
+            raid_panel_port=0,
+            run_seconds=10,
+        )
+        panels = []
+
+        def panel_factory(*args, **kwargs):
+            panel = WebPanel(*args, **kwargs)
+            panels.append(panel)
+            return panel
+
+        def request(path, body=None):
+            origin = f"http://127.0.0.1:{panels[0].server_port}"
+            req = Request(
+                origin + path,
+                data=None if body is None else json.dumps(body).encode(),
+                headers={"Origin": origin, "Content-Type": "application/json"},
+            )
+            with urlopen(req, timeout=3) as response:
+                return json.load(response)
+
+        async def game_state(predicate):
+            for _ in range(100):
+                if panels:
+                    rows = await asyncio.to_thread(request, "/api/services")
+                    row = next(row for row in rows["services"] if row["id"] == "game")
+                    if predicate(row):
+                        return row
+                await asyncio.sleep(0.02)
+            self.fail("Game service did not reach its expected state")
+
+        with (
+            patch("guardian_tales.server.WebPanel", side_effect=panel_factory),
+            patch.dict(os.environ, {"LOCALAPPDATA": str(data_dir / "cache")}),
+            redirect_stdout(StringIO()),
+        ):
+            task = asyncio.create_task(run(args))
+            try:
+                running = await game_state(lambda row: row["canStop"])
+                with self.assertRaises(RuntimeError):
+                    StateLock(data_dir).acquire()
+                body = {"id": "game", "instance": running["instance"]}
+                self.assertEqual(
+                    await asyncio.to_thread(request, "/api/services/stop", body), {"stopping": True}
+                )
+                stopped = await game_state(lambda row: row["stopped"])
+                self.assertEqual(stopped["instance"], running["instance"])
+                self.assertFalse(stopped["canStop"])
+                with StateLock(data_dir):
+                    import sqlite3
+
+                    db = sqlite3.connect(data_dir / "server.sqlite3")
+                    try:
+                        before = db.execute(
+                            "SELECT profile FROM local_account WHERE id=1"
+                        ).fetchone()[0]
+                        with db:
+                            db.execute("UPDATE local_account SET profile=? WHERE id=1", (before,))
+                    finally:
+                        db.close()
+                with self.assertRaises(OSError):
+                    await asyncio.open_connection("127.0.0.1", running["port"])
+                self.assertTrue((await asyncio.to_thread(request, "/api/backend"))["instance"])
+                self.assertFalse(task.done())
+                self.assertEqual(
+                    await asyncio.to_thread(request, "/api/services/restart", body),
+                    {"restarting": True},
+                )
+                ports = await asyncio.wait_for(task, 5)
+                self.assertEqual(ports["api"], running["port"])
+                self.assertEqual(ports["raid-panel"], panels[0].server_port)
+            finally:
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
 
     async def test_prologue_save_survives_server_restart_over_tls(self):
         async def exchange(operations):

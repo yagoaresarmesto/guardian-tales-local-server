@@ -28,25 +28,40 @@ if (root) {
       line.className = "service-row";
       const label = document.createElement("span");
       const repeated = rows.filter(other => other.id === row.id).length > 1;
-      label.textContent = row.label + (repeated ? " (" + row.port + ")" : "");
+      label.textContent = row.label + (repeated ? " (" + row.port + ")" : "") +
+        (row.stopped ? " (stopped)" : "");
+      const actions = document.createElement("div");
+      actions.className = "service-actions";
+      if (row.id === "game") {
+        const stop = document.createElement("button");
+        stop.type = "button";
+        stop.disabled = pending || !row.canStop;
+        stop.textContent = "Stop";
+        stop.setAttribute("aria-label", "Stop " + row.label);
+        stop.title = "Close Guardian Tales, then stop the backend for inventory edits.";
+        stop.onclick = () => control(row, "stop");
+        actions.append(stop);
+      }
       const action = document.createElement("button");
       action.type = "button";
       action.disabled = pending || !row.instance;
       action.textContent = row.instance ? "Restart" : "Offline";
       action.setAttribute("aria-label", "Restart " + label.textContent);
-      action.onclick = () => restart(row);
-      line.append(label, action);
+      action.onclick = () => control(row, "restart");
+      actions.append(action);
+      line.append(label, actions);
       list.append(line);
     }
   }
 
-  async function restart(row) {
+  async function control(row, action) {
     if (pending) return;
     pending = true;
     for (const btn of list.querySelectorAll("button")) btn.disabled = true;
-    status.textContent = "Restarting " + row.label + "…";
+    const stopping = action === "stop";
+    status.textContent = (stopping ? "Stopping " : "Restarting ") + row.label + "…";
     try {
-      const reply = await fetch("/api/services/restart", {
+      const reply = await fetch("/api/services/" + action, {
         method: "POST", headers: {"Content-Type": "application/json"},
         body: JSON.stringify({id: row.id, instance: row.instance}), signal: AbortSignal.timeout(5000),
       });
@@ -55,13 +70,15 @@ if (root) {
         await new Promise(resolve => setTimeout(resolve, 750));
         let rows;
         try { rows = await services(); } catch { continue; }
-        const fresh = rows.find(s => s.id === row.id && s.port === row.port && s.instance !== row.instance);
-        if (fresh) {
-          status.textContent = row.label + " restarted.";
+        const ready = rows.find(s => s.id === row.id && s.port === row.port &&
+          (stopping ? s.stopped : s.instance && s.instance !== row.instance));
+        if (ready) {
+          status.textContent = stopping ? "Game backend stopped. Inventory editing is available. " +
+            "Choose Restart when finished, then reopen Guardian Tales." : row.label + " restarted.";
           return;
         }
       }
-      throw new Error(row.label + " has not returned. Check its terminal.");
+      throw new Error(row.label + (stopping ? " has not stopped." : " has not returned.") + " Check its terminal.");
     } catch (error) {
       status.textContent = error.message;
     } finally {

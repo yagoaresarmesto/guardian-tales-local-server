@@ -1,9 +1,10 @@
 .service-menu { position: relative; font: 500 .9rem "Barlow", "Segoe UI", sans-serif; color: #eff5ff; }
 .service-menu summary { cursor: pointer; padding: .46rem .8rem; color: #e4edfb; background: #172539; border: 1px solid #42566c; border-radius: 5px; }
 .service-menu[open] summary, .service-menu summary:hover { border-color: #ffcb66; }
-.service-popover { position: absolute; right: 0; top: calc(100% + .35rem); z-index: 50; width: min(285px, 88vw); padding: .45rem .85rem; border: 1px solid #546981; border-radius: 8px; background: #172539; box-shadow: 0 10px 32px #080e19aa; }
+.service-popover { position: absolute; right: 0; top: calc(100% + .35rem); z-index: 50; width: min(360px, 88vw); padding: .45rem .85rem; border: 1px solid #546981; border-radius: 8px; background: #172539; box-shadow: 0 10px 32px #080e19aa; }
 .service-row { display: flex; align-items: center; justify-content: space-between; gap: .8rem; min-height: 2.8rem; }
 .service-row + .service-row { border-top: 1px solid #334559; }
+.service-actions { display: flex; gap: .4rem; flex-shrink: 0; }
 .service-row button { font: inherit; font-weight: 650; padding: .32rem .75rem; border-radius: 4px; border: 1px solid #667c91; color: #eff5ff; background: #25374c; cursor: pointer; }
 .service-row button:enabled:hover { border-color: #ffd05f; }
 .service-row button:disabled { opacity: .64; cursor: default; }

@@ -354,6 +354,7 @@ async def run(args):
     await server.start()
     panel = None
     restart = asyncio.Event()
+    stop = asyncio.Event()
     loop = asyncio.get_running_loop()
     try:
         panel = WebPanel(
@@ -386,8 +387,28 @@ async def run(args):
                 server.data_dir / "server.sqlite3",
                 server.ports["api"],
                 lambda: loop.call_soon_threadsafe(restart.set),
-            ):
-                await asyncio.wait_for(restart.wait(), timeout=args.run_seconds or None)
+                request_stop=lambda: loop.call_soon_threadsafe(stop.set),
+            ) as mark_stopped:
+
+                async def wait_for_control():
+                    requests = [asyncio.create_task(event.wait()) for event in (restart, stop)]
+                    try:
+                        await asyncio.wait(requests, return_when=asyncio.FIRST_COMPLETED)
+                        if stop.is_set() and not restart.is_set():
+                            await server.close()
+                            mark_stopped()
+                            print(
+                                "Game backend stopped. Inventory editing is available; "
+                                "choose Services > Game backend > Restart to resume.",
+                                flush=True,
+                            )
+                            await restart.wait()
+                    finally:
+                        for task in requests:
+                            task.cancel()
+                        await asyncio.gather(*requests, return_exceptions=True)
+
+                await asyncio.wait_for(wait_for_control(), timeout=args.run_seconds or None)
         except asyncio.TimeoutError:
             pass
         if restart.is_set():

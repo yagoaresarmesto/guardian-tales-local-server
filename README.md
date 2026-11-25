@@ -224,8 +224,12 @@ Use **Game modes** and **Inventory** at the top of the dashboard to switch
 between Raid, Tetis and the save editors. While the game backend is running,
 you can browse [Equipment](http://127.0.0.1:17658/equipment) directly.
 
-To keep the dashboard available when you stop the game backend for inventory
-edits, launch it independently from the repository root:
+Close Guardian Tales, then choose **Services → Game backend → Stop** to enable
+inventory edits. The dashboard stays open while the game connections and save
+lock close. The editors enable saving once the lock is released. When finished,
+choose **Services → Game backend → Restart** and reopen Guardian Tales.
+
+You can also launch the dashboard independently from the repository root:
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales inventory-panel --open
@@ -368,7 +372,9 @@ Open **Services** on any dashboard page to restart the **Game backend**,
 **Content CDN** or **Inventory server** individually. Each button restarts a
 running service in its existing terminal on its original ports. After updating
 from an older version, relaunch each service once in its usual terminal to
-register its button. Reopen Guardian Tales after a game or content update.
+register its buttons. **Game backend → Stop** keeps the dashboard available for
+offline inventory edits; **Restart** resumes the stopped backend. Reopen Guardian
+Tales after a game or content update.
 
 Raid previews all four encounters on the map. DKA previews the selected
 opponent above its seven-day rotation. Guild Wars previews the phase above
