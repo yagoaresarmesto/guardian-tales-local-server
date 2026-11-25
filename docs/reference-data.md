@@ -800,7 +800,7 @@ not fetch missing bootstrap files from an official service.
 | `weapon_option_mock_catalog.json` | Free option-value proposals and ordinary option lock/unlock | Matching client and public per-weapon option ranges; explicit local free policy |
 | `relic_option_mock_catalog.json` | Free relic main/subgroup option proposals and apply/discard | Matching client and public per-source, per-slot option IDs/ranges; explicit uniform local rolls |
 | `weapon_engrave_mock_catalog.json` | Free first engraving and validation of saved engraving | Matching eligible exclusive specs, origin/hammer rarities, option tiers, experience gate and level coefficient |
-| `basecamp_harvest_catalog.json` | Explicit mastery-reward debugging | Matching client, upgraded camp specs, minimum interval and fixed debug amount |
+| `basecamp_harvest_catalog.json` | Reward-free Guardian Base Camp collection | Matching client, upgraded camp specs and minimum interval |
 | `guardian_mastery_catalog.json` | Single guardian mastery skill upgrades | Matching skill/class map, ordered next-level costs and upgraded camp specs |
 | `guardian_mastery_reset_catalog.json` | Guardian mastery reset | Matching reset resource, cost and cooldown constants |
 
@@ -1405,25 +1405,20 @@ unrelated item changes. New resolutions target the item's latest pending
 proposal; the native apply body has no proposal ID/type. Session-epoch retry
 limitations across new logins still apply.
 
-`/lobby-village/harvest-basecamp` currently supports an explicit fixed mastery
-reward for debugging. It requires a separate `basecamp_harvest_catalog.json`,
-limited to 4 KiB, with exactly `client`, `portal_specs`, `min_seconds` and
-`debug_mastery_points`. The client object is pinned as above; specs are a nonempty
-list of distinct positive IDs, the interval is 1..86,400 seconds, and the reward
-is a positive signed-32-bit amount. The prepared experiment uses the matching
-upgraded portal spec, 60 seconds and **100,000,000 mastery points**, explicitly
-requested by the owner. This catalog is not part of the published content pack.
+`/lobby-village/harvest-basecamp` returns current user and village state with
+an empty `AddedItems` list. Its external `basecamp_harvest_catalog.json` (up to
+4 KiB) supplies the matching `client`, a nonempty list of distinct positive
+upgraded camp IDs in `portal_specs`, and `min_seconds` in the range 1–86,400.
+Older catalogs may include `debug_mastery_points`. Collection awards zero items
+regardless of that setting, so existing installations can keep their catalogs.
 
-The reward goes to the existing asset 70033. It requires a nonnegative saved mastery
-level and one configured camp in producing status, using that camp's `EndTime`.
-Zero allocated skill levels remain valid after a mastery reset; the upgraded
-camp specification supplies the activation boundary.
-Future/zero anchors are retained. Each eligible new request grants the fixed
-amount and advances the clock; retries cannot grant it again. Normal guardian
-points (70013), mastery/guardian levels, gold, tickets, parties and equipment
-remain unchanged. Overflow rejects the whole reward. Without the explicit catalog,
-the operation rejects; ordinary production/scoring, conversion, quick-harvest
-tickets and party changes remain unfinished. Skill upgrades use their own catalog.
+A nonnegative saved mastery level and one configured, producing camp owned by
+the player are required. Once the minimum interval elapses, a fresh request
+advances the camp's `EndTime` and the village revision. Early collections and
+zero or future clocks leave the village as it was. A retry returns the current
+state with an empty item list even for a receipt from the former fixed-reward
+policy. Players keep previously earned points and can manage mastery in the
+inventory panel.
 
 `/user/guardian-mastery-level-up` accepts exactly one integer `SkillId`. Its
 external `guardian_mastery_catalog.json` is limited to 64 KiB and contains exactly

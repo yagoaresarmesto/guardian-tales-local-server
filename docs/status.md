@@ -1522,10 +1522,9 @@ cover imported accounts without a local prologue row, exact state preservation,
 CLI/reopening/replay, signed-64-bit revisions and older databases without an import
 table. The owner subsequently ran the million-gem command; its saved audit receipt
 confirms the grant. The exact APK gem display was not independently verified.
-Twelve base-camp mastery-debug regressions
-cover exact rewards and mutation bounds, interval gates, retries/reopening,
-catalog/authentication guards, camp/mastery state, overflow, revisions, rollback,
-interleaving regular collection and changed configuration.
+Guardian Base Camp regressions cover reward-free collection, timer updates,
+untouched mastery balances at the asset cap, historical reward receipts,
+reopening, eligibility, invalid catalogs, rollback and regular village harvests.
 Fifteen village-harvest regressions cover
 mutation bounds, seeds, interval/period gates, follower bonuses, storage/capacity,
 future/zero clocks, retries, reopening/new login, malformed data, ownership,
@@ -2587,7 +2586,7 @@ profile/village data and prior receipts were unchanged. The next error was
 `/lobby-village/harvest-basecamp`. The owner then requested a fixed reward and
 selected **100 million mastery points per eligible collection**.
 
-That separate request now uses an explicit debug catalog and the producing
+The original experiment used an explicit debug catalog and the producing
 upgraded camp's own clock, with the native 60-second minimum. The mastery balance,
 camp clock, revisions and receipt commit together; retries do not grant again.
 Normal guardian points, levels, gold, tickets, parties, heroes and equipment remain
@@ -2598,6 +2597,14 @@ Four subsequent APK camp collections have saved receipts totaling 400 million
 mastery points; the saved balance equals the pre-retry balance plus those rewards.
 This comparison covers the mastery balance and receipts, not unrelated concurrent
 village or console operations.
+
+The fixed-reward experiment was retired. A fresh collection now returns an
+empty item list and advances only the due camp clock and village revision.
+The same empty item list is returned for retries of old reward receipts.
+Previously earned points remain available in the inventory panel.
+An in-memory copy of the imported save returned zero items on collection and
+retry, with one clock advance. The player also confirmed in the 3.57.0 APK
+that collecting from the building kept the displayed mastery balance intact.
 
 The next mastery failure was `/user/guardian-mastery-level-up`, which accepts one
 `SkillId`. It now spends the matching next-level cost from asset 70033, updates

@@ -238,7 +238,8 @@ class MasteryResetTests(GuardianMasteryFixture, unittest.TestCase):
                 }
             )
         )
-        self.call(route=HARVEST, sequence=82, now=NOW + 60)
+        response = self.call(route=HARVEST, sequence=82, now=NOW + 60)
+        self.assertEqual(response["AddedItems"], [])
         profile = self.store.account.profile()
         self.assertEqual(profile["User"]["GuardianMasteryLevel"], 0)
-        self.assertEqual(self.asset(profile, MASTERY_POINTS)["Amount"], 10344)
+        self.assertEqual(self.asset(profile, MASTERY_POINTS)["Amount"], 10244)

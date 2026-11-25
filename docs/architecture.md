@@ -392,20 +392,13 @@ still be collected. The APK collection succeeded: its gold receipt, balance,
 advanced clock and revisions matched, with full soul points and unrelated state
 retained. The subsequent failure was the base-camp collection request.
 
-`/lobby-village/harvest-basecamp` currently implements the owner's requested
-fixed mastery reward under an explicit external debug catalog. The prepared policy
-uses 100 million of asset 70033 per eligible collection, a 60-second minimum and
-the matching upgraded camp spec. A positive saved mastery level is required.
-Ordinary camp production/scoring and gold conversion remain unfinished.
-
-The handler shares `village_state`, preserving current regular harvest clocks
-and all other village fields. One transaction stores the mastery balance, camp
-clock, both revisions and a `basecamp_harvest_requests` receipt. Replays return
-frozen notices with current models, including after catalog removal, without
-granting again. Existing normal guardian points, levels, gold, tickets and owned
-heroes/gear remain unchanged; overflow rejects the entire fixed reward. Detached
-actual-account validation passed without saved account writes. APK debug
-collection retry is pending.
+`/lobby-village/harvest-basecamp` acknowledges collection from the owned,
+upgraded Guardian Base Camp with an empty `AddedItems` list. An eligible
+collection advances the building's `EndTime` and the village revision in the
+same transaction that records the request. Replays return current user and
+village state, including when the receipt predates reward-free collection.
+The account profile is read-only on this route. The inventory panel can edit
+mastery independently. Regular village harvests use their own clocks and rewards.
 
 ## Resource boundaries
 

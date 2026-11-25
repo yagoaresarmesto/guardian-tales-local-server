@@ -614,8 +614,8 @@ mode's selection if necessary. Natural stamina
 recharge advances the saved timer and charged balance up to its configured cap.
 Village harvesting collects configured inn/facility gold and soul points with
 balances, clocks and retry receipts stored together.
-Base-camp harvesting currently requires an explicit fixed mastery debug reward;
-the prepared experiment uses the owner's requested 100 million per collection.
+Collecting from the Guardian Base Camp advances its timer with no item award.
+Mastery can be managed from the inventory panel.
 Mastery skill upgrades spend the catalog's next-level cost and persist one skill,
 the total mastery level and the corresponding payment with retry protection.
 Reset clears the skills/total and refunds their catalog investment, charging the
@@ -1259,7 +1259,11 @@ This command is an offline administrative action, separate from the network
 mutation allowlist. Imported CLI persistence/replay has synthetic coverage;
 the current imported account has not received a grant during implementation.
 
-## Fixed mastery rewards in the guardian base camp
+## Guardian base camp collection
+
+The current backend acknowledges collection with an empty item list and advances
+the camp timer when eligible. The following observations document the original
+fixed-reward experiment.
 
 The combined village collection then reached the parameterless
 `/lobby-village/harvest-basecamp` request, which was unsupported. Native inspection
@@ -1270,9 +1274,9 @@ notices. No original official base-camp response was captured.
 
 During investigation the owner explicitly requested 100 million points in each
 collection, then selected **mastery points** after clarifying the two balances.
-The implemented contract is therefore an opt-in fixed debug reward, not ordinary
+The original contract was therefore an opt-in fixed debug reward, not ordinary
 camp production. A separate external catalog selects upgraded camp specs, the
-minimum interval and the fixed mastery amount. The prepared policy grants exactly
+minimum interval and the fixed mastery amount. The prepared policy granted exactly
 100,000,000 to existing asset 70033 for each eligible new collection.
 
 The handler requires a preserved village, a nonnegative saved mastery level and one

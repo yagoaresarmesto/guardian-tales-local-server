@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Fixed mastery collections preserve normal points, levels and other village state."""
+"""Base camp collections advance the camp clock without awarding items."""
 
 import copy
 import json
@@ -12,7 +12,7 @@ from guardian_tales.snapshots import CLIENT, preserved_read
 from guardian_tales.village import INT_MAX, MAX_REVISION, current_village
 from tests.test_village_harvest import NOW, VillageFixture
 
-AMOUNT = 100000000
+LEGACY_REWARD = 100_000_000
 
 
 class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
@@ -22,7 +22,7 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
             "client": CLIENT,
             "portal_specs": [9001],
             "min_seconds": 60,
-            "debug_mastery_points": AMOUNT,
+            "debug_mastery_points": LEGACY_REWARD,
         }
         self.debug_path = self.references / "basecamp_harvest_catalog.json"
         self.write_debug_catalog()
@@ -48,22 +48,18 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
     def call(self, body=None, route=ROUTE, sequence=61, now=NOW):
         return super().call(body, route, sequence, now)
 
-    def test_one_collection_grants_exact_mastery_without_touching_other_assets_or_levels(self):
+    def test_due_collection_advances_only_the_camp_clock_and_village_revision(self):
         profile = self.store.account.profile()
         source = self.source.read_bytes()
         seed = self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0]
         response = self.call()
-        notices = [{"ItemId": MASTERY_POINTS, "Amount": AMOUNT}]
-        expected = copy.deepcopy(profile)
-        self.asset(expected, MASTERY_POINTS)["Amount"] += AMOUNT
-        expected["User"]["Cas"] += 1
         village = copy.deepcopy(self.initial)
         village["Buildings"][-1]["EndTime"] = NOW
         village["Cas"] += 1
         self.assertEqual(
-            response, {"User": expected["User"], "UserLobbyVillage": village, "AddedItems": notices}
+            response, {"User": profile["User"], "UserLobbyVillage": village, "AddedItems": []}
         )
-        self.assertEqual(self.store.account.profile(), expected)
+        self.assertEqual(self.store.account.profile(), profile)
         self.assertEqual(current_village(self.db), village)
         self.assertEqual(
             preserved_read(self.db, "/lobby-village/enter")["UserLobbyVillage"], village
@@ -83,11 +79,19 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
             self.assertEqual(current_village(self.db), village)
             self.assertEqual(self.store.account.profile(), profile)
 
-    def test_retry_returns_frozen_notice_and_current_state_after_later_collection(self):
-        first = self.call()
-        self.call(sequence=62, now=NOW + 60)
+    def test_retry_of_legacy_reward_receipt_returns_current_state_without_reward_or_writes(self):
+        self.call()
         profile = self.store.account.profile()
+        self.asset(profile, MASTERY_POINTS)["Amount"] += LEGACY_REWARD
+        self.save_profile(profile)
+        legacy_notice = [{"ItemId": MASTERY_POINTS, "Amount": LEGACY_REWARD}]
+        with self.db:
+            self.db.execute(
+                "UPDATE basecamp_harvest_requests SET result=?", (json.dumps(legacy_notice),)
+            )
+        self.call(sequence=62, now=NOW + 60)
         village = current_village(self.db)
+        self.assertEqual(village["Buildings"][-1]["EndTime"], NOW + 60)
         self.debug_path.unlink()
         before = list(self.db.iterdump())
         self.assertEqual(
@@ -95,11 +99,11 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
             {
                 "User": profile["User"],
                 "UserLobbyVillage": village,
-                "AddedItems": first["AddedItems"],
+                "AddedItems": [],
             },
         )
         self.assertEqual(list(self.db.iterdump()), before)
-        self.assertEqual(self.asset(profile, MASTERY_POINTS)["Amount"], 17 + 2 * AMOUNT)
+        self.assertEqual(self.store.account.profile(), profile)
 
     def test_reopening_reconnect_and_new_login_keep_used_clock_and_receipts(self):
         first = self.call()
@@ -114,11 +118,11 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
         self.assertEqual(self.call()["AddedItems"], [])
         self.assertEqual(self.store.account.profile(), profile)
 
-    def test_no_implicit_reward_without_explicit_matching_debug_configuration(self):
+    def test_missing_or_invalid_camp_configuration_rejects_without_writes(self):
         for key, value in (
             ("client", {}),
             ("debug_mastery_points", True),
-            ("debug_mastery_points", 0),
+            ("debug_mastery_points", -1),
             ("min_seconds", 0),
             ("portal_specs", [9001, 9001]),
             ("portal_specs", [True]),
@@ -134,7 +138,7 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
         self.reject_without_writes()
 
     def test_authentication_parameters_and_locked_mastery_reject_without_writes(self):
-        for body in ({"amount": AMOUNT}, {"itemId": 70013}, [], False):
+        for body in ({"amount": LEGACY_REWARD}, {"itemId": 70013}, [], False):
             self.reject_without_writes(body)
         self.session = BootstrapSession(self.store)
         self.reject_without_writes()
@@ -160,26 +164,23 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
         self.save_village(village)
         self.reject_without_writes()
 
-    def test_balance_overflow_rejects_the_entire_fixed_reward(self):
+    def test_full_balance_and_max_account_revision_do_not_prevent_collection(self):
         profile = self.store.account.profile()
-        self.asset(profile, MASTERY_POINTS)["Amount"] = INT_MAX - AMOUNT + 1
+        self.asset(profile, MASTERY_POINTS)["Amount"] = INT_MAX
+        profile["User"]["Cas"] = MAX_REVISION
         self.save_profile(profile)
+        response = self.call()
+        self.assertEqual(response["AddedItems"], [])
+        self.assertEqual(response["UserLobbyVillage"]["Buildings"][-1]["EndTime"], NOW)
+        self.assertEqual(self.store.account.profile(), profile)
+
+    def test_village_revision_overflow_rejects_without_advancing_camp(self):
+        village = copy.deepcopy(self.initial)
+        village["Cas"] = MAX_REVISION
+        self.save_village(village)
         self.reject_without_writes()
 
-    def test_invalid_account_or_village_revisions_reject_without_advancing_camp(self):
-        for kind in ("account", "village"):
-            profile = self.store.account.profile()
-            village = copy.deepcopy(self.initial)
-            profile["User"]["Cas"] = 1
-            if kind == "account":
-                profile["User"]["Cas"] = MAX_REVISION
-            else:
-                village["Cas"] = MAX_REVISION
-            self.save_profile(profile)
-            self.save_village(village)
-            self.reject_without_writes()
-
-    def test_receipt_failure_rolls_back_points_camp_clock_and_both_revisions(self):
+    def test_receipt_failure_rolls_back_camp_clock_and_village_revision(self):
         self.db.execute(
             "CREATE TRIGGER fail_basecamp BEFORE INSERT ON basecamp_harvest_requests BEGIN SELECT RAISE(ABORT,'synthetic failure'); END"
         )
@@ -203,13 +204,16 @@ class BaseCampHarvestTests(VillageFixture, unittest.TestCase):
         self.assertEqual(replay["AddedItems"], regular["AddedItems"])
         self.assertEqual(list(self.db.iterdump()), before)
 
-    def test_changing_debug_amount_affects_only_new_valid_collections(self):
-        first = self.call()
-        self.debug_catalog["debug_mastery_points"] = 7
-        self.write_debug_catalog()
-        self.assertEqual(self.call(), first)
-        second = self.call(sequence=62, now=NOW + 60)
-        self.assertEqual(second["AddedItems"], [{"ItemId": MASTERY_POINTS, "Amount": 7}])
-        self.assertEqual(
-            self.asset(self.store.account.profile(), MASTERY_POINTS)["Amount"], 17 + AMOUNT + 7
-        )
+    def test_due_collections_work_with_or_without_the_legacy_amount(self):
+        profile = self.store.account.profile()
+        for index, amount in enumerate((7, 0, None)):
+            if amount is None:
+                del self.debug_catalog["debug_mastery_points"]
+            else:
+                self.debug_catalog["debug_mastery_points"] = amount
+            self.write_debug_catalog()
+            now = NOW + 60 * index
+            response = self.call(sequence=61 + index, now=now)
+            self.assertEqual(response["AddedItems"], [])
+            self.assertEqual(response["UserLobbyVillage"]["Buildings"][-1]["EndTime"], now)
+            self.assertEqual(self.store.account.profile(), profile)
