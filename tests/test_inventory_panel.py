@@ -621,6 +621,78 @@ class InventoryPanelTests(unittest.TestCase):
             db.execute("SELECT item_id FROM relic_option_proposals").fetchall(), [(25,)]
         )
 
+    def test_unlock_preserves_equipped_copies_option_locks_jewels_and_duplicate_items(self):
+        profile = self.seed_wallet()
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        user = profile["User"]
+        weapon = user["ItemWeapons"][0]
+        relic = user["ItemMiscs"][0]
+        weapon["Options"][0]["Locked"] = True
+        relic.update(Locked=True, JewelSlots=[300])
+        relic["RelicOptions"][0]["Locked"] = True
+        user.update(Characters=[{"Weapon1": 11, "Relic": 12}], ItemIdCounter=25)
+        user["ItemWeapons"].append(dict(weapon, Id=24))
+        user["ItemMiscs"].append(dict(relic, Id=25))
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        for section, row in (("equipment", weapon), ("relics", relic)):
+            with self.subTest(section=section):
+                api = "/api/game/" + section
+                payload = dict(
+                    id=row["Id"], spec=row["ItemId"], version=self.call(api)["inventoryVersion"]
+                )
+                with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+                    self.call(api + "/unlock", payload)
+                self.assertEqual(locked.exception.code, 423)
+                locked.exception.close()
+                result = self.call(api + "/unlock", payload)
+                user["Cas"] += 1
+                row["Locked"] = False
+                self.assertEqual(result["revision"], user["Cas"])
+                self.assertEqual(result["inventoryVersion"], self.call(api)["inventoryVersion"])
+                with self.assertRaises(HTTPError) as stale:
+                    self.call(api + "/unlock", payload)
+                self.assertEqual(stale.exception.code, 409)
+                stale.exception.close()
+                self.assertEqual(
+                    self.call(api + "/unlock", dict(payload, version=result["inventoryVersion"])),
+                    result,
+                )
+                self.assertEqual(
+                    json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]),
+                    profile,
+                )
+
+    def test_panel_unlock_checks_inventory_spec_and_unambiguous_owned_id(self):
+        profile = self.seed_wallet()
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        version = self.call("/api/game/equipment")["inventoryVersion"]
+        user = profile["User"]
+        user["ItemMiscs"].append(dict(Id=21, ItemId=2, Amount=1, Locked=True))
+        user["ItemIdCounter"] = 21
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+
+        def reject(section, ident, spec):
+            with self.assertRaises(HTTPError) as error:
+                self.call(
+                    "/api/game/" + section + "/unlock", dict(id=ident, spec=spec, version=version)
+                )
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
+            self.assertEqual(
+                json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), profile
+            )
+
+        reject("equipment", 12, 4)
+        reject("equipment", 11, 5)
+        reject("relics", 11, 3)
+        reject("relics", 21, 2)
+        user["ItemMiscs"][-1]["Id"] = 11
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        reject("equipment", 11, 3)
+
     def test_panel_delete_rejects_protected_wrong_section_stack_and_stale_selection(self):
         profile = self.seed_wallet()
         user = profile["User"]

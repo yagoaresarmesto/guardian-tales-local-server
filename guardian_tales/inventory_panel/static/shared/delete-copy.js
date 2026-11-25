@@ -6,7 +6,7 @@ export function copyDeletion(api, selection, reload, note) {
 
   function update() {
     if (!target) return;
-    const reason = blocked || (target.locked ? "Unlock this copy in the game first." :
+    const reason = blocked || (target.locked ? "Choose Unlock in the copy details first." :
       target.jewels ? "Detach its jewels in the game first." :
       target.training ? "Remove it from the Training Room first." :
       !writable ? "Close Guardian Tales and stop the backend to delete this copy." : "");

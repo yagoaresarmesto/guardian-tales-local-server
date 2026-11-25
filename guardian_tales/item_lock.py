@@ -45,6 +45,17 @@ def change(account, body, operation_id, route):
         if previous != (route, encoded):
             raise ValueError("Item-lock request identity was reused with different data")
         return {"User": user}
+    with account.db:
+        set_item_protection(account.db, profile, body["itemIndexes"], locked=route == LOCK)
+        account.db.execute(
+            "INSERT INTO item_lock_requests VALUES(?,?,?)", (operation_id, route, encoded)
+        )
+    return {"User": user}
+
+
+def set_item_protection(db, profile, item_ids, *, locked):
+    """Update only the owned items' protection flags in the caller's transaction."""
+    user = profile["User"]
     owned = {}
     for key in INVENTORIES:
         rows = user.get(key)
@@ -59,7 +70,7 @@ def change(account, body, operation_id, route):
                 raise ValueError("Saved inventory IDs must be valid and globally unambiguous")
             owned[row["Id"]] = row
     targets = []
-    for ident in body["itemIndexes"]:
+    for ident in item_ids:
         row = owned.get(ident)
         if (
             row is None
@@ -71,7 +82,6 @@ def change(account, body, operation_id, route):
                 "Lock targets must identify existing owned items with protection flags"
             )
         targets.append(row)
-    locked = route == LOCK
     changed = any(row["Locked"] != locked for row in targets)
     if changed:
         if user["Cas"] == MAX_REVISION:
@@ -79,14 +89,7 @@ def change(account, body, operation_id, route):
         for row in targets:
             row["Locked"] = locked
         user["Cas"] += 1
-    with account.db:
-        if changed:
-            account.db.execute(
-                "UPDATE local_account SET profile=? WHERE id=1",
-                (json.dumps(profile, separators=(",", ":")),),
-            )
-        account.db.execute(
-            "INSERT INTO item_lock_requests VALUES(?,?,?)", (operation_id, route, encoded)
+        db.execute(
+            "UPDATE local_account SET profile=? WHERE id=1",
+            (json.dumps(profile, separators=(",", ":")),),
         )
-    # Equipment protection is independent of ordinary option-lock flags/proposals.
-    return {"User": user}

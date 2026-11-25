@@ -1,3 +1,4 @@
+import { copyUnlock } from "/unlock-copy.js";
 import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
 import { equipmentOptions, showLimitBreakFact } from "/equipment-options.js";
@@ -8,11 +9,16 @@ const hammerEditor = preview ? null : quantityEditor($("hammer-editor"), {
   api: "/api/game/equipment/hammers", accessId: "equipment-access",
   lock: () => editor.lock(), reload: load, saved: () => draw(),
 });
-let grantDialog, inventoryVersion, writable = false;
+let grantDialog, listing, writable = false;
+const unlock = preview ? null : copyUnlock("/api/game/equipment", () => listing.inventoryVersion, result => {
+  listing.revision = result.revision;
+  listing.inventoryVersion = result.inventoryVersion;
+  draw();
+}, load, note);
 const deletion = preview ? null : copyDeletion("/api/game/equipment", () => {
   const index = visible.findIndex(row => row.id === selected);
   if (index < 0 || kind === "enhance") return null;
-  return {...visible[index], version: inventoryVersion, nextId: visible[index + 1]?.id ?? visible[index - 1]?.id};
+  return {...visible[index], version: listing.inventoryVersion, nextId: visible[index + 1]?.id ?? visible[index - 1]?.id};
 }, async nextId => {
   if (nextId != null) selected = nextId;
   await load();
@@ -21,6 +27,7 @@ const editor = preview ? null : equipmentOptions(load, allowed => {
   writable = allowed;
   hammerEditor.setWritable(allowed);
   deletion.setWritable(allowed);
+  unlock.setWritable(allowed);
   grantDialog?.setWritable(allowed);
 });
 document.body.classList.toggle("live-equipment", !preview);
@@ -49,7 +56,7 @@ if (initialSearch && /^#\d+$/.test(location.hash)) {
 }
 let pageSize = 24;
 const collator = new Intl.Collator("en", {numeric: true, sensitivity: "base"});
-let items = [], hammers = [], visible = [], page = 0, revision, hasIcons = false, saving = false;
+let items = [], hammers = [], visible = [], page = 0, hasIcons = false, saving = false;
 let kind = params.get("type") || "all", selected = Number(params.get("id")) || null;
 $("search").value = params.get("q") || initialSearch || "";
 if (["rating", "name", "id"].includes(params.get("sort"))) $("sort").value = params.get("sort");
@@ -167,6 +174,7 @@ function drawDetails() {
   $("copy-id").textContent = item ? "#" + item.id : "";
   const enhance = kind === "enhance";
   deletion?.show(item && !enhance);
+  unlock?.select(enhance ? null : item);
   $("details-heading").textContent = enhance ? "Hammer details" : "Equipment details";
   $("collection-heading").textContent = enhance ? "Enhance" : "Equipment";
   $("empty").textContent = enhance ? "No owned hammers match these filters." : "No equipment matches these filters.";
@@ -232,8 +240,8 @@ async function load() {
   const res = await fetch(preview ? "/api/inventory" : "/api/game/equipment", {cache: "no-store"});
   if (!res.ok) throw new Error("Could not load the equipment inventory.");
   const data = await res.json();
-  inventoryVersion = data.inventoryVersion;
-  revision = data.revision; hasIcons = data.hasIcons;
+  listing = data;
+  hasIcons = data.hasIcons;
   if (!preview) $("open-equipment-catalog").disabled = false;
   items = preview ? data.rows.filter(item => item.group === "Equipment") : data.rows;
   hammers = data.hammers ?? [];
@@ -300,7 +308,7 @@ $("lock").onclick = async () => {
   saving = true; $("lock").disabled = true;
   try {
     const res = await fetch("/api/lock", {method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({id: item.id, locked: !item.locked, revision})});
+      body: JSON.stringify({id: item.id, locked: !item.locked, revision: listing.revision})});
     const result = await res.json();
     if (res.status === 409) await load();
     if (!res.ok) throw new Error(result.error || "Could not change protection.");

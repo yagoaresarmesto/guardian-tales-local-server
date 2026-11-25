@@ -1,3 +1,4 @@
+import { copyUnlock } from "/unlock-copy.js";
 import { copyDeletion } from "/delete-copy.js";
 import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
 
@@ -11,6 +12,12 @@ let selected = Number(initialQuery.get("id")), family = initialQuery.get("type")
 let page = 0, data, visible = [], draft = [], saving = false, grantDialog;
 const relicApi = "/api/game/relics";
 let writable = false, statusRequest = 0;
+const unlock = copyUnlock(relicApi, () => data.inventoryVersion, result => {
+  data.revision = result.revision;
+  data.inventoryVersion = result.inventoryVersion;
+  drawGrid();
+  showProtection(current());
+}, load, note);
 const deletion = copyDeletion(relicApi, () => {
   const row = current();
   if (!row) return null;
@@ -100,6 +107,7 @@ function setAccess(available, message = "") {
   writable = available === true;
   grantDialog?.setWritable(writable);
   deletion.setWritable(writable);
+  unlock.setWritable(writable);
   $("access").hidden = writable;
   const text = message || "Apply is locked while the game save is in use. Close Guardian Tales and stop the backend to enable it.";
   if (!writable && $("access").textContent !== text) $("access").textContent = text;
@@ -158,9 +166,14 @@ function slotEditor(row, entry) {
   values(); controls.append(effect,value); section.append(controls, range, compare);
   return section;
 }
+function showProtection(row) {
+  unlock.select(row);
+  $("protection").textContent = row?.locked ? "Locked" : "Unlocked";
+}
 function drawEditor() {
   const row = current(); $("detail").hidden = !row; $("placeholder").hidden = !!row;
   deletion.show(row);
+  showProtection(row);
   $("copy-id").textContent = row ? "#" + row.id : "";
   if (!row) { draft = []; return; }
   draft = Object.keys(groups).flatMap(group => row[group].map((o, slot) =>
@@ -170,7 +183,6 @@ function drawEditor() {
   $("family").textContent = spec.family; $("name").textContent = spec.name; $("stars").textContent = "★".repeat(spec.stars);
   $("stars").setAttribute("aria-label", spec.stars + " stars");
   $("equipped").textContent = row.equipped ? "Yes" : "No";
-  $("protection").textContent = row.locked ? "Locked" : "Unlocked";
   $("jewels").textContent = row.jewels;
   $("basic").parentElement.hidden = !row.main.length;
   for (const [group, layout] of Object.entries(groups)) {

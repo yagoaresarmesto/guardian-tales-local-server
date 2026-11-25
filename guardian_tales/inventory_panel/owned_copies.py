@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Delete the selected owned copy using the game's protected removal rules."""
+"""Panel actions on an individual owned equipment or relic copy."""
 
+from guardian_tales.item_lock import set_item_protection
 from guardian_tales.item_sell import remove_owned_items
 from guardian_tales.village import integer
 
 from .game_save import GameSaveEditor
 
 
-class CopyRemoval(GameSaveEditor):
+class OwnedCopyEditor(GameSaveEditor):
     def __init__(self, database, inventory, specs=None):
         super().__init__(database)
         self.inventory = inventory
@@ -26,9 +27,26 @@ class CopyRemoval(GameSaveEditor):
         profile = self.profile(db)
         user = profile["User"]
         if body["version"] != self.inventory_version(user):
-            return 409, {"error": "Your inventory changed. Review the copy before deleting it."}
+            return 409, {"error": "Your inventory changed. Review the selected copy and try again."}
         item = next((row for row in user[self.inventory] if row["Id"] == body["id"]), None)
         if item is None or item["ItemId"] != body["spec"] or not integer(item.get("Amount"), 1, 1):
             raise ValueError("Select a single owned copy from this inventory.")
-        remove_owned_items(db, profile, {item["Id"]: 1})
-        return 200, {"id": item["Id"], "revision": user["Cas"]}
+        return 200, self.change(db, profile, item["Id"])
+
+
+class CopyRemoval(OwnedCopyEditor):
+    @staticmethod
+    def change(db, profile, ident):
+        remove_owned_items(db, profile, {ident: 1})
+        return {"id": ident, "revision": profile["User"]["Cas"]}
+
+
+class CopyUnlock(OwnedCopyEditor):
+    def change(self, db, profile, ident):
+        set_item_protection(db, profile, [ident], locked=False)
+        user = profile["User"]
+        return {
+            "id": ident,
+            "revision": user["Cas"],
+            "inventoryVersion": self.inventory_version(user),
+        }

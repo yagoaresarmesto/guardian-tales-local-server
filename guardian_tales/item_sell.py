@@ -148,7 +148,7 @@ def remove_owned_items(db, profile, quantities, *, extractable=None):
         ):
             raise ValueError("Removal requires sufficient unlocked items outside protected uses")
         if row["Locked"]:
-            raise ValueError("Unlock this copy in the game first.")
+            raise ValueError("Unlock this copy first.")
         if row["Id"] in protected:
             raise ValueError(
                 "Remove this copy from presets, Training Room or equipment costumes first."
