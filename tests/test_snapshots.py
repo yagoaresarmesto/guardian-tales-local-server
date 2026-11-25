@@ -127,6 +127,7 @@ class SnapshotTests(unittest.TestCase):
                 "/item/upgrade-jewel-from-relic",
                 "/lobby-village/harvest-all",
                 "/lobby-village/harvest-basecamp",
+                "/lobby-village/prepare-dispatch",
                 "/lobby-village/receive-gift",
                 "/lobby-village/remove-obstacle",
                 "/mission/claim-challenge-all",

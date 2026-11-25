@@ -39,7 +39,7 @@ def current_village(db):
     read = preserved_read(db, "/lobby-village/enter")
     village = read.get("UserLobbyVillage") if isinstance(read, dict) else None
     if not isinstance(village, dict):
-        raise ValueError("Harvesting requires a preserved village")
+        raise ValueError("This action requires a preserved village")
     return village
 
 

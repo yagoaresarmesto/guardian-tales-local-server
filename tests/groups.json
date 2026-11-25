@@ -37,7 +37,7 @@
   },
   "village": {
     "description": "Harvest, gifts, obstacles, basecamp and guardian mastery",
-    "modules": ["test_village_harvest", "test_village_shop", "test_village_gift_mock", "test_village_obstacle_mock", "test_basecamp_harvest", "test_guardian_mastery", "test_mastery_reset"]
+    "modules": ["test_village_harvest", "test_village_shop", "test_village_dispatch", "test_village_gift_mock", "test_village_obstacle_mock", "test_basecamp_harvest", "test_guardian_mastery", "test_mastery_reset"]
   },
   "guild": {
     "description": "Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War",

@@ -184,6 +184,8 @@ from .training_room import enter as enter_training_room
 from .tutorials import PASSIVE_HELP_TUTORIALS, POST_INN_TUTORIALS, catalog_tutorial_ids
 from .village import create_tables as create_village_tables
 from .village import harvest as harvest_village
+from .village_dispatch import PREPARE as VILLAGE_DISPATCH_PREPARE
+from .village_dispatch import create_tables as create_village_dispatch_tables
 from .village_gift import create_tables as create_village_gift_tables
 from .village_gift import receive as receive_village_gift
 from .village_obstacle import create_tables as create_village_obstacle_tables
@@ -279,6 +281,7 @@ ACCOUNT_ROUTES = (
     PRESET_REORDER_ROUTE,
     "/lobby-village/harvest-all",
     "/lobby-village/harvest-basecamp",
+    VILLAGE_DISPATCH_PREPARE,
     "/lobby-village/receive-gift",
     "/lobby-village/remove-obstacle",
     "/item/enhance-weapon",
@@ -353,6 +356,7 @@ class AccountStore:
         create_weapon_summon_tables(db)
         create_portrait_frame_tables(db)
         create_village_tables(db)
+        create_village_dispatch_tables(db)
         create_basecamp_tables(db)
         create_mastery_tables(db)
         create_mastery_reset_tables(db)

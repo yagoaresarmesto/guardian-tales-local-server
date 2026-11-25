@@ -1012,6 +1012,17 @@ passed, the popup receives the next UTC midnight to keep its countdown running.
 Opening the shop leaves the saved village, purchase counts and balances intact.
 Purchasing and generating a new assortment are separate operations.
 
+**Dispatch** on an idle, unlocked dispatch base prepares its opening event.
+The client sends the owned building ID as `dispatchBuildingId` to
+`/lobby-village/prepare-dispatch`. The backend follows the base's
+`LobbyBuildings.DispatchId` in the external `lobbyvillage` table and chooses
+one of that dispatch's `StartEvents` with equal probability. It stores the
+selection in `UserLobbyVillage.Dispatches`. Reopening the village or retrying
+the button keeps the same event. Preparation spends no currency and starts
+no timer. In the EU 3.57.0 Android client, pressing **Dispatch** opened the
+initial event and displayed its choices. Confirming a choice and claiming the
+dispatch reward use separate routes.
+
 `/lobby-village/receive-gift` supports an explicit no-reward mock. Its external
 `village_gift_mock_catalog.json`, limited to 4 KiB, contains exactly the pinned
 `client` and positive integer `cooldown_seconds` in 1..31,536,000. The prepared

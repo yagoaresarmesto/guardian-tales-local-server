@@ -74,6 +74,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/claim-daily-attendance",
         "/lobby-village/harvest-all",
         "/lobby-village/harvest-basecamp",
+        "/lobby-village/prepare-dispatch",
         "/lobby-village/receive-gift",
         "/lobby-village/remove-obstacle",
         "/user/guardian-mastery-level-up",

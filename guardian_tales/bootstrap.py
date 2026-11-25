@@ -33,6 +33,7 @@ from . import (
     tetis,
     tetis_map_trial,
     tetis_presets,
+    village_dispatch,
 )
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
@@ -675,6 +676,15 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.purchase_stamina(body, operation_id)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == village_dispatch.PREPARE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, village_dispatch.prepare(self.store.account, body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
