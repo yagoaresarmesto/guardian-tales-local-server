@@ -4,6 +4,7 @@ const api = "/api/game/account";
 const number = new Intl.NumberFormat("en-GB");
 const controls = new Map();
 let account, writable = false, saving = false, stale = false, statusRequest = 0;
+let groupsBeforeSearch = null;
 
 function tagValue() {
   return $("tag").value.replace(/^#/, "").toUpperCase();
@@ -21,9 +22,10 @@ function update() {
   const preview = $("identity-preview");
   preview.hidden = !identityChanged;
   preview.textContent = !validName ? "Enter a valid nickname." : !validTag ? "Enter five letters or digits." : "After applying: " + name + "#" + tag;
-  let valid = validName && validTag, changed = identityChanged;
+  let valid = validName && validTag;
+  let changeCount = Number(name !== account.name) + Number(tag !== account.tag);
   const materialEdits = [];
-  for (const {item, input, result, note, setTotal} of controls.values()) {
+  for (const {item, input, result, note, setTotal, row} of controls.values()) {
     const ok = input.disabled || input.validity.valid;
     const total = setTotal ? (input.value === "" ? item.balance : input.valueAsNumber)
       : item.balance + (input.disabled ? 0 : input.valueAsNumber);
@@ -34,14 +36,18 @@ function update() {
     note.textContent = item.limit === null ? "Import the stamina purchase catalog to add reserve coffee."
       : "Enter a whole amount between 0 and " + number.format(Number(input.max)) + ".";
     valid &&= ok;
-    changed ||= ok && total !== item.balance;
-    if (item.key.startsWith("material-") && (!ok || total !== item.balance)) {
+    const edited = !ok || total !== item.balance;
+    row.toggleAttribute("data-edited", edited);
+    if (edited) changeCount++;
+    if (item.key.startsWith("material-") && edited) {
       materialEdits.push(item.label + " → " + (ok ? number.format(total) : "check amount"));
     }
   }
   $("material-edits").hidden = !materialEdits.length;
   $("material-edits").textContent = materialEdits.length ? "Pending: " + materialEdits.join(" · ") : "";
-  $("apply").disabled = !changed || !valid || !account.ready || !writable || saving || stale;
+  $("change-count").textContent = changeCount ? changeCount + " pending change" + (changeCount === 1 ? "" : "s") : "No pending changes";
+  $("change-count").classList.toggle("changed", changeCount > 0);
+  $("apply").disabled = !changeCount || !valid || !account.ready || !writable || saving || stale;
 }
 
 function access(allowed, message = "Close Guardian Tales and stop the backend to enable Apply.") {
@@ -65,6 +71,13 @@ async function checkAccess() {
   }
 }
 
+function balanceColumns(action) {
+  const columns = el("div", "balance-columns");
+  columns.setAttribute("aria-hidden", "true");
+  for (const title of ["Resource", "Saved", action, "After applying"]) columns.append(el("span", "", title));
+  return columns;
+}
+
 function balanceRow(item, setTotal) {
   const row = el("div", "wallet-row");
   const identity = el("div", "wallet-item"), icon = el("img");
@@ -73,11 +86,13 @@ function balanceRow(item, setTotal) {
   icon.onerror = () => icon.remove();
   icon.src = "/icon/" + item.id + ".png";
   const detail = el("div");
-  detail.append(el("strong", "", item.choice || item.label), el("small", "", "Saved: " + number.format(item.balance)));
-  if (item.limit !== null) detail.append(el("small", "", "Limit: " + number.format(item.limit)));
+  detail.append(el("strong", "", item.choice || item.label));
+  if (item.limit !== null) detail.append(el("small", "", "Max " + number.format(item.limit)));
   identity.append(icon, detail);
+  const saved = el("div", "wallet-saved");
+  saved.append(el("span", "compact-label", "Saved"), el("span", "", number.format(item.balance)));
   const action = setTotal ? "Set total" : "Add";
-  const field = el("div", "wallet-input"), label = el("label", "", action), input = el("input");
+  const field = el("div", "wallet-input"), label = el("label", "compact-label", action), input = el("input");
   input.id = (setTotal ? "set-" : "add-") + item.key; label.htmlFor = input.id;
   input.type = "number"; input.inputMode = "numeric"; input.required = !setTotal;
   input.min = 0; input.step = 1;
@@ -89,16 +104,44 @@ function balanceRow(item, setTotal) {
   const note = el("p", "field-note");
   note.id = input.id + "-note"; input.setAttribute("aria-describedby", note.id);
   const after = el("div", "wallet-result"), result = el("strong");
-  after.append(el("small", "", "After applying"), result);
+  after.append(el("span", "compact-label", "After applying"), result);
   field.append(label, input);
-  row.append(identity, field, after, note);
-  controls.set(item.key, {item, input, result, note, setTotal});
+  row.append(identity, saved, field, after, note);
+  if (item.key.startsWith("material-")) {
+    row.dataset.search = [item.label, item.group, item.choice].filter(Boolean).join(" ").toLowerCase();
+  }
+  controls.set(item.key, {item, input, result, note, setTotal, row});
   return row;
 }
 
+function expandedGroups() {
+  return new Set(Array.from($("material-groups").querySelectorAll("details[open]"), node => node.dataset.group));
+}
+
+function filterMaterials() {
+  const words = $("material-search").value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length && !groupsBeforeSearch) groupsBeforeSearch = expandedGroups();
+  for (const row of $("materials").querySelectorAll("[data-search]")) {
+    row.hidden = !words.every(word => row.dataset.search.includes(word));
+  }
+  const groups = $("material-groups");
+  for (const group of groups.children) {
+    const count = group.querySelectorAll(".wallet-row:not([hidden])").length;
+    group.hidden = !count;
+    group.querySelector("summary small").textContent = number.format(count);
+    if (words.length) group.open = count > 0;
+    else if (groupsBeforeSearch) group.open = groupsBeforeSearch.has(group.dataset.group);
+  }
+  if (!words.length) groupsBeforeSearch = null;
+  const common = $("common-materials");
+  common.hidden = !common.querySelector(".wallet-row:not([hidden])");
+  groups.hidden = !groups.querySelector("details:not([hidden])");
+  $("material-empty").hidden = !(common.hidden && groups.hidden);
+}
+
 function renderMaterials(items) {
-  const container = $("materials");
-  const expanded = new Set(Array.from(container.querySelectorAll("details[open]"), node => node.dataset.group));
+  const container = $("material-groups");
+  const expanded = groupsBeforeSearch || expandedGroups();
   const compare = new Intl.Collator("en", {numeric: true}).compare;
   const groups = new Map();
   const common = [];
@@ -112,7 +155,8 @@ function renderMaterials(items) {
   }
   $("materials-section").hidden = !items.length;
   common.sort((a, b) => compare(a.label, b.label));
-  container.replaceChildren(...common.map(item => balanceRow(item, true)));
+  $("common-materials").replaceChildren(balanceColumns("Set total"), ...common.map(item => balanceRow(item, true)));
+  container.replaceChildren();
   for (const group of Array.from(groups.keys()).sort(compare)) {
     const entries = groups.get(group);
     entries.sort((a, b) => Number(b.preferred) - Number(a.preferred) || compare(a.choice, b.choice));
@@ -121,9 +165,12 @@ function renderMaterials(items) {
     section.open = expanded.has(group);
     const summary = el("summary", "", group);
     summary.append(el("small", "", number.format(entries.length)));
-    section.append(summary, ...entries.map(item => balanceRow(item, true)));
+    const list = el("div", "balance-list");
+    list.append(balanceColumns("Set total"), ...entries.map(item => balanceRow(item, true)));
+    section.append(summary, list);
     container.append(section);
   }
+  filterMaterials();
 }
 
 function render(data) {
@@ -132,9 +179,9 @@ function render(data) {
   $("tag").value = data.tag;
   $("saved-identity").textContent = data.name + "#" + data.tag;
   controls.clear();
-  $("wallet").replaceChildren(...data.wallet.map(item => balanceRow(item, false)));
+  $("wallet").replaceChildren(balanceColumns("Add"), ...data.wallet.map(item => balanceRow(item, false)));
   const summoning = data.summoning || [];
-  $("summoning").replaceChildren(...summoning.map(item => balanceRow(item, true)));
+  $("summoning").replaceChildren(balanceColumns("Set total"), ...summoning.map(item => balanceRow(item, true)));
   $("summoning-section").hidden = !summoning.length;
   renderMaterials(data.materials || []);
   $("reload").hidden = true;
@@ -158,7 +205,17 @@ async function load() {
   }
 }
 
-$("account-form").oninput = () => { if (!stale) $("message").textContent = ""; update(); };
+$("account-form").oninput = event => {
+  if (event.target === $("material-search")) {
+    filterMaterials();
+    return;
+  }
+  if (!stale) $("message").textContent = "";
+  update();
+};
+$("material-search").onkeydown = event => {
+  if (event.key === "Enter") event.preventDefault();
+};
 $("reload").onclick = load;
 $("account-form").onsubmit = async event => {
   event.preventDefault();

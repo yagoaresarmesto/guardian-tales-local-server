@@ -1,39 +1,48 @@
-  <main>
+  <main class="account-page">
     <div class="title-row"><h1>Account</h1></div>
     <p id="access" class="save-access" role="status" hidden></p>
     <p id="loading" role="status">Loading account…</p>
     <form id="account-form" hidden>
       <div class="account-grid">
-        <section class="account-card" aria-labelledby="identity-heading">
-          <h2 id="identity-heading">Player identity</h2>
+        <details class="account-card identity-card">
+          <summary><span>Player identity</span><strong id="saved-identity"></strong><span class="identity-toggle">Edit identity</span></summary>
           <div class="identity-body">
-            <div class="identity-summary"><small>Saved identity</small><strong id="saved-identity"></strong></div>
-            <label for="name">Nickname</label>
-            <input id="name" required minlength="2" maxlength="10" autocomplete="off" aria-describedby="name-help">
-            <small id="name-help">2–10 UTF-16 units. An emoji can count as two.</small>
-            <label for="tag">Player tag</label>
-            <input id="tag" required maxlength="6" autocomplete="off" spellcheck="false" aria-describedby="tag-help">
-            <small id="tag-help">Five letters or digits. Leading zeros are kept.</small>
+            <div class="identity-field">
+              <label for="name">Nickname</label>
+              <input id="name" required minlength="2" maxlength="10" autocomplete="off" aria-describedby="name-help">
+              <small id="name-help">2–10 UTF-16 units. An emoji can count as two.</small>
+            </div>
+            <div class="identity-field">
+              <label for="tag">Player tag</label>
+              <input id="tag" required maxlength="6" autocomplete="off" spellcheck="false" aria-describedby="tag-help">
+              <small id="tag-help">Five letters or digits. Leading zeros are kept.</small>
+            </div>
             <p id="identity-preview" class="identity-preview" aria-live="polite" hidden></p>
           </div>
+        </details>
+        <section class="account-card" aria-labelledby="wallet-heading">
+          <h2 id="wallet-heading">Wallet</h2>
+          <div id="wallet" class="balance-list"></div>
         </section>
-        <div class="account-balances">
-          <section class="account-card" aria-labelledby="wallet-heading">
-            <h2 id="wallet-heading">Wallet</h2>
-            <div id="wallet"></div>
-          </section>
-          <section id="summoning-section" class="account-card" aria-labelledby="summoning-heading" hidden>
-            <h2 id="summoning-heading">Summoning</h2>
-            <div id="summoning"></div>
-          </section>
-          <section id="materials-section" class="account-card" aria-labelledby="materials-heading" hidden>
+        <section id="summoning-section" class="account-card" aria-labelledby="summoning-heading" hidden>
+          <h2 id="summoning-heading">Summoning</h2>
+          <div id="summoning" class="balance-list"></div>
+        </section>
+        <section id="materials-section" class="account-card" aria-labelledby="materials-heading" hidden>
+          <header class="materials-bar">
             <h2 id="materials-heading">Materials</h2>
-            <div id="materials"></div>
-            <p id="material-edits" hidden></p>
-          </section>
-        </div>
+            <input id="material-search" type="search" aria-label="Search materials" placeholder="Search materials, heroes or worlds…" autocomplete="off">
+          </header>
+          <div id="materials">
+            <div id="common-materials" class="balance-list"></div>
+            <div id="material-groups"></div>
+          </div>
+          <p id="material-empty" role="status" hidden>No matching materials.</p>
+          <p id="material-edits" hidden></p>
+        </section>
       </div>
       <footer class="account-actions">
+        <span id="change-count"></span>
         <p id="message" role="status"></p>
         <button type="button" id="reload" hidden>Reload account</button>
         <button type="submit" id="apply" class="apply-button" disabled>Apply</button>
