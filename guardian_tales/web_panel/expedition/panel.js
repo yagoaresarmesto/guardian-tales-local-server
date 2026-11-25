@@ -1,8 +1,10 @@
 import { $, feedback, setArtwork } from "/panel.js";
+import { selectGate, showMap } from "/expedition-map.js";
 
 const endpoint = "/api/expedition";
 let state;
 let areaFilter = "";
+let districtFilter = null;
 
 function stageInfo(row) {
   const key = typeof row.name === "string" ? row.name : "";
@@ -74,7 +76,8 @@ function renderAreas() {
 function renderRows() {
   const query = $("search").value.toLowerCase().replaceAll("·", " ").replace(/\s+/g, " ").trim();
   const filtered = state.stages.filter(row =>
-    (!areaFilter || row.area === areaFilter) && (!$("only-custom").checked || row.overridden)
+    (!areaFilter || row.area === areaFilter) && (!districtFilter || row.district_id === districtFilter)
+    && (!$("only-custom").checked || row.overridden)
     && [row.stage_id, row.key, row.area, row.name].join(" ").toLowerCase().includes(query)
   );
   const nodes = filtered.map(row => {
@@ -103,6 +106,10 @@ function display(next) {
   const previous = $("stage").value;
   $("stage").replaceChildren(...state.stages.map(row => new Option(row.area + " · " + row.name + " · " + row.stage_id, row.stage_id)));
   if (state.stages.some(row => String(row.stage_id) === previous)) $("stage").value = previous;
+  if (!state.hasWorldMap || !state.stages.some(row => row.district_id === districtFilter)) {
+    districtFilter = null;
+    $("clear-district").hidden = true;
+  }
   $("bounds").textContent = "(1–" + state.max_enemy_level + ")";
   $("level").max = state.max_enemy_level;
   document.querySelector(".expedition-page").toggleAttribute("data-art", state.hasArt);
@@ -113,6 +120,7 @@ function display(next) {
   renderAreas();
   renderRows();
   renderTarget();
+  showMap(state, districtFilter, areaFilter);
 }
 
 async function refresh(message = "") {
@@ -156,6 +164,13 @@ async function save(action) {
 
 $("editor").addEventListener("change", event => {
   if (event.target.name === "scope" || event.target.id === "stage") {
+    if (event.target.id === "stage" && districtFilter) {
+      const next = state.stages.find(row => row.stage_id === Number($("stage").value));
+      if (next?.district_id !== districtFilter) {
+        areaFilter = next?.area || "";
+        filterDistrict(null);
+      }
+    }
     renderTarget();
     feedback("");
   }
@@ -175,12 +190,36 @@ $("rows").addEventListener("click", event => {
   ($("level").disabled ? $("stage") : $("level")).focus();
 });
 $("reload").addEventListener("click", () => refresh());
+function filterDistrict(id) {
+  const row = state.stages.find(stage => stage.district_id === id);
+  districtFilter = id;
+  if (id && row) {
+    areaFilter = row.area;
+    $("search").value = "";
+    $("only-custom").checked = false;
+    $("stage").value = row.stage_id;
+    $("editor").elements.scope.value = "stage";
+    renderTarget();
+    feedback("");
+    $("clear-district").textContent = "District " + row.district_number + " ×";
+    $("clear-district").setAttribute("aria-label", "Clear District " + row.district_number + " filter");
+  }
+  $("clear-district").hidden = !id;
+  selectGate(id, areaFilter);
+  renderAreas();
+  renderRows();
+}
+$("district-gates").addEventListener("click", event => {
+  const gate = event.target.closest("button[data-district]");
+  if (gate && !$("controls").disabled) filterDistrict(Number(gate.dataset.district));
+});
+$("clear-district").addEventListener("click", () => filterDistrict(null));
 $("areas").addEventListener("click", event => {
   const pick = event.target.closest("button[data-area]");
   if (!pick) return;
   areaFilter = pick.dataset.area;
-  for (const button of $("areas").children) button.setAttribute("aria-pressed", String(button === pick));
-  renderRows();
+  filterDistrict(null);
+  [...$("areas").children].find(button => button.dataset.area === areaFilter)?.focus();
 });
 $("only-custom").addEventListener("change", () => { if (state) renderRows(); });
 $("search").addEventListener("input", () => { if (state) renderRows(); });

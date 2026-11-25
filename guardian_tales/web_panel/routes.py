@@ -31,6 +31,7 @@ from .dka import adapter as dka
 from .dka import sprites
 from .expedition import adapter as expedition
 from .expedition import artwork as expedition_art
+from .expedition import world_map
 from .guild_war import adapter as guild_war
 from .kamazone import adapter as kamazone
 from .kamazone.season_art import SEASONS as KAMAZONE_SEASONS
@@ -125,6 +126,8 @@ FILES["/backend.js"] = (ROOT / "shared/backend.js", JS)
 FILES["/tetis-specialty.js"] = (ROOT / "tetis/specialty.js", JS)
 FILES["/services.css"] = (ROOT / "shared/services.css", CSS)
 FILES["/orbital-board.js"] = (ROOT / "orbital_lift/board.js", JS)
+FILES["/expedition-map.js"] = (ROOT / "expedition/map.js", JS)
+FILES["/expedition-map.css"] = (ROOT / "expedition/map.css", CSS)
 FILES["/tetis-loadout.js"] = (ROOT / "tetis/loadout.js", JS)
 FILES["/tetis-loadout.css"] = (ROOT / "tetis/loadout.css", CSS)
 for mode in MODES:
@@ -168,6 +171,8 @@ MEDIA = {
         for art in KAMAZONE_SEASONS.values()
     },
     "/expedition/forest.jpg": (EXPEDITION.read, "image/jpeg"),
+    "/expedition/world-map.webp": (world_map.resource, "image/webp"),
+    "/expedition/world-map.json": (partial(world_map.resource, layout=True), "application/json"),
     **{
         f"/expedition/{name}.jpg": (partial(expedition_art.scene, name=name), "image/jpeg")
         for name in expedition_art.SCENES
@@ -178,6 +183,7 @@ MEDIA = {
             "stage": "ic_parish_stage_record_00.png",
             "boss": "ic_expedition_mark_boss_00.png",
             "emblem": "expedition_ic_parish_00.png",
+            "ribbon": "expedition_ic_parish_title_00.png",
             "rift": "rift_banner_unexplored_1.png",
         }.items()
     },

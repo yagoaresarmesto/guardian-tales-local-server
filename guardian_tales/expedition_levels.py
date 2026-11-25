@@ -36,7 +36,12 @@ def catalog(body):
         )
     ):
         raise ValueError("Invalid Expedition district definitions")
-    ids = {ident for row in expedition["Districts"] for ident in row["StageIds"]}
+    districts = {
+        ident: (row.get("Id"), row.get("DistrictNo"))
+        for row in expedition["Districts"]
+        for ident in row["StageIds"]
+    }
+    ids = districts.keys()
     stages = json.loads(tables["stages"][1])
     if not isinstance(stages, list) or any(not isinstance(row, dict) for row in stages):
         raise ValueError("Invalid stage definitions")
@@ -77,7 +82,11 @@ def catalog(body):
         )
         if not integer(level, maximum=len(levels)):
             raise ValueError("Invalid original Expedition enemy level")
-        result[row["Id"]] = {"name": row.get("Name"), "original_level": level}
+        result[row["Id"]] = {
+            "name": row.get("Name"),
+            "original_level": level,
+            "district": districts.get(row["Id"], (None, None)),
+        }
     return result, len(levels)
 
 
@@ -246,6 +255,8 @@ def level_settings(
             dict(
                 stage_id=ident,
                 name=row["name"],
+                district_id=row["district"][0],
+                district_number=row["district"][1],
                 original_level=visible_level(row["original_level"], maximum),
                 enemy_level=visible_level(chosen.get(ident, row["original_level"]), maximum),
                 overridden=ident in chosen,

@@ -449,8 +449,12 @@ by that copy. It includes private receipts, backups and targeted removal.
 The [Expedition tab](http://127.0.0.1:17658/expedition) and
 [enemy-level commands](docs/reference-data.md#per-stage-enemy-levels) list
 original and configured enemy levels. Browse the panel by area, search by stage
-name or ID, or show only customized stages. The illustrations and stage markers
-load from the local Expedition UI bundle when available. The **All stages**
+name or ID, or show only customized stages. With the local Solo Expedition
+world map and panel-art extra installed, the panel assembles the islands, clouds
+and ten district gates from the game's prefab. Select a gate to browse its
+stages. Use **+** to zoom, drag or swipe to pan, and **Fit map** for the overview.
+The map shows the fully revealed landscape. Area-wide unexplored stages and the
+event remain accessible in the directory. The **All stages**
 action covers the full catalog even when the directory is filtered.
 Set a single stage or all stages to a
 visible level from 1 to 220 in the matching pack, or restore their original

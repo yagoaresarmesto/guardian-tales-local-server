@@ -26,7 +26,7 @@ from guardian_tales.expedition_levels import (
 )
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.web_panel.expedition import artwork
+from guardian_tales.web_panel.expedition import artwork, world_map
 from guardian_tales.web_panel.routes import media_resource
 from guardian_tales.web_panel.server import WebPanel
 from tests.test_snapshots import request
@@ -142,6 +142,40 @@ class ExpeditionLevelTests(unittest.TestCase):
                         )
                     reader(self.refs)
                     read.assert_called_once_with(source, texture)
+
+    def test_map_gates_use_native_district_membership_and_leave_extra_stages_unassigned(self):
+        self.tables["expedition"]["Districts"] = [
+            {"Id": 10410, "DistrictNo": 10, "StageIds": [OTHER]},
+            {"Id": 10101, "DistrictNo": 1, "StageIds": [STAGE]},
+        ]
+        event_id = 250019999
+        self.tables["stages"].append(
+            {"Id": event_id, "ExpeditionStageType": 1, "StandardLevel": {"Default": 19}}
+        )
+        self.write_source()
+        api = self.open_panel()
+        state = api()
+        self.assertFalse(state["hasWorldMap"])
+        self.assertEqual(
+            [(r["stage_id"], r["district_id"], r["district_number"]) for r in state["stages"]],
+            [(STAGE, 10101, 1), (OTHER, 10410, 10), (event_id, None, None)],
+        )
+        for name in ("world-map.json", "world-map.webp"):
+            reader, _ = media_resource("/expedition/" + name)
+            with self.assertRaises(FileNotFoundError):
+                reader(self.refs)
+
+    @unittest.skipUnless(find_spec("PIL"), "Pillow is optional for the panel")
+    def test_map_sprite_transform_preserves_flips_and_clips_at_the_viewport(self):
+        from PIL import Image
+
+        sprite = Image.new("RGBA", (4, 2), "red")
+        sprite.paste("blue", (2, 0, 4, 2))
+        canvas = Image.new("RGB", (5, 4))
+        world_map._paste_sprite(canvas, sprite, [(3, 1), (-1, 1), (3, 3)])
+        self.assertEqual(canvas.getpixel((0, 1)), (0, 0, 255))
+        self.assertEqual(canvas.getpixel((2, 2)), (255, 0, 0))
+        self.assertEqual(canvas.getpixel((3, 1)), (0, 0, 0))
 
     def test_panel_and_cli_share_levels_revisions_and_distinct_originals(self):
         api = self.open_panel()

@@ -1,3 +1,5 @@
+@import url("/expedition-map.css");
+
 .expedition-page { --exp-pad: clamp(14px, 1.5vw, 24px); --mint: #a9e3ce; }
 .expedition-banner {
   min-height: 207px; padding: 26px clamp(20px, 3vw, 46px);

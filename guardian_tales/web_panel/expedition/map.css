@@ -1,0 +1,81 @@
+.expedition-page:has(.world-map:not([hidden])) .expedition-banner {
+  min-height: 0; padding-block: 14px; border-radius: 10px 10px 0 0; border-bottom: 0;
+}
+.expedition-page:has(.world-map:not([hidden])) .banner-copy {
+  display: grid; grid-template-columns: auto 1fr; align-items: end; column-gap: 24px;
+}
+.expedition-page:has(.world-map:not([hidden])) .season-status { grid-column: 1 / -1; }
+.expedition-page:has(.world-map:not([hidden])) .expedition-banner h1 {
+  font-size: clamp(1.85rem, 3.2vw, 3rem); margin: 3px 0 0;
+}
+.expedition-page:has(.world-map:not([hidden])) .expedition-status { padding-bottom: 4px; }
+.expedition-page:has(.world-map:not([hidden])) #journey { opacity: .36; object-position: center 33%; width: 39%; }
+.world-map {
+  border: 1px solid #726655; border-radius: 0 0 9px 9px; overflow: hidden;
+  background: #162637; box-shadow: 0 8px 24px #070f2038;
+}
+#map-viewport {
+  position: relative; width: 100%; aspect-ratio: var(--map-ratio); overflow: auto;
+  scrollbar-width: thin; scrollbar-color: #83765e #262e34; background: #b9a47f;
+}
+#map-viewport:focus-visible { outline-offset: -3px; }
+#map-viewport[data-zoomed] { cursor: grab; }
+#map-viewport[data-zoomed]:active { cursor: grabbing; }
+#map-sheet { position: relative; width: 100%; container-type: inline-size; aspect-ratio: var(--map-ratio); user-select: none; }
+#map-terrain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.district-gate {
+  position: absolute; transform: translate(-50%, -50%); display: grid; justify-items: center;
+  width: clamp(24px, 5.8cqw, 90px); padding: 0; border: 0; border-radius: 4px;
+  background: transparent; color: #fff5d8; filter: drop-shadow(0 2px 2px #22180a99);
+}
+.district-gate .gate-door { grid-area: 1 / 1; width: 58%; aspect-ratio: 118/192; }
+[data-art] .gate-door { background: url("/expedition/emblem.png") center / contain no-repeat; }
+.gate-door::after {
+  display: none;
+  content: attr(data-number); position: absolute; top: 0; right: 12%; min-width: 1.45em;
+  padding: 2px; border: 1px solid #ffdf97; border-radius: 4px; background: #50392e;
+  font: 800 clamp(.6rem, .95cqw, .84rem)/1 "Segoe UI", sans-serif; color: #fff6dd;
+}
+[data-art] .district-gate[data-boss] .gate-door::before {
+  content: ""; position: absolute; right: 10%; top: 5%; width: 19%; aspect-ratio: 30 / 41;
+  background: url("/expedition/boss.png") center / contain no-repeat;
+}
+.gate-label {
+  grid-area: 1 / 1; align-self: end; width: 100%; margin-bottom: 13%; padding: .22em 0 .28em;
+  background: #983535; text-align: center; white-space: nowrap;
+  font-size: clamp(.6rem, .97cqw, .88rem); font-weight: 750; line-height: 1.15;
+}
+[data-art] .gate-label { background: url("/expedition/ribbon.png") center / 100% 100% no-repeat; }
+.district-gate:hover, .district-gate[aria-pressed="true"] {
+  z-index: 1; filter: drop-shadow(0 0 2px #fff0a6) drop-shadow(0 0 4px #ffbc48);
+}
+.district-gate[aria-pressed="true"]::after {
+  content: ""; position: absolute; top: -8px; width: 0; height: 0;
+  border-top: 7px solid #fff39e; border-inline: 5px solid transparent;
+}
+.district-gate:focus-visible { outline: 3px solid #173b50; box-shadow: 0 0 0 5px #ffe093; }
+.map-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px var(--exp-pad); background: #192b38; border-top: 1px solid #655c4b; }
+.map-selection, .map-zoom { display: flex; align-items: center; gap: 8px; }
+.map-selection { flex-wrap: wrap; gap: 3px 14px; }
+.map-selection strong { font-size: .9rem; }
+.map-selection a { color: #b8e4df; font-size: .82rem; }
+.map-zoom button, #clear-district {
+  border: 1px solid #52667b; border-radius: 4px; min-height: 30px; padding: 3px 9px;
+  background: #172638; color: var(--ink); font-weight: 650;
+}
+.map-zoom button:disabled { opacity: .45; }
+.map-zoom button:enabled:hover, #clear-district:hover { border-color: var(--gold); }
+#zoom-fit { white-space: nowrap; font-size: .82rem; }
+#clear-district { border-color: #c49f56; color: var(--gold); margin-bottom: 12px; }
+@container (max-width: 620px) {
+  .gate-label { display: none; }
+  .district-gate .gate-door { width: 80%; min-height: 24px; }
+  .gate-door::after { display: block; right: 0; }
+}
+.expedition-page:not([data-art]) .gate-door::after { display: block; }
+@media (max-width: 620px) {
+  .expedition-page:has(.world-map:not([hidden])) .banner-copy { display: block; }
+  .expedition-page:has(.world-map:not([hidden])) .expedition-status { display: flex; gap: 3px 10px; padding: 3px 0 0; }
+  #map-viewport[data-zoomed] { min-height: 245px; }
+  .map-zoom { gap: 4px; }
+}

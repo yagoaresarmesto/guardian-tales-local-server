@@ -4,10 +4,15 @@
 from ...expedition_levels import level_settings
 from ...village import integer
 from ..artwork import EXPEDITION
+from .world_map import WORLD
 
 
 def state(references):
-    return {**level_settings(references), "hasArt": EXPEDITION.available(references)}
+    return {
+        **level_settings(references),
+        "hasArt": EXPEDITION.available(references),
+        "hasWorldMap": WORLD.available(references),
+    }
 
 
 def apply(references, body):

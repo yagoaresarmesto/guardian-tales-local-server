@@ -2,11 +2,33 @@
   <section class="banner expedition-banner" aria-labelledby="page-title">
     <img id="journey" alt="" hidden>
     <div class="banner-copy">
-      <p class="season-status">Solo Expedition</p>
+      <p class="season-status" id="expedition-kicker">Solo Expedition</p>
       <h1 id="page-title">Enemy <em>levels</em></h1>
       <div class="expedition-status"><span id="trial" role="status"></span><span id="overview"></span></div>
     </div>
   </section>
+
+  <section class="world-map" id="world-map" aria-label="Expedition district map" hidden>
+    <div id="map-viewport" tabindex="0" role="region" aria-label="World map, scroll to explore when zoomed in">
+      <div id="map-sheet">
+        <img id="map-terrain" alt="" draggable="false">
+        <div id="district-gates" role="group" aria-label="Districts"></div>
+      </div>
+    </div>
+    <div class="map-bar">
+      <div class="map-selection"><strong id="map-location">All districts</strong><a href="#catalog-title">View stages ↓</a></div>
+      <div class="map-zoom" role="group" aria-label="Map zoom">
+        <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+        <button type="button" id="zoom-fit" aria-label="Fit the entire map">Fit map</button>
+        <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+  </section>
+  <template id="gate-template">
+    <button type="button" class="district-gate">
+      <span class="gate-door" aria-hidden="true"></span><span class="gate-label"></span>
+    </button>
+  </template>
 
   <div class="expedition-workspace">
     <section class="surface directory" aria-labelledby="catalog-title">
@@ -16,6 +38,7 @@
       </header>
       <div class="catalog">
         <div id="areas" role="group" aria-label="Filter by area"></div>
+        <button type="button" id="clear-district" hidden></button>
         <div class="tools">
           <label class="sr" for="search">Find a stage by name or ID</label>
           <input type="search" id="search" placeholder="Find a stage by name or ID">
