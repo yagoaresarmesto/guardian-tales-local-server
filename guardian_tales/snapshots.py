@@ -18,6 +18,12 @@ from .state_lock import StateLock
 FORMAT = "guardian-tales-account-snapshot"
 CLIENT = {"version": "3.57.0", "version_code": 431, "region": "eu"}
 MAX_SNAPSHOT = 32 * 1024 * 1024
+PRESET_OVERLAYS = (
+    ("party_preset_state", "UserPartyPreset2"),
+    ("character_list_preset_state", "UserCharacterListPreset"),
+    ("multi_party_preset_state", "UserMultiPartyPreset"),
+    ("coop_expedition_slots_state", "CoopExpeditionSlots"),
+)
 STARTUP_READS = frozenset(
     (
         "/collection/list-all",
@@ -190,11 +196,7 @@ def preserved_read(db, route):
         return None
     value = reads[route]["value"]
     overlays = {
-        "/preset/get-presets": (
-            ("party_preset_state", "UserPartyPreset2"),
-            ("character_list_preset_state", "UserCharacterListPreset"),
-            ("multi_party_preset_state", "UserMultiPartyPreset"),
-        ),
+        "/preset/get-presets": PRESET_OVERLAYS,
         "/lobby-village/enter": (("village_state", "UserLobbyVillage"),),
     }
     for table, resource in overlays.get(route, ()):

@@ -14,7 +14,7 @@ from .equipment_grants import EquipmentGrants
 from .equipment_options import EquipmentOptionEditor
 from .hero_portraits import HeroPortraits
 from .mastery import MasteryEditor
-from .owned_copies import CopyProtection, CopyRemoval
+from .owned_copies import CopyProtection, CopyRemoval, ForcedCopyRemoval
 from .preview import Sandbox
 from .relic_grants import RelicGrants
 from .relics import RelicEditor
@@ -67,6 +67,7 @@ class InventoryApplication:
             "/api/game/equipment": self.equipment.request,
             "/api/game/equipment/add": self.equipment_grants.write,
             "/api/game/equipment/delete": CopyRemoval(database, "ItemWeapons").write,
+            "/api/game/equipment/force-delete": ForcedCopyRemoval(database, "ItemWeapons").write,
             "/api/game/equipment/lock": CopyProtection(database, "ItemWeapons", locked=True).write,
             "/api/game/equipment/unlock": CopyProtection(
                 database, "ItemWeapons", locked=False
@@ -82,6 +83,12 @@ class InventoryApplication:
             ).write,
             "/api/game/relics/unlock": CopyProtection(
                 database, "ItemMiscs", self.relics.specs, locked=False
+            ).write,
+            "/api/game/relics/force-delete": ForcedCopyRemoval(
+                database,
+                "ItemMiscs",
+                self.relics.specs,
+                {spec for spec, row in self.catalog.specs.items() if row.get("Type") == "jewel"},
             ).write,
             "/api/game/relics/delete": CopyRemoval(database, "ItemMiscs", self.relics.specs).write,
         }

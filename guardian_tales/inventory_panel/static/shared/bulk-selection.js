@@ -5,6 +5,7 @@ export function bulkSelection({api, version, focusId, describe, onProtection, re
   document.querySelector(".collection-bar").after(toolbar);
   const dialog = $("bulk-dialog"), marked = new Map();
   let pageRows = [], selecting = false, available = false, writable = false, busy = false;
+  const force = $("bulk-force");
   let reviewError = "";
 
   function status(text = "", error = false) {
@@ -12,11 +13,9 @@ export function bulkSelection({api, version, focusId, describe, onProtection, re
     $("bulk-status").textContent = text;
     $("bulk-status").classList.toggle("error", error);
   }
-  function deleteBlock(row) {
-    if (row.locked) return "Locked";
-    if (row.jewels) return "Socketed jewel";
-    if (row.training) return "Training Room";
-    return "";
+  function protections(row) {
+    return [row.locked && "Locked", row.training && "Training Room",
+      row.jewels && (row.jewels === 1 ? "1 socketed jewel" : row.jewels + " socketed jewels")].filter(Boolean);
   }
   function update() {
     const active = selecting && available;
@@ -38,7 +37,9 @@ export function bulkSelection({api, version, focusId, describe, onProtection, re
       button.setAttribute("aria-pressed", String(active ? marked.has(id) : id === focusId()));
     }
     if (dialog.open) {
-      const reason = reviewError || (rows.some(deleteBlock) ? "Omit protected copies or release their protection first." :
+      force.disabled = busy;
+      $("bulk-force-note").hidden = !force.checked;
+      const reason = reviewError || (!force.checked && rows.some(row => row.locked || row.jewels || row.training) ? "Omit protected copies or choose Force delete." :
         !writable ? "Close Guardian Tales and stop the backend to delete these copies." : "");
       $("bulk-problem").hidden = !reason;
       $("bulk-problem").textContent = reason;
@@ -52,14 +53,14 @@ export function bulkSelection({api, version, focusId, describe, onProtection, re
     const equipped = rows.filter(row => row.equipped).length;
     $("bulk-warning").textContent = "Permanently delete " + count + " " + copies + "?" +
       (equipped ? " This will also unequip " + equipped + "." : "");
-    $("bulk-confirm").textContent = "Delete " + count + " " + copies;
+    $("bulk-confirm").textContent = (force.checked ? "Force delete " : "Delete ") + count + " " + copies;
     $("bulk-review").replaceChildren(...rows.map(row => {
       const {name, stars} = describe(row);
       const line = el("li"), icon = image("/icon/" + row.spec + ".png");
       icon.loading = "lazy";
       const identity = el("div");
       identity.append(el("strong", "", name), el("small", "", [stars ? stars + "★" : "", "Copy #" + row.id,
-        row.equipped ? "Equipped" : "", deleteBlock(row)].filter(Boolean).join(" · ")));
+        row.equipped ? "Equipped" : "", ...protections(row)].filter(Boolean).join(" · ")));
       const omit = el("button", "bulk-omit", "×");
       omit.type = "button";
       omit.dataset.id = row.id;
@@ -83,8 +84,10 @@ export function bulkSelection({api, version, focusId, describe, onProtection, re
   $("bulk-clear").onclick = () => { marked.clear(); status(); update(); };
   $("bulk-delete").onclick = () => {
     reviewError = "";
+    force.checked = false;
     dialog.showModal(); review(); $("bulk-cancel").focus();
   };
+  force.onchange = () => { reviewError = ""; review(); };
   $("bulk-review").onclick = e => {
     const button = e.target.closest("button[data-id]");
     if (busy || !button) return;
@@ -115,7 +118,7 @@ export function bulkSelection({api, version, focusId, describe, onProtection, re
         throw new Error(result.error || "Could not update the selected copies.");
       }
       const count = rows.length + (rows.length === 1 ? " copy" : " copies");
-      if (action === "delete") {
+      if (action === "delete" || action === "force-delete") {
         marked.clear(); dialog.close();
         try { await reload(); }
         catch { status(count + " deleted. Reload the inventory to refresh the list.", true); return; }
@@ -134,7 +137,7 @@ export function bulkSelection({api, version, focusId, describe, onProtection, re
   }
   $("bulk-lock").onclick = () => apply("lock");
   $("bulk-unlock").onclick = () => apply("unlock");
-  $("bulk-confirm").onclick = () => apply("delete");
+  $("bulk-confirm").onclick = () => apply(force.checked ? "force-delete" : "delete");
 
   return {
     page(rows, enabled = true) {

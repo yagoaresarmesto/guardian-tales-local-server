@@ -23,19 +23,18 @@ def create_tables(db):
         )
 
 
-def gear_references(value):
-    """Read both native character fields and saved preset equipment references."""
-    result = set()
+def gear_slots(value):
+    """Yield populated gear slots in characters and nested party presets."""
     if isinstance(value, list):
         for row in value:
-            result.update(gear_references(row))
+            yield from gear_slots(row)
     elif isinstance(value, dict):
         for key, row in value.items():
             if key in EQUIPMENT_FIELDS:
                 if row is not None and not integer(row):
                     raise ValueError("Invalid saved equipment reference")
                 if row:
-                    result.add(row)
+                    yield value, key
             elif key == "EquipCostumes":
                 if row is None:
                     continue
@@ -43,10 +42,15 @@ def gear_references(value):
                     ident is not None and not integer(ident) for ident in row.values()
                 ):
                     raise ValueError("Invalid saved equipment-costume references")
-                result.update(ident for ident in row.values() if ident)
+                for slot, ident in row.items():
+                    if ident:
+                        yield row, slot
             else:
-                result.update(gear_references(row))
-    return result
+                yield from gear_slots(row)
+
+
+def gear_references(value):
+    return {mapping[key] for mapping, key in gear_slots(value)}
 
 
 def protected_ids(db, user):

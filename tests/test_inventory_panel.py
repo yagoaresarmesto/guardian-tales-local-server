@@ -33,7 +33,7 @@ from guardian_tales.panel_common.art_cache import cached_art
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
 from guardian_tales.service_control import register
-from guardian_tales.snapshots import CLIENT
+from guardian_tales.snapshots import CLIENT, preserved_read
 from guardian_tales.state_lock import StateLock
 from guardian_tales.web_panel.server import WebPanel
 
@@ -44,6 +44,7 @@ def prepare_inventory(root):
     catalog = {
         "items": [
             dict(Id=1, Name="test_ticket", Type="ticket", MaxCount=10),
+            dict(Id=300, Name="test_jewel", Type="jewel"),
             dict(Id=2, Name="test_card", Type="card"),
             dict(Id=6, Name="exp_hammer_1_rare", Type="enhancehammer", Level=19, Rarity=1),
             dict(Id=7, Name="limitbreak_hammer_legend", Type="limitbreakhammer", Rarity=3),
@@ -725,6 +726,124 @@ class InventoryPanelTests(unittest.TestCase):
                 self.assertEqual(result["inventoryVersion"], self.call(api)["inventoryVersion"])
                 self.assertEqual(saved(), profile)
                 reject("delete", payload, 409)
+
+    def test_force_delete_equipment_releases_only_matching_slots_in_live_presets(self):
+        profile = self.seed_wallet()
+        user = profile["User"]
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        user.update(
+            Characters=[dict(Id=11, Weapon1=11, Relic=12, EquipCostumes={"1": 15, "2": 12})],
+            TrainingSlots={"2": {"Id": 2, "ItemId": 15, "IsLevel": True}},
+            ItemIdCounter=22,
+        )
+        unchanged = {"Cas": 8, "Presets": [{"Id": 15, "Characters": [{"Id": 11, "Relic": 12}]}]}
+        hero = {"Id": 11, "Weapon1": 11, "Weapon2": 15, "Relic": 12}
+        party = {"Cas": 3, "Presets": [{"Id": 15, "Characters": [hero]}]}
+        multi = {"Cas": 4, "Presets": [{"Id": 11, "Parties": [{"Characters": [hero]}]}]}
+        coop = {"0": {"Id": 15, "Dealer": hero}}
+        captured = {
+            "UserPartyPreset2": unchanged,
+            "UserCharacterListPreset": unchanged,
+            "UserMultiPartyPreset": multi,
+            "CoopExpeditionSlots": coop,
+        }
+        raw = json.dumps({"/preset/get-presets": {"value": captured}})
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY, startup_reads TEXT)")
+            db.execute("INSERT INTO imported_account VALUES(1,?)", (raw,))
+            db.execute("CREATE TABLE party_preset_state (id INTEGER PRIMARY KEY, value TEXT)")
+            db.execute("INSERT INTO party_preset_state VALUES(1,?)", (json.dumps(party),))
+        api = "/api/game/equipment"
+        body = dict(
+            copies=[dict(id=11, spec=3), dict(id=15, spec=5)],
+            version=self.call(api)["inventoryVersion"],
+        )
+        with StateLock(self.root), self.assertRaises(HTTPError) as busy:
+            self.call(api + "/force-delete", body)
+        self.assertEqual(busy.exception.code, 423)
+        busy.exception.close()
+        # Fail after overlay writes and verify they roll back with the profile.
+        user["TrainingSlots"] = []
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        with self.assertRaises(HTTPError) as invalid:
+            self.call(api + "/force-delete", body)
+        self.assertEqual(invalid.exception.code, 400)
+        invalid.exception.close()
+        self.assertEqual(
+            preserved_read(db, "/preset/get-presets"), dict(captured, UserPartyPreset2=party)
+        )
+        self.assertEqual(
+            json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), profile
+        )
+        user["TrainingSlots"] = {"2": {"Id": 2, "ItemId": 15, "IsLevel": True}}
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        result = self.call(api + "/force-delete", body)
+        self.assertEqual(result["revision"], user["Cas"] + 1)
+        self.assertEqual(result["ids"], [11, 15])
+        user["Cas"] += 1
+        user["ItemWeapons"] = []
+        user["Characters"][0].update(Weapon1=None, EquipCostumes={"2": 12})
+        user["TrainingSlots"]["2"]["ItemId"] = 0
+        self.assertEqual(
+            json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), profile
+        )
+        hero.update(Weapon1=None, Weapon2=None)
+        party["Cas"] += 1
+        multi["Cas"] += 1
+        self.assertEqual(
+            preserved_read(db, "/preset/get-presets"), dict(captured, UserPartyPreset2=party)
+        )
+        self.assertEqual(
+            db.execute("SELECT startup_reads FROM imported_account").fetchone()[0], raw
+        )
+        with self.assertRaises(HTTPError) as stale:
+            self.call(api + "/force-delete", body)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+
+    def test_force_delete_relics_recovers_all_jewels_once_and_rejects_invalid_sockets(self):
+        profile = self.seed_wallet()
+        user = profile["User"]
+        source = user["ItemMiscs"][0]
+        source.update(Locked=True, JewelSlots=[300, None])
+        duplicate = dict(source, Id=24, JewelSlots=[9999])
+        sibling = dict(source, Id=25)
+        user["ItemMiscs"].extend([duplicate, sibling])
+        user.update(TrainingSlots={}, Characters=[{"Relic": 12}], ItemIdCounter=25)
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY, startup_reads TEXT)")
+        api = "/api/game/relics"
+        version = self.call(api)["inventoryVersion"]
+        batch = dict(copies=[dict(id=12, spec=4), dict(id=24, spec=4)], version=version)
+        for body in (batch, dict(batch, copies=[dict(id=12, spec=4), dict(id=11, spec=3)])):
+            with self.assertRaises(HTTPError) as invalid:
+                self.call(api + "/force-delete", body)
+            self.assertEqual(invalid.exception.code, 400)
+            invalid.exception.close()
+            self.assertEqual(
+                json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0]), profile
+            )
+        duplicate["JewelSlots"] = [300, 0]
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        self.call(api + "/force-delete", batch)
+        saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])["User"]
+        self.assertEqual(saved["ItemMiscs"], [sibling])
+        self.assertEqual(saved["ItemStackables"][:-1], user["ItemStackables"])
+        recovered = saved["ItemStackables"][-1]
+        self.assertEqual((recovered["Id"], recovered["ItemId"], recovered["Amount"]), (26, 300, 2))
+        self.assertEqual(saved["Characters"], [{"Relic": None}])
+        self.assertEqual(saved["Cas"], user["Cas"] + 1)
+        self.call(
+            api + "/force-delete", dict(id=25, spec=4, version=self.call(api)["inventoryVersion"])
+        )
+        saved = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])["User"]
+        self.assertEqual((saved["ItemIdCounter"], saved["ItemStackables"][-1]["Amount"]), (26, 3))
 
     def test_batch_larger_than_a_page_fits_in_one_protection_request(self):
         profile = self.seed_wallet()

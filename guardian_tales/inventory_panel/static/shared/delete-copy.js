@@ -2,14 +2,18 @@ import { $ } from "/inventory-dom.js";
 
 export function copyDeletion(api, selection, reload, note) {
   const dialog = $("delete-dialog"), opener = $("delete-copy"), confirm = $("delete-confirm");
+  const force = $("delete-force");
   let target, writable = false, busy = false, blocked = "";
 
   function update() {
     if (!target) return;
-    const reason = blocked || (target.locked ? "Choose Unlock in the copy details first." :
-      target.jewels ? "Detach its jewels in the game first." :
-      target.training ? "Remove it from the Training Room first." :
-      !writable ? "Close Guardian Tales and stop the backend to delete this copy." : "");
+    force.disabled = busy;
+    $("delete-force-note").hidden = !force.checked;
+    confirm.textContent = force.checked ? "Force delete copy" : "Delete copy";
+    const protection = target.locked ? "This copy is locked." : target.jewels ? "This relic has socketed jewels." :
+      target.training ? "This copy is in the Training Room." : "";
+    const reason = blocked || (!writable ? "Close Guardian Tales and stop the backend to delete this copy." :
+      protection && !force.checked ? protection + " Release it or choose Force delete." : "");
     $("delete-status").textContent = reason;
     $("delete-status").hidden = !reason;
     confirm.disabled = busy || !!reason;
@@ -20,6 +24,7 @@ export function copyDeletion(api, selection, reload, note) {
     target = selection();
     if (!target || busy) return;
     blocked = "";
+    force.checked = false;
     $("delete-name").textContent = target.name;
     $("delete-id").textContent = "Copy #" + target.id;
     $("delete-stars").textContent = "★".repeat(target.stars || 0);
@@ -34,6 +39,7 @@ export function copyDeletion(api, selection, reload, note) {
     dialog.showModal();
     $("delete-cancel").focus();
   };
+  force.onchange = () => { blocked = ""; update(); };
   $("delete-cancel").onclick = () => dialog.close();
   dialog.oncancel = e => { if (busy) e.preventDefault(); };
   dialog.onclose = () => { target = null; };
@@ -43,7 +49,7 @@ export function copyDeletion(api, selection, reload, note) {
     busy = true;
     update();
     try {
-      const response = await fetch(api + "/delete", {
+      const response = await fetch(api + (force.checked ? "/force-delete" : "/delete"), {
         method: "POST", headers: {"Content-Type": "application/json"},
         body: JSON.stringify({id, spec, version}),
       });

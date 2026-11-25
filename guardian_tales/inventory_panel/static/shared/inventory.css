@@ -388,3 +388,6 @@ main > #message.error { border-color: #ff997b; }
 #bulk-review small { display:block; color:var(--muted); }
 .bulk-omit { margin-left:auto; }
 @media(max-width:480px) { .bulk-actions { width:100%; margin-left:0; } .collection-bar:has(#bulk-toggle) { flex-wrap:wrap; padding-block:7px; } }
+
+.force-delete-option { display:flex; align-items:center; gap:7px; width:fit-content; margin-top:12px; color:#ffbfc0; cursor:pointer; }
+.delete-body .force-delete-note { margin-top:4px; color:var(--muted); }

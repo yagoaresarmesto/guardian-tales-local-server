@@ -101,7 +101,9 @@ class InventoryHandler(LocalPanelHandler):
                 if self.path.startswith("/api/game/mastery")
                 else (4096 if self.path.startswith("/api/game/") else 512)
             )
-            if re.fullmatch(r"/api/game/(equipment|relics)/(lock|unlock|delete)", self.path):
+            if re.fullmatch(
+                r"/api/game/(equipment|relics)/(lock|unlock|delete|force-delete)", self.path
+            ):
                 max_body = 1024 * 1024
             raw = self.read_body(max_body, "Invalid request size.")
             if not self.allowed_origin():
