@@ -22,6 +22,11 @@
             </div>
             <div id="board-grid" role="group" aria-label="Enemy formation"></div>
             <div class="formation-tools">
+              <div class="unit-modifier" id="modifier-field" hidden>
+                <label for="unit-modifier">Elite modifier</label>
+                <small id="modifier-target"></small>
+                <select id="unit-modifier" aria-describedby="modifier-target"></select>
+              </div>
               <div class="board-level-field">
                 <label for="board-level">Floor enemy level</label>
                 <input id="board-level" type="number" min="1" step="1" aria-describedby="board-inherit">
@@ -94,6 +99,7 @@
     <p id="no-enemies" hidden>No matching enemies. <button type="button" id="reset-enemy-filters">Clear filters</button></p>
     <footer class="picker-footer">
       <span id="enemy-results" role="status"></span>
+      <button type="button" id="board-edit-elite">Edit elite modifier</button>
       <button type="button" id="board-move">Move or swap</button>
       <button type="button" id="board-remove">Remove enemy</button>
     </footer>

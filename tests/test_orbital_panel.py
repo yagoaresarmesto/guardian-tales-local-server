@@ -151,11 +151,12 @@ class OrbitalPanelTests(unittest.TestCase):
             "infinitytowerfloors": floors,
             "exps2": {"LevelExps": list(range(220))},
             "infinitytowermonsters": [
-                {"MonsterId": 10, "SpecId": 10, "Class": "boss"},
+                {"MonsterId": 10, "SpecId": 10, "Class": "boss", "AvailableEliteOption": [15, 18]},
                 {"MonsterId": 11, "SpecId": 11},
                 {"MonsterId": 12, "SpecId": 12},
             ],
             "monsters": [{"Id": i, "Name": f"it_foe_{i}"} for i in (10, 11, 12)],
+            "options": [{"Id": 15, "Name": "elite_mortar"}, {"Id": 18, "Name": "elite_stat_up"}],
             "__checksum__": "stock",
         }
         texts = {name: json.dumps(data) for name, data in tables.items()}
@@ -183,6 +184,8 @@ class OrbitalPanelTests(unittest.TestCase):
         self.assertEqual(view["floor"]["type"], "Normal")
         self.assertEqual({e["id"] for e in view["enemies"]}, {10, 11})
         self.assertEqual([e["id"] for e in view["enemies"] if e["boss"]], [10])
+        self.assertEqual(view["floor"]["originalElites"], {"4": 15})
+        self.assertEqual({e["id"]: e["elites"] for e in view["enemies"]}, {10: [15, 18], 11: []})
         # Preserve settings from installations that predate custom boards.
         (self.root / SELECTION).write_text(json.dumps({"revision": 1, "level": 100}))
         for invalid_floor in (0, 1501):
@@ -199,6 +202,10 @@ class OrbitalPanelTests(unittest.TestCase):
             [{"position": 1, "enemy": 10, "origin": 3}],
             [{"position": True, "enemy": 10}],
             [{"position": 1, "enemy": 10, "Options": []}],
+            [{"position": 1, "enemy": 11, "elite": 18}],
+            [{"position": 1, "enemy": 10, "elite": 19}],
+            [{"position": 1, "enemy": 10, "elite": True}],
+            [{"position": 1, "enemy": 10, "elite": [15, 18]}],
         ):
             with self.subTest(bad=bad), self.assertRaises(HTTPError) as rejected:
                 choose(1, 1, {"units": bad, "level": None})
@@ -231,6 +238,24 @@ class OrbitalPanelTests(unittest.TestCase):
         choose(1, 7, None)
         self.assertIsNone(self.api(suffix="/boards/1500")["custom"])
         self.api({"revision": 8, "level": None}, "/enemy-level")
+        self.assertEqual(served(), floors)
+        edited = [dict(units[0], elite=None), dict(units[1], elite=18)]
+        choose(1, 9, {"units": edited, "level": None})
+        self.assertEqual(self.api(suffix="/boards/1")["custom"]["units"], edited)
+        self.assertEqual(
+            served()[0]["Monsters"],
+            [
+                {"Position": 20, "MonsterId": 10},
+                {"Position": 4, "MonsterId": 10, "Options": [{"OptionId": 18, "Level": 1}]},
+            ],
+        )
+        edited[0].update(position=1, elite=18)
+        choose(1, 10, {"units": edited, "level": None})
+        self.assertEqual(
+            served()[0]["Monsters"][0],
+            {"Position": 1, "MonsterId": 10, "Options": [{"OptionId": 18, "Level": 1}]},
+        )
+        choose(1, 11, None)
         self.assertEqual(served(), floors)
         self.assertEqual(path.read_bytes(), source)
         self.assertEqual(self.profile(), self.original)

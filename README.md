@@ -299,8 +299,16 @@ The board mirrors the enemy side in the game with four columns and five rows
 of square cells. Occupied cells show their element, and a red crown marks a
 boss from the Orbital Lift catalog. Hover over or focus a cell to see its
 enemy's name. The header and tile artwork come from the installed resource
-pack. Moving an original enemy keeps its elite modifiers. A replacement
-starts with its own base stats.
+pack. The enemy picker uses the same square portraits and corner element icons.
+
+To change one enemy's **Elite modifier**, click its cell, then **Edit elite
+modifier**. After placing a new enemy, its modifier selector is already on the
+board next to its name and cell number. Choose an effect or **None**, then
+click **Save floor**. The editor offers only the effects listed for that enemy
+in the installed catalog. In 3.57.0 the original floors use at most one
+level-1 effect per enemy: Mortar (Shelling), Stat Up (Enlargement), melee
+immunity or ranged immunity. An **Elite** label marks affected cells. Moving
+or swapping an enemy carries its modifier. A replacement starts with none.
 
 Leave **Floor enemy level** blank to follow the global setting or the original
 floor level. An explicit level (1–200) takes precedence for that floor.

@@ -16,8 +16,11 @@ function artwork(src, className, lazy = false) {
   return image;
 }
 
-function portrait(enemy, lazy = false) {
-  return artwork("/orbital-lift/enemies/" + encodeURIComponent(enemy.sprite) + ".png", "enemy-portrait", lazy);
+function addEnemyArt(tile, enemy, lazy = false) {
+  if (enemy.sprite) tile.append(artwork("/orbital-lift/enemies/" + encodeURIComponent(enemy.sprite) + ".png", "enemy-portrait", lazy));
+  const element = elementNames[enemy.element] ?? enemy.element;
+  if (element) tile.append(artwork("/elements/" + encodeURIComponent(element.toLowerCase()) + ".png", "cell-element", lazy));
+  if (enemy.boss) tile.append(artwork("/orbital-lift/boss-crown.png", "cell-crown", lazy));
 }
 
 function enemyChooser(onPick) {
@@ -59,10 +62,13 @@ function enemyChooser(onPick) {
       elements.add(card.dataset.element);
       const name = document.createElement("strong");
       name.textContent = enemy.name;
-      const detail = document.createElement("span");
-      detail.textContent = card.dataset.element + " · #" + enemy.id;
-      if (enemy.sprite) card.append(portrait(enemy, true));
-      card.append(name, detail);
+      const id = document.createElement("span");
+      id.className = "card-id";
+      id.textContent = "#" + enemy.id;
+      card.title = [enemy.name, card.dataset.element, id.textContent].join(" · ");
+      card.setAttribute("aria-label", card.title);
+      addEnemyArt(card, enemy, true);
+      card.append(name, id);
       card.onclick = () => { dialog.close(); onPick(enemy.id); };
       cards.push(card);
     }
@@ -89,6 +95,7 @@ function enemyChooser(onPick) {
       $("enemy-picker-target").textContent = "Floor " + floor + " · Cell " + cell +
         (enemy ? " · " + enemy.name : "");
       $("board-move").hidden = $("board-remove").hidden = !enemy;
+      $("board-edit-elite").hidden = !enemy?.elites?.length;
       for (const card of gallery.children) {
         card.setAttribute("aria-pressed", String(Number(card.dataset.id) === enemy?.id));
       }
@@ -104,6 +111,9 @@ export function startBoard(nextFloor, onSave) {
   let current = nextFloor >= 1 && nextFloor <= 1500 ? nextFloor : 1;
   const level = $("board-level"), picker = $("board-floor");
   const unitAt = pos => units.find(unit => unit.position === pos);
+  const originalElite = unit => state.floor.originalElites?.[unit?.origin] ?? null;
+  const eliteOf = unit => unit && Object.hasOwn(unit, "elite") ? unit.elite : originalElite(unit);
+  const modifier = $("unit-modifier");
   const draft = () => JSON.stringify([units, level.value]);
   const chooser = enemyChooser(enemy => {
     const idx = units.findIndex(unit => unit.position === selected);
@@ -162,13 +172,16 @@ export function startBoard(nextFloor, onSave) {
   function render() {
     for (const button of cells) {
       const pos = Number(button.dataset.position);
-      const enemy = enemies.get(unitAt(pos)?.enemy);
+      const unit = unitAt(pos);
+      const enemy = enemies.get(unit?.enemy);
+      const elite = eliteOf(unit);
       const element = elementNames[enemy?.element] ?? enemy?.element;
       button.draggable = Boolean(enemy);
       button.dataset.occupied = String(button.draggable);
+      button.dataset.elite = String(elite !== null);
       button.setAttribute("aria-pressed", String(pos === selected));
       button.setAttribute("aria-haspopup", moving === null ? "dialog" : "false");
-      button.title = ["Cell " + pos, enemy?.name ?? "Empty", element, enemy?.boss ? "Boss" : ""].filter(Boolean).join(" · ");
+      button.title = ["Cell " + pos, enemy?.name ?? "Empty", element, enemy?.boss ? "Boss" : "", state.eliteNames?.[elite]].filter(Boolean).join(" · ");
       button.setAttribute("aria-label", button.title);
       const ident = String(enemy?.id ?? "");
       if (button.dataset.enemy === ident) continue;
@@ -181,20 +194,27 @@ export function startBoard(nextFloor, onSave) {
       label.textContent = enemy?.name ?? "+";
       button.replaceChildren(number);
       if (enemy) {
-        if (enemy.sprite) button.append(portrait(enemy));
-        if (element) button.append(artwork("/elements/" + encodeURIComponent(element.toLowerCase()) + ".png", "cell-element"));
-        if (enemy.boss) button.append(artwork("/orbital-lift/boss-crown.png", "cell-crown"));
+        addEnemyArt(button, enemy);
       } else {
         button.append(artwork("/orbital-lift/empty-cell.png", "empty-emblem"));
       }
       button.append(label);
+    }
+    const unit = unitAt(selected), enemy = enemies.get(unit?.enemy);
+    $("modifier-field").hidden = !enemy;
+    if (enemy) {
+      const allowed = enemy.elites ?? [];
+      $("modifier-target").textContent = "Cell " + selected + " · " + enemy.name;
+      modifier.replaceChildren(new Option("None", ""), ...allowed.map(id => new Option(state.eliteNames[id], id)));
+      modifier.value = eliteOf(unit) ?? "";
+      modifier.disabled = !allowed.length;
     }
     $("board-count").textContent = units.length + (units.length === 1 ? " enemy" : " enemies");
     $("board-cancel-move").hidden = moving === null;
     $("board-hint").textContent = moving !== null ? "Choose a destination to move or swap the enemy in cell " + moving + "."
       : !units.length && state.floor.type !== "RecordRoom" ? "Add at least one enemy to save this combat floor."
       : !units.length && state.floor.type === "RecordRoom" ? "Select a cell to add an enemy and turn this room into a combat floor."
-      : "Select a cell to add or change its enemy. Drag enemies to swap positions.";
+      : "Select a cell to change its enemy or elite modifier. Drag enemies to swap positions.";
     buttons();
   }
 
@@ -268,6 +288,15 @@ export function startBoard(nextFloor, onSave) {
     $("board-open").disabled = !picker.validity.valid;
   };
   level.oninput = () => { message(""); buttons(); };
+  modifier.onchange = () => {
+    const unit = unitAt(selected);
+    const elite = modifier.value === "" ? null : Number(modifier.value);
+    if (elite === originalElite(unit)) delete unit.elite;
+    else unit.elite = elite;
+    message("");
+    render();
+  };
+  $("board-edit-elite").onclick = () => { chooser.close(); modifier.focus(); };
   $("board-remove").onclick = () => {
     chooser.close();
     units = units.filter(unit => unit.position !== selected);

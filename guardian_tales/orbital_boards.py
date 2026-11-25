@@ -23,28 +23,55 @@ def stock_units(floor):
 
 def roster(floors, tables):
     used = {unit["MonsterId"] for floor in floors for unit in floor["Monsters"]}
-    monsters = {row["Id"]: row for row in json.loads(tables["monsters"][1])}
-    result = {}
-    for spec in json.loads(tables["infinitytowermonsters"][1]):
-        enemy = spec["MonsterId"]
-        if enemy in used:
-            result[enemy] = (spec, monsters[spec["SpecId"]])
-    if used != result.keys():
+    specs = {
+        spec["MonsterId"]: spec
+        for spec in json.loads(tables["infinitytowermonsters"][1])
+        if spec["MonsterId"] in used
+    }
+    if used != specs.keys():
         raise ValueError("The Orbital Lift monster catalog is incomplete.")
-    return result
+    return specs
+
+
+def elite_catalog(specs, tables):
+    used = {option for spec in specs.values() for option in spec.get("AvailableEliteOption", [])}
+    titles = {
+        "elite_mortar": "Mortar (Shelling)",
+        "elite_stat_up": "Stat Up (Enlargement)",
+        "elite_melee_immune": "Melee immunity",
+        "elite_projectile_immune": "Ranged immunity",
+    }
+    options = json.loads(tables["options"][1]) if used and "options" in tables else []
+    names = {
+        row["Id"]: titles.get(
+            row["Name"], row["Name"].removeprefix("elite_").replace("_", " ").title()
+        )
+        for row in options
+        if row["Id"] in used
+    }
+    allowed = {
+        enemy: [key for key in spec.get("AvailableEliteOption", []) if key in names]
+        for enemy, spec in specs.items()
+    }
+    return names, allowed
 
 
 @lru_cache(maxsize=2)
 def catalog(source, directory):
     _, tables = records(decode(source))
     floors, maximum = levels.floor_data(tables)
-    monsters = roster(floors, tables)
-    names = {enemy: model["Name"].removeprefix("it_") for enemy, (_, model) in monsters.items()}
+    specs = roster(floors, tables)
+    models = {row["Id"]: row for row in json.loads(tables["monsters"][1])}
+    modifiers, allowed = elite_catalog(specs, tables)
+    names = {
+        enemy: models[spec["SpecId"]]["Name"].removeprefix("it_") for enemy, spec in specs.items()
+    }
     labels = english_labels(
         ReferenceData(directory), hashlib.sha256(source).hexdigest(), set(names.values())
     )
     choices = []
-    for enemy, (spec, model) in monsters.items():
+    for enemy, spec in specs.items():
+        model = models[spec["SpecId"]]
         name = names[enemy]
         sprite = (
             (model.get("SpriteName") or {}).get("default")
@@ -57,17 +84,24 @@ def catalog(source, directory):
                 "name": labels.get(name) or name.replace("_", " ").title(),
                 "element": model.get("ElementalType"),
                 "boss": spec.get("Class") == "boss",
+                "elites": allowed[enemy],
                 "sprite": sprite.split(":")[-1].split("#")[-1],
             }
         )
     return {
         "maxLevel": maximum,
+        "eliteNames": modifiers,
         "enemies": sorted(choices, key=lambda x: (x["name"], x["id"])),
         "floors": {
             row["Floor"]: {
                 "type": row["FloorType"],
                 "level": row["StandardLevel"] + 1,
                 "units": stock_units(row),
+                "originalElites": {
+                    unit["Position"]: unit["Options"][0]["OptionId"]
+                    for unit in row["Monsters"]
+                    if unit.get("Options")
+                },
             }
             for row in floors
             if row["Floor"] <= LAST_SELECTABLE_FLOOR
@@ -83,6 +117,7 @@ def state(references, floor=1):
         "floor": view["floors"][floor],
         "custom": data["boards"].get(str(floor)),
         "enemies": view["enemies"],
+        "eliteNames": view["eliteNames"],
         "maxLevel": view["maxLevel"],
         "revision": data["revision"],
         "globalLevel": data["level"],
@@ -101,10 +136,12 @@ def validate_board(board, original, enemies, maximum):
     stock = {unit["position"]: unit["enemy"] for unit in original}
     positions, origins = set(), set()
     for unit in units:
-        if not isinstance(unit, dict) or set(unit) not in (
-            {"enemy", "position"},
-            {"enemy", "position", "origin"},
-        ):
+        if not isinstance(unit, dict) or not {"enemy", "position"} <= unit.keys() <= {
+            "enemy",
+            "position",
+            "origin",
+            "elite",
+        }:
             raise ValueError("Invalid enemy placement.")
         pos, enemy = unit["position"], unit["enemy"]
         if (
@@ -115,6 +152,11 @@ def validate_board(board, original, enemies, maximum):
         ):
             raise ValueError("Use one Orbital Lift enemy per cell.")
         positions.add(pos)
+        modifier = unit.get("elite")
+        if modifier is not None and (
+            not integer(modifier, minimum=1) or modifier not in enemies[enemy]
+        ):
+            raise ValueError("Choose one elite modifier available to this enemy.")
         if "origin" in unit:
             origin = unit["origin"]
             if (
@@ -126,8 +168,23 @@ def validate_board(board, original, enemies, maximum):
             origins.add(origin)
 
 
+def native_unit(unit, original):
+    row = {
+        **original.get(unit.get("origin"), {}),
+        "Position": unit["position"],
+        "MonsterId": unit["enemy"],
+    }
+    # Old boards omit elite and inherit the complete original options through origin.
+    if "elite" in unit:
+        if unit["elite"] is None:
+            row.pop("Options", None)
+        else:
+            row["Options"] = [{"OptionId": unit["elite"], "Level": 1}]
+    return row
+
+
 def apply_overrides(floors, boards, tables, maximum):
-    enemies = roster(floors, tables)
+    _, enemies = elite_catalog(roster(floors, tables), tables)
     by_floor = {str(row["Floor"]): row for row in floors if row["Floor"] <= LAST_SELECTABLE_FLOOR}
     for key, board in boards.items():
         if key not in by_floor:
@@ -138,14 +195,7 @@ def apply_overrides(floors, boards, tables, maximum):
             row["StandardLevel"] = board["level"] - 1
         if board["units"] is not None:
             original = {unit["Position"]: unit for unit in row["Monsters"]}
-            row["Monsters"] = [
-                {
-                    **original.get(unit.get("origin"), {}),
-                    "Position": unit["position"],
-                    "MonsterId": unit["enemy"],
-                }
-                for unit in board["units"]
-            ]
+            row["Monsters"] = [native_unit(unit, original) for unit in board["units"]]
             if row["Monsters"] and row["FloorType"] == "RecordRoom":
                 row["FloorType"] = "Normal"
 
@@ -168,7 +218,10 @@ def apply(references, body):
             view = catalog(source, references.directory)
             stock = view["floors"][floor]["units"]
             validate_board(
-                board, stock, {enemy["id"] for enemy in view["enemies"]}, view["maxLevel"]
+                board,
+                stock,
+                {enemy["id"]: enemy["elites"] for enemy in view["enemies"]},
+                view["maxLevel"],
             )
             if board["units"] == stock:
                 board = {**board, "units": None}
