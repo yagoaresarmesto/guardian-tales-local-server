@@ -1,4 +1,4 @@
-import { $, el, image } from "/inventory-dom.js";
+import { $, el } from "/inventory-dom.js";
 
 const api = "/api/game/account";
 const number = new Intl.NumberFormat("en-GB");
@@ -67,10 +67,13 @@ async function checkAccess() {
 
 function balanceRow(item, setTotal) {
   const row = el("div", "wallet-row");
-  const identity = el("div", "wallet-item"), icon = image("/icon/" + item.id + ".png");
+  const identity = el("div", "wallet-item"), icon = el("img");
+  icon.alt = "";
+  icon.loading = "lazy";
   icon.onerror = () => icon.remove();
+  icon.src = "/icon/" + item.id + ".png";
   const detail = el("div");
-  detail.append(el("strong", "", item.label), el("small", "", "Saved: " + number.format(item.balance)));
+  detail.append(el("strong", "", item.choice || item.label), el("small", "", "Saved: " + number.format(item.balance)));
   if (item.limit !== null) detail.append(el("small", "", "Limit: " + number.format(item.limit)));
   identity.append(icon, detail);
   const action = setTotal ? "Set total" : "Add";
@@ -89,44 +92,38 @@ function balanceRow(item, setTotal) {
   after.append(el("small", "", "After applying"), result);
   field.append(label, input);
   row.append(identity, field, after, note);
-  controls.set(item.key, {item, input, result, note, setTotal, row});
+  controls.set(item.key, {item, input, result, note, setTotal});
   return row;
 }
 
 function renderMaterials(items) {
-  const picker = $("material"), variant = $("material-variant");
-  const previous = picker.value, previousVariant = variant.value;
+  const container = $("materials");
+  const expanded = new Set(Array.from(container.querySelectorAll("details[open]"), node => node.dataset.group));
+  const compare = new Intl.Collator("en", {numeric: true}).compare;
   const groups = new Map();
+  const common = [];
   for (const item of items) {
-    const group = item.group || item.label;
-    if (!groups.has(group)) groups.set(group, []);
-    groups.get(group).push(item);
+    if (!item.group) {
+      common.push(item);
+      continue;
+    }
+    if (!groups.has(item.group)) groups.set(item.group, []);
+    groups.get(item.group).push(item);
   }
   $("materials-section").hidden = !items.length;
-  const compare = new Intl.Collator("en", {numeric: true}).compare;
-  picker.replaceChildren(...Array.from(groups.keys()).sort(compare).map(label => new Option(label, label)));
-  if (!groups.size) return;
-  if (groups.has(previous)) picker.value = previous;
-  const selected = new Map([[previous, previousVariant]]);
-  function showBalance() {
-    const item = groups.get(picker.value).find(candidate => candidate.key === variant.value);
-    selected.set(picker.value, item.key);
-    $("material-balance").replaceChildren(controls.get(item.key)?.row || balanceRow(item, true));
-    update();
+  common.sort((a, b) => compare(a.label, b.label));
+  container.replaceChildren(...common.map(item => balanceRow(item, true)));
+  for (const group of Array.from(groups.keys()).sort(compare)) {
+    const entries = groups.get(group);
+    entries.sort((a, b) => Number(b.preferred) - Number(a.preferred) || compare(a.choice, b.choice));
+    const section = el("details", "material-group");
+    section.dataset.group = group;
+    section.open = expanded.has(group);
+    const summary = el("summary", "", group);
+    summary.append(el("small", "", number.format(entries.length)));
+    section.append(summary, ...entries.map(item => balanceRow(item, true)));
+    container.append(section);
   }
-  function chooseGroup() {
-    const options = groups.get(picker.value);
-    options.sort((a, b) => compare(a.choice || a.label, b.choice || b.label));
-    variant.replaceChildren(...options.map(item => new Option(item.choice || item.label, item.key)));
-    const initial = options.find(item => item.key === selected.get(picker.value)) || options.find(item => item.preferred);
-    if (initial) variant.value = initial.key;
-    $("variant-field").hidden = !options[0].group;
-    $("variant-label").textContent = ({"Hero Myth Stones": "Hero", "Purple Coins": "World"})[picker.value] || "Coin";
-    showBalance();
-  }
-  picker.onchange = chooseGroup;
-  variant.onchange = showBalance;
-  chooseGroup();
 }
 
 function render(data) {
