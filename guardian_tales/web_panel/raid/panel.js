@@ -98,8 +98,8 @@ function renderLineup() {
     card.querySelector(".inspect").setAttribute("aria-label", label);
     pin.setAttribute("aria-label", label);
     pin.title = label;
-    showPortrait(pin.querySelector("img"), slot.boss);
-    showPortrait(card.querySelector("img"), slot.boss);
+    showPortrait(pin.querySelector(".boss-portrait"), slot.boss);
+    showPortrait(card.querySelector(".boss-portrait"), slot.boss);
     showElement(card.querySelector(".card-element"), slot.element);
     const name = card.querySelector(".stock-name");
     name.textContent = bossName(slot);
