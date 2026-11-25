@@ -20,6 +20,7 @@ FILES = {
     "/inventory-dom.js": (STATIC / "shared/inventory-dom.js", JS),
     "/quantity-editor.js": (STATIC / "shared/quantity-editor.js", JS),
     "/equipment-options.js": (STATIC / "equipment/options.js", JS),
+    "/equipment-add.js": (STATIC / "equipment/add.js", JS),
 }
 
 

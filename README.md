@@ -260,6 +260,7 @@ then restart the inventory panel. The file under `files/static_data/` is the
 encoded download. Existing catalog-bound English tables also work.
 
 - **Equipment** lets you change basic options, sub-options and their locks on an individual weapon or accessory.
+  Use **Add equipment** to search by name or catalog ID and filter by equipment type. **Add to inventory** creates one unequipped level-1 copy at its original rarity, rolls its native options and selects it in the grid. The picker uses standard, non-limited player weapons, shields and accessories from the installed client. You can browse while playing. Close the game and stop the backend to save a new copy.
   The grid and detail view size equipment artwork by its original sprite dimensions so that compact items, such as rings and gauntlets, retain their proportions alongside long weapons.
   Exclusive weapons show their hero’s face in the lower-right corner, using the hero’s 6★ portrait when available. Their cards fade from blue to green, or to pink for a 6★ copy.
   The upper-right book ribbon marks completed weapon knowledge and its associated collections. The exclusive ribbon shows the weapon’s current engraving state. A rainbow star means the bonus has reached its maximum, even if the weapon still has engraving attempts left.

@@ -10,6 +10,7 @@ from guardian_tales.raid_static import decode, records
 
 from .account_details import AccountEditor
 from .catalog import InventoryCatalog
+from .equipment_grants import EquipmentGrants
 from .equipment_options import EquipmentOptionEditor
 from .hero_portraits import HeroPortraits
 from .mastery import MasteryEditor
@@ -42,12 +43,16 @@ class InventoryApplication:
         self.account_editor = AccountEditor(database, references, self.catalog, tables)
         self.relics = RelicEditor(database, self.catalog)
         self.equipment = EquipmentOptionEditor(database, self.catalog, tables, progression)
+        self.equipment_grants = EquipmentGrants(
+            database, self.catalog, body, tables, self.equipment.specs
+        )
         self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)
         self.listings = {
             "/api/inventory": self.preview_listing,
             "/api/game/account": self.account_editor.info,
             "/api/game/consumables": self.consumables.info,
             "/api/game/equipment": self.equipment.info,
+            "/api/game/equipment/catalog": self.equipment_grants.info,
             "/api/game/mastery": self.mastery.info,
             "/api/game/relics": self.relics.info,
         }
@@ -56,6 +61,7 @@ class InventoryApplication:
             "/api/game/account": self.account_editor.write,
             "/api/game/consumables": self.consumables.write,
             "/api/game/equipment": self.equipment.request,
+            "/api/game/equipment/add": self.equipment_grants.write,
             "/api/game/equipment/roll": partial(self.equipment.request, roll=True),
             "/api/game/equipment/hammers": self.equipment.hammers.write,
             "/api/game/mastery": self.mastery.write,

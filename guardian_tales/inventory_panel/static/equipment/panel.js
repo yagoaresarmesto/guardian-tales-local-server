@@ -7,7 +7,12 @@ const hammerEditor = preview ? null : quantityEditor($("hammer-editor"), {
   api: "/api/game/equipment/hammers", accessId: "equipment-access",
   lock: () => editor.lock(), reload: load, saved: () => draw(),
 });
-const editor = preview ? null : equipmentOptions(load, hammerEditor.setWritable);
+let grantDialog, writable = false;
+const editor = preview ? null : equipmentOptions(load, allowed => {
+  writable = allowed;
+  hammerEditor.setWritable(allowed);
+  grantDialog?.setWritable(allowed);
+});
 document.body.classList.toggle("live-equipment", !preview);
 if (preview) {
   document.querySelector(".temporary").textContent = "Temporary save copy";
@@ -224,6 +229,29 @@ function paginate(delta) {
   page += delta;
   selected = visible[page * pageSize]?.id ?? null;
   note(); draw();
+}
+if (!preview) {
+  const opener = $("open-equipment-catalog");
+  opener.hidden = false;
+  opener.onclick = async () => {
+    try {
+      const { equipmentCatalog } = await import("/equipment-add.js");
+      grantDialog ??= equipmentCatalog(types, art, async (id, item) => {
+        selected = id;
+        kind = item.kind;
+        $("search").value = "";
+        try {
+          await load();
+          note(item.name + " added to inventory. Copy #" + id + " is selected.");
+        } catch {
+          note(item.name + " was added as copy #" + id + ". Reload Equipment to see it.", true);
+        }
+      });
+      grantDialog.open(kind, writable);
+    } catch {
+      note("Could not open the equipment catalog. Reload the dashboard and try again.", true);
+    }
+  };
 }
 $("previous").onclick = () => paginate(-1);
 $("next").onclick = () => paginate(1);

@@ -48,7 +48,9 @@
         </div>
       </section>
       <section class="collection" aria-labelledby="collection-heading">
-        <header class="collection-bar"><h2 id="collection-heading">Equipment</h2></header>
+        <header class="collection-bar"><h2 id="collection-heading">Equipment</h2>
+          <button type="button" id="open-equipment-catalog" aria-haspopup="dialog" hidden>Add equipment</button>
+        </header>
         <div class="collection-body">
           <div class="rack">
             <div class="tools"><label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" aria-label="Search equipment by name or ID" placeholder="Search by name or ID"></label>
@@ -67,4 +69,26 @@
       </section>
     </div>
     <p id="message" role="status" hidden></p>
+    <dialog id="equipment-catalog" aria-labelledby="catalog-heading">
+      <header class="section-bar"><h2 id="catalog-heading">Add equipment</h2>
+        <button type="button" id="catalog-close" aria-label="Close equipment catalog">×</button>
+      </header>
+      <div class="catalog-body">
+        <div class="catalog-filters">
+          <label>Search <input id="catalog-search" type="search" placeholder="Name or catalog ID" autofocus></label>
+          <label>Equipment type <select id="catalog-type"></select></label>
+        </div>
+        <div class="catalog-picker">
+          <select id="catalog-items" size="8" aria-label="Matching equipment"></select>
+          <div class="catalog-preview" id="catalog-preview" hidden>
+            <div class="hero-art" id="catalog-art"></div>
+            <strong id="catalog-name"></strong>
+            <span class="hero-stars" id="catalog-stars"></span>
+            <span id="catalog-facts"></span>
+          </div>
+        </div>
+        <p id="catalog-status" role="status"></p>
+      </div>
+      <footer><button type="button" id="catalog-add" class="apply-button" disabled>Add to inventory</button></footer>
+    </dialog>
   </main>

@@ -51,7 +51,18 @@ def prepare_inventory(root):
                 Id=8, Name="limitbreak_hammer_epic", Type="limitbreakhammer", Rarity=4, MaxCount=6
             ),
             dict(Id=9, Name="hammer_box", Type="gachaitem"),
-            dict(Id=10, Name="test_shield", Type="weapon", WeaponType="shield", Rarity=4),
+            dict(
+                Id=10,
+                Name="test_shield",
+                Type="weapon",
+                WeaponType="shield",
+                Rarity=4,
+                OriginRarity=4,
+                Limited=False,
+                SortingNumber=400,
+                MinOptions=0,
+                MaxOptions=0,
+            ),
             dict(Id=70014, Name="spiritStone", Type="goods"),
             dict(Id=70004, Name="experience", Type="goods"),
             dict(Id=70028, Name="jewel_powder", Type="goods"),
@@ -83,6 +94,9 @@ def prepare_inventory(root):
                 Name="test_ring",
                 Type="weapon",
                 WeaponType="accessory",
+                OriginRarity=4,
+                Summonable=True,
+                Limited=False,
                 Rarity=4,
                 Options=[pool],
                 MinOptions=1,
@@ -101,6 +115,9 @@ def prepare_inventory(root):
                 Name="test_sword",
                 Type="weapon",
                 WeaponType="onehandsword",
+                OriginRarity=4,
+                Summonable=True,
+                Limited=False,
                 Rarity=4,
                 ExclusiveCharacterId=1,
                 Options=[pool],
@@ -146,6 +163,7 @@ def prepare_inventory(root):
             ),
         ],
         "buffs": [],
+        "constants": {"DefaultInventoryLimit": 8},
         "options": [
             dict(
                 Id=10,
@@ -183,6 +201,15 @@ def prepare_inventory(root):
     }
     sword = next(item for item in catalog["items"] if item["Id"] == 5)
     catalog["items"].append(dict(sword, Id=50, Name="test_myth_sword", Rarity=5))
+    catalog["items"].extend(
+        [
+            dict(sword, Id=51, Name="internal_weapon", Summonable=False, SortingNumber=-1),
+            dict(sword, Id=52, Name="limited_weapon", Limited=True),
+            dict(sword, Id=53, Name="npc_weapon", WeaponType="custom"),
+            dict(sword, Id=54, Name="future_weapon", VersionFrom={"KakaoGlobal": "v999.0"}),
+            dict(sword, Id=55, Name="invalid_weapon", MinOptions=3),
+        ]
+    )
     records = []
     for key, value in catalog.items():
         content = json.dumps(value)
@@ -446,6 +473,51 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertEqual(missing_art.exception.code, 404)
         self.assertTrue(self.call("/inventory-dom.js"))
         self.assertTrue(self.call("/equipment-options.js"))
+        self.assertTrue(self.call("/equipment-add.js"))
+
+    def test_add_standard_equipment_and_reject_replayed_or_unlisted_grants(self):
+        original = self.seed_wallet()["User"]
+        catalog = self.call("/api/game/equipment/catalog")
+        self.assertEqual({i["spec"] for i in catalog["items"]}, {3, 5, 10})
+        path = "/api/game/equipment/add"
+        payload = dict(spec=3, version=catalog["version"])
+        for spec in (1, 50, 51, 52, 53, 54, 55, True):
+            with self.subTest(spec=spec), self.assertRaises(HTTPError) as invalid:
+                self.call(path, dict(payload, spec=spec))
+            self.assertEqual(invalid.exception.code, 400)
+            invalid.exception.close()
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(path, payload)
+        self.assertEqual(locked.exception.code, 423)
+        locked.exception.close()
+        self.assertEqual(self.call(path, payload), {"id": 21, "spec": 3})
+        with self.assertRaises(HTTPError) as stale:
+            self.call(path, payload)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        version = self.call("/api/game/equipment/catalog")["version"]
+        self.assertEqual(self.call(path, dict(spec=10, version=version))["id"], 22)
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+            user = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])["User"]
+        self.assertEqual(user["ItemWeapons"][:-2], original["ItemWeapons"])
+        self.assertEqual(user["ItemMiscs"], original["ItemMiscs"])
+        self.assertEqual(user["ItemStackables"], original["ItemStackables"])
+        self.assertEqual(user["Assets"], original["Assets"])
+        self.assertEqual((user["ItemIdCounter"], user["Cas"]), (22, original["Cas"] + 2))
+        ring, shield = user["ItemWeapons"][-2:]
+        self.assertEqual((ring["Experience"], ring["LimitBreaks"], ring["Locked"]), (0, 0, False))
+        (option,) = ring["Options"]
+        self.assertIn(option["Level"], (1, 2, 3))
+        self.assertEqual(
+            (option["OptionId"], option["Locked"], option["OptionSource"]), (7, False, 0)
+        )
+        self.assertIsNone(shield["Options"])
+        catalog = self.call("/api/game/equipment/catalog")
+        self.assertFalse(catalog["spaceAvailable"])
+        with self.assertRaises(HTTPError) as full:
+            self.call(path, dict(spec=5, version=catalog["version"]))
+        self.assertEqual(full.exception.code, 400)
+        full.exception.close()
 
     def test_either_dashboard_serves_both_sections_on_the_same_save(self):
         game_panel = WebPanel(

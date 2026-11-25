@@ -1,4 +1,27 @@
 #preview-link { font-size: .82rem; }
+#open-equipment-catalog { margin-left:auto; padding:5px 12px; border:1px solid #6986a4; border-radius:5px; background:#263e55; color:#eaf6ff; font-weight:700; }
+#equipment-catalog { padding:0; width:min(590px,94vw); max-height:90dvh; overflow:auto; border:1px solid #506984; border-radius:9px; color:#edf5ff; background:#19273a; box-shadow:0 12px 50px #060b1699; }
+#equipment-catalog::backdrop { background:#050c18bd; }
+#catalog-close { border:0; background:transparent; color:var(--muted); font-size:1.5rem; line-height:1; }
+.catalog-body { padding:16px; }
+.catalog-filters, .catalog-picker { display:grid; grid-template-columns:minmax(0,3fr) minmax(130px,2fr); gap:12px; }
+.catalog-filters label { display:grid; gap:4px; font-size:.82rem; font-weight:650; }
+.catalog-filters :is(input,select), #catalog-items { min-width:0; border:1px solid #4b617b; border-radius:5px; background:var(--field); color:inherit; font:inherit; padding:8px; }
+.catalog-picker { margin-top:12px; }
+#catalog-items { width:100%; padding:3px; font-size:.9rem; }
+#catalog-items option { padding:5px 8px; }
+.catalog-preview { display:grid; justify-items:center; align-content:center; gap:6px; text-align:center; padding:10px; background:#213247; border-radius:5px; }
+.catalog-preview .hero-art { width:78px; height:78px; }
+.catalog-preview .hero-stars { position:static; }
+#catalog-status, #catalog-facts { color:var(--muted); font-size:.82rem; }
+#catalog-status { margin:10px 0 0; min-height:1.25em; }
+#equipment-catalog footer { display:flex; justify-content:flex-end; border-top:1px solid var(--line); padding:10px 16px; }
+@media(max-width:480px) {
+  .catalog-body { padding:12px; }
+  .catalog-picker { grid-template-columns:1fr; }
+  .catalog-preview { grid-template-columns:auto 1fr; justify-items:start; text-align:left; column-gap:12px; }
+  .catalog-preview .hero-art { grid-row:span 3; width:54px; height:54px; }
+}
 .tile, .hero-art { --card-top: #333e61; }
 [data-equipment-color="normal"] {
   --card-mid: #39475b; --card-lower: #526473; --card-band: #8999a5; --card-highlight: #c0e4ef;
