@@ -162,6 +162,7 @@ class SnapshotTests(unittest.TestCase):
                 "/user/claim-daily-attendance",
                 "/user/evolve-character/v2",
                 "/user/guardian-mastery-level-up",
+                "/user/limitbreak-character/v2",
                 "/user/mark-tutorial",
                 "/user/recall-character-growth/v2",
                 "/user/reset-guardian-mastery-level",

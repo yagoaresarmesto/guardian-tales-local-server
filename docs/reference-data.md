@@ -638,6 +638,20 @@ The 3.57.0 request to `/user/evolve-character/v2` carries the owned
 and the hero's `EvolveTo` link. The final step grants the next star and resets
 the step counter. Tests cover individual and bulk upgrades, split payments,
 insufficient balances and reconnects. Retrying the same request charges once.
+Dream Stone evolution was also verified in the EU 3.57.0 client.
+
+## Hero limit breaks
+
+In **Heroes → Limit Break**, choose how many breaks to add to a hero at five
+stars or above. The backend uses the hero's summon rarity and current break count
+to charge only the selected steps in `exps2.LimitBreaks`. In EU 3.57.0, the five
+steps for a Unique hero cost 100, 120, 140, 160 and 180 Hero Crystals. The
+training level cap reads the updated break count the next time the hero trains.
+
+The `/user/limitbreak-character/v2` request carries the owned `CharacterId`
+and the number of additional steps in `LimitBreakCount`. Backend tests check
+single and bulk purchases, rarity pricing, the cap, insufficient crystals
+and retries. The payment and mission counter commit with the hero's new break count.
 
 ## Hero Blessing
 
