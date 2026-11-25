@@ -1,73 +1,28 @@
 <main>
   <section class="banner"><h1>Orbital <em>Lift</em></h1></section>
-  <div class="workspace">
-    <aside class="surface inspector" aria-labelledby="progress-heading">
-      <header class="panel-heading">
-        <span class="section-icon stack" aria-hidden="true"></span>
-        <h2 id="progress-heading">Saved progress</h2>
-        <button type="button" id="reload" aria-label="Reload saved progress" title="Reload saved progress">↻</button>
-      </header>
-      <dl class="lift-progress">
-        <div><dt>Highest cleared floor</dt><dd id="cleared">—</dd></div>
-        <div><dt>Next floor</dt><dd id="next">—</dd></div>
-      </dl>
-    </aside>
-    <section class="surface collection" aria-labelledby="editor-heading">
-      <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="editor-heading">Set next floor</h2></header>
-      <form id="editor">
-        <fieldset id="controls" disabled>
-          <label class="label" for="floor">Floor to play</label>
-          <input type="number" id="floor" min="1" max="1500" step="1" required aria-describedby="range preview">
-          <small id="range">1–1,500</small>
-          <p id="preview" aria-live="polite"></p>
-          <p id="access" role="status" hidden>Open the standalone inventory dashboard, close Guardian Tales and stop the game backend. Then reload saved progress to enable Apply.</p>
-          <div class="actions"><button type="submit" id="apply" disabled>Apply</button></div>
-        </fieldset>
-      </form>
-      <p id="feedback" role="status" hidden></p>
-    </section>
-    <section class="surface enemy-levels" aria-labelledby="enemy-heading">
-      <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="enemy-heading">Enemy levels</h2></header>
-      <form id="level-editor">
-        <p id="level-status" aria-live="polite"></p>
-        <fieldset id="level-controls" disabled>
-          <label class="label" for="enemy-level">Enemy level for all floors</label>
-          <input type="number" id="enemy-level" min="1" step="1" required aria-describedby="level-range">
-          <small id="level-range"></small>
-          <div class="actions">
-            <button type="submit" id="apply-level" class="primary-action" disabled>Apply to all floors</button>
-            <button type="button" id="restore-level" disabled>Restore original levels</button>
-          </div>
-        </fieldset>
-        <p id="level-feedback" role="status" hidden></p>
-      </form>
-    </section>
+  <div class="lift-workspace">
     <section class="surface board-section" aria-labelledby="board-heading">
-      <header class="panel-heading"><span class="section-icon stack" aria-hidden="true"></span><h2 id="board-heading">Enemy board</h2></header>
+      <header class="panel-heading">
+        <span class="section-icon stack" aria-hidden="true"></span><h2 id="board-heading">Enemy board</h2>
+        <span id="board-dirty" hidden>Unsaved changes</span>
+      </header>
       <div class="board-body">
         <form id="board-picker">
           <label for="board-floor">Floor to edit</label>
           <input id="board-floor" type="number" min="1" max="1500" value="1" required>
           <button id="board-open" disabled>Open floor</button>
-          <span id="board-title"></span>
         </form>
         <fieldset id="board-controls" disabled>
-          <div class="board-layout">
-            <div id="board-grid" role="group" aria-label="Enemy formation"></div>
-            <div class="board-tools">
-              <h3 id="cell-title">Selected cell</h3>
-              <label for="board-enemy">Enemy</label>
-              <select id="board-enemy"></select>
-              <div class="board-buttons">
-                <button type="button" id="board-place">Place enemy</button>
-                <button type="button" id="board-move">Move or swap</button>
-                <button type="button" id="board-remove">Remove</button>
-              </div>
-              <label for="board-level">Floor enemy level</label>
-              <input id="board-level" type="number" min="1" step="1">
-              <small id="board-inherit"></small>
-              <p id="board-hint"></p>
-            </div>
+          <div class="board-strip">
+            <h3 id="board-title">Formation</h3><span id="board-count"></span>
+          </div>
+          <p id="board-hint" role="status">Select a cell to add or change its enemy.</p>
+          <button type="button" id="board-cancel-move" hidden>Cancel move</button>
+          <div id="board-grid" role="group" aria-label="Enemy formation"></div>
+          <div class="board-level-field">
+            <label for="board-level">Floor enemy level</label>
+            <input id="board-level" type="number" min="1" step="1" aria-describedby="board-inherit">
+            <small id="board-inherit"></small>
           </div>
           <div class="actions">
             <button class="primary-action" id="board-save" type="button" disabled>Save floor</button>
@@ -77,5 +32,65 @@
         <p id="board-message" role="status"></p>
       </div>
     </section>
+    <div class="lift-settings">
+      <aside class="surface inspector" aria-labelledby="progress-heading">
+        <header class="panel-heading">
+          <span class="section-icon stack" aria-hidden="true"></span>
+          <h2 id="progress-heading">Saved progress</h2>
+          <button type="button" id="reload" aria-label="Reload saved progress" title="Reload saved progress">↻</button>
+        </header>
+        <dl class="lift-progress">
+          <div><dt>Highest cleared floor</dt><dd id="cleared">—</dd></div>
+          <div><dt>Next floor</dt><dd id="next">—</dd></div>
+        </dl>
+      </aside>
+      <section class="surface collection" aria-labelledby="editor-heading">
+        <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="editor-heading">Set next floor</h2></header>
+        <form id="editor">
+          <fieldset id="controls" disabled>
+            <label class="label" for="floor">Floor to play</label>
+            <input type="number" id="floor" min="1" max="1500" step="1" required aria-describedby="range preview">
+            <small id="range">1–1,500</small>
+            <p id="preview" aria-live="polite"></p>
+            <p id="access" role="status" hidden>Open the standalone inventory dashboard, close Guardian Tales and stop the game backend. Then reload saved progress to enable Apply.</p>
+            <div class="actions"><button type="submit" id="apply" disabled>Apply</button></div>
+          </fieldset>
+        </form>
+        <p id="feedback" role="status" hidden></p>
+      </section>
+      <section class="surface enemy-levels" aria-labelledby="enemy-heading">
+        <header class="panel-heading"><span class="section-icon sliders" aria-hidden="true"></span><h2 id="enemy-heading">Enemy levels</h2></header>
+        <form id="level-editor">
+          <p id="level-status" aria-live="polite"></p>
+          <fieldset id="level-controls" disabled>
+            <label class="label" for="enemy-level">Enemy level for all floors</label>
+            <input type="number" id="enemy-level" min="1" step="1" required aria-describedby="level-range">
+            <small id="level-range"></small>
+            <div class="actions">
+              <button type="submit" id="apply-level" class="primary-action" disabled>Apply to all floors</button>
+              <button type="button" id="restore-level" disabled>Restore original levels</button>
+            </div>
+          </fieldset>
+          <p id="level-feedback" role="status" hidden></p>
+        </form>
+      </section>
+    </div>
   </div>
+  <dialog id="enemy-picker" aria-labelledby="enemy-picker-title" aria-describedby="enemy-picker-target">
+    <header class="picker-heading">
+      <div><p id="enemy-picker-target"></p><h2 id="enemy-picker-title" tabindex="-1" autofocus>Choose an enemy</h2></div>
+      <button id="picker-close" type="button" aria-label="Close enemy picker">×</button>
+    </header>
+    <div class="picker-filters">
+      <input type="search" id="enemy-search" autocomplete="off" placeholder="Search by name or ID" aria-label="Search enemies by name or ID">
+      <select id="enemy-element" aria-label="Filter by element"></select>
+    </div>
+    <div id="enemy-choices" role="group" aria-label="Enemy portraits"></div>
+    <p id="no-enemies" hidden>No matching enemies. <button type="button" id="reset-enemy-filters">Clear filters</button></p>
+    <footer class="picker-footer">
+      <span id="enemy-results" role="status"></span>
+      <button type="button" id="board-move">Move or swap</button>
+      <button type="button" id="board-remove">Remove enemy</button>
+    </footer>
+  </dialog>
 </main>

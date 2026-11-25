@@ -290,8 +290,11 @@ floor's own difficulty. The backend can keep running. Reopen the game to load
 the new settings. This edit affects the tables served by the backend and is
 independent of the saved floor, enemy lineups and elite modifiers.
 Under **Enemy board**, enter any floor from **1 to 1,500** and click **Open floor**.
-Choose a cell and an enemy, then click **Place enemy**. Drag an occupied cell
-onto another to move or swap, or use **Move or swap** and select a destination.
+Click a cell to open the enemy portraits. Search by name or ID, or filter by
+element. Click a portrait to add or replace the enemy in that cell. Press
+**Escape** to close the picker. To reposition an enemy, drag it to another
+cell or choose **Move or swap** and click the destination. **Remove enemy**
+clears the selected cell. Click **Save floor** when the formation is ready.
 The board matches the enemy side in the game. Moving an original enemy keeps
 its elite modifiers. A replacement starts with its own base stats.
 
