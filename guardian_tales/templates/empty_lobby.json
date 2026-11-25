@@ -45,6 +45,10 @@
       "LobbyVillagePrincessAlarm": 0
     }
   },
+  "/lobby-village/enter-shop": {
+    "body_type": 1,
+    "value": {"LobbyVillageShopItems": []}
+  },
   "/guild/get-join-suggestion-list/v2": {
     "body_type": 1,
     "value": {

@@ -1003,6 +1003,15 @@ Airships, visitors, guardian-base-camp points, dispatches, shops and constructio
 require their own operations. Native arithmetic is evidence for the local
 calculation, not a captured official reward contract.
 
+The Heavenhold village shop opens with the authenticated read
+`/lobby-village/enter-shop`. The popup reads `LobbyVillageShopItems` for its
+product descriptions, separately from the village's `SaleProductIds`. The
+backend forwards product rows when supplied in the preserved village response.
+A save with only sale IDs displays empty slots. If the saved refresh time has
+passed, the popup receives the next UTC midnight to keep its countdown running.
+Opening the shop leaves the saved village, purchase counts and balances intact.
+Purchasing and generating a new assortment are separate operations.
+
 `/lobby-village/receive-gift` supports an explicit no-reward mock. Its external
 `village_gift_mock_catalog.json`, limited to 4 KiB, contains exactly the pinned
 `client` and positive integer `cooldown_seconds` in 1..31,536,000. The prepared
