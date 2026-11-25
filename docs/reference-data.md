@@ -40,8 +40,8 @@ Training uses the matching imported-account free-experience policy, respects
 story unlocks, saved limit breaks/blessing and the existing Myth level modifier,
 and requires only Andras in that request. No currency, item or saved training
 counter is granted/consumed/advanced. Other development operations are outside
-this prototype. The new branch is activated for the experiment; interactive
-awakening purchases/reset are not implemented and no stones or gold are spent.
+this prototype. The 52 experimental nodes open automatically. Purchases on
+Andras's original tree use the ordinary awakening rules and prices.
 
 Trial XP and retry receipts commit together in the private
 `andras-myth-trial.sqlite3` file next to `server.sqlite3`. They are bound to the
@@ -206,7 +206,7 @@ uniform upgrade. The Andras trial currently has the following scope:
 | Appearance, equipment and base abilities | Original class, origin, animations, equipment and saved progression are retained; the active combat coefficients are tuned as above. The owner confirmed the original appearance. | Combat, costume and exclusive-weapon interactions have not all been verified for this variant. |
 | Base-stat changes | Original five-star base stats remain unchanged; levels still scale normally. | Official Myth variants can have different base stats. No common ratio or Andras-specific rebalancing has been selected. |
 | Leader skill | The owner confirmed casting the preceding Eunha action and subsequently seeing Bianca's movie, but reported a missing hit animation. The separate impact-prefab follow-up has automated/copy coverage; its APK check is pending. | The original class has no shipped title; the optional English CDN overlay supplies the requested name. Numerical combat benchmarking remains separate. |
-| Awakening | Original nodes/flags are retained; 52 extra nodes are projected already open. | Interactive open/reset requests are not implemented. |
+| Awakening | Original nodes use the ordinary awakening handler. The client shows 52 additional nodes already open. | The experimental nodes require no purchase. Awakening Reset remains outside the trial. |
 | Myth ability improvements | Original animations/mechanics remain, with the active experimental coefficients above. | Full hero-specific Myth reworks are not reconstructed by this trial. |
 | Other development | Original limit breaks and blessing affect the cap and retained options. | Blessing, limit-break, conversion and awakening mutations are not added by this trial. Training Room placement/removal is also outside its supported entry/read path. |
 | Collection and rewards | Original stored hero and knowledge/mission records remain normal. | Experimental Myth progression does not grant official conversion rewards or rewrite collection counters. |
@@ -668,6 +668,26 @@ catalog price is 400 for a Unique hero and 200 for an eligible ascended Story
 hero. The same inventory hero keeps its gear, XP and existing awakening nodes.
 Backend tests cover regional eligibility, all three payment combinations,
 insufficient materials and retries after reconnecting.
+Astoria's official promotion using personal Myth Stones was verified in the EU
+3.57.0 client and persisted after reopening the game.
+
+## Hero awakening
+
+In **Heroes → Awakening**, open a single node, select a path, or use **Auto
+Awakening**. On leaving the screen, the 3.57.0 client sends its selected
+`NodeIndices` together with the owned `CharacterId` and `discountBuff` to
+`/user/open-awakening-node-all`. Each hero's origin selects its tree and layout.
+Current rank, permanent limit breaks and connections determine which nodes can
+open. A center requires all its neighbors. Special nodes use the selected
+hero's own price when defined.
+
+The backend saves the selected bits, actual gold spent and material deductions
+together. An active account awakening discount reduces the gold price per node.
+Tests cover single and bulk requests, different trees, Myth-only nodes, older
+saved masks, insufficient materials and reconnects.
+The matching catalog passed a host check across 653 hero forms. In the EU
+3.57.0 client, both a single-node purchase and Auto Awakening persisted after
+reopening the game. Astoria's completed Myth tree contained 294 open nodes.
 
 ## Hero Blessing
 

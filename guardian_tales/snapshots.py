@@ -78,6 +78,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/evolve-character/v2",
         "/user/limitbreak-character/v2",
         "/user/myth-character/v2",
+        "/user/open-awakening-node-all",
         "/lobby-village/harvest-all",
         "/lobby-village/harvest-basecamp",
         "/lobby-village/prepare-dispatch",

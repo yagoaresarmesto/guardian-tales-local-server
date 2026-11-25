@@ -26,7 +26,7 @@ Execution stays sequential; this change does not introduce parallel workers.
 | `account` | Snapshot import, profile reads, portraits, frames, badges, nicknames, Backroom entry and local administration |
 | `content` | Content packs, references, archives, static nickname policy and catalog contracts |
 | `campaign` | Story entry, stage progress/completion and play menus |
-| `heroes` | Hero experience, evolution, official regional Myth forms and stone payments, limit breaks, free Hero Reset, blessings, equipment, training caps and Training Room slots |
+| `heroes` | Hero experience, evolution, official Myth, individual and auto awakening, limit breaks, free Hero Reset, blessings, equipment, training caps and Training Room slots |
 | `inventory` | Weapons, relic options and jewel operations |
 | `teams` | Normal parties, presets, Orbital/Raid ordering and compact response payloads |
 | `rewards` | Missions, challenges, knowledge, passes, temporal events, stamina and attendance |

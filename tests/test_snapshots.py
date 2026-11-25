@@ -165,6 +165,7 @@ class SnapshotTests(unittest.TestCase):
                 "/user/limitbreak-character/v2",
                 "/user/mark-tutorial",
                 "/user/myth-character/v2",
+                "/user/open-awakening-node-all",
                 "/user/recall-character-growth/v2",
                 "/user/reset-guardian-mastery-level",
                 "/user/save-party-member/v2",

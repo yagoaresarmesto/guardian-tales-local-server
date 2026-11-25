@@ -20,6 +20,7 @@ from . import (
     classic_coop,
     colosseum,
     expedition,
+    hero_awakening,
     hero_blessing,
     hero_evolution,
     hero_limit_break,
@@ -87,6 +88,7 @@ from .test_item_static import bootstrap_seed as test_item_bootstrap_seed
 from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
 
 HERO_GROWTH_HANDLERS = {
+    hero_awakening.ROUTE: hero_awakening.awaken,
     hero_evolution.ROUTE: hero_evolution.evolve,
     hero_limit_break.ROUTE: hero_limit_break.limit_break,
     hero_myth.ROUTE: hero_myth.promote,

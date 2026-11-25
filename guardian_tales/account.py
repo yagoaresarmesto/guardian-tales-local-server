@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 
 from . import (
     colosseum,
+    hero_awakening,
     hero_blessing,
     hero_evolution,
     hero_limit_break,
@@ -225,6 +226,7 @@ ACCOUNT_ROUTES = (
     *HERO_EQUIPMENT_ROUTES,
     hero_reset.ROUTE,
     *hero_blessing.ROUTES,
+    hero_awakening.ROUTE,
     hero_evolution.ROUTE,
     hero_limit_break.ROUTE,
     hero_myth.ROUTE,
@@ -363,6 +365,7 @@ class AccountStore:
         create_hero_equipment_tables(db)
         hero_reset.create_tables(db)
         hero_blessing.create_tables(db)
+        hero_awakening.create_tables(db)
         hero_evolution.create_tables(db)
         hero_limit_break.create_tables(db)
         hero_myth.create_tables(db)
