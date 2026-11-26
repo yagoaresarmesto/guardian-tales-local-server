@@ -17,5 +17,9 @@
 #training, #unavailable, #message { margin-top:12px; }
 #message { color:#c1ebd8; }
 #message.error { color:#ffbf9c; }
+.hero-reset-action { display:flex; align-items:center; flex-wrap:wrap; gap:8px; margin-top:16px; padding-top:12px; border-top:1px solid var(--line); }
+#reset-reason { color:var(--muted); font-size:.8rem; }
+#reset-cancel { padding:5px 11px; border:1px solid #52667b; border-radius:5px; background:var(--field); }
+#reset-access { color:#ffd294; }
 #detail [hidden], #upgrade[hidden] { display:none; }
 @media (max-width:680px) { #inspector { scroll-margin-top:12px; } }

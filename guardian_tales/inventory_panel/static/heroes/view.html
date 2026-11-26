@@ -21,6 +21,10 @@
             <label>Target<select id="target"></select></label>
             <button type="submit" class="apply-button" id="apply" disabled>Apply upgrade</button>
           </form>
+          <div class="hero-reset-action">
+            <button type="button" class="delete-copy-button" id="hero-reset" aria-haspopup="dialog" aria-describedby="reset-reason" disabled>Hero Reset</button>
+            <small id="reset-reason" hidden></small>
+          </div>
           <p role="status" id="message" hidden></p>
         </div>
       </div>
@@ -40,4 +44,14 @@
       </div>
     </section>
   </div>
+  <dialog class="item-catalog delete-dialog" id="reset-dialog" aria-labelledby="reset-heading" aria-describedby="reset-result reset-explanation">
+    <header class="section-bar"><h2 id="reset-heading">Hero Reset</h2></header>
+    <div class="delete-body">
+      <div class="delete-identity"><span id="reset-art"></span><div><strong id="reset-name"></strong><small id="reset-result"></small></div></div>
+      <p id="reset-explanation">Clears experience, limit breaks, blessing and awakening. The hero keeps their equipment. No reset stone is spent and no materials are refunded.</p>
+      <p id="reset-access" hidden>Stop the game backend to confirm.</p>
+    </div>
+    <footer><button type="button" id="reset-cancel" autofocus>Cancel</button>
+      <button type="button" class="delete-copy-button" id="reset-confirm">Reset hero</button></footer>
+  </dialog>
 </main>

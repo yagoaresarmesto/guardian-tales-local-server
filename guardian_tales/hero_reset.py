@@ -4,7 +4,7 @@
 import json
 
 from . import andras_trial
-from .characters import owned_character
+from .characters import hero_transaction, owned_character
 from .hero_equipment import catalog, resource
 from .village import MAX_REVISION, integer
 
@@ -47,7 +47,34 @@ def reset_spec(heroes, spec_id):
     return ordinary[0]
 
 
-def reset(account, body, operation_id):
+def reset_changes(user, hero, heroes, references):
+    """Plan the changes for one owned hero without modifying the save."""
+    ident = hero["Id"]
+    slots = user.get("TrainingSlots", {})
+    if not isinstance(slots, dict) or any(
+        not isinstance(slot, dict) or slot.get("CharacterId") == ident for slot in slots.values()
+    ):
+        raise ValueError("Remove the hero from the Training Room before resetting")
+    trial = andras_trial.load(references)
+    if (
+        trial
+        and trial["active"]
+        and (trial["owner_id"], trial["inventory_id"]) == (user["Id"], ident)
+    ):
+        raise ValueError("Disable the experimental Andras trial before resetting her")
+    spec_id = hero.get("CharacterId")
+    if not integer(spec_id, minimum=1):
+        raise ValueError("Invalid saved hero specification")
+    target = reset_spec(heroes, spec_id)
+    changes = dict(Experience=0, LimitBreaks=0, BlessLevel=0, AwakeningTree="", AwakeningTreeGold=0)
+    if target["Id"] != spec_id or target["SummonCategory"] == "Unique":
+        changes.update(CharacterId=target["Id"], RankUpgrade=0)
+    if hero.get("SpriteRank") is not None and not integer(hero["SpriteRank"], target["Rank"]):
+        changes["SpriteRank"] = None
+    return {key: value for key, value in changes.items() if hero.get(key) != value}
+
+
+def reset(account, body, operation_id, *, heroes=None):
     if (
         not isinstance(body, dict)
         or set(body) != {"CharacterId", "ReceiveCrystal"}
@@ -60,8 +87,7 @@ def reset(account, body, operation_id):
         raise ValueError("Hero Reset requires an owned character ID and a crystal selection")
     ident = body["CharacterId"]
     db = account.db
-    with db:
-        db.execute("BEGIN IMMEDIATE")
+    with hero_transaction(db):
         profile = account.profile()
         user = profile["User"]
         prior = db.execute(
@@ -73,32 +99,10 @@ def reset(account, body, operation_id):
                 raise ValueError("Hero Reset identity was used for a different request")
             return {"User": resource(user), "AddedItems": []}
         hero = owned_character(user, ident)
-        slots = user.get("TrainingSlots", {})
-        if not isinstance(slots, dict) or any(
-            not isinstance(slot, dict) or slot.get("CharacterId") == ident
-            for slot in slots.values()
-        ):
-            raise ValueError("Remove the hero from the Training Room before resetting")
-        trial = andras_trial.load(account.references)
-        if (
-            trial
-            and trial["active"]
-            and (trial["owner_id"], trial["inventory_id"]) == (user["Id"], ident)
-        ):
-            raise ValueError("Disable the experimental Andras trial before resetting her")
-        heroes, _ = catalog(account.references.read_bytes("static_data_get.bin"))
-        spec_id = hero.get("CharacterId")
-        if not integer(spec_id, minimum=1):
-            raise ValueError("Invalid saved hero specification")
-        target = reset_spec(heroes, spec_id)
-        changes = dict(
-            Experience=0, LimitBreaks=0, BlessLevel=0, AwakeningTree="", AwakeningTreeGold=0
-        )
-        if target["Id"] != spec_id or target["SummonCategory"] == "Unique":
-            changes.update(CharacterId=target["Id"], RankUpgrade=0)
-        if hero.get("SpriteRank") is not None and not integer(hero["SpriteRank"], target["Rank"]):
-            changes["SpriteRank"] = None
-        if any(hero.get(key) != value for key, value in changes.items()):
+        if heroes is None:
+            heroes, _ = catalog(account.references.read_bytes("static_data_get.bin"))
+        changes = reset_changes(user, hero, heroes, account.references)
+        if changes:
             if not integer(user.get("Cas"), MAX_REVISION - 1):
                 raise ValueError("Invalid saved user revision")
             hero.update(changes)

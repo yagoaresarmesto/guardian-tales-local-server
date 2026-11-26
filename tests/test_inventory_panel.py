@@ -506,7 +506,14 @@ class InventoryPanelTests(unittest.TestCase):
             (),
         )
         editor.specs = {
-            i: dict(Id=i, Name=f"archer_{i}", Rank=rank, Playable=True)
+            i: dict(
+                Id=i,
+                Name=f"archer_{i}",
+                Rank=rank,
+                Playable=True,
+                OriginId=31,
+                SummonCategory="Unique",
+            )
             for i, rank in ((31, 3), (32, 4), (33, 6))
         }
         editor.specs[33]["SpineAssetName"] = {"default": "archer#archer_myth_model"}
@@ -597,6 +604,68 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertEqual((user["Assets"], user["ItemStackables"]), ([], []))
         self.assertEqual(user["Characters"][1], other)
         self.assertEqual(user["Characters"][0]["AwakeningTreeGold"], 0)
+
+    def test_panel_hero_reset_matches_preview_preserves_inventory_and_rejects_stale_requests(self):
+        api = "/api/game/heroes"
+        editor, other = self.seed_hero_upgrades()
+        with closing(sqlite3.connect(editor.database)) as db, db:
+            profile = editor.profile(db)
+            user = profile["User"]
+            user["Characters"][0].update(Weapon1=151, Costume=201)
+            user["ItemStackables"] = [dict(Id=10, ItemId=110003, Amount=2)]
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        initial = self.call(api + "/1")
+        self.assertIn("reason", initial["reset"])
+        myth = self.call(api, dict(id=1, action="max", version=initial["version"]))
+        self.assertEqual(myth["hero"]["form"], "Myth")
+        self.assertEqual(myth["actions"], {})
+        target = myth["reset"]["target"]
+        self.assertEqual(target, initial["hero"])
+        body = dict(id=1, action="reset", version=myth["version"])
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(api, body)
+        self.assertEqual(locked.exception.code, 423)
+        locked.exception.close()
+        with editor.reader() as db:
+            before = editor.profile(db)
+        result = self.call(api, body)
+        self.assertEqual(result["hero"], target)
+        self.assertEqual(result["reset"], initial["reset"])
+        self.assertEqual(self.call(api + "/1"), result)
+        with self.assertRaises(HTTPError) as stale:
+            self.call(api, body)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        with self.assertRaises(HTTPError) as repeated:
+            self.call(api, body | {"version": result["version"]})
+        self.assertEqual(repeated.exception.code, 400)
+        repeated.exception.close()
+        before["User"]["Characters"] = [user["Characters"][0], other]
+        before["User"]["Cas"] += 1
+        with editor.reader() as db:
+            self.assertEqual(editor.profile(db), before)
+
+    def test_panel_hero_reset_respects_story_evolution_and_training_room(self):
+        api = "/api/game/heroes"
+        editor, _ = self.seed_hero_upgrades()
+        for spec in editor.specs.values():
+            spec["SummonCategory"] = "Story"
+        with closing(sqlite3.connect(editor.database)) as db, db:
+            profile = editor.profile(db)
+            profile["User"]["Characters"][0].update(CharacterId=33, Experience=37)
+            profile["User"]["Characters"][1]["Experience"] = 37
+            profile["User"]["TrainingSlots"] = {"1": {"CharacterId": 2, "IsLevel": True}}
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        first = self.call(api + "/1")
+        second = self.call(api + "/2")
+        self.assertIn("Training Room", second["reset"]["reason"])
+        with self.assertRaises(HTTPError) as blocked:
+            self.call(api, dict(id=2, action="reset", version=second["version"]))
+        self.assertEqual(blocked.exception.code, 400)
+        blocked.exception.close()
+        result = self.call(api, dict(id=1, action="reset", version=first["version"]))
+        self.assertEqual(result["hero"], first["reset"]["target"])
+        self.assertEqual((result["hero"]["spec"], result["hero"]["stars"]), (32, 5))
 
     def test_max_hero_is_atomic_and_stops_at_the_selected_heros_available_form(self):
         api = "/api/game/heroes"

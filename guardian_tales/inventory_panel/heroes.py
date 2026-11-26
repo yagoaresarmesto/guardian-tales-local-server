@@ -12,6 +12,7 @@ from guardian_tales import (
     hero_evolution,
     hero_limit_break,
     hero_myth,
+    hero_reset,
     imported_training,
 )
 from guardian_tales.account import AccountStore
@@ -247,30 +248,58 @@ class HeroEditor(GameSaveEditor):
 
     def details(self, ident):
         with self.reader() as db:
-            profile = self.profile(db)
-            return self.inspect(
-                profile, owned_character(profile["User"], ident), self.training_policy(db)
-            )
+            return self.selected_details(db, ident)
+
+    def selected_details(self, db, ident):
+        profile = self.profile(db)
+        hero = owned_character(profile["User"], ident)
+        detail = self.inspect(profile, hero, self.training_policy(db))
+        account = AccountStore(db, self.catalog.refs.directory, initialize=False)
+        detail["reset"] = self.reset_preview(account, profile["User"], hero)
+        return detail
+
+    def reset_preview(self, account, user, hero):
+        if account.needs_prologue():
+            return {"reason": "Complete the prologue before resetting a hero."}
+        try:
+            changes = hero_reset.reset_changes(user, hero, self.specs, account.references)
+        except ValueError as exc:
+            return {"reason": str(exc)}
+        if not changes:
+            return {"reason": "This hero has no progress to reset."}
+        return {"target": self.summary(hero | changes)}
 
     def apply_locked(self, db, body):
         if not isinstance(body, dict):
-            raise ValueError("Choose a hero and an upgrade")
+            raise ValueError("Choose a hero and an action")
         max_hero = body.get("action") == "max"
         fields = {"id", "version", "action"}
-        if not max_hero:
+        if body.get("action") not in ("max", "reset"):
             fields.add("value")
         if set(body) != fields:
-            raise ValueError("Choose a hero and an upgrade")
+            raise ValueError("Choose a hero and an action")
         ident, action = body["id"], body["action"]
         if not integer(ident, minimum=1) or not isinstance(action, str):
-            raise ValueError("Invalid hero upgrade")
+            raise ValueError("Invalid hero action")
         profile = self.profile(db)
         if body["version"] != self.inventory_version(profile["User"]):
             return 409, {"error": "The roster has changed. Reload the heroes before applying."}
-        policy = self.training_policy(db)
         hero = owned_character(profile["User"], ident)
-        detail = self.inspect(profile, hero, policy)
         account = AccountStore(db, self.catalog.refs.directory, initialize=False)
+        if action == "reset":
+            preview = self.reset_preview(account, profile["User"], hero)
+            if "reason" in preview:
+                raise ValueError(preview["reason"])
+            hero_reset.create_tables(db)
+            hero_reset.reset(
+                account,
+                {"CharacterId": ident, "ReceiveCrystal": False},
+                "panel-" + uuid4().hex,
+                heroes=self.specs,
+            )
+            return 200, self.selected_details(db, ident)
+        policy = self.training_policy(db)
+        detail = self.inspect(profile, hero, policy)
         if not max_hero:
             value = body["value"]
             options = detail["actions"].get(action, {}).get("choices", [])
@@ -295,6 +324,7 @@ class HeroEditor(GameSaveEditor):
             detail = self.inspect(profile, hero, policy)
             if not max_hero:
                 break
+        detail["reset"] = self.reset_preview(account, profile["User"], hero)
         return 200, detail
 
     def apply_upgrade(self, account, profile, hero, policy, detail, action, value):

@@ -3,6 +3,7 @@ import { $, el, inventoryTile, watchGridPageSize } from "/inventory-dom.js";
 const api = "/api/game/heroes";
 let heroes = [], selected = null, detail = null, page = 0, pageSize = 24;
 let generation = 0, applying = false, writable = false;
+let pendingReset = null;
 
 async function json(url, body) {
   const options = { cache: "no-store" };
@@ -28,9 +29,12 @@ function tell(text = "", error = false) {
 function updateAccess(allowed) {
   writable = allowed;
   $("access").hidden = writable;
-  $("access").textContent = "Close Guardian Tales and stop the game backend to apply hero upgrades.";
+  $("access").textContent = "Close Guardian Tales and stop the game backend to edit heroes.";
   $("apply").disabled = applying || !writable || !detail?.actions[$("action").value];
   $("max-hero").disabled = applying || !writable || !detail || !Object.keys(detail.actions).length;
+  $("hero-reset").disabled = applying || !writable || !detail?.reset.target;
+  $("reset-confirm").disabled = $("hero-reset").disabled || !pendingReset;
+  $("reset-access").hidden = writable;
 }
 
 async function checkAccess() {
@@ -115,6 +119,8 @@ function display(result, preferredAction) {
   $("training").hidden = !result.trainingRoom;
   $("upgrade").hidden = options.length === 0;
   $("unavailable").hidden = options.length > 0;
+  $("reset-reason").textContent = result.reset.reason || "";
+  $("reset-reason").hidden = !result.reset.reason;
   targets();
 }
 
@@ -172,7 +178,7 @@ $("tiles").onclick = event => {
   const card = event.target.closest("button[data-id]");
   if (card) selectHero(Number(card.dataset.id), true);
 };
-async function applyUpgrade(maxHero) {
+function applyUpgrade(maxHero) {
   if (applying || !writable || !detail) return;
   const action = maxHero ? "max" : $("action").value;
   const body = { id: selected, version: detail.version, action };
@@ -182,16 +188,21 @@ async function applyUpgrade(maxHero) {
     body.value = Number(target.value);
     message = detail.hero.name + " · " + target.text + " applied.";
   }
+  return applyChange(body, message, maxHero ? "Applying all available upgrades…" : "");
+}
+
+async function applyChange(body, message, progress) {
+  if (applying || !writable || !detail || body.id !== selected || body.version !== detail.version) return;
   applying = true;
   $("action").disabled = $("target").disabled = $("refresh").disabled = true;
-  tell(maxHero ? "Applying all available upgrades…" : "");
+  tell(progress);
   updateAccess(writable);
   draw();
   try {
     const result = await json(api, body);
     const index = heroes.findIndex(h => h.id === selected);
     heroes[index] = { ...result.hero, upgradable: Object.keys(result.actions).length > 0 };
-    display(result, action);
+    display(result, body.action);
     tell(message);
   } catch (error) {
     if (error.status === 409) detail = null;
@@ -206,6 +217,25 @@ async function applyUpgrade(maxHero) {
 }
 $("upgrade").onsubmit = event => { event.preventDefault(); applyUpgrade(false); };
 $("max-hero").onclick = () => applyUpgrade(true);
+$("hero-reset").onclick = () => {
+  if (applying || !writable || !detail?.reset.target) return;
+  const target = detail.reset.target;
+  pendingReset = { id: selected, version: detail.version, action: "reset" };
+  $("reset-heading").textContent = "Reset " + detail.hero.name + "?";
+  $("reset-name").textContent = target.name + " · #" + selected;
+  $("reset-result").textContent = "After reset · Level " + target.level + " · " + target.stars + "★";
+  $("reset-art").replaceChildren(...sprite(target).childNodes);
+  updateAccess(writable);
+  $("reset-dialog").showModal();
+};
+$("reset-cancel").onclick = () => $("reset-dialog").close();
+$("reset-dialog").onclose = () => { if (!$("reset-dialog").open) pendingReset = null; };
+$("reset-confirm").onclick = () => {
+  if (!pendingReset || $("reset-confirm").disabled) return;
+  const body = pendingReset;
+  $("reset-dialog").close();
+  applyChange(body, detail.hero.name + " · Hero reset applied.", "Resetting hero…");
+};
 $("search").oninput = $("element").onchange = $("sort").onchange = $("upgradable").onchange = () => { page = 0; draw(); };
 $("action").onchange = () => { targets(); tell(); };
 $("previous").onclick = () => { page--; draw(); };
