@@ -10,6 +10,10 @@ export function itemCatalog({section, types = new Map(), tile, drawArt, onAdded}
   let message = "", request = 0;
   let stars = 0, index = 0, pageSize = 10;
   type.add(new Option(isRelic ? "All families" : "All types", "all"));
+  if (!isRelic) {
+    type.add(new Option("Collaboration weapons", "collaboration"));
+    search.placeholder = "Name, hero or catalog ID";
+  }
   for (const [key, label] of types) type.add(new Option(label, key));
   for (let rating = 0; rating <= (isRelic ? 5 : 6); rating++) {
     const button = el("button", "", rating ? rating + "★" : "All stars");
@@ -61,9 +65,10 @@ export function itemCatalog({section, types = new Map(), tile, drawArt, onAdded}
   function filter() {
     const previous = filtered[index];
     const query = search.value.trim().replace(/^#/, "").toLowerCase();
-    filtered = items.filter(i => (!stars || i.stars === stars) && (type.value === "all" || i.kind === type.value) &&
+    filtered = items.filter(i => (!stars || i.stars === stars) &&
+      (type.value === "all" || i.kind === type.value || (type.value === "collaboration" && i.collaborationId)) &&
       (i.name.toLowerCase().includes(query) || types.get(i.kind)?.toLowerCase().includes(query) ||
-        String(i.spec).includes(query)));
+        i.exclusiveHeroName?.toLowerCase().includes(query) || String(i.spec).includes(query)));
     index = Math.max(0, filtered.indexOf(previous));
     Array.from($("catalog-ratings").children).forEach((button, rating) =>
       button.setAttribute("aria-pressed", String(rating === stars)));

@@ -10,9 +10,15 @@ from guardian_tales.village import integer
 
 from .catalog_grants import CatalogGrants
 from .equipment_options import generate
-from .equipment_ribbons import available_in_client
+from .equipment_ribbons import available_in_client, equipment_ribbons
 from .stack_quantities import HAMMERS
 from .weapon_progression import LIMIT_BREAK_TYPES
+
+
+def grantable_edition(spec):
+    if spec.get("Limited") is True:
+        return integer(spec.get("CollaborationId"), minimum=1)
+    return spec.get("Limited") is False
 
 
 def standard_variants(body, catalog):
@@ -39,7 +45,7 @@ def standard_variants(body, catalog):
                 or spec.get("OriginRarity") != grade
                 or spec.get("NameWithoutRarity") != origin.get("NameWithoutRarity")
                 or spec.get("Rarity") != rarity
-                or spec.get("Limited") is not False
+                or not grantable_edition(spec)
                 or spec.get("SortingNumber") == -1
                 or not available_in_client(spec, version, now)
                 or spec != catalog.specs.get(spec["Id"])
@@ -69,6 +75,8 @@ class EquipmentGrants(CatalogGrants):
             self.items[ident] = {
                 "spec": ident,
                 "kind": spec["WeaponType"],
+                "collaborationId": spec.get("CollaborationId"),
+                "ribbons": equipment_ribbons({}, spec, ()),
                 **catalog.equipment.catalog_facts(spec),
                 "name": catalog.names.get(ident)
                 or (spec.get("NameWithoutRarity") or spec["Name"]).replace("_", " ").title(),

@@ -215,6 +215,23 @@ def prepare_inventory(root):
             dict(sword, Id=56, Name="eu_myth_sword", Rarity=5, Summonable=False),
         ]
     )
+    collab_sword = dict(
+        sword,
+        Id=57,
+        Name="collab_sword_epic",
+        NameWithoutRarity="collab_sword",
+        Limited=True,
+        CollaborationId=6,
+        Summonable=False,
+        SortingNumber=101,
+    )
+    catalog["items"].extend(
+        [
+            dict(collab_sword, EvolveTo={"KakaoGlobal": 58}),
+            dict(collab_sword, Id=58, Name="collab_sword_myth", Rarity=5),
+            dict(collab_sword, Id=59, Name="collab_internal", SortingNumber=-1),
+        ]
+    )
     sword["EvolveTo"] = {"Default": 50, "KakaoGlobal": 56}
     relic = next(item for item in catalog["items"] if item["Id"] == 4)
     catalog["items"].extend(
@@ -807,10 +824,10 @@ class InventoryPanelTests(unittest.TestCase):
     def test_add_standard_equipment_and_reject_replayed_or_unlisted_grants(self):
         original = self.seed_wallet()["User"]
         catalog = self.call("/api/game/equipment/catalog")
-        self.assertEqual({i["spec"] for i in catalog["items"]}, {3, 5, 10, 56})
+        self.assertEqual({i["spec"] for i in catalog["items"]}, {3, 5, 10, 56, 57, 58})
         path = "/api/game/equipment/add"
         payload = dict(spec=3, version=catalog["version"])
-        for spec in (1, 50, 51, 52, 53, 54, 55, True):
+        for spec in (1, 50, 51, 52, 53, 54, 55, 59, True):
             with self.subTest(spec=spec), self.assertRaises(HTTPError) as invalid:
                 self.call(path, dict(payload, spec=spec))
             self.assertEqual(invalid.exception.code, 400)
@@ -1201,6 +1218,27 @@ class InventoryPanelTests(unittest.TestCase):
             db.execute("INSERT INTO imported_account VALUES(1,?)", (json.dumps(presets),))
         reject("relics", 12, 4)  # Saved preset.
         reject("relics", 23, 2)  # Other miscellaneous inventory.
+
+    def test_catalog_adds_limited_collaboration_weapons_and_their_linked_myth_forms(self):
+        self.seed_wallet()
+        api = "/api/game/equipment"
+        catalog = self.call(api + "/catalog")
+        collabs = [item for item in catalog["items"] if item["collaborationId"]]
+        self.assertEqual(
+            {(i["spec"], i["stars"], i["collaborationId"]) for i in collabs},
+            {(57, 5, 6), (58, 6, 6)},
+        )
+        version = catalog["version"]
+        for item in collabs:
+            self.assertEqual(item["ribbons"], ["exclusive-collab"])
+            saved = self.call(api + "/add", dict(spec=item["spec"], version=version))
+            inventory = self.call(api)
+            row = next(row for row in inventory["rows"] if row["id"] == saved["id"])
+            self.assertEqual(
+                (row["spec"], row["stars"], row["level"]), (item["spec"], item["stars"], 1)
+            )
+            self.assertIn("exclusive-collab", row["ribbons"])
+            version = inventory["inventoryVersion"]
 
     def test_catalog_grants_the_selected_native_star_variant(self):
         self.seed_wallet()
