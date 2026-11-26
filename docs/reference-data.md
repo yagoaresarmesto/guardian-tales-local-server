@@ -781,6 +781,19 @@ selections. Packet tests cover all four starting ranks, shorter evolution chains
 the maximum-rarity checkbox, atomic rejection and repeated requests. The Android
 result screen awaits a device check.
 
+### Grade 6 Evolution
+
+Select a five-star weapon with a released six-star form in its EU evolution
+chain. The Grade 6 forge sends the owned copy ID as `targetWeaponId` to
+`/item/myth-weapon`. A weapon assigned to the Training Room must leave that
+slot first. The forge also accepts eligible weapons with zero limit breaks.
+
+The local price is zero Red Shards. The forge retains the same copy, experience,
+rolled options, engraving, limit breaks, lock and equipped hero. A retry returns
+the saved result. Backend tests cover both original rarities, the regional
+evolution link, the displayed price and rejected selections. Android confirmation
+of the result screen is pending.
+
 ## Equipment Mystery Evolution
 
 Use Mystery Evolution on unlocked weapons, shields or accessories with one

@@ -630,12 +630,13 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
-            if route == weapon_evolution.ROUTE:
+            if route in weapon_evolution.ROUTES:
                 try:
                     epoch = self.request_epoch or self.store.request_epoch(True)
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
-                        request, weapon_evolution.evolve(self.store.account, body, operation_id)
+                        request,
+                        weapon_evolution.evolve(self.store.account, body, operation_id, route),
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

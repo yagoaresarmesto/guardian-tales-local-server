@@ -124,6 +124,7 @@ class SnapshotTests(unittest.TestCase):
                 "/item/inlaid-jewelslot",
                 "/item/limitbreak-weapon/v2",
                 "/item/lock",
+                "/item/myth-weapon",
                 "/item/sell",
                 "/item/unlock",
                 "/item/upgrade-jewel",

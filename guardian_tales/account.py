@@ -304,7 +304,7 @@ ACCOUNT_ROUTES = (
     "/item/enhance-weapon",
     merch_enhance.ROUTE,
     *mystery_evolution.ROUTES,
-    weapon_evolution.ROUTE,
+    *weapon_evolution.ROUTES,
     *ITEM_LOCK_ROUTES,
     ITEM_SELL_ROUTE,
     ITEM_EXTRACT_ROUTE,

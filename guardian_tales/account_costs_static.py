@@ -21,11 +21,13 @@ def prepare(body):
     equipment = json.loads(items["weaponenhance"][1]) if "weaponenhance" in items else {}
     compose_steps = equipment.get("WeaponCompose", []) if isinstance(equipment, dict) else []
     evolve_steps = equipment.get("WeaponEvolve", []) if isinstance(equipment, dict) else []
+    myth_steps = equipment.get("WeaponMyth", []) if isinstance(equipment, dict) else []
     if (
         "ChangeNickCost" not in constants
         and not {"inventoryexpansion", "merch"} & items.keys()
         and not compose_steps
         and not evolve_steps
+        and not myth_steps
     ):
         return None
     cost = constants.get("ChangeNickCost", 0)
@@ -38,6 +40,14 @@ def prepare(body):
         if step["GoldCost"]:
             step["GoldCost"] = 0
             changes["weaponenhance"] = equipment
+    for step in myth_steps:
+        # The Grade 6 screen needs the material entry to display its icon.
+        for price in step.get("Costs", []):
+            if not integer(price.get("ItemId"), minimum=1) or not integer(price.get("Amount")):
+                raise ValueError("Invalid Grade 6 evolution material")
+            if price["Amount"]:
+                price["Amount"] = 0
+                changes["weaponenhance"] = equipment
     if cost:
         constants["ChangeNickCost"] = 0
         changes["constants"] = constants

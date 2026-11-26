@@ -40,6 +40,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/colosseum/set-defense-party-preset",
         "/item/enhance-weapon",
         "/item/evolve-weapon-bundle",
+        "/item/myth-weapon",
         "/item/compose-gears",
         "/item/compose-weapon",
         "/merch/enhance-merch/v2",
