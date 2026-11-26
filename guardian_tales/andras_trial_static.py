@@ -45,7 +45,12 @@ def same_definition(left, right):
 
 
 def binary_rows(encoded, *, require_id=True, max_count=10000):
-    data = base64.b64decode(encoded, validate=True)
+    return read_binary_rows(
+        base64.b64decode(encoded, validate=True), require_id=require_id, max_count=max_count
+    )
+
+
+def read_binary_rows(data, *, require_id=True, max_count=10000):
     if len(data) < HEADER.size:
         raise ValueError("Missing native hero binary header")
     magic, version, count, blocks = HEADER.unpack_from(data)

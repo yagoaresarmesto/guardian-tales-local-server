@@ -5,6 +5,8 @@ import hashlib
 import json
 from http.server import BaseHTTPRequestHandler
 
+from .views import CSS, JS
+
 
 class LocalPanelHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
@@ -35,8 +37,12 @@ class LocalPanelHandler(BaseHTTPRequestHandler):
     def reply(self, status, mime, data, *, artwork=False, compressed=False):
         cache = "no-store"
         etag = None
-        if self.command == "GET" and status == 200 and (artwork or mime.startswith("image/")):
-            cache = "private, max-age=900"
+        if self.command == "GET" and status == 200:
+            if artwork or mime.startswith("image/"):
+                cache = "private, max-age=900"
+            elif mime in (CSS, JS):
+                cache = "private, no-cache"
+        if cache != "no-store":
             etag = '"' + hashlib.sha256(data).hexdigest() + '"'
             validators = self.headers.get("If-None-Match", "").split(",")
             if any(value.strip().removeprefix("W/") in ("*", etag) for value in validators):

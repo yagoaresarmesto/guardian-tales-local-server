@@ -32,6 +32,7 @@ from guardian_tales.inventory_panel.equipment_ribbons import (
     equipment_ribbons,
 )
 from guardian_tales.inventory_panel.server import InventoryServer
+from guardian_tales.panel_common import labels as panel_labels
 from guardian_tales.panel_common.art_cache import cached_art
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.reference import ReferenceData
@@ -350,6 +351,47 @@ def prepare_inventory(root):
 
 
 class InventoryStartupTests(unittest.TestCase):
+    def test_label_lookups_share_only_matching_contents_and_requested_keys(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        refs = ReferenceData(root)
+        path = root / "strings-bin-enUS"
+        preferred = root / "andras-trial-strings-test.bin"
+        keys = {"weapon": 201, "spell": 202, "missing": 203}
+
+        def table(title):
+            return base64.b64decode(pack_rows([(1, 201, title), (2, 202, b"Fire")]))
+
+        with (
+            patch.object(panel_labels, "binary_name_hash", side_effect=keys.__getitem__),
+            patch.object(
+                panel_labels, "read_binary_rows", wraps=panel_labels.read_binary_rows
+            ) as parse,
+        ):
+
+            def lookup(names):
+                return panel_labels.english_labels(refs, "test", names)
+
+            self.assertEqual(lookup(["weapon"]), {})
+            path.write_bytes(table(b"Axe"))
+            original_stat = path.stat()
+            with ThreadPoolExecutor(max_workers=4) as pool:
+                matches = list(pool.map(lookup, [["weapon", "missing"], ["missing", "weapon"]] * 4))
+            self.assertEqual(matches, [{"weapon": "Axe"}] * 8)
+            self.assertEqual(parse.call_count, 1)
+            matches[0]["weapon"] = "changed"
+            self.assertEqual(lookup(["missing", "weapon"]), {"weapon": "Axe"})
+            self.assertEqual(lookup(["spell"]), {"spell": "Fire"})
+            self.assertEqual(parse.call_count, 2)
+
+            path.write_bytes(table(b"Bow"))
+            os.utime(path, ns=(original_stat.st_atime_ns, original_stat.st_mtime_ns))
+            self.assertEqual(path.stat().st_size, original_stat.st_size)
+            self.assertEqual(lookup(["missing", "weapon"]), {"weapon": "Bow"})
+            preferred.write_bytes(b"broken")
+            self.assertEqual(lookup(["weapon"]), {})
+            preferred.unlink()
+            self.assertEqual(lookup(["weapon"]), {"weapon": "Bow"})
+
     def test_native_english_cache_resolves_weapon_and_hero_and_prefers_exact_binding(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         refs = ReferenceData(root)
@@ -432,6 +474,32 @@ class InventoryPanelTests(unittest.TestCase):
         ):
             self.fail("A second dashboard bound the active inventory port")
         self.assertEqual(self.call("/api/backend")["instance"], self.server.instance)
+
+    def test_dashboard_revalidates_static_styles_and_scripts_across_tabs(self):
+        connection = self.enterContext(
+            closing(HTTPConnection("127.0.0.1", self.server.server_port, timeout=5))
+        )
+
+        def get(path, validator):
+            connection.request("GET", path, headers={"If-None-Match": validator})
+            response = connection.getresponse()
+            return response, response.read()
+
+        for path in ("/panel.css", "/equipment.js"):
+            first, content = get(path, '"old-version"')
+            self.assertEqual(first.status, 200)
+            self.assertTrue(content)
+            self.assertEqual(first.getheader("Cache-Control"), "private, no-cache")
+            etag = first.getheader("ETag")
+            self.assertIsNotNone(etag)
+            fresh, content = get(path, "W/" + etag)
+            self.assertEqual((fresh.status, content, fresh.getheader("ETag")), (304, b"", etag))
+            self.assertEqual(fresh.getheader("Cache-Control"), "private, no-cache")
+
+        page, content = get("/heroes", "*")
+        self.assertEqual((page.status, page.getheader("Cache-Control")), (200, "no-store"))
+        self.assertTrue(content)
+        self.assertIsNone(page.getheader("ETag"))
 
     def test_artwork_on_reused_connection_after_gzipped_listing(self):
         brand = self.root / "brand.png"
