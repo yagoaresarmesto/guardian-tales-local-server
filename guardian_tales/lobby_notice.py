@@ -49,7 +49,7 @@ def selection(references, db=None):
         rows = report(references, db) if enabled and mode == "settings" else []
         contents = [enabled, mode, generation, rows]
         if rows:
-            contents.append("illustrated-banner-v1")
+            contents.append("illustrated-details-v2")
         signature = hashlib.sha256(json.dumps(contents, sort_keys=True).encode()).hexdigest()
         if history and history[0]["signature"] == signature:
             revision = history[0]["revision"]

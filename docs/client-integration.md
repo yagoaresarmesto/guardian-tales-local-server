@@ -17,9 +17,16 @@ CDN environment and set `lobby_notice.json` in the active reference directory to
 `{"enabled": true, "mode": "settings", "generation": 2}`. Use the next generation
 when switching from an existing image. On a fresh login, the backend reads the
 applied mode selections and the local save, then publishes a read-only snapshot.
-Changes in those values automatically receive a new banner URL. **Move** links
-to its full settings, including the Raid lineup, DKA rotation and individual
-Expedition overrides. With the optional `panel-art` extra and matching content,
+Changes in those values automatically receive a new banner URL. **Move** opens
+an English, read-only guide to that snapshot. Select a mode to see the Raid
+encounters, the selected day and weaknesses in the DKA rotation, the Kama-ZONE
+calendar and benefits, or the Expedition stage overrides grouped by area.
+The Orbital Lift guide lists the next floor's effective enemy level and formation;
+Tetis separates loadout, progress and specialties. Mode selection and expandable
+stage lists work without JavaScript. Images are embedded in the page, which
+also works without access to the web panel.
+
+With the optional `panel-art` extra and matching content,
 the banner reuses the web panel's local illustrations. DKA shows the slime for
 the selected day, Kama-ZONE uses the season artwork when available, and Guild
 Wars uses the saved phase icon. Expedition shows its district map, Orbital

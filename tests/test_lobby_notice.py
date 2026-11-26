@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from guardian_tales import lobby_notice as notice
-from guardian_tales import lobby_notice_art, lobby_settings
+from guardian_tales import lobby_notice_art, lobby_notice_details, lobby_settings
 from guardian_tales.raid_static import compress, decode, digest, records, selected_static_seed
 from guardian_tales.reference import ReferenceData
 
@@ -141,6 +141,81 @@ class LobbyNoticeTests(unittest.TestCase):
         self.assertEqual(card["summary"], "Enemy levels 110–140")
         self.assertEqual(card["caption"], "2 of 3 stages")
         self.assertEqual(len(card["details"]), 2)
+
+    def test_detail_guide_preserves_navigation_day_and_all_stage_overrides_without_art(self):
+        cards = [
+            {
+                "name": "Dungeon Kingdom Arena",
+                **lobby_settings.card(
+                    "Rotation 2",
+                    "Season 36",
+                    [("Day 1", "Fire Slime · Downed"), ("Day 2", "Void Slime · Airborne")],
+                    selectedDay=2,
+                ),
+            },
+            {
+                "name": "Expedition",
+                **lobby_settings.card(
+                    "Enemy levels",
+                    details=[
+                        ("Area 4 · Boss (123)", "Lv. 82 → 140"),
+                        ("Event <A> (124)", "Lv. 90 → 140"),
+                    ],
+                ),
+            },
+            {"name": "Guild Wars", **lobby_settings.card("Practice disabled")},
+        ]
+        with patch.object(lobby_notice_details, "heading_art", return_value=""):
+            page = lobby_notice_details.detail_page(self.refs, cards).decode()
+        self.assertEqual(page.count('type="radio"'), 3)
+        for n in range(3):
+            self.assertIn(f'<label for="mode-{n}">', page)
+            self.assertIn(f'<article id="sheet-{n}"', page)
+        self.assertIn('aria-controls="sheet-0" checked', page)
+        self.assertIn('Day 2<span class="current">Selected</span>', page)
+        self.assertEqual(page.count('<span class="current">'), 1)
+        self.assertIn("Airborne", page)
+        self.assertIn("<summary>Area 4", page)
+        self.assertIn("<summary>Other stages", page)
+        self.assertIn("Event &lt;A&gt;<small>124</small>", page)
+        self.assertIn("Practice disabled", page)
+
+    def test_next_floor_details_use_effective_level_formation_and_elites(self):
+        import sqlite3
+        from contextlib import closing
+
+        stock = {
+            "level": 80,
+            "units": [{"position": 1, "enemy": 8, "origin": 1}],
+            "originalElites": {1: 5},
+        }
+        catalog = {
+            "floors": {1001: stock},
+            "enemies": [{"id": 8, "name": "Imp"}],
+            "eliteNames": {5: "Mortar"},
+        }
+        with (
+            closing(sqlite3.connect(":memory:")) as db,
+            patch.object(self.refs, "read_bytes", return_value=b""),
+            patch.object(lobby_settings.orbital_boards, "catalog", return_value=catalog),
+            patch.object(lobby_settings.orbital_levels, "settings") as settings,
+        ):
+            db.execute("CREATE TABLE local_account(id INTEGER, profile TEXT)")
+            db.execute(
+                "INSERT INTO local_account VALUES (1, ?)",
+                (json.dumps({"UserProgress": {"TowerInfinity": {"Floor": 1000}}}),),
+            )
+            settings.return_value = {"level": 90, "boards": {}}
+            card = lobby_settings.orbital_card(self.refs, db)
+            self.assertEqual(
+                card["currentFloor"], {"level": 90, "units": [("Cell 1", "Imp · Mortar")]}
+            )
+            settings.return_value["boards"]["1001"] = {
+                "level": 120,
+                "units": [{"enemy": 8, "position": 7, "origin": 1, "elite": None}],
+            }
+            card = lobby_settings.orbital_card(self.refs, db)
+            self.assertEqual(card["currentFloor"], {"level": 120, "units": [("Cell 7", "Imp")]})
 
     def test_dka_uses_the_slime_sprite_for_the_saved_day_and_variant(self):
         elements = ("None", "Ice", "Light", "Earth", "Darkness", "Fire", "Nebula")

@@ -13,6 +13,7 @@ from . import (
     guild_war_static,
     kamazone,
     kamazone_practice,
+    orbital_boards,
     orbital_levels,
     punchking,
     punchking_static,
@@ -71,6 +72,8 @@ def dka_card(refs):
         f"Rotation {variant['id']} · Day {number}",
         f"Season {variant['season_id']} · {slime}",
         [(f"Day {i}", f"{name} · {weakness}") for i, (_, name, weakness) in enumerate(days, 1)],
+        selectedDay=number,
+        slimeElements=[key if key in SLIME_FRAMES else None for key, _, _ in days],
         sprite=f"/dka/slimes/{element}.png" if element in SLIME_FRAMES else None,
     )
 
@@ -95,11 +98,16 @@ def kama_card(refs):
         source = refs.read_bytes("static_data_get.bin")
         if kamazone.playable_season(source, ident):
             benefits = kamazone_practice.effective(refs, source, ident)["benefits"]
-            used = kamazone_practice.allocated_points(
-                kamazone_practice.catalog(source, ident), benefits
-            )
+            catalog = kamazone_practice.catalog(source, ident)
+            used = kamazone_practice.allocated_points(catalog, benefits)
             details.append(("Benefit points allocated", f"{used:,} / {kamazone_practice.BUDGET:,}"))
-            details.extend((f"Benefit {k}", f"Level {v}") for k, v in sorted(benefits.items()) if v)
+            selected = [(catalog[int(k)], v) for k, v in sorted(benefits.items()) if v]
+            if selected:
+                keys = {row["Name"] for row, _ in selected if row.get("Name")}
+                labels = english_labels(refs, kamazone_practice.source_hash(source), keys)
+                for row, value in selected:
+                    title = labels.get(row.get("Name")) or f"Benefit {row['Id']}"
+                    details.append((title, f"Level {value} / {row['MaxLevel']}"))
     return card(
         f"{'Old season' if archived else 'Season'} {ident}",
         f"{name} · {phase}",
@@ -197,15 +205,32 @@ def orbital_card(refs, db):
             ]
             description += " · " + (", ".join(placements) or "Empty formation")
         details.append((f"Floor {key}", description))
+    extra = {}
+    if floor and floor <= LAST_SELECTABLE_FLOOR:
+        catalog = orbital_boards.catalog(refs.read_bytes("static_data_get.bin"), refs.directory)
+        stock = catalog["floors"][floor]
+        custom = boards.get(str(floor), {})
+        units = custom.get("units")
+        if units is None:
+            units = stock["units"]
+        enemies = {e["id"]: e["name"] for e in catalog["enemies"]}
+        formation = []
+        for unit in sorted(units, key=lambda u: u["position"]):
+            elite = unit.get("elite", stock["originalElites"].get(unit.get("origin")))
+            name = enemies.get(unit["enemy"]) or f"#{unit['enemy']}"
+            if elite:
+                name += f" · {catalog['eliteNames'].get(elite) or f'Elite #{elite}'}"
+            formation.append((f"Cell {unit['position']}", name))
+        extra["currentFloor"] = {
+            "level": custom.get("level") or level or stock["level"],
+            "units": formation,
+        }
     if floor and floor >= 1001:
-        return card(
-            summary,
-            caption,
-            details,
+        extra.update(
             backdrop="/orbital-lift/scenery/mars-bg.webp",
             sprite="/orbital-lift/scenery/ic_tower1000_clear_00.webp",
         )
-    return card(summary, caption, details)
+    return card(summary, caption, details, **extra)
 
 
 def tetis_card(refs, db):

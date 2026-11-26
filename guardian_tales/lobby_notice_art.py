@@ -3,13 +3,13 @@
 
 import json
 from functools import lru_cache
-from html import escape
 from io import BytesIO
 
 from .reference import ReferenceData
 
 # Registered web-panel resources, with the horizontal focal point for each scene.
 MODE_ART = {
+    "Guild Raid": ("/map.png", None, 0.5),
     "Dungeon Kingdom Arena": ("/dka/arena-backdrop.jpg", None, 0.5),
     "Kama-ZONE": ("/kamazone/lobby.jpg", None, 0.82),
     "Expedition": ("/expedition/world-map.webp", "/expedition/emblem.png", 0.64),
@@ -30,25 +30,6 @@ def font(size, bold=False):
         except OSError:
             pass
     return ImageFont.load_default(size=size)
-
-
-def detail_page(cards):
-    sections = []
-    for card in cards:
-        parts = [escape(s) for s in (card["summary"], card["caption"], card.get("hp")) if s]
-        entries = "".join(
-            f"<div><dt>{escape(k)}</dt><dd>{escape(v)}</dd></div>" for k, v in card["details"]
-        )
-        sections.append(
-            f"<section><h2>{escape(card['name'])}</h2><p>{' · '.join(parts)}</p><dl>{entries}</dl></section>"
-        )
-    return ("""<!doctype html><html lang="en"><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>Game mode settings</title>
-<style>*{box-sizing:border-box}body{margin:0;background:#101c2a;color:#f0f3f8;font:16px/1.45 system-ui,sans-serif}
-main{max-width:980px;margin:auto;padding:22px}h1{color:#ffe0a1}section{border-top:1px solid #416079;padding:12px 0}
-h2{margin:4px 0;color:#98d9ed;font-size:1.2rem}p{margin:5px 0}dl{margin:7px 0}dl div{display:flex;gap:1em;
-justify-content:space-between;padding:5px 0;border-bottom:1px solid #26384a}dd{margin:0;text-align:right;overflow-wrap:anywhere}
-</style><main><h1>Game mode settings</h1>""" + "".join(sections) + "</main></html>").encode()
 
 
 def panel_image(refs, path):
@@ -162,4 +143,8 @@ def banner(directory, cards):
 @lru_cache(maxsize=4)
 def render(directory, data, extension):
     cards = json.loads(data)
-    return detail_page(cards) if extension == "html" else banner(directory, cards)
+    if extension == "html":
+        from .lobby_notice_details import detail_page
+
+        return detail_page(ReferenceData(directory), cards)
+    return banner(directory, cards)
