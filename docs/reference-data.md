@@ -2334,8 +2334,10 @@ but cannot be redeemed by this implementation.
 
 `/festival-pass/check-not-redeemable` accepts no parameters (or an empty object)
 and returns `{"NotRedeemable": [shop_ids]}`. The client loads these integers into
-its shop exclusion set. The **local policy** excludes items whose saved purchase
-count reaches their configured limit or whose configured persistent reward is
+its shop exclusion set. Opening Coin Exchange on an imported save runs the same
+read against that account's current inventory and purchase history. The **local
+policy** excludes items whose saved purchase count reaches their configured
+limit or whose configured persistent reward is
 already present in `User.ItemMiscs`. Point affordability is a separate UI/payment
 check. This query changes no profile, points, inventory or receipts. A completely
 empty season-zero state can use the catalog for this read without initialization;

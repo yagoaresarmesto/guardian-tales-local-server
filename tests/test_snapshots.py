@@ -218,6 +218,26 @@ class SnapshotTests(unittest.TestCase):
                 ).fetchone()[0]
                 self.assertEqual(json.loads(preserved_progress), self.snapshot["stage_progresses"])
 
+    def test_festival_coin_exchange_reads_imported_purchase_limits_and_owned_rewards(self):
+        profile = self.snapshot["profile"]
+        profile["UserFestivalPass"].update(SeasonId=91, Point=4, Purchase={"12": 2})
+        user = profile["User"]
+        user["ItemIdCounter"] += 1
+        user["ItemMiscs"].append({"Id": user["ItemIdCounter"], "ItemId": 12001, "Amount": 1})
+        self.write_source()
+        import_snapshot(self.source, self.state)
+        references = Path(__file__).parent / "fixtures"
+        with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
+            store = GuestStore(db, references)
+            session = BootstrapSession(store)
+            session.signed_in = True
+            changes = db.total_changes
+            for body in (None, {}):
+                response = session.handle(request("/festival-pass/check-not-redeemable", body))
+                self.assertEqual(json.loads(response.body), {"NotRedeemable": [11, 12]})
+            self.assertEqual(db.total_changes, changes)
+            self.assertEqual(store.account.profile(), profile)
+
     def test_network_mutations_and_repeated_prologue_reject_without_state_changes(self):
         import_snapshot(self.source, self.state)
         with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
