@@ -13,6 +13,9 @@ from guardian_tales.village import INT_MAX, MAX_REVISION, integer
 from .equipment_ribbons import available_in_client
 from .game_save import GameSaveEditor
 
+# The two Knights and the two martial artists each share one story choice.
+STORY_ALTERNATIVES = (frozenset({1, 2}), frozenset({52, 53}))
+
 
 class HeroGrants(GameSaveEditor):
     def __init__(self, editor):
@@ -42,6 +45,10 @@ class HeroGrants(GameSaveEditor):
         counter = user.get("CharacterIdCounter")
         if not integer(counter) or counter < max(copy_ids, default=0):
             raise ValueError("Invalid saved character counter.")
+
+        for alternatives in STORY_ALTERNATIVES:
+            if origins.intersection(alternatives):
+                origins.update(alternatives)
 
         version = tuple(map(int, CLIENT["version"].split(".")))
         now = datetime.now(timezone.utc)

@@ -626,6 +626,35 @@ class InventoryPanelTests(unittest.TestCase):
                 with editor.reader() as db:
                     self.assertEqual(editor.profile(db), profile)
 
+    def test_recruitment_respects_both_story_choices_in_evolved_forms(self):
+        editor, profile = self.seed_recruitment_roster()
+        api = "/api/game/heroes"
+        for origin in (1, 2, 52, 53):
+            editor.specs[origin] = dict(editor.specs[1], Id=origin, OriginId=origin)
+            editor.specs[origin + 100] = dict(editor.specs[origin], Id=origin + 100, Rank=6)
+        for knight, artist, other_knight, other_artist in ((1, 52, 2, 53), (2, 53, 1, 52)):
+            with self.subTest(knight=knight, artist=artist):
+                profile["User"]["Characters"] = [new_character(27, knight + 100)]
+                with closing(sqlite3.connect(editor.database)) as db, db:
+                    db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+                catalog = self.call(api + "/catalog")
+                self.assertCountEqual([h["spec"] for h in catalog["heroes"]], [4, 5, 15, 52, 53])
+                self.call(api + "/add", dict(spec=artist, version=catalog["version"]))
+                for form in (artist, artist + 100):
+                    with closing(sqlite3.connect(editor.database)) as db, db:
+                        saved = editor.profile(db)
+                        saved["User"]["Characters"][-1]["CharacterId"] = form
+                        db.execute("UPDATE local_account SET profile=?", (json.dumps(saved),))
+                    current = self.call(api + "/catalog")
+                    self.assertCountEqual([h["spec"] for h in current["heroes"]], [4, 5, 15])
+                    for excluded in (other_knight, other_artist):
+                        with self.assertRaises(HTTPError) as rejected:
+                            self.call(api + "/add", dict(spec=excluded, version=current["version"]))
+                        self.assertEqual(rejected.exception.code, 400)
+                        rejected.exception.close()
+                    with editor.reader() as db:
+                        self.assertEqual(editor.profile(db), saved)
+
     def test_hero_grant_fails_closed_for_unverifiable_rosters(self):
         editor, profile = self.seed_recruitment_roster()
         api = "/api/game/heroes"

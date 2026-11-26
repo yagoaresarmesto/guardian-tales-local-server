@@ -14,7 +14,7 @@ export function heroCatalog(json, heroTile, onAdded) {
     grid.inert = busy;
     search.disabled = busy;
     $("hero-catalog-status").textContent = message ||
-      (version && !candidates.length ? "You own every available hero." :
+      (version && !candidates.length ? "No heroes left to add to this roster." :
         version && !grid.childElementCount ? "No missing heroes match this search." :
         !writable ? "Close Guardian Tales and stop the backend to add a hero." : "");
   }
