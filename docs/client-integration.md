@@ -10,6 +10,23 @@ hostname/trust/routing setup for a host backend whose TLS connection already
 passes verification. Its new APK path is still being tested separately from the
 earlier private laboratory observations below.
 
+## Local lobby notice
+
+The test backend can show a local PNG in the native lobby notice window. Place
+`lobby_notice_1.png` in the active reference directory, then create
+`lobby_notice.json` there with `{"enabled": true, "generation": 1}`. The standard
+local CDN uses the same reference directory. All client languages use this image,
+so put the desired message directly on the banner. Fully reopen the game and
+enter the lobby to see it. On Android 3.57.0, the English test image
+**This is a test** appeared over the lobby with the native close button and
+the option to hide the notice for the day.
+
+To remove the notice, set `{"enabled": false, "generation": 2}` and reopen the
+game. Increase the generation on each change so the client refreshes its catalog.
+When enabling a new image, use the matching filename, such as
+`lobby_notice_3.png`. An installation without a settings file uses its original
+notice catalog. The test notice has no rewards.
+
 ## Client version and content compatibility
 
 The **APK is the client**: its platform and game requests must reach the local

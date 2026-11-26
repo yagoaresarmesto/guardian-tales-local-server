@@ -33,6 +33,7 @@ from . import (
     kamazone_practice,
     kamazone_preview,
     kamazone_run,
+    lobby_notice,
     merch_enhance,
     multi_presets,
     mystery_evolution,
@@ -1109,11 +1110,21 @@ class BootstrapSession:
                 def tetis_seed(references, name, value):
                     return tetis_map_trial.bootstrap_seed(references, name, value, practice)
 
+                def notice_seed(references, name, value):
+                    return selected_static_seed(
+                        references,
+                        name,
+                        value,
+                        tetis_seed,
+                        lobby_notice.selection,
+                        lobby_notice.prepare,
+                    )
+
                 seed = selected_static_seed(
                     self.store.references,
                     filename,
                     body,
-                    tetis_seed,
+                    notice_seed,
                     orbital_levels.bootstrap_selection,
                     orbital_levels.prepare_selection,
                 )

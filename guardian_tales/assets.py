@@ -12,6 +12,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
+from . import lobby_notice
 from .recommended_art import missing_recommended
 from .service_control import register, restart_worker
 from .tetis_art import missing_tetis_media
@@ -104,6 +105,12 @@ def handler_for(library, journal=None, reference_dir=None):
                 entry, override = missing_recommended(library, relative)
             if entry is None and override is None:
                 override = missing_tetis_media(library, relative)
+            if entry is None and override is None and banner_reference is not None:
+                try:
+                    override = lobby_notice.image(banner_reference, relative)
+                except (OSError, ValueError):
+                    self.send_error(503, "Local lobby notice is not ready")
+                    return
             if entry is None and override is None and banner_reference is not None:
                 from .kamazone_banner import missing_banner
 
@@ -221,7 +228,7 @@ def main(argv=None):
     p.add_argument("--port", type=int, default=18080)
     p.add_argument("--journal", type=Path)
     p.add_argument(
-        "--reference-dir", type=Path, help="Optional Andras title inputs and Kama-ZONE selection"
+        "--reference-dir", type=Path, help="Optional local titles, season banners and lobby notice"
     )
     p.add_argument("--run-seconds", type=int, default=0)
     p.add_argument("--restart-worker", action="store_true", help=argparse.SUPPRESS)
