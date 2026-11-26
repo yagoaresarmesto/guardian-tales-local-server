@@ -53,7 +53,7 @@ def rules(body):
     return heroes, crystal
 
 
-def limit_break(account, body, operation_id):
+def limit_break(account, body, operation_id, *, free=False):
     if (
         not isinstance(body, dict)
         or set(body) != {"CharacterId", "LimitBreakCount"}
@@ -91,20 +91,22 @@ def limit_break(account, body, operation_id):
             for slot in slots.values()
         ):
             raise ValueError("This hero has a Training Room limit break")
-        total = sum(prices[current : current + count])
-        balances = [row for row in user["Assets"] if row["Id"] == crystal]
-        if len(balances) != 1 or not integer(balances[0].get("Amount"), minimum=total):
-            raise ValueError("Insufficient Hero Crystals")
-        asset = balances[0]
         if (
-            not integer(asset.get("Spent"), MAX_REVISION - total)
-            or not integer(record.get("LimitBreakCharacterCount", 0), INT_MAX - count)
+            not integer(record.get("LimitBreakCharacterCount", 0), INT_MAX - count)
             or not integer(user.get("Cas"), MAX_REVISION - 1)
             or not integer(record.get("Cas"), MAX_REVISION - 1)
         ):
             raise ValueError("Invalid saved limit break spending, mission count or revision")
-        asset["Amount"] -= total
-        asset["Spent"] += total
+        if not free:
+            total = sum(prices[current : current + count])
+            balances = [row for row in user["Assets"] if row["Id"] == crystal]
+            if len(balances) != 1 or not integer(balances[0].get("Amount"), minimum=total):
+                raise ValueError("Insufficient Hero Crystals")
+            asset = balances[0]
+            if not integer(asset.get("Spent"), MAX_REVISION - total):
+                raise ValueError("Invalid saved limit break spending")
+            asset["Amount"] -= total
+            asset["Spent"] += total
         hero["LimitBreaks"] = current + count
         record["LimitBreakCharacterCount"] = record.get("LimitBreakCharacterCount", 0) + count
         user["Cas"] += 1

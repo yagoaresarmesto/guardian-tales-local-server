@@ -72,6 +72,23 @@ def load_catalog(references):
     return catalog
 
 
+def story_cap(catalog, progress):
+    cap = catalog["caps"][0]["max_level"]
+    for row in catalog["caps"][1:]:
+        if progress["StageStates"].get(str(row["opened_stage_id"]), 0) & 1:
+            cap = row["max_level"]
+    return cap
+
+
+def hero_cap(catalog, cap, hero):
+    return (
+        cap
+        + hero.get("LimitBreaks", 0) * catalog["limit_break_coefficient"]
+        + hero.get("BlessLevel", 0) * catalog["blessing_coefficient"]
+        + (catalog["myth_coefficient"] if hero["CharacterId"] in catalog["myth_ids"] else 0)
+    )
+
+
 def train(account, body, operation_id):
     if (
         not isinstance(body, dict)
@@ -122,19 +139,11 @@ def train(account, body, operation_id):
         ):
             raise ValueError("Training identity conflicts with its saved receipt")
         return {"User": user, "UserRecord": record}
-    cap = catalog["caps"][0]["max_level"]
-    for row in catalog["caps"][1:]:
-        if progress["StageStates"].get(str(row["opened_stage_id"]), 0) & 1:
-            cap = row["max_level"]
+    cap = story_cap(catalog, progress)
     targets = {}
     for key, delta in changes.items():
         hero = characters[key]
-        max_level = (
-            cap
-            + hero.get("LimitBreaks", 0) * catalog["limit_break_coefficient"]
-            + hero.get("BlessLevel", 0) * catalog["blessing_coefficient"]
-            + (catalog["myth_coefficient"] if hero["CharacterId"] in catalog["myth_ids"] else 0)
-        )
+        max_level = hero_cap(catalog, cap, hero)
         target = hero["Experience"] + delta
         # Native levels are zero-based: threshold[N] reaches internal level N.
         if max_level >= len(catalog["experience_by_level"]) or not integer(

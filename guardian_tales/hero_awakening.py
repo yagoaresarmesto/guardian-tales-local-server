@@ -47,7 +47,7 @@ def gold_discount(user, requested, rate):
     return rate
 
 
-def apply_nodes(user, hero, tree, rank, indices, discount):
+def apply_nodes(user, hero, tree, rank, indices, discount, *, free=False):
     prefix, mask = saved_mask(hero, len(tree.nodes))
     opened = {i for i in range(len(tree.nodes)) if mask[i // 8] & (1 << (i % 8))}
     new = set(indices) - opened
@@ -57,22 +57,30 @@ def apply_nodes(user, hero, tree, rank, indices, discount):
     tree.unlock(indices, opened, rank, breaks)
     if not new:
         return
+    if not integer(user.get("Cas"), MAX_REVISION - 1):
+        raise ValueError("Invalid saved awakening revision")
+    if not free:
+        pay_for_nodes(user, hero, tree, new, discount)
+    for i in new:
+        mask[i // 8] |= 1 << (i % 8)
+    hero["AwakeningTree"] = "|".join(base64.b64encode(part).decode() for part in (prefix, mask))
+    user["Cas"] += 1
+
+
+def pay_for_nodes(user, hero, tree, indices, discount):
     materials = Counter()
     gold = 0
-    for i in new:
+    for i in indices:
         node = tree.nodes[i]
         gold += round(node.gold * (1 - discount))
         for item, amount in node.stones:
             materials[item] += amount
-        mask[i // 8] |= 1 << (i % 8)
     balances = [row for row in user["Assets"] if row["Id"] == GOLD]
     if len(balances) != 1 or not integer(balances[0].get("Amount"), minimum=gold):
         raise ValueError("Not enough gold to awaken the selected nodes")
     asset = balances[0]
-    if (
-        not integer(asset.get("Spent"), INT_MAX - gold, -INT_MAX - 1)
-        or not integer(hero.get("AwakeningTreeGold", 0), INT_MAX - gold)
-        or not integer(user.get("Cas"), MAX_REVISION - 1)
+    if not integer(asset.get("Spent"), INT_MAX - gold, -INT_MAX - 1) or not integer(
+        hero.get("AwakeningTreeGold", 0), INT_MAX - gold
     ):
         raise ValueError("Invalid saved awakening expenditure or revision")
     for item, amount in materials.items():
@@ -80,11 +88,9 @@ def apply_nodes(user, hero, tree, rank, indices, discount):
     asset["Amount"] -= gold
     asset["Spent"] += gold
     hero["AwakeningTreeGold"] = hero.get("AwakeningTreeGold", 0) + gold
-    hero["AwakeningTree"] = "|".join(base64.b64encode(part).decode() for part in (prefix, mask))
-    user["Cas"] += 1
 
 
-def awaken(account, body, operation_id):
+def awaken(account, body, operation_id, *, free=False):
     if (
         not isinstance(body, dict)
         or set(body) != {"CharacterId", "NodeIndices", "discountBuff"}
@@ -125,7 +131,9 @@ def awaken(account, body, operation_id):
         if hero["CharacterId"] not in heroes:
             raise ValueError("Missing awakening tree for the selected hero")
         tree, rank = heroes[hero["CharacterId"]]
-        apply_nodes(user, hero, tree, rank, indices, gold_discount(user, requested, rate))
+        apply_nodes(
+            user, hero, tree, rank, indices, gold_discount(user, requested, rate), free=free
+        )
         db.execute(
             "UPDATE local_account SET profile=? WHERE id=1",
             (json.dumps(profile, separators=(",", ":")),),

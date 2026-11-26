@@ -214,6 +214,9 @@ MEDIA = {
 
 
 def media_resource(path):
+    hero = re.fullmatch(r"/heroes/sprites/([a-zA-Z0-9_.-]{1,100})\.png", path)
+    if hero:
+        return partial(CHARACTERS.read, frame=hero[1]), "image/png"
     portrait = re.fullmatch(r"/orbital-lift/enemies/([a-zA-Z0-9_.-]{1,100})\.png", path)
     if portrait:
         if portrait[1] == "boss_shadow_beast":

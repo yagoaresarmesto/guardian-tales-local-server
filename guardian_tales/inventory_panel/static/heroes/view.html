@@ -1,0 +1,42 @@
+<main>
+  <div class="title-row"><h1>Heroes</h1><span id="owned-count" hidden></span></div>
+  <p id="access" class="save-access" role="status" hidden></p>
+  <div class="workspace">
+    <section class="inspector" id="inspector" aria-labelledby="details-heading">
+      <header class="section-bar"><h2 id="details-heading">Hero details</h2><span id="copy-id"></span></header>
+      <p id="placeholder">Select a hero to view their progress.</p>
+      <div id="detail" hidden>
+        <div class="item-identity">
+          <div class="hero-art" id="hero-art"></div>
+          <div class="identity-text"><div class="identity-meta" id="hero-element"></div><h3 id="hero-name"></h3><div class="hero-stars" id="hero-stars"></div></div>
+        </div>
+        <div class="item-info">
+          <dl id="facts" class="inspector-facts"></dl>
+          <p id="training" class="editor-note" hidden>Assigned to the Training Room.</p>
+          <p id="unavailable" class="editor-note" hidden>No further upgrades are available for this hero right now.</p>
+          <form id="upgrade" hidden>
+            <label>Upgrade<select id="action"></select></label>
+            <label>Target<select id="target"></select></label>
+            <small>Panel upgrades are free.</small>
+            <button type="submit" class="apply-button" id="apply" disabled>Apply upgrade</button>
+          </form>
+          <p role="status" id="message" hidden></p>
+        </div>
+      </div>
+    </section>
+    <section class="collection" aria-labelledby="roster-heading">
+      <header class="collection-bar"><h2 id="roster-heading">Owned heroes</h2><button id="refresh" type="button">Reload</button></header>
+      <div class="rack">
+        <div class="tools">
+          <label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" placeholder="Search by name or ID" aria-label="Search heroes by name or ID"></label>
+          <label class="sort">Element<select id="element"><option value="">All elements</option></select></label>
+          <label class="sort">Sort by<select id="sort"><option value="name">Name</option><option value="low">Lowest level</option><option value="high">Highest level</option></select></label>
+        </div>
+        <label class="upgrade-filter"><input type="checkbox" id="upgradable"> Upgrades available</label>
+        <div id="tiles" role="group" aria-label="Owned hero cards"></div>
+        <p id="empty" hidden>No heroes match these filters.</p>
+        <footer class="pager"><span id="range" aria-live="polite">Loading heroes…</span><button id="previous" aria-label="Previous page" disabled>‹</button><button id="next" aria-label="Next page" disabled>›</button></footer>
+      </div>
+    </section>
+  </div>
+</main>

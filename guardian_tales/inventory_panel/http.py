@@ -61,6 +61,9 @@ class InventoryHandler(LocalPanelHandler):
                 )
             if path.startswith("/api/game/") or path == "/api/inventory":
                 inventory = self.server.inventory
+                selected = re.fullmatch(r"/api/game/heroes/([1-9][0-9]{0,9})", path)
+                if selected:
+                    return self.list_json(inventory.heroes.details(int(selected[1])))
                 if path in ("/api/game/relics/status", "/api/game/status"):
                     return self.json(200, inventory.relics.status())
                 if path in inventory.listings:

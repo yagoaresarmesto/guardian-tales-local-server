@@ -356,9 +356,12 @@ def valid_prologue_info(info):
 
 
 class AccountStore:
-    def __init__(self, db, reference_dir=None):
+    def __init__(self, db, reference_dir=None, *, initialize=True):
         self.db = db
         self.references = ReferenceData(reference_dir)
+        if not initialize:
+            # Offline editors bind only after validating the existing schema.
+            return
         create_snapshot_tables(db)
         create_preset_tables(db)
         multi_presets.create_tables(db)
@@ -1011,14 +1014,14 @@ class AccountStore:
             "AddedPoint": FIRST_FESTIVAL_POINTS,
         }
 
-    def add_character_experience(self, request, operation_id=None):
+    def add_character_experience(self, request, operation_id=None, *, free=False):
         if is_imported(self.db):
             return train_imported_characters(self, request, operation_id)
         if (self.references.directory / "training_catalog.json").is_file():
-            return train_characters(self, request, operation_id)
-        return self._initial_knight_training(request)
+            return train_characters(self, request, operation_id, free=free)
+        return self._initial_knight_training(request, free=free)
 
-    def _initial_knight_training(self, request):
+    def _initial_knight_training(self, request, *, free=False):
         """Apply the observed post-Inn knight level 1-to-2 tutorial once.
 
         Experiences contains deltas, not target totals. This narrow operation
@@ -1053,14 +1056,17 @@ class AccountStore:
             if trained != (37,) or knight["Experience"] < 37:
                 raise ValueError("Knight tutorial receipt does not match the saved character")
             return {"User": user, "UserRecord": record}
-        experience = next(asset for asset in user["Assets"] if asset["Id"] == 70004)
-        if knight["Experience"] != 0 or experience["Amount"] < 37:
+        if knight["Experience"] != 0:
             raise ValueError(
                 "The initial knight upgrade requires level 1 and 37 available experience"
             )
         # The pinned APK displayed 37 for this tutorial and sent that delta.
         # It derives the displayed level from the character's Experience.
-        experience["Amount"] -= 37
+        if not free:
+            experience = next(asset for asset in user["Assets"] if asset["Id"] == 70004)
+            if experience["Amount"] < 37:
+                raise ValueError("The initial knight upgrade requires 37 available experience")
+            experience["Amount"] -= 37
         knight["Experience"] = 37
         record["AddCharacterExperienceAmount"] += 37
         record["Cas"] += 1

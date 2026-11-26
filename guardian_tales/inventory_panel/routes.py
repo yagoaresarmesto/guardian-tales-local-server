@@ -10,6 +10,7 @@ STATIC = Path(__file__).parent / "static"
 TITLES = {
     "equipment": "Equipment inventory",
     "relics": "Relics",
+    "heroes": "Heroes",
     "consumables": "Consumables",
     "mastery": "Guardian Mastery",
     "account": "Account",

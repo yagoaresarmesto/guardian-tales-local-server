@@ -62,7 +62,7 @@ def rules(body):
     return caps, prices, ticket, quest
 
 
-def bless(account, route, body, operation_id):
+def bless(account, route, body, operation_id, *, free=False):
     if (
         route not in ROUTES
         or not isinstance(body, dict)
@@ -115,7 +115,8 @@ def bless(account, route, body, operation_id):
             or not integer(record.get("Cas"), MAX_REVISION - 1)
         ):
             raise ValueError("Invalid saved blessing count or revision")
-        spend_tickets(user, ticket, sum(prices[current:target]))
+        if not free:
+            spend_tickets(user, ticket, sum(prices[current:target]))
         hero["BlessLevel"] = target
         misc["BlessCharacterCount"] = misc.get("BlessCharacterCount", 0) + gained
         user["Cas"] += 1

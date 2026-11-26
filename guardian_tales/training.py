@@ -6,7 +6,7 @@ import json
 from .campaign import FIRST_STAGE_ID, STAGE_CLEARED
 
 
-def train_characters(account, request, operation_id):
+def train_characters(account, request, operation_id, *, free=False):
     if (
         not isinstance(request, dict)
         or set(request) != {"Experiences"}
@@ -108,12 +108,13 @@ def train_characters(account, request, operation_id):
             return {"User": user, "UserRecord": record}
         raise ValueError("Training must reach a catalog level within the saved story cap")
     spent = sum(changes.values())
-    experience = next(a for a in user["Assets"] if a["Id"] == 70004)
-    if spent > experience["Amount"]:
-        raise ValueError("Insufficient experience for character training")
+    if not free:
+        experience = next(a for a in user["Assets"] if a["Id"] == 70004)
+        if spent > experience["Amount"]:
+            raise ValueError("Insufficient experience for character training")
+        experience["Amount"] -= spent
     for key, target in targets.items():
         characters[key]["Experience"] = target
-    experience["Amount"] -= spent
     record["AddCharacterExperienceAmount"] += spent
     record["Cas"] += 1
     user["Cas"] += 1

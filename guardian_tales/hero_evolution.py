@@ -82,7 +82,7 @@ def price(steps, current, count):
     return total, evolves
 
 
-def evolve(account, body, operation_id):
+def evolve(account, body, operation_id, *, free=False):
     if (
         not isinstance(body, dict)
         or set(body) != {"CharacterId", "UpgradeCount", "DreamSpiritStoneUsageAmount"}
@@ -137,7 +137,8 @@ def evolve(account, body, operation_id):
             hero["CharacterId"] = target
             record["EvolveCharacterCount"] = record.get("EvolveCharacterCount", 0) + 1
             record["Cas"] += 1
-        spend_hero_stones(user, dream, budget, stone, rate, cost)
+        if not free:
+            spend_hero_stones(user, dream, budget, stone, rate, cost)
         hero["RankUpgrade"] = 0 if evolves else current + count
         user["Cas"] += 1
         db.execute(

@@ -13,6 +13,7 @@ from .catalog import InventoryCatalog
 from .equipment_grants import EquipmentGrants
 from .equipment_options import EquipmentOptionEditor
 from .hero_portraits import HeroPortraits
+from .heroes import HeroEditor
 from .mastery import MasteryEditor
 from .owned_copies import CopyProtection, CopyRemoval, ForcedCopyRemoval
 from .preview import Sandbox
@@ -42,6 +43,7 @@ class InventoryApplication:
                 tables,
             )
         self.mastery = MasteryEditor(database, references)
+        self.heroes = HeroEditor(database, self.catalog, tables, body)
         self.account_editor = AccountEditor(database, references, self.catalog, tables)
         self.relics = RelicEditor(database, self.catalog, tables)
         self.relic_grants = RelicGrants(database, self.catalog, self.relics.specs, tables)
@@ -56,6 +58,7 @@ class InventoryApplication:
             "/api/game/consumables": self.consumables.info,
             "/api/game/equipment": self.equipment.info,
             "/api/game/equipment/catalog": self.equipment_grants.info,
+            "/api/game/heroes": self.heroes.info,
             "/api/game/mastery": self.mastery.info,
             "/api/game/relics": self.relics.info,
             "/api/game/relics/catalog": self.relic_grants.info,
@@ -75,6 +78,7 @@ class InventoryApplication:
             "/api/game/equipment/roll": partial(self.equipment.request, roll=True),
             "/api/game/equipment/hammers": self.equipment.hammers.write,
             "/api/game/mastery": self.mastery.write,
+            "/api/game/heroes": self.heroes.write,
             "/api/game/mastery/preview": self.mastery.preview,
             "/api/game/relics": self.relics.apply,
             "/api/game/relics/add": self.relic_grants.write,

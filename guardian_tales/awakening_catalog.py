@@ -37,27 +37,32 @@ class Tree:
                 visible.difference_update(path)
         return visible
 
-    def unlock(self, indices, opened, rank, breaks):
-        visible = self.visible(rank, breaks)
-        if not set(indices) <= visible:
-            raise ValueError("The selected nodes are unavailable on this hero's current tree")
+    def can_open(self, index, opened):
+        node = self.nodes[index]
+        if 1 <= index <= 6 and opened.isdisjoint(range(1, 7)):
+            return True
+        if node.center:
+            return node.neighbors <= opened
+        return not node.neighbors.isdisjoint(opened)
+
+    def open_connected(self, indices, opened):
         pending = dict.fromkeys(i for i in indices if i not in opened)
         # Auto Awakening can send a center and its surrounding nodes in the same batch.
         while pending:
             before = len(pending)
             for i in tuple(pending):
-                node = self.nodes[i]
-                if 1 <= i <= 6 and opened.isdisjoint(range(1, 7)):
-                    allowed = True
-                elif node.center:
-                    allowed = node.neighbors <= opened
-                else:
-                    allowed = not node.neighbors.isdisjoint(opened)
-                if allowed:
+                if self.can_open(i, opened):
                     opened.add(i)
                     del pending[i]
             if len(pending) == before:
-                raise ValueError("Open the connected awakening nodes first")
+                break
+        return opened
+
+    def unlock(self, indices, opened, rank, breaks):
+        if not set(indices) <= self.visible(rank, breaks):
+            raise ValueError("The selected nodes are unavailable on this hero's current tree")
+        if not set(indices) <= self.open_connected(indices, opened):
+            raise ValueError("Open the connected awakening nodes first")
 
 
 def build_tree(config, packed_nodes, layout, drawing, prices):

@@ -21,7 +21,9 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from guardian_tales.andras_trial_static import pack_rows
+from guardian_tales.awakening_catalog import Node, Tree
 from guardian_tales.basecamp import MASTERY_POINTS
+from guardian_tales.characters import new_character
 from guardian_tales.inventory_panel import server
 from guardian_tales.inventory_panel.equipment import english_inventory_names
 from guardian_tales.inventory_panel.equipment_ribbons import (
@@ -470,10 +472,11 @@ class InventoryPanelTests(unittest.TestCase):
     def test_views_and_referenced_static_assets(self):
         import re
 
-        for section in ("equipment", "relics", "consumables", "mastery", "account"):
+        for section in ("equipment", "relics", "heroes", "consumables", "mastery", "account"):
             page = self.call("/" + section)
             self.assertIn(b'lang="en"', page)
             self.assertIn(b'href="/account"', page)
+            self.assertIn(b'href="/heroes"', page)
             self.assertIn(f'href="/{section}" aria-current="page"'.encode(), page)
             self.assertEqual(page.count(b'aria-current="page"'), 1)
             self.assertEqual(b'id="preview-link"' in page, section == "equipment")
@@ -489,6 +492,106 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertTrue(self.call("/equipment-options.js"))
         self.assertTrue(self.call("/equipment-add.js"))
         self.assertTrue(self.call("/catalog-picker.js"))
+
+    def test_owned_hero_upgrades_are_free_versioned_and_limited_to_the_current_form(self):
+        api = "/api/game/heroes"
+        self.assertEqual(self.call(api)["heroes"], [])
+        editor = self.server.inventory.heroes
+        tree = Tree(
+            (
+                Node(0, 0, False, frozenset({1}), 10, ((70, 2),)),
+                Node(0, 0, False, frozenset({0}), 10, ((70, 2),)),
+            ),
+            (),
+            (),
+        )
+        editor.specs = {
+            i: dict(Id=i, Name=f"archer_{i}", Rank=rank, Playable=True)
+            for i, rank in ((31, 3), (32, 4), (33, 6))
+        }
+        editor.specs[33]["SpineAssetName"] = {"default": "archer#archer_myth_model"}
+        rules = {
+            "hero_blessing.rules": ({32: 2, 33: 2}, (10, 20), 88, 39),
+            "hero_evolution.rules": ({31: (3, 32, 81, 1)}, {3: {0: (40, True)}}, 90),
+            "hero_limit_break.rules": ({32: (100,), 33: (100,)}, 91),
+            "hero_myth.rules": ({32: (33, 93, 400)}, 1, 94, 1),
+            "awakening_catalog.catalog": (
+                {i: (tree, s["Rank"]) for i, s in editor.specs.items()},
+                0.3,
+            ),
+        }
+        rules["hero_awakening.catalog"] = rules["awakening_catalog.catalog"]
+        for name, values in rules.items():
+            self.enterContext(patch("guardian_tales." + name, return_value=values))
+        policy = dict(
+            client=CLIENT,
+            free_experience=True,
+            experience_by_level=[0, 37, 111, 222, 370, 555],
+            caps=[{"opened_stage_id": 0, "max_level": 1}],
+            limit_break_coefficient=1,
+            blessing_coefficient=1,
+            myth_coefficient=1,
+            max_limit_breaks=1,
+            max_bless_level=2,
+            character_ids=[31, 32, 33],
+            myth_ids=[33],
+        )
+        (self.root / "imported_training_catalog.json").write_text(json.dumps(policy))
+        other = new_character(2, 31)
+        with closing(sqlite3.connect(editor.database)) as db, db:
+            profile = editor.profile(db)
+            profile["User"].update(
+                Characters=[new_character(1, 31), other], Assets=[], ItemStackables=[]
+            )
+            profile["UserProgress"] = {
+                "StageStates": {"100010001": 7},
+                "QuestProgresses": [{"Id": 39, "Grade": 0}],
+            }
+            profile["UserRecord"] = {"Cas": 2, "AddCharacterExperienceAmount": 0}
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY)")
+            db.execute("INSERT INTO imported_account VALUES (1)")
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        roster = self.call(api)["heroes"]
+        self.assertEqual([h["id"] for h in roster], [1, 2])
+        self.assertTrue(all(h["upgradable"] for h in roster))
+        detail = self.call(api + "/1")
+        original = dict(id=1, action="evolve", value=1, version=detail["version"])
+        with StateLock(self.root), self.assertRaises(HTTPError) as in_use:
+            self.call(api, original)
+        self.assertEqual(in_use.exception.code, 423)
+        in_use.exception.close()
+        for invalid in (dict(id=999), dict(action="myth"), dict(action="level", value=6)):
+            with self.assertRaises(HTTPError) as rejected:
+                self.call(api, original | invalid)
+            self.assertEqual(rejected.exception.code, 400)
+            rejected.exception.close()
+        for action, value in (
+            ("evolve", 1),
+            ("break", 1),
+            ("bless", 2),
+            ("myth", 1),
+            ("level", 6),
+            ("awaken", 1),
+            ("awaken", -1),
+        ):
+            detail = self.call(
+                api, dict(id=1, action=action, value=value, version=detail["version"])
+            )
+        self.assertEqual(detail["actions"], {})
+        self.assertEqual(detail["hero"]["sprite"], "/heroes/sprites/archer_33.png")
+        self.assertEqual(
+            detail["stats"],
+            {"Level": "6 / 6", "Blessing": "2 / 2", "Limit breaks": "1 / 1", "Awakening": "2 / 2"},
+        )
+        with self.assertRaises(HTTPError) as stale:
+            self.call(api, original)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        with editor.reader() as db:
+            user = editor.profile(db)["User"]
+        self.assertEqual((user["Assets"], user["ItemStackables"]), ([], []))
+        self.assertEqual(user["Characters"][1], other)
+        self.assertEqual(user["Characters"][0]["AwakeningTreeGold"], 0)
 
     def test_add_relic_uses_native_star_slots_and_separate_capacity(self):
         original = self.seed_wallet()["User"]

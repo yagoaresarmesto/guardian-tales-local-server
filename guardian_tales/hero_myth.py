@@ -73,7 +73,7 @@ def rules(body):
     return forms, maximum, dream, rate
 
 
-def promote(account, body, operation_id):
+def promote(account, body, operation_id, *, free=False):
     if (
         not isinstance(body, dict)
         or set(body) != {"CharacterId", "DreamMythStoneUsageAmount"}
@@ -122,7 +122,8 @@ def promote(account, body, operation_id):
         ):
             raise ValueError("Invalid saved Myth count or revision")
         target, stone, cost = form
-        spend_hero_stones(user, dream, budget, stone, rate, cost)
+        if not free:
+            spend_hero_stones(user, dream, budget, stone, rate, cost)
         hero.update(CharacterId=target, RankUpgrade=0)
         misc["MythCharacterCount"] = misc.get("MythCharacterCount", 0) + 1
         user["Cas"] += 1
