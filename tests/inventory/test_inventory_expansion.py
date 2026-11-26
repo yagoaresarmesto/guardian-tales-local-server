@@ -9,8 +9,8 @@ from guardian_tales.inventory_expansion import ROUTE
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
 from guardian_tales.village import MAX_REVISION
-from tests.test_snapshots import request
-from tests.test_village_harvest import VillageFixture
+from tests.account.test_snapshots import request
+from tests.village.test_village_harvest import VillageFixture
 
 
 class InventoryExpansionTests(VillageFixture, unittest.TestCase):

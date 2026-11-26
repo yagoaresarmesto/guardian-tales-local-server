@@ -21,8 +21,8 @@ For changes to persistence or rewards, preserve existing account state, make
 retries safe, and test both successful completion and rejected input. Run the
 regression suite, synthetic demo, formatter and linter before submitting changes.
 
-Tests have [logical groups](tests/README.md). Place Inventory regression modules
-in [tests/inventory/](tests/inventory/). Use `validate --group NAME` during
+Place each regression module under `tests/<group>/`. The [test guide](tests/README.md)
+lists the groups and their directories. Use `validate --group NAME` during
 iteration and the default `validate` command for the full suite. Register new
 test modules exactly once in [the group catalog](tests/groups.json). Validation
 checks for missing or duplicate assignments before executing tests.

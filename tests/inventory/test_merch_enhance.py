@@ -9,8 +9,8 @@ from guardian_tales.items import inventory_item
 from guardian_tales.merch_enhance import ROUTE
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
-from tests.test_snapshots import request
-from tests.test_village_harvest import VillageFixture
+from tests.account.test_snapshots import request
+from tests.village.test_village_harvest import VillageFixture
 
 
 class MerchEnhanceTests(VillageFixture, unittest.TestCase):

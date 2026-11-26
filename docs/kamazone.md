@@ -657,7 +657,7 @@ From the repository root on Windows, supply the matching external static data:
 
 ```powershell
 $env:GT_KAMAZONE_TEST_STATIC = (Resolve-Path '.\local\client-data\reference\static_data_get.bin').Path
-.\.venv\Scripts\python.exe -m unittest tests.test_kamazone_playthrough
+.\.venv\Scripts\python.exe -m unittest tests.content.test_kamazone_playthrough
 ```
 
 On Android 3.57.0 EU, the owner confirmed that Finish Challenge retained the

@@ -10,7 +10,7 @@ from guardian_tales.items import inventory_item
 from guardian_tales.jewel_socket import ATTACH, DETACH, ROUTE, create_tables
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, digest
-from tests.test_village_harvest import NOW, VillageFixture
+from tests.village.test_village_harvest import NOW, VillageFixture
 
 
 class JewelSocketTests(VillageFixture, unittest.TestCase):

@@ -17,9 +17,8 @@ needed. No full game content or captured bootstrap data is needed.
 
 ### Select an area
 
-The suite has [logical test groups](../tests/README.md), defined in
-[the group catalog](../tests/groups.json). Inventory tests live in
-[tests/inventory/](../tests/inventory/).
+Each [test group](../tests/README.md) has a directory under `tests/` and an
+entry in [the group catalog](../tests/groups.json).
 
 ```sh
 python -m guardian_tales validate --list-groups

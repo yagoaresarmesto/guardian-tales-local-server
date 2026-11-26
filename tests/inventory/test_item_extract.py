@@ -16,7 +16,7 @@ from guardian_tales.protocol import PacketError
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.village import MAX_REVISION
 from guardian_tales.weapon_summon import MAGIC_METAL
-from tests.test_village_harvest import NOW, VillageFixture
+from tests.village.test_village_harvest import NOW, VillageFixture
 
 
 class ItemExtractTests(VillageFixture, unittest.TestCase):

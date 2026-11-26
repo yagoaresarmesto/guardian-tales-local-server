@@ -13,7 +13,7 @@ from guardian_tales.item_sell import EQUIPMENT_FIELDS, ROUTE
 from guardian_tales.items import inventory_item
 from guardian_tales.protocol import PacketError
 from guardian_tales.village import MAX_REVISION
-from tests.test_village_harvest import NOW, VillageFixture
+from tests.village.test_village_harvest import NOW, VillageFixture
 
 
 class ItemSellTests(VillageFixture, unittest.TestCase):

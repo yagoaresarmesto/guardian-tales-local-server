@@ -12,7 +12,7 @@ from guardian_tales.items import inventory_item
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.village import INT_MAX, MAX_REVISION, current_village
 from guardian_tales.weapon_enhance import ROUTE
-from tests.test_village_harvest import NOW, VillageFixture
+from tests.village.test_village_harvest import NOW, VillageFixture
 
 
 class WeaponEnhanceTests(VillageFixture, unittest.TestCase):

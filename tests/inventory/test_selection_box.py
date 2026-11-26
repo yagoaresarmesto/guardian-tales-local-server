@@ -8,7 +8,7 @@ from guardian_tales.items import inventory_item
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, digest
 from guardian_tales.selection_box import ROUTE
-from tests.test_village_harvest import VillageFixture
+from tests.village.test_village_harvest import VillageFixture
 
 
 class SelectionBoxTests(VillageFixture, unittest.TestCase):

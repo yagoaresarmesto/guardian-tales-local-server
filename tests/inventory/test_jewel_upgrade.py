@@ -12,8 +12,8 @@ from guardian_tales.jewel_upgrade import LOOSE, RELIC
 from guardian_tales.protocol import PacketError
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.village import INT_MAX, MAX_REVISION
-from tests.test_snapshots import request as packet
-from tests.test_village_harvest import NOW, VillageFixture
+from tests.account.test_snapshots import request as packet
+from tests.village.test_village_harvest import NOW, VillageFixture
 
 
 class JewelUpgradeTests(VillageFixture, unittest.TestCase):

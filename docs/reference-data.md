@@ -1198,7 +1198,7 @@ missing timers, purchase energy or transfer reserve stamina.
 The optional `village_harvest_catalog.json` is limited to 2 MiB. It contains the
 pinned `client`, `min_seconds`, `inn_factor`, `facility_divisor`, `sp_base_max`,
 `rarity_bonus`, `match_bonus` and decimal-ID `buildings`/`followers` objects.
-The [synthetic fixture builder](../tests/test_village_harvest.py) shows its shape.
+The [synthetic fixture builder](../tests/village/test_village_harvest.py) shows its shape.
 Inn rows contain both rates/storage limits and the maximum manufacture level.
 Producer rows contain specialization, follower slots and same-resource effects
 with `item_id`, `value`, `period` and `storage`; other building rows explicitly
@@ -2442,7 +2442,7 @@ Each season has four distinct boss IDs with slots 1–4. Bosses can share a stag
 ID. Each boss has only `slot`, `id`, `stage_id`. Its first-round object contains `number` (1),
 positive `score`, nonnegative `buff_level` and positive `boss_hp_bar`. IDs and
 numeric fields use bounded native integers. See the account-free synthetic
-[catalog example](../tests/test_guild_raid.py) and the
+[catalog example](../tests/guild/test_guild_raid.py) and the
 [season command and limitations](official-save-experiment.md#fresh-local-raid-entry-and-season-selection).
 Do not substitute guessed IDs or another client's catalog.
 

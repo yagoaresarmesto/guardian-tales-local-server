@@ -29,9 +29,9 @@ from guardian_tales.raid_static import decode, records
 from guardian_tales.reference import ReferenceData
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.state_lock import StateLock
-from tests import test_andras_trial as fixture
-from tests.test_admin_test_items import source_body
-from tests.test_snapshots import request
+from tests.account import test_andras_trial as fixture
+from tests.account.test_admin_test_items import source_body
+from tests.account.test_snapshots import request
 
 
 class HeadHunterTests(unittest.TestCase):

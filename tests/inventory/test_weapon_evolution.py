@@ -8,8 +8,8 @@ from guardian_tales.items import inventory_item
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, decode, digest, records
 from guardian_tales.weapon_evolution import MYTH_ROUTE, ROUTE
-from tests.test_snapshots import request
-from tests.test_village_harvest import VillageFixture
+from tests.account.test_snapshots import request
+from tests.village.test_village_harvest import VillageFixture
 
 
 class WeaponEvolutionTests(VillageFixture, unittest.TestCase):

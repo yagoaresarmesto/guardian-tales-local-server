@@ -1,23 +1,23 @@
 {
   "core": {
     "description": "Bootstrap packets, LZ4 and test-runner organization",
-    "modules": ["test_bootstrap", "test_static_cache", "test_validation"]
+    "modules": ["core.test_bootstrap", "core.test_static_cache", "core.test_validation"]
   },
   "account": {
     "description": "Account import, profile customization and local administration",
-    "modules": ["test_snapshots", "test_profile_card", "test_representative_character", "test_portrait_frame", "test_profile_badge", "test_account_name", "test_my_room", "test_colosseum", "test_admin", "test_admin_festival", "test_admin_imported", "test_admin_test_items", "test_andras_trial"]
+    "modules": ["account.test_snapshots", "account.test_profile_card", "account.test_representative_character", "account.test_portrait_frame", "account.test_profile_badge", "account.test_account_name", "account.test_my_room", "account.test_colosseum", "account.test_admin", "account.test_admin_festival", "account.test_admin_imported", "account.test_admin_test_items", "account.test_andras_trial"]
   },
   "content": {
     "description": "Reference data, content packs, archives and catalog contracts",
-    "modules": ["test_reference", "test_content_pack", "test_ondemand_archives", "test_quest_catalog", "test_tutorial_catalog", "test_nickname_static", "test_kamazone", "test_kamazone_legacy", "test_kamazone_practice", "test_kamazone_run", "test_kamazone_battle", "test_kamazone_shop", "test_kamazone_shelter", "test_kamazone_conclude", "test_kamazone_aids", "test_kamazone_playthrough", "test_kamazone_events", "test_kamazone_loot"]
+    "modules": ["content.test_reference", "content.test_content_pack", "content.test_ondemand_archives", "content.test_quest_catalog", "content.test_tutorial_catalog", "content.test_nickname_static", "content.test_kamazone", "content.test_kamazone_legacy", "content.test_kamazone_practice", "content.test_kamazone_run", "content.test_kamazone_battle", "content.test_kamazone_shop", "content.test_kamazone_shelter", "content.test_kamazone_conclude", "content.test_kamazone_aids", "content.test_kamazone_playthrough", "content.test_kamazone_events", "content.test_kamazone_loot"]
   },
   "campaign": {
     "description": "Story entry, stage progress, completion and play menus",
-    "modules": ["test_campaign", "test_campaign_complete", "test_completion", "test_discovery", "test_monsters", "test_story", "test_story_interactions", "test_play_menu", "test_expedition", "test_expedition_levels", "test_classic_coop"]
+    "modules": ["campaign.test_campaign", "campaign.test_campaign_complete", "campaign.test_completion", "campaign.test_discovery", "campaign.test_monsters", "campaign.test_story", "campaign.test_story_interactions", "campaign.test_play_menu", "campaign.test_expedition", "campaign.test_expedition_levels", "campaign.test_classic_coop"]
   },
   "heroes": {
     "description": "Hero experience, evolution, Myth, awakening, limit breaks, resets, blessings, equipment, training caps and saved Training Room slots",
-    "modules": ["test_training", "test_training_catalog", "test_imported_training", "test_training_room", "test_hero_equipment", "test_hero_reset", "test_hero_blessing", "test_hero_evolution", "test_hero_limit_break", "test_hero_myth", "test_hero_awakening"]
+    "modules": ["heroes.test_training", "heroes.test_training_catalog", "heroes.test_imported_training", "heroes.test_training_room", "heroes.test_hero_equipment", "heroes.test_hero_reset", "heroes.test_hero_blessing", "heroes.test_hero_evolution", "heroes.test_hero_limit_break", "heroes.test_hero_myth", "heroes.test_hero_awakening"]
   },
   "inventory": {
     "description": "Item protection/sales/extraction, weapons, relic options and jewels",
@@ -25,38 +25,38 @@
   },
   "teams": {
     "description": "Normal parties, preset selection/editing and compact resources",
-    "modules": ["test_party_members", "test_preset_selection", "test_preset_edit", "test_preset_delete", "test_preset_create", "test_preset_payloads", "test_preset_reorder", "test_multi_presets"]
+    "modules": ["teams.test_party_members", "teams.test_preset_selection", "teams.test_preset_edit", "teams.test_preset_delete", "teams.test_preset_create", "teams.test_preset_payloads", "teams.test_preset_reorder", "teams.test_multi_presets"]
   },
   "rewards": {
     "description": "Missions, achievements, knowledge, passes, temporal events, stamina and attendance",
-    "modules": ["test_missions", "test_beginner_batches", "test_challenges", "test_challenge_batches", "test_imported_challenges", "test_hero_knowledge", "test_imported_hero_knowledge", "test_guardian_pass", "test_festival_pass", "test_festival_shop", "test_festival_redemption", "test_stamina_regen", "test_stamina_purchase", "test_imported_stamina_purchase", "test_attendance_mock", "test_live_events"]
+    "modules": ["rewards.test_missions", "rewards.test_beginner_batches", "rewards.test_challenges", "rewards.test_challenge_batches", "rewards.test_imported_challenges", "rewards.test_hero_knowledge", "rewards.test_imported_hero_knowledge", "rewards.test_guardian_pass", "rewards.test_festival_pass", "rewards.test_festival_shop", "rewards.test_festival_redemption", "rewards.test_stamina_regen", "rewards.test_stamina_purchase", "rewards.test_imported_stamina_purchase", "rewards.test_attendance_mock", "rewards.test_live_events"]
   },
   "summons": {
     "description": "Wishlists, hero/weapon draws and imported summon state",
-    "modules": ["test_summon_selection", "test_summon_draw", "test_imported_summons", "test_weapon_summon", "test_paid_summons", "test_weapon_selection"]
+    "modules": ["summons.test_summon_selection", "summons.test_summon_draw", "summons.test_imported_summons", "summons.test_weapon_summon", "summons.test_paid_summons", "summons.test_weapon_selection"]
   },
   "village": {
     "description": "Harvest, gifts, obstacles, basecamp and guardian mastery",
-    "modules": ["test_village_harvest", "test_village_shop", "test_village_dispatch", "test_village_gift_mock", "test_village_obstacle_mock", "test_basecamp_harvest", "test_guardian_mastery", "test_mastery_reset"]
+    "modules": ["village.test_village_harvest", "village.test_village_shop", "village.test_village_dispatch", "village.test_village_gift_mock", "village.test_village_obstacle_mock", "village.test_basecamp_harvest", "village.test_guardian_mastery", "village.test_mastery_reset"]
   },
   "guild": {
     "description": "Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War",
-    "modules": ["test_guild_reads", "test_guild_raid", "test_raid_static", "test_raid_panel", "test_punchking", "test_guild_meteor", "test_guild_war", "test_guild_war_panel"]
+    "modules": ["guild.test_guild_reads", "guild.test_guild_raid", "guild.test_raid_static", "guild.test_raid_panel", "guild.test_punchking", "guild.test_guild_meteor", "guild.test_guild_war", "guild.test_guild_war_panel"]
   },
   "tetis": {
     "description": "Offline Tetis battles, seasonal progression, sweeps and the web editor",
-    "modules": ["test_tetis_game", "test_tetis_progress", "test_tetis_panel"]
+    "modules": ["tetis.test_tetis_game", "tetis.test_tetis_progress", "tetis.test_tetis_panel"]
   },
   "orbital": {
     "description": "Orbital entry, progress and completion",
-    "modules": ["test_orbital", "test_orbital_completion", "test_orbital_formation", "test_orbital_panel"]
+    "modules": ["orbital.test_orbital", "orbital.test_orbital_completion", "orbital.test_orbital_formation", "orbital.test_orbital_panel"]
   },
   "android": {
     "description": "Temporary Android bridge routing and restoration",
-    "modules": ["test_android_bridge"]
+    "modules": ["android.test_android_bridge"]
   },
   "integration": {
     "description": "Loopback transport/TLS, packet codec and resource serving",
-    "modules": ["test_server", "test_client_cert", "test_assets", "test_lobby_notice"]
+    "modules": ["integration.test_server", "integration.test_client_cert", "integration.test_assets", "integration.test_lobby_notice"]
   }
 }

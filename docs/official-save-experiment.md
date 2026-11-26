@@ -462,7 +462,7 @@ to `{"version":"3.57.0","version_code":431,"region":"eu"}`. It contains:
 - `stage_progresses`: a dictionary of stage IDs to their captured Base64 strings
   or null values. Missing progress is not inferred.
 
-The [synthetic tests](../tests/test_snapshots.py) construct a small example without
+The [synthetic tests](../tests/account/test_snapshots.py) construct a small example without
 player data. Machine-specific capture and snapshot preparation are separate from
 the importer. There is no automatic official-service login or account downloader.
 
