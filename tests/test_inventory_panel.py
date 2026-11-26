@@ -46,6 +46,16 @@ def prepare_inventory(root):
     option = dict(OptionId=7, Level=1, Locked=False)
     catalog = {
         "items": [
+            dict(
+                Id=88,
+                Type="merch",
+                Name="merch_figure_unique",
+                NameWithoutRarity="merch_figure",
+                Rarity=4,
+                OriginRarity=1,
+                SpriteName={"default": "merch_figure"},
+            ),
+            dict(Id=89, Type="merchenhance", Name="merch_clay"),
             dict(Id=1, Name="test_ticket", Type="ticket", MaxCount=10),
             dict(Id=300, Name="test_jewel", Type="jewel"),
             dict(Id=2, Name="test_card", Type="card"),
@@ -168,6 +178,12 @@ def prepare_inventory(root):
             ),
         ],
         "buffs": [],
+        "merch": {
+            "MerchLevels": [
+                dict(Level=0, ExpNeeded=[10, 20, 40]),
+                dict(Level=1, ExpNeeded=[0, 0, 0]),
+            ]
+        },
         "constants": {"DefaultInventoryLimit": 8, "DefaultRelicInventoryLimit": 3},
         "options": [
             dict(
@@ -490,11 +506,20 @@ class InventoryPanelTests(unittest.TestCase):
     def test_views_and_referenced_static_assets(self):
         import re
 
-        for section in ("equipment", "relics", "heroes", "consumables", "mastery", "account"):
+        for section in (
+            "equipment",
+            "relics",
+            "merch",
+            "heroes",
+            "consumables",
+            "mastery",
+            "account",
+        ):
             page = self.call("/" + section)
             self.assertIn(b'lang="en"', page)
             self.assertIn(b'href="/account"', page)
             self.assertIn(b'href="/heroes"', page)
+            self.assertLess(page.index(b'href="/relics"'), page.index(b'href="/merch"'))
             self.assertIn(f'href="/{section}" aria-current="page"'.encode(), page)
             self.assertEqual(page.count(b'aria-current="page"'), 1)
             self.assertEqual(b'id="preview-link"' in page, section == "equipment")
@@ -510,6 +535,53 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertTrue(self.call("/equipment-options.js"))
         self.assertTrue(self.call("/equipment-add.js"))
         self.assertTrue(self.call("/catalog-picker.js"))
+
+    def test_merch_lists_each_owned_copy_with_its_own_level_and_holder(self):
+        api = "/api/game/merch"
+        self.assertEqual(self.call(api)["copies"], [])
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db, db:
+            profile = json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+            user = profile["User"]
+            user["ItemMiscs"].extend(
+                [
+                    dict(Id=21, ItemId=88, Experience=19, Locked=False),
+                    dict(Id=22, ItemId=88, Experience=20, Locked=True),
+                ]
+            )
+            user["ItemStackables"].append(dict(Id=23, ItemId=89, Amount=4))
+            user["Characters"] = [dict(CharacterId=4, Merch=22)]
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        with StateLock(self.root):
+            copies = self.call(api)["copies"]
+        self.assertEqual(
+            copies,
+            [
+                dict(
+                    id=21,
+                    spec=88,
+                    name="Figure",
+                    stars=5,
+                    level=1,
+                    locked=False,
+                    equipped=False,
+                    hero=None,
+                ),
+                dict(
+                    id=22,
+                    spec=88,
+                    name="Figure",
+                    stars=5,
+                    level=2,
+                    locked=True,
+                    equipped=True,
+                    hero=None,
+                ),
+            ],
+        )
+        with self.assertRaises(HTTPError) as rejected:
+            self.call(api, {})
+        self.assertEqual(rejected.exception.code, 404)
+        rejected.exception.close()
 
     def test_hero_stars_follow_current_form_and_family(self):
         editor = self.server.inventory.heroes

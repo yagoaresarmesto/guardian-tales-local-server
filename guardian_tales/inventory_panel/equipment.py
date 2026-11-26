@@ -44,7 +44,7 @@ def english_inventory_names(references, specs, catalog_hash, hero_name_keys):
     for spec in specs.values():
         if spec.get("Type") in CONSUMABLES or spec.get("Type") in HAMMERS:
             name = spec.get("Name")
-        elif spec.get("WeaponType") or spec.get("Type") == "relic":
+        elif spec.get("WeaponType") or spec.get("Type") in ("relic", "merch"):
             name = spec.get("NameWithoutRarity")
         else:
             continue

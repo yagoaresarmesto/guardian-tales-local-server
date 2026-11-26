@@ -16,6 +16,7 @@ from .hero_grants import HeroGrants
 from .hero_portraits import HeroPortraits
 from .heroes import HeroEditor
 from .mastery import MasteryEditor
+from .merch import MerchInventory
 from .owned_copies import CopyProtection, CopyRemoval, ForcedCopyRemoval
 from .preview import Sandbox
 from .relic_grants import RelicGrants
@@ -48,6 +49,7 @@ class InventoryApplication:
         self.hero_grants = HeroGrants(self.heroes)
         self.account_editor = AccountEditor(database, references, self.catalog, tables)
         self.relics = RelicEditor(database, self.catalog, tables)
+        self.merch = MerchInventory(database, self.catalog, tables)
         self.relic_grants = RelicGrants(database, self.catalog, self.relics.specs, tables)
         self.equipment = EquipmentOptionEditor(database, self.catalog, tables, progression)
         self.equipment_grants = EquipmentGrants(
@@ -63,6 +65,7 @@ class InventoryApplication:
             "/api/game/heroes": self.heroes.info,
             "/api/game/heroes/catalog": self.hero_grants.info,
             "/api/game/mastery": self.mastery.info,
+            "/api/game/merch": self.merch.info,
             "/api/game/relics": self.relics.info,
             "/api/game/relics/catalog": self.relic_grants.info,
         }

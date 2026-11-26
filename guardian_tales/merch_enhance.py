@@ -67,6 +67,13 @@ class Forge:
         return spec["Id"], total if spec["EvolveTo"] else spent
 
 
+def level_thresholds(levels):
+    return [
+        list(accumulate((row["ExpNeeded"][origin] for row in levels[:-1]), initial=0))
+        for origin in range(3)
+    ]
+
+
 @lru_cache(maxsize=2)
 def rules(body):
     tables = records(decode(body))[1]
@@ -83,10 +90,7 @@ def rules(body):
                 for i, row in enumerate(rows)
             ):
                 raise ValueError("Invalid merch forge progression table")
-        thresholds = [
-            list(accumulate((row["ExpNeeded"][origin] for row in levels[:-1]), initial=0))
-            for origin in range(3)
-        ]
+        thresholds = level_thresholds(levels)
         if any(any(a >= b for a, b in zip(curve, curve[1:])) for curve in thresholds):
             raise ValueError("Invalid merch XP thresholds")
         bonus = data["Constants"]["DuplicateExpBonus"]

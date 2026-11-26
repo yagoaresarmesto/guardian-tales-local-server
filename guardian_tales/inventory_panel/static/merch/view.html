@@ -1,0 +1,34 @@
+  <main>
+    <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
+    <div class="workspace">
+      <section class="inspector" aria-labelledby="details-title">
+        <div class="section-bar"><h2 id="details-title">Merch details</h2><span id="copy-id"></span></div>
+        <div id="placeholder"><img src="/type-icon/inventory.png" alt=""><p>Select a merch item to see its details.</p></div>
+        <div id="detail" hidden>
+          <div class="item-identity">
+            <div class="hero-art" id="portrait"></div>
+            <div><div class="identity-meta" id="level"></div><h3 id="name"></h3><div class="hero-stars" id="stars"></div></div>
+          </div>
+          <dl class="inspector-facts">
+            <div class="fact"><dt>Equipped</dt><dd id="equipped"></dd></div>
+            <div class="fact"><dt>Protection</dt><dd id="protection"></dd></div>
+            <div class="fact"><dt>Item ID</dt><dd id="item-id"></dd></div>
+          </dl>
+        </div>
+      </section>
+      <section class="collection" aria-labelledby="collection-heading">
+        <header class="collection-bar"><h2 id="collection-heading">Merch</h2></header>
+        <div class="collection-body"><div class="rack">
+          <div class="tools">
+            <label class="search"><span class="search-icon" aria-hidden="true"></span><input type="search" id="search" aria-label="Search merch by name or ID" placeholder="Search by name or ID"></label>
+            <label class="sort">Show <select id="show"><option value="all">All copies</option><option value="equipped">Equipped</option><option value="locked">Locked</option><option value="unlocked">Unlocked</option></select></label>
+          </div>
+          <label class="mobile-types">Rarity <select id="mobile-types"></select></label>
+          <div id="tiles" role="group" aria-label="Merch copies"></div>
+          <p id="empty" hidden></p>
+          <footer class="pager"><span id="range" aria-live="polite">Loading merch…</span><button type="button" id="prev" aria-label="Previous page" disabled>‹</button><button type="button" id="next" aria-label="Next page" disabled>›</button></footer>
+        </div><aside class="types"><h3>Rarity</h3><div id="types" role="group" aria-label="Merch rarity"></div></aside></div>
+        <p id="error" role="alert" hidden></p>
+      </section>
+    </div>
+  </main>

@@ -1,0 +1,8 @@
+.tile {
+  --edge: #685448;
+  background: linear-gradient(175deg, #29334b, #2c3041 60%, #563524);
+}
+.tile[aria-pressed="true"] { background: linear-gradient(175deg, #374560, #383a47 60%, #74432c); }
+.tile-stars, .hero-stars { color: #ffc18c; }
+.types .type-button:not([data-type=""])::before { content: "★"; text-align: center; color: #ffc18c; }
+#error { padding: 12px 16px; color: #ffcbb6; }
