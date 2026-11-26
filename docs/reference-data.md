@@ -767,6 +767,20 @@ including explicit nulls for displaced holders. It does not replace inventories
 or unrelated resource fields. Restart only the backend and fully reopen the game
 after updating. Bulk `change-characters-equipments` uses a separate route.
 
+## Normal equipment evolution
+
+The local forge accepts weapons, shields and accessories starting at one through
+four stars. Choose one step or evolve each selected copy to its own family's
+highest normal rarity, up to five stars. Each step follows the EU catalog's
+`EvolveTo` link and costs zero gold. Equipped copies retain their inventory ID,
+holder, experience and lock. Existing compatible options carry over within the
+new rank's limits. Additional options come from that rank's catalog.
+
+The client sends `/item/evolve-weapon-bundle` for both single and multiple
+selections. Packet tests cover all four starting ranks, shorter evolution chains,
+the maximum-rarity checkbox, atomic rejection and repeated requests. The Android
+result screen awaits a device check.
+
 ## Equipment Mystery Evolution
 
 Use Mystery Evolution on unlocked weapons, shields or accessories with one

@@ -20,19 +20,21 @@ def prepare(body):
         raise ValueError("Invalid nickname constants table")
     equipment = json.loads(items["weaponenhance"][1]) if "weaponenhance" in items else {}
     compose_steps = equipment.get("WeaponCompose", []) if isinstance(equipment, dict) else []
+    evolve_steps = equipment.get("WeaponEvolve", []) if isinstance(equipment, dict) else []
     if (
         "ChangeNickCost" not in constants
         and not {"inventoryexpansion", "merch"} & items.keys()
         and not compose_steps
+        and not evolve_steps
     ):
         return None
     cost = constants.get("ChangeNickCost", 0)
     if not integer(cost) or "__checksum__" not in items:
         raise ValueError("Invalid nickname cost or static checksum")
     changes = {}
-    for step in compose_steps:
+    for step in (*compose_steps, *evolve_steps):
         if not isinstance(step, dict) or not integer(step.get("GoldCost")):
-            raise ValueError("Invalid mystery evolution price")
+            raise ValueError("Invalid equipment evolution price")
         if step["GoldCost"]:
             step["GoldCost"] = 0
             changes["weaponenhance"] = equipment

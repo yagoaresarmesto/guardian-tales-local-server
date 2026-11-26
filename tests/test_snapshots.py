@@ -119,6 +119,7 @@ class SnapshotTests(unittest.TestCase):
                 "/item/detach-jewel",
                 "/item/engrave-weapon",
                 "/item/enhance-weapon",
+                "/item/evolve-weapon-bundle",
                 "/item/extract",
                 "/item/inlaid-jewelslot",
                 "/item/limitbreak-weapon/v2",

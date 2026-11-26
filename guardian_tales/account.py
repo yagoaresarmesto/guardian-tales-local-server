@@ -28,6 +28,7 @@ from . import (
     story_rewards,
     story_world_pass,
     tetis_presets,
+    weapon_evolution,
 )
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .account_name import change as change_account_name
@@ -303,6 +304,7 @@ ACCOUNT_ROUTES = (
     "/item/enhance-weapon",
     merch_enhance.ROUTE,
     *mystery_evolution.ROUTES,
+    weapon_evolution.ROUTE,
     *ITEM_LOCK_ROUTES,
     ITEM_SELL_ROUTE,
     ITEM_EXTRACT_ROUTE,
@@ -393,6 +395,7 @@ class AccountStore:
         create_weapon_enhance_tables(db)
         merch_enhance.create_tables(db)
         mystery_evolution.create_tables(db)
+        weapon_evolution.create_tables(db)
         create_weapon_limit_break_tables(db)
         create_weapon_option_tables(db)
         create_weapon_engrave_tables(db)

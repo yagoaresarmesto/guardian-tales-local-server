@@ -43,6 +43,7 @@ from . import (
     tetis_map_trial,
     tetis_presets,
     village_dispatch,
+    weapon_evolution,
 )
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
 from .account_costs_static import bootstrap_seed as account_costs_bootstrap_seed
@@ -626,6 +627,15 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.change_item_locks(body, operation_id, route)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == weapon_evolution.ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, weapon_evolution.evolve(self.store.account, body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
