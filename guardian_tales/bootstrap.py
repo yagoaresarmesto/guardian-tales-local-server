@@ -36,6 +36,7 @@ from . import (
     multi_presets,
     mystery_evolution,
     orbital_levels,
+    selection_box,
     story_interactions,
     story_rewards,
     story_world_pass,
@@ -648,6 +649,15 @@ class BootstrapSession:
                         self.store.account, route, body, operation_id
                     )
                     return json_response(request, result)
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == selection_box.ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, selection_box.redeem(self.store.account, body, operation_id)
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route == merch_enhance.ROUTE:

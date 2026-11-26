@@ -23,6 +23,7 @@ from . import (
     merch_enhance,
     multi_presets,
     mystery_evolution,
+    selection_box,
     story_interactions,
     story_loot,
     story_rewards,
@@ -304,6 +305,7 @@ ACCOUNT_ROUTES = (
     "/item/enhance-weapon",
     merch_enhance.ROUTE,
     *mystery_evolution.ROUTES,
+    selection_box.ROUTE,
     *weapon_evolution.ROUTES,
     *ITEM_LOCK_ROUTES,
     ITEM_SELL_ROUTE,
@@ -395,6 +397,7 @@ class AccountStore:
         create_weapon_enhance_tables(db)
         merch_enhance.create_tables(db)
         mystery_evolution.create_tables(db)
+        selection_box.create_tables(db)
         weapon_evolution.create_tables(db)
         create_weapon_limit_break_tables(db)
         create_weapon_option_tables(db)

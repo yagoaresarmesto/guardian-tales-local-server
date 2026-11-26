@@ -41,6 +41,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/item/enhance-weapon",
         "/item/evolve-weapon-bundle",
         "/item/myth-weapon",
+        "/item/use-selection-box",
         "/item/compose-gears",
         "/item/compose-weapon",
         "/merch/enhance-merch/v2",

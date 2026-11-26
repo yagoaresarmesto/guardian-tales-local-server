@@ -56,6 +56,16 @@ def standard_variants(body, catalog):
             spec = native.get(link.get("KakaoGlobal", link.get("Default")))
 
 
+def equipment_space_available(user, base_capacity, hammers):
+    adjustment = user.get("InvenLimitAdj", 0)
+    if not integer(base_capacity, minimum=1) or not integer(adjustment):
+        return False
+    hammer_slots = sum(
+        row["ItemId"] in hammers and row["Amount"] > 0 for row in user["ItemStackables"]
+    )
+    return len(user["ItemWeapons"]) + hammer_slots < base_capacity + adjustment
+
+
 class EquipmentGrants(CatalogGrants):
     inventory = "ItemWeapons"
 
@@ -83,13 +93,7 @@ class EquipmentGrants(CatalogGrants):
             }
 
     def space_available(self, user):
-        adjustment = user.get("InvenLimitAdj", 0)
-        if not integer(self.base_capacity, minimum=1) or not integer(adjustment):
-            return False
-        hammer_slots = sum(
-            row["ItemId"] in self.hammers and row["Amount"] > 0 for row in user["ItemStackables"]
-        )
-        return len(user["ItemWeapons"]) + hammer_slots < self.base_capacity + adjustment
+        return equipment_space_available(user, self.base_capacity, self.hammers)
 
     def initialize_copy(self, item):
         rules = self.rules.get(item["ItemId"])

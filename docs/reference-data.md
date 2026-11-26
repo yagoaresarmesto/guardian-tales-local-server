@@ -767,6 +767,15 @@ including explicit nulls for displaced holders. It does not replace inventories
 or unrelated resource fields. Restart only the backend and fully reopen the game
 after updating. Bulk `change-characters-equipments` uses a separate route.
 
+## Equipment selection boxes
+
+Opening an Epic weapon selection box uses `/item/use-selection-box`. The local
+backend uses the selected index in the box's ordered EU reward list. It creates
+one equipment copy at the configured level with that weapon's option rolls,
+then consumes one box in the same transaction. The equipment bag needs one free
+slot. A reconnect can replay the original reward without spending another box.
+Packet tests cover stack consumption, invalid choices, full inventory and retries.
+
 ## Normal equipment evolution
 
 The local forge accepts weapons, shields and accessories starting at one through
