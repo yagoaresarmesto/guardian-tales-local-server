@@ -23,7 +23,10 @@ def has_grants(db):
 
 @lru_cache(maxsize=2)
 def item_definitions(body):
-    tables = records(decode(body))[1]
+    return item_definitions_from_tables(records(decode(body))[1])
+
+
+def item_definitions_from_tables(tables):
     if not {"items", "__checksum__"} <= tables.keys():
         raise ValueError("Test pins require matching external items and checksum tables")
     items = json.loads(tables["items"][1])

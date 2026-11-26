@@ -5,7 +5,6 @@ import json
 from datetime import datetime, timezone
 
 from guardian_tales.snapshots import CLIENT
-from guardian_tales.test_item_static import item_definitions
 from guardian_tales.village import integer
 
 from .catalog_grants import CatalogGrants
@@ -21,8 +20,7 @@ def grantable_edition(spec):
     return spec.get("Limited") is False
 
 
-def standard_variants(body, catalog):
-    native = {s["Id"]: s for s in item_definitions(body)}
+def standard_variants(native, catalog):
     version = tuple(map(int, CLIENT["version"].split(".")))
     now = datetime.now(timezone.utc)
     for origin in native.values():
@@ -69,14 +67,14 @@ def equipment_space_available(user, base_capacity, hammers):
 class EquipmentGrants(CatalogGrants):
     inventory = "ItemWeapons"
 
-    def __init__(self, database, catalog, body, tables, rules):
+    def __init__(self, database, catalog, native_specs, tables, rules):
         super().__init__(database)
         self.rules = rules
         self.items = {}
         self.hammers = {i for i, s in catalog.specs.items() if s.get("Type") in HAMMERS}
         constants = json.loads(tables["constants"][1]) if "constants" in tables else {}
         self.base_capacity = constants.get("DefaultInventoryLimit")
-        for spec in standard_variants(body, catalog):
+        for spec in standard_variants(native_specs, catalog):
             ident = spec["Id"]
             if rules.get(ident) is None and not (
                 spec.get("MinOptions") == spec.get("MaxOptions") == 0 and not spec.get("Options")

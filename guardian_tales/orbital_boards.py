@@ -8,7 +8,7 @@ from functools import lru_cache
 from . import orbital_levels as levels
 from .orbital import FORMATION_CELLS, LAST_SELECTABLE_FLOOR
 from .panel_common.labels import english_labels
-from .raid_static import decode, records
+from .raid_static import source_tables
 from .reference import ReferenceData
 from .state_lock import StateLock
 from .village import integer
@@ -58,7 +58,7 @@ def elite_catalog(specs, tables):
 
 @lru_cache(maxsize=2)
 def catalog(source, directory):
-    _, tables = records(decode(source))
+    tables = source_tables(source)
     floors, maximum = levels.floor_data(tables)
     specs = roster(floors, tables)
     models = {row["Id"]: row for row in json.loads(tables["monsters"][1])}

@@ -7,7 +7,7 @@ from io import BytesIO
 
 from guardian_tales.head_hunter_static import SOURCE, VARIANT, active_spec
 from guardian_tales.panel_common.artwork import UI, Atlas
-from guardian_tales.test_item_static import PIN_ID, active_specs, item_definitions
+from guardian_tales.test_item_static import PIN_ID, active_specs
 
 from .equipment import EquipmentDisplay
 from .equipment_ribbons import read_completed_books
@@ -38,9 +38,9 @@ def inventory_icon(png):
 
 
 class InventoryCatalog:
-    def __init__(self, db, references, catalog, thresholds, hero_name_keys, tables):
+    def __init__(self, db, references, catalog, thresholds, hero_name_keys, tables, native_specs):
         self.refs = references
-        self.specs = {s["Id"]: s for s in item_definitions(catalog)}
+        self.specs = native_specs.copy()
         self.equipment = EquipmentDisplay(
             references,
             self.specs,
@@ -54,7 +54,7 @@ class InventoryCatalog:
             spec = json.loads(encoded)
             self.specs[spec["Id"]] = spec
             self.names[spec["Id"]] = "Rustic but Precious Pin · trial"
-        head = active_spec(db, references)
+        head = active_spec(db, references, body=catalog, items=native_specs.values())
         if head:
             self.specs[VARIANT] = json.loads(head)
         self.has_icons = ICONS.available(references) or UI.available(references)

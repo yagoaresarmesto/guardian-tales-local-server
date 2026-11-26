@@ -9,7 +9,7 @@ from contextlib import nullcontext
 from functools import lru_cache
 
 from .expedition import enabled
-from .raid_static import atomic_replace, compress, decode, digest, records
+from .raid_static import atomic_replace, compress, decode, digest, records, source_tables
 from .reference import ReferenceData
 from .state_lock import StateLock
 from .village import integer
@@ -21,7 +21,7 @@ MAX_OVERRIDES = 256
 
 @lru_cache(maxsize=2)
 def catalog(body):
-    _, tables = records(decode(body))
+    tables = source_tables(body)
     if not {"expedition", "stages", "exps2", "__checksum__"} <= tables.keys():
         raise ValueError("Enemy levels require matching Expedition, stage and experience tables")
     expedition = json.loads(tables["expedition"][1])

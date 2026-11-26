@@ -10,7 +10,7 @@ from functools import lru_cache
 
 from . import kamazone_legacy
 from .punchking_static import atomic_write
-from .raid_static import compress, decode, digest, records
+from .raid_static import compress, decode, digest, records, source_tables
 from .reference import ReferenceData
 from .state_lock import StateLock
 from .static_cache import prepare_static
@@ -45,11 +45,6 @@ def one(rows, key, value):
     if len(found) != 1:
         raise ValueError(f"Kama-ZONE requires one {key}={value}")
     return found[0]
-
-
-@lru_cache(maxsize=2)
-def source_tables(body):
-    return records(decode(body))[1]
 
 
 @lru_cache(maxsize=2)

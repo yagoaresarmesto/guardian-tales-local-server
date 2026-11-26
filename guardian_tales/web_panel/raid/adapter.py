@@ -13,8 +13,13 @@ ELEMENT_NAMES = {values[0]: name for name, values in raid_custom.ELEMENTS.items(
 
 
 @lru_cache(maxsize=2)
-def encounter_art_and_elements(body):
-    tables = raid_static.records(raid_static.decode(body))[1]
+def encounter_art_and_elements(body, *, custom=False):
+    # A custom lineup has its own verified tables; keep the shared stock catalog available.
+    tables = (
+        raid_static.records(raid_static.decode(body))[1]
+        if custom
+        else raid_static.source_tables(body)
+    )
     raid = json.loads(tables["guildraid2"][1])
     monsters = json.loads(tables["monsters"][1]) if "monsters" in tables else []
     by_id = {row["Id"]: row for row in monsters}
@@ -64,7 +69,7 @@ def state(references):
         body = references.read_bytes(f"guild_raid_static_{digest}.bin")
         if hashlib.sha256(body).hexdigest() != digest:
             raise ValueError("The prepared Raid tables do not match the active selection")
-        active_elements, _ = encounter_art_and_elements(body)
+        active_elements, _ = encounter_art_and_elements(body, custom=True)
     return {
         "active": season_view(active, active_elements),
         "custom": custom,

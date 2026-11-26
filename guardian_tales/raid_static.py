@@ -9,6 +9,8 @@ import struct
 import tempfile
 import time
 from array import array
+from functools import lru_cache
+from types import MappingProxyType
 
 from .packet_reader import MAX_PACKET, lz4_block, read_lz4_sequences
 from .static_cache import prepare_static
@@ -155,6 +157,12 @@ def records(raw):
             raise ValueError("Invalid static table revision")
         result[name] = (at, content, revision)
     return lines, result
+
+
+@lru_cache(maxsize=1)
+def source_tables(body):
+    """Share one verified, read-only stock catalog across mode readers."""
+    return MappingProxyType(records(decode(body))[1])
 
 
 def prepare(

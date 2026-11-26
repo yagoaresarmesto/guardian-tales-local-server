@@ -7,6 +7,7 @@ from functools import partial
 from threading import Lock
 
 from guardian_tales.raid_static import decode, records
+from guardian_tales.test_item_static import item_definitions_from_tables
 
 from .account_details import AccountEditor
 from .catalog import InventoryCatalog
@@ -33,6 +34,7 @@ class InventoryApplication:
         self._sandbox_guard = Lock()
         body = references.read_bytes("static_data_get.bin")
         tables = records(decode(body))[1]
+        native_specs = {s["Id"]: s for s in item_definitions_from_tables(tables)}
         self.hero_portraits = HeroPortraits(tables)
         progression = WeaponProgression(tables)
         with closing(sqlite3.connect(database.as_uri() + "?mode=ro", uri=True)) as source:
@@ -43,6 +45,7 @@ class InventoryApplication:
                 progression.thresholds,
                 self.hero_portraits.name_keys,
                 tables,
+                native_specs,
             )
         self.mastery = MasteryEditor(database, references)
         self.heroes = HeroEditor(database, self.catalog, tables, body)
@@ -53,7 +56,7 @@ class InventoryApplication:
         self.relic_grants = RelicGrants(database, self.catalog, self.relics.specs, tables)
         self.equipment = EquipmentOptionEditor(database, self.catalog, tables, progression)
         self.equipment_grants = EquipmentGrants(
-            database, self.catalog, body, tables, self.equipment.specs
+            database, self.catalog, native_specs, tables, self.equipment.specs
         )
         self.consumables = StackQuantityEditor(database, self.catalog, CONSUMABLES)
         self.listings = {

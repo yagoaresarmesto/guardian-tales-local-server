@@ -21,11 +21,13 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from guardian_tales import raid_static
 from guardian_tales.andras_trial_static import pack_rows
 from guardian_tales.awakening_catalog import Node, Tree
 from guardian_tales.basecamp import MASTERY_POINTS
 from guardian_tales.characters import new_character
 from guardian_tales.inventory_panel import server
+from guardian_tales.inventory_panel.application import InventoryApplication
 from guardian_tales.inventory_panel.equipment import english_inventory_names
 from guardian_tales.inventory_panel.equipment_ribbons import (
     completed_weapon_books,
@@ -351,6 +353,15 @@ def prepare_inventory(root):
 
 
 class InventoryStartupTests(unittest.TestCase):
+    def test_startup_verifies_the_source_item_table_once_for_display_and_grants(self):
+        root = Path(self.enterContext(tempfile.TemporaryDirectory()))
+        database = prepare_inventory(root)
+        with patch.object(raid_static, "record_bytes", wraps=raid_static.record_bytes) as verify:
+            application = InventoryApplication(database, ReferenceData(root))
+        self.assertEqual(sum(call.args[0] == "items" for call in verify.call_args_list), 1)
+        self.assertIn(57, application.catalog.specs)
+        self.assertIn(57, application.equipment_grants.items)
+
     def test_label_lookups_share_only_matching_contents_and_requested_keys(self):
         root = Path(self.enterContext(tempfile.TemporaryDirectory()))
         refs = ReferenceData(root)

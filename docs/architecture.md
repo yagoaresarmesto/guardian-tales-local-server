@@ -35,6 +35,15 @@ optional `static-data` extra enables native LZ4 decompression after block
 validation. Older supported block layouts use the Python reader. The encoder
 produces the same on-wire data with either installation.
 
+When building the lobby settings report, the mode readers share one read-only
+index of the verified stock tables. Its key is the full compressed catalog.
+Custom Raid lineups use their own published tables. Each report still reads
+the current mode settings and account progress.
+
+On first opening the web inventory, the panel uses the same verified item
+definitions for display and for the equipment picker. The picker follows the
+stock evolution chains even when the save has local item variants.
+
 ## Package map
 
 | Module | Responsibility |

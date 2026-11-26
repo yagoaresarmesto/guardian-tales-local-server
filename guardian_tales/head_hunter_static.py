@@ -31,6 +31,10 @@ def one(rows, key, value):
 @lru_cache(maxsize=2)
 def weapon_spec(body):
     items = json.loads(records(decode(body))[1]["items"][1])
+    return weapon_spec_from_items(items)
+
+
+def weapon_spec_from_items(items):
     original = one(items, "Id", SOURCE)
     if any(
         original.get(k) != v
@@ -64,7 +68,7 @@ def weapon_spec(body):
     return json.dumps(result, ensure_ascii=False, separators=(",", ":"))
 
 
-def active_spec(db, references):
+def active_spec(db, references, *, body=None, items=None):
     if not db.execute(
         "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (TABLE,)
     ).fetchone():
@@ -92,10 +96,12 @@ def active_spec(db, references):
         present.append(source_sha)
     if not present:
         return None
-    body = references.read_bytes("static_data_get.bin")
-    if any(sha != hashlib.sha256(body).hexdigest() for sha in present):
+    if body is None:
+        body = references.read_bytes("static_data_get.bin")
+    source_hash = hashlib.sha256(body).hexdigest()
+    if any(sha != source_hash for sha in present):
         raise ValueError("Head Hunter trial belongs to another content pack")
-    return weapon_spec(body)
+    return weapon_spec(body) if items is None else weapon_spec_from_items(items)
 
 
 @lru_cache(maxsize=2)

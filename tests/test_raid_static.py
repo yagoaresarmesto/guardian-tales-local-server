@@ -40,6 +40,7 @@ from guardian_tales.raid_static import (
     decode,
     digest,
     records,
+    source_tables,
 )
 from tests.test_guild_raid import synthetic_catalog, synthetic_static
 from tests.test_snapshots import request
@@ -73,6 +74,27 @@ class RaidStaticTests(unittest.TestCase):
         lines[at + 1] = value + "\n"
         lines[at + 3] = digest(value.encode()) + "\n"
         self.source.write_bytes(compress("".join(lines).encode()))
+
+    def test_stock_readers_share_only_verified_immutable_tables_for_identical_bytes(self):
+        source_tables.cache_clear()
+        self.addCleanup(source_tables.cache_clear)
+        with patch("guardian_tales.raid_static.decode", wraps=decode) as unpack:
+            tables = source_tables(self.original)
+            self.assertIs(tables, source_tables(self.source.read_bytes()))
+            unpack.assert_called_once()
+        with self.assertRaises(TypeError):
+            tables["guildraid2"] = (0, "changed", 1)
+
+        lines, _ = records(decode(self.original))
+        lines[3] = digest(b"invalid") + "\n"
+        with self.assertRaisesRegex(ValueError, "content checksum"):
+            source_tables(compress("".join(lines).encode()))
+        self.assertIs(tables, source_tables(self.original))
+        self.rewrite_source("guildraid2", lambda raid: raid.update(Extra=True))
+        revised = source_tables(self.source.read_bytes())
+        self.assertTrue(json.loads(revised["guildraid2"][1])["Extra"])
+        self.assertNotIn("Extra", json.loads(tables["guildraid2"][1]))
+        self.assertEqual(source_tables.cache_info().currsize, 1)
 
     def test_atomic_publication_retries_transient_windows_sharing_locks_without_partial_output(
         self,

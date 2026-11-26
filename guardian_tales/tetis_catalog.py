@@ -6,7 +6,7 @@ from bisect import bisect_right
 from collections import Counter, defaultdict
 from functools import lru_cache
 
-from .raid_static import decode, records
+from .raid_static import source_tables
 from .village import integer
 
 
@@ -199,7 +199,7 @@ def catalog(tables):
 
 @lru_cache(maxsize=2)
 def _catalog_from_file(path, modified, size):
-    return catalog(records(decode(path.read_bytes()))[1])
+    return catalog(source_tables(path.read_bytes()))
 
 
 def load_catalog(references):

@@ -14,10 +14,19 @@ from guardian_tales.__main__ import main
 from guardian_tales.admin_test_items import grant_test_pin
 from guardian_tales.andras_trial_growth import LEADER
 from guardian_tales.head_hunter import grant, history, remove
-from guardian_tales.head_hunter_static import ACTION, CLASS, OPTION, SOURCE, TABLE, VARIANT
+from guardian_tales.head_hunter_static import (
+    ACTION,
+    CLASS,
+    OPTION,
+    SOURCE,
+    TABLE,
+    VARIANT,
+    active_spec,
+)
 from guardian_tales.items import inventory_item
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import decode, records
+from guardian_tales.reference import ReferenceData
 from guardian_tales.snapshots import CLIENT
 from guardian_tales.state_lock import StateLock
 from tests import test_andras_trial as fixture
@@ -411,6 +420,12 @@ class HeadHunterTests(unittest.TestCase):
 
     def test_wrong_pack_or_owner_never_serve_or_equip_trial(self):
         self.grant()
+        refs = ReferenceData(self.refs)
+        body = self.source.read_bytes()
+        source_items = self.fixture.tables["items"]
+        self.assertEqual(
+            active_spec(self.db, refs, body=body, items=source_items), active_spec(self.db, refs)
+        )
         for field, value in (("source_sha256", "wrong"), ("owner_id", 99999)):
             old = self.db.execute(f"SELECT {field} FROM {TABLE}").fetchone()[0]
             with self.db:
@@ -418,6 +433,8 @@ class HeadHunterTests(unittest.TestCase):
             before = list(self.db.iterdump())
             with self.assertRaises(PacketError):
                 self.fetch()
+            with self.assertRaises(ValueError):
+                active_spec(self.db, refs, body=body, items=source_items)
             with self.assertRaises(PacketError):
                 self.fetch(
                     "/user/change-weapons",

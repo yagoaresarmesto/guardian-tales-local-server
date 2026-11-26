@@ -515,7 +515,7 @@ class KamazonePreviewTests(unittest.TestCase):
         before = list(self.db.iterdump()), self.db.total_changes
         files = {p.name: p.read_bytes() for p in self.fixture.root.iterdir()}
         kamazone.source_tables.cache_clear()
-        with patch("guardian_tales.kamazone.decode", wraps=decode) as decoding:
+        with patch("guardian_tales.raid_static.decode", wraps=decode) as decoding:
             first = self.call()
             original = copy.deepcopy(first)
             first["UserKamazonLand"]["Nodes"].append({"Id": 999})
