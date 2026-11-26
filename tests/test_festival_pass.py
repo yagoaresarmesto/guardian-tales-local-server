@@ -6,8 +6,11 @@ import sqlite3
 import unittest
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.festival_missions import ROUTE as MISSION_ROUTE
 from guardian_tales.packet_reader import PacketError, parse_packet
 from guardian_tales.protocol import Packet, encode_packet
+from guardian_tales.raid_static import compress, digest
+from tests.test_village_harvest import VillageFixture
 
 
 class FirstFestivalPassTests(unittest.TestCase):
@@ -151,3 +154,63 @@ class FirstFestivalPassTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.claim()
         self.assertEqual(self.account.profile(), saved)
+
+
+class FestivalMissionClaimTests(VillageFixture, unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        catalog = {
+            "Seasons": [{"Id": 41, "MissionSet": 7}],
+            "Missions": [
+                {"SetId": 7, "Id": 2, "GroupId": 2, "Value": 100, "PassExperience": 10},
+                {"SetId": 7, "Id": 3, "GroupId": 2, "Value": 300, "PassExperience": 100},
+                {"SetId": 7, "Id": 4, "GroupId": 2, "Value": 600, "PassExperience": 100},
+                {"SetId": 7, "Id": 8, "GroupId": 8, "Value": 1, "PassExperience": 600},
+                {"SetId": 6, "Id": 9, "GroupId": 2, "Value": 1, "PassExperience": 50},
+            ],
+        }
+        content = json.dumps(catalog)
+        table = f"festivalpass\n{content}\n1\n{digest(content.encode())}\n"
+        (self.references / "static_data_get.bin").write_bytes(compress(table.encode()))
+        profile = self.store.account.profile()
+        profile["UserFestivalPass"].update(
+            SeasonId=41,
+            Point=49,
+            Experience=9900,
+            Missions={
+                "2": {"Id": 2, "Value": 310, "RewardedIds": [2], "Rewarded": False},
+                "8": {"Id": 8, "Value": 1, "RewardedIds": None, "Rewarded": False},
+            },
+        )
+        self.save_profile(profile)
+
+    def test_claim_all_records_only_new_tiers_and_reconnect_cannot_repeat_them(self):
+        expected = self.store.account.profile()
+        festival = expected["UserFestivalPass"]
+        festival["Experience"] += 700
+        festival["Cas"] += 1
+        festival["Missions"]["2"]["RewardedIds"].append(3)
+        festival["Missions"]["8"]["RewardedIds"] = [8]
+        body = {"missionIds": [2, 3, 3, 8]}
+        self.assertEqual(self.call(body, MISSION_ROUTE), {"UserFestivalPass": festival})
+        self.assertEqual(self.store.account.profile(), expected)
+        self.open_session(reconnect=True)
+        changes = self.db.total_changes
+        self.assertEqual(self.call(body, MISSION_ROUTE), {"UserFestivalPass": festival})
+        self.assertEqual(self.db.total_changes, changes)
+
+    def test_invalid_batches_cannot_partially_grant_xp(self):
+        original = self.store.account.profile()
+        for ids in ([3, 4], [3, 9], [3, True], 3):
+            with self.subTest(ids=ids), self.assertRaises(PacketError):
+                self.call({"missionIds": ids}, MISSION_ROUTE)
+            self.assertEqual(self.store.account.profile(), original)
+
+    def test_legacy_group_rewarded_flag_is_honored(self):
+        original = self.store.account.profile()
+        original["UserFestivalPass"]["Missions"]["8"]["Rewarded"] = True
+        self.save_profile(original)
+        changes = self.db.total_changes
+        self.call({"missionIds": [8]}, MISSION_ROUTE)
+        self.assertEqual(self.db.total_changes, changes)
+        self.assertEqual(self.store.account.profile(), original)

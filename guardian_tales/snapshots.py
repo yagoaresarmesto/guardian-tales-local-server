@@ -38,6 +38,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/colosseum/save-formation",
         "/colosseum/set-defense-party-formation",
         "/colosseum/set-defense-party-preset",
+        "/festival-pass/claim-missions",
         "/item/enhance-weapon",
         "/item/evolve-weapon-bundle",
         "/item/myth-weapon",

@@ -20,6 +20,7 @@ from . import (
     classic_coop,
     colosseum,
     expedition,
+    festival_missions,
     hero_awakening,
     hero_blessing,
     hero_evolution,
@@ -1012,6 +1013,8 @@ class BootstrapSession:
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
+            if route == festival_missions.ROUTE:
+                return json_response(request, festival_missions.claim(self.store.account, body))
             if route == "/guardian-pass/claim-all":
                 try:
                     return json_response(request, self.store.account.claim_guardian_pass(body))

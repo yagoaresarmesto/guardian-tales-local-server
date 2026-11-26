@@ -2322,6 +2322,20 @@ storage ceiling rather than truncating it. Exact official overflow behavior is
 unverified. Paid gems, automatic stamina regeneration and counter upgrades are
 outside this operation's scope.
 
+## Festival Pass mission claims
+
+The missions tab sends `/festival-pass/claim-missions` with a `missionIds`
+array for both individual claims and **Claim All**. The local backend uses the
+saved season's mission set from the client's `festivalpass` table. Each
+requested tier must meet its group's saved progress threshold. The response
+returns the updated `UserFestivalPass`.
+
+The claim records newly rewarded tier IDs and adds their catalog experience in
+one transaction. An imported save can already have rewarded tiers or a whole
+group marked as rewarded. Repeated claims preserve that history. Eligibility
+uses the saved progress window, including on imported saves. Opening the pass
+or claiming a mission does not roll the weekly counters forward.
+
 ## Festival shop availability and point redemption
 
 The external `festival_shop_catalog.json` contains `season_id` and an `items`

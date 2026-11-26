@@ -107,6 +107,7 @@ class SnapshotTests(unittest.TestCase):
                 "/colosseum/save-formation",
                 "/colosseum/set-defense-party-formation",
                 "/colosseum/set-defense-party-preset",
+                "/festival-pass/claim-missions",
                 "/item/apply-options",
                 "/item/apply-relic-options",
                 "/item/attach-jewel",

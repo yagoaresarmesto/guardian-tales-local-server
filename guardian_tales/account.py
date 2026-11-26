@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 
 from . import (
     colosseum,
+    festival_missions,
     hero_awakening,
     hero_blessing,
     hero_evolution,
@@ -280,6 +281,7 @@ ACCOUNT_ROUTES = (
     "/festival-pass/enter",
     "/live-event/enter",
     "/festival-pass/claim-all",
+    festival_missions.ROUTE,
     "/festival-pass/check-not-redeemable",
     "/festival-pass/redeem-point-rewards",
     "/user/exchange-summon-pickup-ticket",
