@@ -1,6 +1,6 @@
 #owned-count { color:#cee2f0; font-variant-numeric:tabular-nums; }
 .upgrade-filter { display:flex; align-items:center; gap:6px; width:fit-content; margin:0 0 12px; color:#d1deeb; font-size:.85rem; }
-.collection-bar #refresh { margin-left:auto; }
+.collection-bar { flex-wrap:wrap; padding-block:6px; }
 .item-info { padding:0 var(--inspector-inset) var(--inspector-inset); }
 #facts { margin-inline:calc(-1 * var(--inspector-inset)); }
 #refresh { border:1px solid #59738d; border-radius:5px; background:#263e55; color:#eaf6ff; padding:6px 12px; font-weight:650; }
@@ -15,12 +15,17 @@
 [data-star-style="myth_red"] { --rank-band:#c11238; --rank-ink:#ffba62; }
 [data-star-style="collab"] { --rank-band:#6750ce; --rank-ink:#ffafff; }
 
-#tiles .tile {
+:is(#tiles, #missing-heroes) .tile {
   border-radius:5px;
   background:linear-gradient(to top, var(--rank-band) 0%, transparent 29%),
     linear-gradient(155deg, #3c4555, #505867);
 }
-#tiles .tile[aria-pressed="true"] { border-color:var(--gold); box-shadow:inset 0 0 0 1px var(--gold); }
+:is(#tiles, #missing-heroes) .tile[aria-pressed="true"] { border-color:var(--gold); box-shadow:inset 0 0 0 1px var(--gold); }
+#hero-catalog { width:min(700px, 94vw); }
+#missing-heroes { display:grid; grid-template-columns:repeat(auto-fill,minmax(min(100%,100px),1fr)); gap:8px; }
+#hero-catalog-status { font-size:.88rem; color:var(--muted); margin:10px 0 0; }
+#hero-catalog-status:empty { display:none; }
+#hero-catalog footer { justify-content:flex-end; }
 .tile-level { padding:3px 5px; border-radius:3px; background:#20242ede; color:#fff; }
 .tile-name { color:#fff; text-shadow:0 1px 3px #151b25; }
 .tile-art img { --art-size:86%; }

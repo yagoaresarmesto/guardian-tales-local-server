@@ -30,7 +30,7 @@
       </div>
     </section>
     <section class="collection" aria-labelledby="roster-heading">
-      <header class="collection-bar"><h2 id="roster-heading">Owned heroes</h2><button id="refresh" type="button">Reload</button></header>
+      <header class="collection-bar"><h2 id="roster-heading">Owned heroes</h2><button id="open-hero-catalog" class="open-item-catalog" type="button" aria-haspopup="dialog">Add collaboration hero</button><button id="refresh" type="button">Reload</button></header>
       <div class="rack">
         <div class="tools">
           <label class="search"><span class="search-icon" aria-hidden="true"></span><input id="search" type="search" placeholder="Search by name or ID" aria-label="Search heroes by name or ID"></label>
@@ -44,6 +44,15 @@
       </div>
     </section>
   </div>
+  <dialog class="item-catalog" id="hero-catalog" aria-labelledby="hero-catalog-heading">
+    <header class="section-bar"><h2 id="hero-catalog-heading">Missing collaboration heroes</h2>
+      <button id="catalog-close" type="button" aria-label="Close hero catalog">×</button></header>
+    <div class="catalog-body">
+      <div id="missing-heroes" role="group" aria-label="Available heroes"></div>
+      <p id="hero-catalog-status" role="status"></p>
+    </div>
+    <footer><button id="recruit-hero" type="button" class="apply-button" disabled>Add to roster</button></footer>
+  </dialog>
   <dialog class="item-catalog delete-dialog" id="reset-dialog" aria-labelledby="reset-heading" aria-describedby="reset-result reset-explanation">
     <header class="section-bar"><h2 id="reset-heading">Hero Reset</h2></header>
     <div class="delete-body">

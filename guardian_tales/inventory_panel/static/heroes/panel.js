@@ -1,9 +1,11 @@
 import { $, el, inventoryTile, watchGridPageSize } from "/inventory-dom.js";
+import { collaborationCatalog } from "/hero-add.js";
 
 const api = "/api/game/heroes";
 let heroes = [], selected = null, detail = null, page = 0, pageSize = 24;
 let generation = 0, applying = false, writable = false;
 let pendingReset = null;
+const recruits = collaborationCatalog(json, heroTile, id => load(id));
 
 async function json(url, body) {
   const options = { cache: "no-store" };
@@ -35,6 +37,8 @@ function updateAccess(allowed) {
   $("hero-reset").disabled = applying || !writable || !detail?.reset.target;
   $("reset-confirm").disabled = $("hero-reset").disabled || !pendingReset;
   $("reset-access").hidden = writable;
+  $("open-hero-catalog").disabled = applying;
+  recruits.setWritable(writable);
 }
 
 async function checkAccess() {
@@ -92,7 +96,26 @@ function rankStars(hero) {
   return row;
 }
 
-function draw() {
+function heroTile(h, pressed, idLabel = "Hero #") {
+  const card = inventoryTile({ id: h.id, idLabel, name: h.name, art: sprite(h, "tile-art"),
+    selected: pressed, level: h.level, stars: h.stars });
+  if (h.element) {
+    const icon = el("img", "element-icon");
+    icon.alt = h.element;
+    icon.src = "/elements/" + h.element.toLowerCase() + ".png";
+    card.querySelector(".tile-header").append(icon);
+  }
+  card.dataset.starStyle = h.starStyle || "";
+  card.querySelector(".tile-stars").replaceChildren(rankStars(h));
+  const rarity = rarityLabel(h);
+  if (rarity) {
+    card.title += " · " + rarity;
+    card.setAttribute("aria-label", card.title);
+  }
+  return card;
+}
+
+function draw(revealId = null) {
   const query = $("search").value.trim().toLowerCase();
   const element = $("element").value;
   const items = heroes.filter(h => (!element || h.element === element)
@@ -101,24 +124,11 @@ function draw() {
   const sort = $("sort").value;
   items.sort((a, b) => (sort === "low" ? a.level - b.level : sort === "high" ? b.level - a.level : 0)
     || a.name.localeCompare(b.name) || a.id - b.id);
+  if (revealId !== null) page = Math.floor(items.findIndex(h => h.id === revealId) / pageSize);
   page = Math.max(0, Math.min(page, Math.ceil(items.length / pageSize) - 1));
   const start = page * pageSize;
   const cards = items.slice(start, start + pageSize).map(h => {
-    const card = inventoryTile({ id: h.id, idLabel: "Hero #", name: h.name, art: sprite(h, "tile-art"),
-      selected: h.id === selected, level: h.level, stars: h.stars });
-    if (h.element) {
-      const icon = el("img", "element-icon");
-      icon.alt = h.element;
-      icon.src = "/elements/" + h.element.toLowerCase() + ".png";
-      card.querySelector(".tile-header").append(icon);
-    }
-    card.dataset.starStyle = h.starStyle || "";
-    card.querySelector(".tile-stars").replaceChildren(rankStars(h));
-    const rarity = rarityLabel(h);
-    if (rarity) {
-      card.title += " · " + rarity;
-      card.setAttribute("aria-label", card.title);
-    }
+    const card = heroTile(h, h.id === selected);
     card.disabled = applying;
     return card;
   });
@@ -181,10 +191,10 @@ async function selectHero(id, scroll = false) {
   }
 }
 
-async function load() {
+async function load(revealId = null) {
   if (applying) return;
   const ticket = ++generation;
-  const prior = selected;
+  const prior = revealId ?? selected;
   detail = null;
   updateAccess(writable);
   try {
@@ -195,10 +205,15 @@ async function load() {
     const elements = [...new Set(heroes.map(h => h.element).filter(Boolean))].sort();
     $("element").replaceChildren(new Option("All elements", ""), ...elements.map(e => new Option(e, e)));
     if (elements.includes(previousElement)) $("element").value = previousElement;
+    if (revealId !== null) {
+      $("element").value = "";
+      $("search").value = "";
+      $("upgradable").checked = false;
+    }
     $("owned-count").hidden = false;
     $("owned-count").textContent = heroes.length + " owned";
     updateAccess(data.writable);
-    draw();
+    draw(revealId);
     if (heroes.some(h => h.id === prior)) await selectHero(prior);
     else {
       selected = null;
@@ -277,7 +292,7 @@ $("search").oninput = $("element").onchange = $("sort").onchange = $("upgradable
 $("action").onchange = () => { targets(); tell(); };
 $("previous").onclick = () => { page--; draw(); };
 $("next").onclick = () => { page++; draw(); };
-$("refresh").onclick = load;
+$("refresh").onclick = () => load();
 watchGridPageSize($("tiles"), count => { pageSize = count; draw(); });
 window.addEventListener("focus", checkAccess);
 setInterval(checkAccess, 5000);

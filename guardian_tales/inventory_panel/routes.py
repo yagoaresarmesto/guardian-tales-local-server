@@ -23,6 +23,7 @@ FILES = {
     "/quantity-editor.js": (STATIC / "shared/quantity-editor.js", JS),
     "/equipment-options.js": (STATIC / "equipment/options.js", JS),
     "/equipment-add.js": (STATIC / "equipment/add.js", JS),
+    "/hero-add.js": (STATIC / "heroes/add.js", JS),
     "/copy-protection.js": (STATIC / "shared/copy-protection.js", JS),
     "/bulk-selection.js": (STATIC / "shared/bulk-selection.js", JS),
     "/delete-copy.js": (STATIC / "shared/delete-copy.js", JS),

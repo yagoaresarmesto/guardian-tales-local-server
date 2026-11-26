@@ -11,11 +11,12 @@ import sys
 import tempfile
 import tomllib
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import closing, redirect_stderr, redirect_stdout
 from http.client import HTTPConnection
 from io import StringIO
 from pathlib import Path
-from threading import Thread
+from threading import Barrier, Thread
 from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -533,6 +534,87 @@ class InventoryPanelTests(unittest.TestCase):
                 }
                 hero = editor.summary(new_character(1, 20))
                 self.assertEqual((hero["stars"], hero["starStyle"]), (stars, style))
+
+    def seed_collaboration_roster(self):
+        editor = self.server.inventory.heroes
+        editor.specs[1]["CollaborationId"] = 3
+        editor.specs[4]["CollaborationId"] = 3
+        editor.specs[14] = dict(editor.specs[4], Id=14, Rank=4)
+        editor.specs[19] = dict(
+            editor.specs[4], Id=19, OriginId=19, VersionFrom={"KakaoGlobal": "v999.0"}
+        )
+        with closing(sqlite3.connect(editor.database)) as db, db:
+            profile = editor.profile(db)
+            profile["User"].update(Characters=[new_character(27, 2)], CharacterIdCounter=38)
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY)")
+            db.execute("INSERT INTO imported_account VALUES (1)")
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        return editor, profile
+
+    def test_collaboration_grants_check_origin_and_serialize_competing_requests(self):
+        editor, profile = self.seed_collaboration_roster()
+        api = "/api/game/heroes"
+        catalog = self.call(api + "/catalog")
+        self.assertEqual([(h["spec"], h["level"]) for h in catalog["heroes"]], [(4, 1)])
+        body = dict(spec=4, version=catalog["version"])
+        for spec in (1, 2, 3, 5, 14, 19, 27, True):
+            with self.subTest(spec=spec), self.assertRaises(HTTPError) as rejected:
+                self.call(api + "/add", body | {"spec": spec})
+            self.assertEqual(rejected.exception.code, 400)
+            rejected.exception.close()
+        with StateLock(self.root), self.assertRaises(HTTPError) as locked:
+            self.call(api + "/add", body)
+        self.assertEqual(locked.exception.code, 423)
+        locked.exception.close()
+        barrier = Barrier(2)
+
+        def recruit():
+            barrier.wait(timeout=5)
+            try:
+                return self.call(api + "/add", body)
+            except HTTPError as exc:
+                with exc:
+                    return exc.code
+
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            results = [workers.submit(recruit) for _ in range(2)]
+            outcomes = [future.result() for future in results]
+        self.assertIn({"id": 39, "spec": 4}, outcomes)
+        self.assertTrue(any(status in (409, 423) for status in outcomes))
+        current = self.call(api + "/catalog")
+        self.assertEqual(current["heroes"], [])
+        for version, code in ((body["version"], 409), (current["version"], 400)):
+            with self.assertRaises(HTTPError) as replay:
+                self.call(api + "/add", body | {"version": version})
+            self.assertEqual(replay.exception.code, code)
+            replay.exception.close()
+        profile["User"]["Characters"].append(new_character(39, 4))
+        profile["User"]["CharacterIdCounter"] = 39
+        profile["User"]["Cas"] += 1
+        with editor.reader() as db:
+            self.assertEqual(editor.profile(db), profile)
+
+    def test_collaboration_grant_fails_closed_for_unverifiable_rosters(self):
+        editor, profile = self.seed_collaboration_roster()
+        api = "/api/game/heroes"
+        body = dict(spec=4, version=self.call(api + "/catalog")["version"])
+        for roster, counter in (
+            ([new_character(3, 999)], 3),
+            ([new_character(3, 1), new_character(4, 3)], 4),
+            ([new_character(3, 1), new_character(3, 5)], 3),
+            ([new_character(3, 1)], 2),
+            ([new_character(3, 1)], 0x7FFFFFFF),
+        ):
+            with self.subTest(roster=roster, counter=counter):
+                profile["User"].update(Characters=roster, CharacterIdCounter=counter)
+                with closing(sqlite3.connect(editor.database)) as db, db:
+                    db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+                with self.assertRaises(HTTPError) as rejected:
+                    self.call(api + "/add", body)
+                self.assertEqual(rejected.exception.code, 400)
+                rejected.exception.close()
+                with editor.reader() as db:
+                    self.assertEqual(editor.profile(db), profile)
 
     def seed_hero_upgrades(self):
         api = "/api/game/heroes"
