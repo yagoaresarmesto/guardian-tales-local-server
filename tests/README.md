@@ -1,9 +1,8 @@
 # Regression test groups
 
-The suite uses standard-library `unittest`. Files remain at their existing paths;
-logical groups are defined in [groups.json](groups.json). Classification does not
-move tests or change their fixture imports, discovery IDs or relative execution
-order. The full suite remains the default in CI and local validation.
+The suite uses standard-library `unittest`. [groups.json](groups.json) assigns
+each test module to one group. Inventory modules live in [inventory/](inventory/).
+CI and local validation run the full suite by default.
 
 Run these commands from the repository root, with the project's Python environment:
 
@@ -15,10 +14,8 @@ python -m guardian_tales validate
 ```
 
 `--list-groups` discovers and counts tests without executing them. Repeated
-`--group` options select a union, so a test runs at most once. Selection retains
-the original discovery order, rather than imposing command-line group order.
-Omit `--group`, or use `--group all`, to run the original complete suite.
-Execution stays sequential; this change does not introduce parallel workers.
+`--group` options select a union, so each selected test runs once in discovery
+order. Omit `--group` or use `--group all` to run the full suite sequentially.
 
 | Group | Area |
 |---|---|
@@ -41,10 +38,10 @@ Execution stays sequential; this change does not introduce parallel workers.
 Grouping is by module responsibility. Some modules contain both small contract
 tests and integration checks; the labels do not replace their individual test
 descriptions. Counts are calculated from discovery rather than pinned in the
-catalog. Run one module with its unchanged import path when appropriate:
+catalog. To run just the jewel upgrade tests, use the module's import path:
 
 ```sh
-python -m unittest tests.test_jewel_upgrade
+python -m unittest tests.inventory.test_jewel_upgrade
 ```
 
 Prepare loopback TLS certificates for the complete/integration suite as described
@@ -60,12 +57,11 @@ Shared fixtures currently live in modules such as
 [test_village_harvest.py](test_village_harvest.py),
 [test_guild_raid.py](test_guild_raid.py),
 [test_guardian_mastery.py](test_guardian_mastery.py) and
-[test_preset_edit.py](test_preset_edit.py). Other modules import these helpers.
-Their locations remain unchanged. A future physical folder/fixture refactor
-should update all consumers and compare discovery identities and coverage as a
-separate change.
+[test_preset_edit.py](test_preset_edit.py). The Orbital panel tests also use
+`prepare_inventory` from [test_inventory_panel.py](inventory/test_inventory_panel.py).
 
-When adding a `test_*.py` module, register it exactly once in `groups.json`.
+When adding a `test_*.py` module, register it exactly once in `groups.json`
+using its dotted name relative to this directory (e.g. `inventory.test_jewel_upgrade`).
 Imports of shared fixtures do not require assigning their modules to a second
 group. Run the relevant groups during iteration and the complete suite before
 publishing a verified change.

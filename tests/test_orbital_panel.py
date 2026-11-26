@@ -18,7 +18,7 @@ from guardian_tales.snapshots import CLIENT
 from guardian_tales.state_lock import StateLock
 from guardian_tales.village import MAX_REVISION
 from guardian_tales.web_panel.server import WebPanel
-from tests.test_inventory_panel import prepare_inventory
+from tests.inventory.test_inventory_panel import prepare_inventory
 from tests.test_snapshots import request as packet_request
 
 

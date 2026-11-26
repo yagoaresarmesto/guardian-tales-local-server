@@ -424,7 +424,7 @@ class InventoryStartupTests(unittest.TestCase):
                 )
 
     def test_first_launch_installs_panel_art_and_next_launch_skips_pip(self):
-        with (Path(__file__).resolve().parents[1] / "pyproject.toml").open("rb") as config:
+        with (Path(__file__).resolve().parents[2] / "pyproject.toml").open("rb") as config:
             requirements = tomllib.load(config)["project"]["optional-dependencies"]["panel-art"]
         with (
             patch.object(server, "display_readers_available", side_effect=[False, True, True]),

@@ -18,8 +18,8 @@ needed. No full game content or captured bootstrap data is needed.
 ### Select an area
 
 The suite has [logical test groups](../tests/README.md), defined in
-[the group catalog](../tests/groups.json). Existing test files and shared fixture
-imports stay at their original locations:
+[the group catalog](../tests/groups.json). Inventory tests live in
+[tests/inventory/](../tests/inventory/).
 
 ```sh
 python -m guardian_tales validate --list-groups
@@ -27,18 +27,15 @@ python -m guardian_tales validate --group inventory
 python -m guardian_tales validate --group teams --group guild
 ```
 
-Listing reports discovered counts without executing cases. Multiple groups form
-a union and keep discovery order; a case cannot run twice through repeated group
-arguments. The default `validate` command and CI still execute every test in the
-original order. Unknown groups, catalog omissions, stale files, undiscovered
+Listing reports discovered counts without executing cases. A run executes each
+selected case once in discovery order. The default `validate` command and CI run
+the full suite. Unknown groups, catalog omissions, stale files, undiscovered
 modules and duplicate test identities fail before execution. Register each new
 test module exactly once in `tests/groups.json`.
 
-Direct `python -m unittest tests.test_jewel_upgrade` and
-`python -m unittest discover -s tests` also retain their existing paths and
-behavior. The grouped runner adds catalog-completeness checks. Grouping does
-not introduce parallel execution or alter temporary fixtures, game handlers or
-the saved local account.
+Use `python -m unittest tests.inventory.test_jewel_upgrade` for one module or
+`python -m unittest discover -s tests` for standard discovery across the suite.
+The grouped runner also checks the catalog for completeness.
 
 ## Verify without external networking
 
