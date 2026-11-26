@@ -18,7 +18,7 @@ def prepare(body):
     constants = json.loads(items["constants"][1]) if "constants" in items else {}
     if not isinstance(constants, dict):
         raise ValueError("Invalid nickname constants table")
-    if "ChangeNickCost" not in constants and "inventoryexpansion" not in items:
+    if "ChangeNickCost" not in constants and not {"inventoryexpansion", "merch"} & items.keys():
         return None
     cost = constants.get("ChangeNickCost", 0)
     if not integer(cost) or "__checksum__" not in items:
@@ -33,6 +33,28 @@ def prepare(body):
             for row in rows:
                 row.update(InvenExpandCost=0, InvenTotalExpandCost=0)
             changes["inventoryexpansion"] = rows
+    if "merch" in items:
+        forge = json.loads(items["merch"][1])
+        if not isinstance(forge, dict):
+            raise ValueError("Invalid merch forge table")
+        for name in ("MerchLevels", "MerchEvolves"):
+            rows = forge.get(name, [])
+            if not isinstance(rows, list):
+                raise ValueError("Invalid merch forge rows")
+            for row in rows:
+                prices = row.get("GoldNeeded", []) if isinstance(row, dict) else None
+                if not isinstance(prices, list) or not all(integer(n) for n in prices):
+                    raise ValueError("Invalid merch forge prices")
+                if any(prices):
+                    row["GoldNeeded"] = [0] * len(prices)
+                    changes["merch"] = forge
+        specs = json.loads(items["items"][1]) if "items" in items else []
+        if not isinstance(specs, list) or not all(isinstance(s, dict) for s in specs):
+            raise ValueError("Invalid item specifications for merch forge")
+        for spec in specs:
+            if spec.get("Type") == "merchenhance" and spec.get("GoldNeeded"):
+                spec["GoldNeeded"] = 0
+                changes["items"] = specs
     if not changes:
         return body, items["__checksum__"][1]
     values = {

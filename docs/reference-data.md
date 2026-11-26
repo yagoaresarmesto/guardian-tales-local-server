@@ -767,6 +767,28 @@ including explicit nulls for displaced holders. It does not replace inventories
 or unrelated resource fields. Restart only the backend and fully reopen the game
 after updating. Bulk `change-characters-equipments` uses a separate route.
 
+## Free merch enhancement
+
+Open the merch forge, choose an owned piece and select materials in the same
+batch. The local handler accepts the three grades of enhancement glue and
+unlocked merch copies. Glue gives its catalog XP per unit. Other merch gives
+XP for its level and original rarity. A copy from the target's family also
+contributes the catalog's duplicate bonus and rarity progress. Crossing a
+threshold evolves the selected copy, even when its XP is already at the cap.
+The 3.57.0 EU catalog has 30 merch levels.
+
+The local forge charges zero gold and retains every selected material. It
+updates the target in its existing inventory slot, so equipped heroes retain
+the same copy. Stop and restart the backend after updating, then fully reopen
+Guardian Tales to load the free prices. Enhancement, evolution and glue prices
+are supplied by a local static-data overlay.
+
+The 3.57.0 client calls `/merch/enhance-merch/v2` with `ItemId`, a
+`SourceItems` map of inventory IDs to quantities, and `discountBuff`. Packet
+tests cover mixed selections, evolution thresholds, level caps, an empty gold
+balance, rejected materials and duplicate requests. The in-game retry is
+pending confirmation.
+
 ## Inventory expansion
 
 The 3.57.0 client sends `/user/expand-inventory` with `TargetStep`. The local

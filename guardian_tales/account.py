@@ -20,6 +20,7 @@ from . import (
     hero_myth,
     hero_reset,
     inventory_expansion,
+    merch_enhance,
     multi_presets,
     story_interactions,
     story_loot,
@@ -299,6 +300,7 @@ ACCOUNT_ROUTES = (
     "/lobby-village/receive-gift",
     "/lobby-village/remove-obstacle",
     "/item/enhance-weapon",
+    merch_enhance.ROUTE,
     *ITEM_LOCK_ROUTES,
     ITEM_SELL_ROUTE,
     ITEM_EXTRACT_ROUTE,
@@ -387,6 +389,7 @@ class AccountStore:
         create_village_gift_tables(db)
         create_village_obstacle_tables(db)
         create_weapon_enhance_tables(db)
+        merch_enhance.create_tables(db)
         create_weapon_limit_break_tables(db)
         create_weapon_option_tables(db)
         create_weapon_engrave_tables(db)

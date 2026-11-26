@@ -32,6 +32,7 @@ from . import (
     kamazone_practice,
     kamazone_preview,
     kamazone_run,
+    merch_enhance,
     multi_presets,
     orbital_levels,
     story_interactions,
@@ -624,6 +625,15 @@ class BootstrapSession:
                     operation_id = epoch + ":" + str(request["sequence_id"])
                     return json_response(
                         request, self.store.account.change_item_locks(body, operation_id, route)
+                    )
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == merch_enhance.ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, merch_enhance.enhance(self.store.account, body, operation_id)
                     )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc

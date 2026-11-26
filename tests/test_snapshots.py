@@ -130,6 +130,7 @@ class SnapshotTests(unittest.TestCase):
                 "/lobby-village/prepare-dispatch",
                 "/lobby-village/receive-gift",
                 "/lobby-village/remove-obstacle",
+                "/merch/enhance-merch/v2",
                 "/mission/claim-challenge-all",
                 "/mission/claim-challenge-all-step",
                 "/preset/delete-character-list-preset",
