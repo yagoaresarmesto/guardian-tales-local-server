@@ -9,7 +9,7 @@ from guardian_tales.test_item_static import item_definitions
 from guardian_tales.village import integer
 
 from .catalog_grants import CatalogGrants
-from .equipment_options import generate
+from .equipment_options import roll_new_options
 from .equipment_ribbons import available_in_client, equipment_ribbons
 from .stack_quantities import HAMMERS
 from .weapon_progression import LIMIT_BREAK_TYPES
@@ -94,9 +94,4 @@ class EquipmentGrants(CatalogGrants):
     def initialize_copy(self, item):
         rules = self.rules.get(item["ItemId"])
         if rules:
-            levels = generate(rules, [], {})
-            item["Options"] = [
-                {"OptionId": key, "Level": levels[key], "Locked": False, "OptionSource": 0}
-                for key in rules["options"]
-                if key in levels
-            ]
+            item["Options"] = roll_new_options(rules)

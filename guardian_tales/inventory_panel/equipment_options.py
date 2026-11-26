@@ -188,6 +188,15 @@ def generate(spec, rows, locked):
     return keep
 
 
+def roll_new_options(rules):
+    levels = generate(rules, [], {})
+    return [
+        {"OptionId": key, "Level": levels[key], "Locked": False, "OptionSource": 0}
+        for key in rules["options"]
+        if key in levels
+    ]
+
+
 def roll_basics(spec, locked):
     return {
         ident: locked[ident] if ident in locked else RANDOM.randint(rule["low"], rule["high"])

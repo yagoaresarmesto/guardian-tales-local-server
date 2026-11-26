@@ -767,6 +767,24 @@ including explicit nulls for displaced holders. It does not replace inventories
 or unrelated resource fields. Restart only the backend and fully reopen the game
 after updating. Bulk `change-characters-equipments` uses a separate route.
 
+## Equipment Mystery Evolution
+
+Use Mystery Evolution on unlocked weapons, shields or accessories with one
+through four stars. Each material must have the same number of stars as its
+target. A successful roll replaces that copy with random equipment one star
+higher, retaining its inventory ID and experience. The manual forge sends
+`/item/compose-weapon`. The automatic forge sends one or more groups to
+`/item/compose-gears` with the target first in each group.
+
+The local forge keeps the gold and material copies on either outcome. It uses
+the installed `WeaponCompose` success rates and exclusive-equipment odds.
+For a four-star target, each of up to ten four-star materials contributes ten
+percentage points. Within the rolled category the local server chooses
+uniformly among eligible catalog entries and generates the new item's options.
+A repeated request returns its original outcome. Packet tests cover both modes,
+failed rolls, mixed batches and rejection of five-star inputs. Android confirmation
+of the result screen is pending.
+
 ## Free merch enhancement
 
 Open the merch forge, choose an owned piece and select materials in the same

@@ -113,6 +113,8 @@ class SnapshotTests(unittest.TestCase):
                 "/item/change-lock-options",
                 "/item/change-options",
                 "/item/change-relic-options/v2",
+                "/item/compose-gears",
+                "/item/compose-weapon",
                 "/item/decompose-jewel",
                 "/item/detach-jewel",
                 "/item/engrave-weapon",
