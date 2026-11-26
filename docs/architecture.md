@@ -19,6 +19,22 @@ flowchart LR
     H[Local health client] -->|HTTP 17657| G
 ```
 
+## Static data after a restart
+
+When the game checks for updated data, the backend evaluates the current calendar,
+mode selections, account-specific item definitions and lobby notice. It stores
+each prepared overlay under `<data-dir>/static-cache/`, with one file per
+transformation. An entry matches the exact input bytes, transformation settings
+and backend implementation. The stored response bytes and client checksum are
+verified together before reuse. The first request prepares missing entries.
+An unreadable or damaged cache entry is rebuilt on demand. The cache directory
+is disposable and can be excluded from save backups.
+
+The standard-library reader handles static data on its own. Installing the
+optional `static-data` extra enables native LZ4 decompression after block
+validation. Older supported block layouts use the Python reader. The encoder
+produces the same on-wire data with either installation.
+
 ## Package map
 
 | Module | Responsibility |

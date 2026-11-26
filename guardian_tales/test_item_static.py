@@ -6,6 +6,7 @@ import json
 from functools import lru_cache
 
 from .raid_static import compress, decode, digest, records
+from .static_cache import prepare_static
 from .village import integer
 
 PIN_ID = 9110633
@@ -166,7 +167,8 @@ def bootstrap_seed(db, references, filename, request, parent):
     specs = active_specs(db)
     if not specs:
         return parent(references, filename, request)
-    body, checksum = prepare(parent(references, "static_data_get.bin", request), specs)
+    source = parent(references, "static_data_get.bin", request)
+    body, checksum = prepare_static(references, prepare, source, specs)
     if filename == "static_data_get.bin":
         return body
     return json.dumps(

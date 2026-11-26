@@ -6,6 +6,7 @@ import re
 from functools import lru_cache
 
 from .raid_static import compress, decode, digest, records
+from .static_cache import prepare_static
 from .village import integer
 
 ENTRY = "/expedition/enter"
@@ -79,13 +80,14 @@ def prepare(body):
 def bootstrap_seed(references, filename, request, parent):
     if filename not in ("static_data_get.bin", "static_data_check.bin") or not enabled(references):
         return parent(references, filename, request)
-    body, checksum = prepare(parent(references, "static_data_get.bin", request))
+    source = parent(references, "static_data_get.bin", request)
+    body, checksum = prepare_static(references, prepare, source)
     from .expedition_levels import load_levels
     from .expedition_levels import prepare as prepare_levels
 
     selection = load_levels(references)
     if selection is not None:
-        body, checksum = prepare_levels(body, *selection)
+        body, checksum = prepare_static(references, prepare_levels, body, *selection)
     if filename == "static_data_get.bin":
         return body
     return json.dumps(

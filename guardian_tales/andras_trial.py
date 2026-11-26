@@ -13,6 +13,7 @@ from pathlib import Path
 
 from .andras_trial_static import SOURCE, VARIANT, definitions, prepare
 from .reference import ReferenceData
+from .static_cache import prepare_static
 from .village import integer
 
 SELECTION = "andras_myth_trial.json"
@@ -151,7 +152,9 @@ def bootstrap_seed(references, filename, request, parent):
     selection = load(references)
     if selection is None:
         return parent(references, filename, request)
-    body, checksum = prepare(
+    body, checksum = prepare_static(
+        references,
+        prepare,
         parent(references, "static_data_get.bin", request),
         selection["generation"],
         selection["active"],

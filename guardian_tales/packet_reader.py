@@ -59,53 +59,67 @@ def unwrap_compression(data):
 
 def lz4_block(data, expected, *, limit=MAX_PACKET):
     """Decode a bounded raw LZ4 block; no frame container or external library."""
+    out = bytearray()
+    read_lz4_sequences(data, expected, limit=limit, output=out)
+    return bytes(out)
+
+
+def read_lz4_sequences(data, expected, *, limit, output=None):
+    """Validate the block and optionally expand its sequences into an empty bytearray."""
     if not 0 <= expected <= limit:
         raise PacketError("LZ4 output size outside reader limits")
-    out = bytearray()
     at = 0
+    size = 0
+    end = len(data)
 
-    def extended(initial):
+    def extended():
         nonlocal at
-        length = initial
-        if initial == 15:
-            while True:
-                if at >= len(data):
-                    raise PacketError("Truncated LZ4 length")
-                b = data[at]
-                at += 1
-                length += b
-                if length > expected:
-                    raise PacketError("LZ4 length exceeds expected output")
-                if b != 255:
-                    break
-        return length
+        length = 15
+        while True:
+            if at >= end:
+                raise PacketError("Truncated LZ4 length")
+            b = data[at]
+            at += 1
+            length += b
+            if length > expected:
+                raise PacketError("LZ4 length exceeds expected output")
+            if b != 255:
+                return length
 
-    while at < len(data):
+    while at < end:
         token = data[at]
         at += 1
-        literal = extended(token >> 4)
-        if at + literal > len(data) or len(out) + literal > expected:
+        literal = token >> 4
+        if literal == 15:
+            literal = extended()
+        size += literal
+        if at + literal > end or size > expected:
             raise PacketError("LZ4 literal exceeds input/output bounds")
-        out += data[at : at + literal]
+        if output is not None:
+            output += data[at : at + literal]
         at += literal
-        if at == len(data):
+        if at == end:
             break
-        if at + 2 > len(data):
+        if at + 2 > end:
             raise PacketError("Truncated LZ4 match offset")
-        offset = int.from_bytes(data[at : at + 2], "little")
+        offset = data[at] | (data[at + 1] << 8)
         at += 2
-        match = extended(token & 15) + 4
-        if not offset or offset > len(out) or len(out) + match > expected:
+        match = token & 15
+        if match == 15:
+            match = extended()
+        match += 4
+        if not offset or offset > size or size + match > expected:
             raise PacketError("Invalid LZ4 match")
-        if offset >= match:
-            start = len(out) - offset
-            out += out[start : start + match]
-        else:
-            for _ in range(match):
-                out.append(out[-offset])
-    if len(out) != expected:
+        if output is not None:
+            if offset >= match:
+                start = size - offset
+                output += output[start : start + match]
+            else:
+                for _ in range(match):
+                    output.append(output[-offset])
+        size += match
+    if size != expected:
         raise PacketError("LZ4 output length mismatch")
-    return bytes(out)
 
 
 def parse_packet(data):

@@ -97,6 +97,8 @@ Generate the client certificates once from the checkout.
 
 Start the **game backend** and **resource CDN** in separate PowerShell terminals. Keep both running during play.
 
+The backend reuses prepared game data across restarts. The first load builds the cache automatically. [Static data cache and optional LZ4 support](docs/architecture.md#static-data-after-a-restart)
+
 ```powershell
 # Terminal 1
 .\.venv\Scripts\python.exe -m guardian_tales serve --data-dir local/state --cert-dir local/client-tls --reference-dir local/client-data/reference

@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from datetime import datetime, timezone
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
 from guardian_tales.guild_raid import (
@@ -437,6 +437,30 @@ class RaidStaticTests(unittest.TestCase):
         raw = decode(self.original).replace(b'"Keep":[1,2]', b'"Keep":[1,3]')
         with self.assertRaises(ValueError):
             records(raw)
+
+    def test_static_native_decoder_obeys_the_same_validation_and_legacy_fallback(self):
+        codec = Mock(LZ4BlockError=ValueError)
+        literal = compress(b"plain")
+        with patch("guardian_tales.raid_static.native_lz4", codec):
+            codec.decompress.return_value = b"plain"
+            self.assertEqual(decode(literal), b"plain")
+            codec.decompress.assert_called_once_with(literal[:-4], uncompressed_size=5)
+            codec.decompress.reset_mock()
+            for block, size in (
+                (b"\x00", MAX_STATIC + 1),
+                (b"\x50short", 6),
+                (b"\x10a\x00\x00", 5),
+            ):
+                with self.subTest(block=block), self.assertRaises(PacketError):
+                    decode(block + struct.pack("<I", size))
+            codec.decompress.assert_not_called()
+            codec.decompress.side_effect = ValueError("native decoder requires trailing literals")
+            # A distance-one match at EOF is accepted by the original reader.
+            legacy = b"\x10a\x01\x00" + struct.pack("<I", 5)
+            self.assertEqual(decode(legacy), b"aaaaa")
+        with patch("guardian_tales.raid_static.native_lz4", None):
+            self.assertEqual(decode(legacy), b"aaaaa")
+            self.assertEqual(decode(literal), b"plain")
 
     def test_no_override_or_legacy_id_setting_preserves_static_response_and_upgrade_requires_restart(
         self,

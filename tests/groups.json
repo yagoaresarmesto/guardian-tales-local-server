@@ -1,7 +1,7 @@
 {
   "core": {
     "description": "Bootstrap packets, LZ4 and test-runner organization",
-    "modules": ["test_bootstrap", "test_validation"]
+    "modules": ["test_bootstrap", "test_static_cache", "test_validation"]
   },
   "account": {
     "description": "Account import, profile customization and local administration",

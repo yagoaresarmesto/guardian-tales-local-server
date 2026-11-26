@@ -6,6 +6,7 @@ from functools import lru_cache
 
 from .inventory_expansion import expansion_rows
 from .raid_static import compress, decode, digest, records
+from .static_cache import prepare_static
 from .village import integer
 
 
@@ -107,7 +108,8 @@ def prepare(body):
 
 def bootstrap_seed(references, filename, request, parent):
     if filename in ("static_data_get.bin", "static_data_check.bin"):
-        prepared = prepare(parent(references, "static_data_get.bin", request))
+        source = parent(references, "static_data_get.bin", request)
+        prepared = prepare_static(references, prepare, source)
         if prepared is not None:
             body, checksum = prepared
             if filename == "static_data_get.bin":

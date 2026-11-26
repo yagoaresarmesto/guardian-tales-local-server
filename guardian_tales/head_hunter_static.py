@@ -9,6 +9,7 @@ from functools import lru_cache
 from .andras_trial_static import binary_rows, pack_rows, same_definition
 from .raid_custom import binary_name_hash
 from .raid_static import compress, decode, digest, records
+from .static_cache import prepare_static
 from .village import integer
 
 SOURCE = 9060604
@@ -202,7 +203,8 @@ def bootstrap_seed(db, references, filename, request, parent):
     spec = active_spec(db, references)
     if spec is None:
         return parent(references, filename, request)
-    body, checksum = prepare(parent(references, "static_data_get.bin", request), spec)
+    source = parent(references, "static_data_get.bin", request)
+    body, checksum = prepare_static(references, prepare, source, spec)
     if filename == "static_data_get.bin":
         return body
     return json.dumps(

@@ -22,6 +22,7 @@ from .reference import default_cert_dir
 from .service_control import register, restart_worker
 from .snapshots import IMPORTED_MUTATIONS, is_imported
 from .state_lock import StateLock
+from .static_cache import StaticCache
 from .web_panel.server import WebPanel
 
 
@@ -51,6 +52,7 @@ class LocalServer:
             )
             self.db.commit()
             self.guests = GuestStore(self.db, reference_dir)
+            self.guests.references.static_cache = StaticCache(self.data_dir / "static-cache")
         except BaseException:
             if hasattr(self, "db"):
                 self.db.close()

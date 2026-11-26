@@ -10,7 +10,13 @@ import tempfile
 import time
 from array import array
 
-from .packet_reader import MAX_PACKET, lz4_block
+from .packet_reader import MAX_PACKET, lz4_block, read_lz4_sequences
+from .static_cache import prepare_static
+
+try:
+    from lz4 import block as native_lz4
+except (ImportError, OSError):
+    native_lz4 = None
 
 MAX_STATIC = 64 * 1024 * 1024
 LOCAL_FROM = "2000-01-01T00:00:00+00:00"
@@ -44,7 +50,7 @@ def selected_static_seed(references, filename, request, parent, selection, prepa
         value, revision = selection(references)
         if revision:
             source = parent(references, "static_data_get.bin", request)
-            body, checksum = prepare(source, value, revision)
+            body, checksum = prepare_static(references, prepare, source, value, revision)
             if filename == "static_data_get.bin":
                 return body
             return json.dumps(
@@ -118,7 +124,19 @@ def decode(body):
     if not 5 <= len(body) <= MAX_PACKET:
         raise ValueError("Invalid external static table body size")
     expected = struct.unpack("<I", body[-4:])[0]
-    return lz4_block(body[:-4], expected, limit=MAX_STATIC)
+    block = body[:-4]
+    if native_lz4 is not None:
+        # Preserve our bounds and match-offset rules before passing local data to liblz4.
+        read_lz4_sequences(block, expected, limit=MAX_STATIC)
+        try:
+            raw = native_lz4.decompress(block, uncompressed_size=expected)
+        except native_lz4.LZ4BlockError:
+            # Some supported legacy blocks end in a match instead of a literal run.
+            pass
+        else:
+            if len(raw) == expected:
+                return raw
+    return lz4_block(block, expected, limit=MAX_STATIC)
 
 
 def records(raw):

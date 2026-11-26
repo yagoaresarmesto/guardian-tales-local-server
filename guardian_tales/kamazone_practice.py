@@ -11,6 +11,7 @@ from . import kamazone, kamazone_legacy
 from .punchking_static import atomic_write
 from .raid_static import compress, decode, digest, records
 from .reference import ReferenceData
+from .static_cache import prepare_static
 from .village import integer
 
 CONFIG = "kamazone_practice.json"
@@ -257,7 +258,9 @@ def bootstrap_seed(references, filename, request, parent):
     if selected is None and legacy is None:
         return parent(references, filename, request)
     generation = (selected or {}).get("generation", 0) + (legacy or {}).get("generation", 0)
-    body, checksum = prepare(
+    body, checksum = prepare_static(
+        references,
+        prepare,
         parent(references, "static_data_get.bin", request),
         generation,
         selected["season_id"] if selected else None,

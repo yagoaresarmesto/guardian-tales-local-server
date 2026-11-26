@@ -13,6 +13,7 @@ from .punchking_static import atomic_write
 from .raid_static import compress, decode, digest, records
 from .reference import ReferenceData
 from .state_lock import StateLock
+from .static_cache import prepare_static
 from .village import integer
 
 SELECTION = "kamazone_selection.json"
@@ -253,7 +254,9 @@ def bootstrap_seed(references, filename, request, parent):
     ):
         raise ValueError("Kama-ZONE selection belongs to another content pack; disable it first")
     window = tuple(selected["period"][k] for k in FIELDS) if selected["period"] else None
-    body, checksum = prepare(
+    body, checksum = prepare_static(
+        references,
+        prepare,
         parent(references, "static_data_get.bin", request),
         selected["generation"],
         selected["season_id"],
