@@ -3269,7 +3269,7 @@
     "later_raid_selection_and_utc_date_refresh": true,
     "native_stage_contract": "Start MonsterId -> Messages; end nonnegative Int32 Damage/Boolean Abandoned -> GuildRaid, IsRenew and Abandoned",
     "rankings": "Empty native lists; nullable MyRank and zero MyScore for guild/user views",
-    "saved_team_selection": "Native DKA type 13, IDs [1300,1400), GuildPunchKing pointer; captured owned definitions only",
+    "saved_team_selection": "Native type 13 has seven slots (1300..1306). Protocol tests cover saving and applying teams, first selection, battle entry, reordering, deletion and retry isolation. In-game Apply after this change is pending.",
     "practice_policy": "No rewards, coins, costs, saved personal bests, official rankings or profile changes; session/receipt tables only",
     "active_session_and_request_receipts_are_atomic_and_selection_fenced": true,
     "synthetic_regressions": 12,

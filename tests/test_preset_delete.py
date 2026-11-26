@@ -181,7 +181,7 @@ class PresetDeleteTests(unittest.TestCase):
 
     def test_raid_deletion_rejects_missing_duplicate_other_mode_or_invalid_selection(self):
         profile, group = self.add_raid_presets()
-        for ident in (699, 730, 799, 800, 802, 1302, True, 705.0, "705"):
+        for ident in (699, 730, 799, 800, 802, 1307, True, 705.0, "705"):
             self.reject_without_writes({"PresetId": ident})
         duplicated = copy.deepcopy(group)
         duplicated["Presets"].append(

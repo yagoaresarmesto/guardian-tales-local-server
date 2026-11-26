@@ -120,8 +120,8 @@ class PunchkingTests(unittest.TestCase):
         snapshot["startup_reads"]["/preset/get-presets"]["value"]["UserPartyPreset2"] = {
             "Cas": 1,
             "Presets": [
-                {"Id": ident, "Characters": [{"Id": 1, "Weapon1": 1}]}
-                for ident in (401, 713, 1300, 1301)
+                {"Id": ident, "Order": order, "Characters": [{"Id": 1, "Weapon1": 1}]}
+                for ident, order in ((401, 0), (713, 0), (1300, 0), (1301, 1))
             ],
         }
         save = self.root / "synthetic.json"
@@ -316,6 +316,55 @@ class PunchkingTests(unittest.TestCase):
         self.assertEqual(reply["User"]["SelectedPresetId"], expected["User"]["SelectedPresetId"])
         self.reject("/preset/set-selected-preset", {"PresetId": 1399}, 41)
         self.call(START, {"MonsterId": 101}, 42)
+
+    def test_apply_create_reorder_and_delete_dka_teams_through_native_routes(self):
+        route = "/preset/set-presets"
+        team = {"Id": 1301, "Order": 1, "Name": "Slime team", "Characters": [{"Id": 1}]}
+        apply = {"PartyPreset": team, "SetSelected": True}
+        saved = self.call(route, apply, 50)
+        self.assertEqual(saved["User"]["SelectedPresetId"]["GuildPunchKing"], 1301)
+        self.assertEqual(saved["UserPartyPreset2"]["Cas"], 2)
+        self.assertEqual(self.call(route, apply, 50), saved)
+        self.assertEqual(self.call(START, {"MonsterId": 101}, 51), {"Messages": []})
+        new = dict(apply, PartyPreset=dict(team, Id=1306, Order=999))
+        created = self.call(route, new, 52)
+        self.assertEqual(created["UserPartyPreset2"]["Presets"][-1]["Order"], 2)
+        self.assertEqual(created["User"]["SelectedPresetId"]["GuildPunchKing"], 1306)
+        sorted_teams = self.call(
+            "/preset/reorder-preset", {"PresetType": 13, "Order": [2, 1, 0, 0, 0, 0, 0]}, 53
+        )
+        self.assertEqual(
+            [p["Order"] for p in sorted_teams["UserPartyPreset2"]["Presets"] if p["Id"] >= 1300],
+            [2, 1, 0],
+        )
+        deleted = self.call("/preset/delete-preset", {"PresetId": 1306}, 54)
+        self.assertEqual(
+            deleted["User"]["SelectedPresetId"],
+            dict(self.profile["User"]["SelectedPresetId"], GuildPunchKing=0),
+        )
+        self.assertEqual(self.call(route, new, 52), deleted)
+        self.assertEqual(
+            self.call("/preset/get-presets")["UserPartyPreset2"], deleted["UserPartyPreset2"]
+        )
+        self.reject(route, dict(new, PartyPreset=dict(team, Id=1307, Order=999)), 55)
+        self.reject(route, dict(apply, PartyPreset=dict(team, Characters=[])), 56)
+        self.reject(
+            route,
+            dict(apply, PartyPreset=dict(team, Characters=[{"Id": 1, "Weapon1": 987654}])),
+            57,
+        )
+
+    def test_first_dka_apply_accepts_a_save_without_a_previous_dka_selection(self):
+        profile = self.store.account.profile()
+        del profile["User"]["SelectedPresetId"]["GuildPunchKing"]
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        team = {"Id": 1306, "Order": 999, "Name": "New team", "Characters": [{"Id": 1}]}
+        result = self.call("/preset/set-presets", {"PartyPreset": team, "SetSelected": True})
+        self.assertEqual(
+            result["User"]["SelectedPresetId"],
+            dict(profile["User"]["SelectedPresetId"], GuildPunchKing=1306),
+        )
 
     def test_daily_bootstrap_refresh_keeps_chosen_day_and_updates_checksum(self):
         selection = select(self.refs, 3, 7)

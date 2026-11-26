@@ -18,12 +18,14 @@ SELECTION_FIELDS = {
 # Pinned 3.57.0 EU constants: PresetCountS3[mode - 1].
 COLOSSEUM_PRESET_COUNT = 30
 RAID_PRESET_COUNT = 30
+DKA_PRESET_COUNT = 7
 EXPEDITION_PRESET_COUNT = 20
 TETIS_PRESET_COUNT = 15
 TETIS_ROSTER_SIZE = 8
 FIXED_CREATION_COUNTS = {
     600: COLOSSEUM_PRESET_COUNT,
     700: RAID_PRESET_COUNT,
+    1300: DKA_PRESET_COUNT,
     1700: TETIS_PRESET_COUNT,
 }
 
@@ -126,7 +128,7 @@ def choose_preset(user, preset_id, field, base):
     selected, revision = user.get("SelectedPresetId"), user.get("Cas")
     if not isinstance(selected, dict):
         raise ValueError("Invalid saved party selection")
-    current = selected.get(field, 0 if base in (600, 900, 1700) else None)
+    current = selected.get(field, 0 if base in (600, 900, 1300, 1700) else None)
     if (
         not integer(current)
         or current != 0
@@ -174,7 +176,7 @@ def set_selected(account, body, operation_id):
         field = "Expedition"
     if (
         field is None
-        or base in (600, 1700)
+        or base in (600, 1300, 1700)
         and body["PresetId"] >= base + FIXED_CREATION_COUNTS[base]
     ):
         raise ValueError("Select an existing supported preset within its mode's slots")
@@ -280,8 +282,8 @@ def save_party(account, body, operation_id, character_list=False):
     incoming = body[request_field]
     base = incoming["Id"] // 100 * 100
     if (
-        base not in ((1700,) if character_list else (400, 600, 700))
-        or base in (600, 1700)
+        base not in ((1700,) if character_list else (400, 600, 700, 1300))
+        or base in (600, 1300, 1700)
         and incoming["Id"] >= base + FIXED_CREATION_COUNTS[base]
     ):
         raise ValueError("Use an available preset slot for this mode and preset type")
@@ -383,15 +385,18 @@ def delete_existing(account, body, operation_id, character_list=False):
         not isinstance(body, dict)
         or set(body) != {"PresetId"}
         or not integer(body["PresetId"])
-        or body["PresetId"] // 100 * 100 not in ((1700,) if character_list else (400, 700))
-        or character_list
-        and body["PresetId"] >= 1700 + TETIS_PRESET_COUNT
         or not isinstance(operation_id, str)
         or not 1 <= len(operation_id) <= 200
         or account.needs_prologue()
     ):
         raise ValueError("Delete an existing preset in a supported slot after the prologue")
     base = body["PresetId"] // 100 * 100
+    if (
+        base not in ((1700,) if character_list else (400, 700, 1300))
+        or base in (1300, 1700)
+        and body["PresetId"] >= base + FIXED_CREATION_COUNTS[base]
+    ):
+        raise ValueError("Delete an existing preset in a supported slot after the prologue")
     field = SELECTION_FIELDS[base]
     encoded = json.dumps(body, separators=(",", ":"))
     previous = account.db.execute(
@@ -417,7 +422,7 @@ def delete_existing(account, body, operation_id, character_list=False):
         raise ValueError("Invalid preset group revision")
     user = profile["User"]
     selected = user.get("SelectedPresetId")
-    current = selected.get(field) if isinstance(selected, dict) else None
+    current = selected.get(field, 0) if isinstance(selected, dict) else None
     # Zero means no saved selection. Choosing a replacement remains an explicit
     # client action; deleting a definition never selects an unrelated team.
     selected_changed = choose_preset(

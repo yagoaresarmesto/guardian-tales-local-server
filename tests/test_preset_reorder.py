@@ -113,7 +113,7 @@ class PresetReorderTests(unittest.TestCase):
         self.assertEqual(self.db.total_changes, changes)
 
     def test_both_native_modes_change_only_target_order_and_group_revision(self):
-        self.assertEqual(SLOT_COUNTS, {4: 5, 7: 30, 17: 15, 18: 30})
+        self.assertEqual(SLOT_COUNTS, {4: 5, 7: 30, 13: 7, 17: 15, 18: 30})
         raw = self.db.execute("SELECT profile FROM local_account").fetchone()[0]
         seed = self.db.execute("SELECT startup_reads FROM imported_account").fetchone()[0]
         original_read = preserved_read(self.db, "/preset/get-presets")
@@ -277,7 +277,7 @@ class PresetReorderTests(unittest.TestCase):
             {"presetType": 7, "Order": valid["Order"]},
         ):
             self.reject(body)
-        for mode in (None, True, 4.0, "7", 0, -1, 6, 8, 13, 0x80000000):
+        for mode in (None, True, 4.0, "7", 0, -1, 6, 8, 14, 0x80000000):
             self.reject(dict(valid, PresetType=mode))
         for values in (None, {}, "0", [], [0] * 5, [0] * 29, [0] * 31):
             self.reject(dict(valid, Order=values))

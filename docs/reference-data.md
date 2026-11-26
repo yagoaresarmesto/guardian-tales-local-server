@@ -2572,9 +2572,10 @@ start and completion. This is a free practice policy: no official ranking data,
 rewards, coins, attempts, personal bests or imported profile state are written.
 The native result screen still receives the client battle result. Entry returns
 a seven-day `GuildRaid` status and partial `UserRaid` season pointer, preserving
-unrelated cached currencies. Saved DKA teams in the native `[1300,1400)` block
-can be selected with the normal preset selector; editing those definitions is
-still a separate unsupported contract. Start requires the chosen catalog boss
+unrelated cached currencies. DKA uses the shared party preset editor. The pinned
+`PresetCountS3[12]` defines seven slots (1300–1306). Apply can save and select
+an edited or new team in one request. Selection, reordering and deletion use
+the same routes as Raid with DKA's own `GuildPunchKing` pointer. Start requires the chosen catalog boss
 and an existing nonempty owned team. Start/end store only local practice-session
 and epoch/sequence receipts, commit atomically and fence variant/day changes.
 Replays do not clear a later active battle. Unknown preserved arena progress is

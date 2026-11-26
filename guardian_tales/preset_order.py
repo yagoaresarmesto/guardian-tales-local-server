@@ -1,9 +1,10 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Reorder Orbital, Raid, Guild War, Expedition and Tetis preset slots."""
+"""Reorder each supported mode's native preset slots."""
 
 import json
 
 from .presets import (
+    DKA_PRESET_COUNT,
     MAX_REVISION,
     RAID_PRESET_COUNT,
     TETIS_PRESET_COUNT,
@@ -15,7 +16,13 @@ from .presets import (
 ROUTE = "/preset/reorder-preset"
 # Native PresetCount/GetBasePresetId map Guild War (18) to Raid (7),
 # including its slot count. Tetis has a separate 15-slot character-list roster.
-SLOT_COUNTS = {4: 5, 7: RAID_PRESET_COUNT, 17: TETIS_PRESET_COUNT, 18: RAID_PRESET_COUNT}
+SLOT_COUNTS = {
+    4: 5,
+    7: RAID_PRESET_COUNT,
+    13: DKA_PRESET_COUNT,
+    17: TETIS_PRESET_COUNT,
+    18: RAID_PRESET_COUNT,
+}
 
 
 def reorder(account, body, operation_id):

@@ -302,9 +302,10 @@ its saved receipt, pointer and revision matched, with unrelated state preserved.
 Raid selection was tested through the protocol against an in-memory clone of
 the actual account; its first post-fix APK change remains unverified.
 
-The native DKA preset type is 13, using `[1300,1400)` and the
-`GuildPunchKing` selected-mode field. Selection now also supports existing owned
-teams in this block. Other definition editing remains Orbital-only.
+The native DKA preset type is 13 with seven slots (1300–1306) and an independent
+`GuildPunchKing` selection. Apply uses the shared party preset save transaction
+for both existing and new teams. The native seven-entry order array addresses
+these slots by ID. Deleting the selected team clears the DKA pointer.
 
 All preset mutations and their receipt replays now return a compact `User`
 resource containing only `Id`, `Cas` and the complete `SelectedPresetId` map.

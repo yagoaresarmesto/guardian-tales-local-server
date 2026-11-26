@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from .guild_menu import own_guild
-from .presets import owned_party_preset
+from .presets import DKA_PRESET_COUNT, owned_party_preset
 from .reference import ReferenceData
 from .snapshots import CLIENT
 
@@ -210,7 +210,7 @@ def handle(account, route, body, operation_id):
                     "Arena boss differs from the selected variant/day; restart the game"
                 )
             preset_id = profile["User"]["SelectedPresetId"].get("GuildPunchKing")
-            if not integer(preset_id, 1300, 1399):
+            if not integer(preset_id, 1300, 1300 + DKA_PRESET_COUNT - 1):
                 raise ValueError("Choose an existing Dungeon Kingdom Arena team first")
             owned_party_preset(account.db, profile, preset_id)
         elif account.db.execute("SELECT token FROM punchking_active WHERE id=1").fetchone() != (
