@@ -30,6 +30,18 @@ def choice(value, label):
     return {"value": value, "label": label}
 
 
+def star_style(spec, origin):
+    rank = spec.get("Rank")
+    category = spec.get("SummonCategory", origin.get("SummonCategory"))
+    if spec.get("CollaborationId") or origin.get("CollaborationId"):
+        return "collab"
+    if rank == 5 or (rank == 6 and category == "Story"):
+        return "promote_silver"
+    if rank == 6:
+        return "myth_red"
+    return {"Normal": "bronze", "Story": "silver", "Unique": "gold"}.get(category)
+
+
 class HeroEditor(GameSaveEditor):
     def __init__(self, database, catalog, tables, body):
         super().__init__(database)
@@ -73,6 +85,7 @@ class HeroEditor(GameSaveEditor):
             ),
             "element": ELEMENTS.get(spec.get("ElementalType"), spec.get("ElementalType")),
             "form": {5: "Ascended", 6: "Myth"}.get(rank, ""),
+            "starStyle": star_style(spec, self.specs.get(spec.get("OriginId"), {})),
             "stars": (
                 min(rank + 1, 5) if rank is not None and rank < 6 else (6 if rank == 6 else None)
             ),

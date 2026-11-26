@@ -493,6 +493,30 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertTrue(self.call("/equipment-add.js"))
         self.assertTrue(self.call("/catalog-picker.js"))
 
+    def test_hero_stars_follow_current_form_and_family(self):
+        editor = self.server.inventory.heroes
+        for category, rank, collaboration, stars, style in (
+            ("Normal", 0, False, 1, "bronze"),
+            ("Normal", 4, False, 5, "bronze"),
+            ("Story", 1, False, 2, "silver"),
+            ("Story", 4, False, 5, "silver"),
+            ("Unique", 2, False, 3, "gold"),
+            ("Unique", 3, False, 4, "gold"),
+            ("Unique", 4, False, 5, "gold"),
+            ("Story", 5, False, 5, "promote_silver"),
+            ("Story", 6, False, 6, "promote_silver"),
+            ("Unique", 6, False, 6, "myth_red"),
+            ("Unique", 4, True, 5, "collab"),
+            ("Unique", 6, True, 6, "collab"),
+        ):
+            with self.subTest(category=category, rank=rank, collaboration=collaboration):
+                editor.specs = {
+                    10: {"SummonCategory": category, "CollaborationId": int(collaboration)},
+                    20: {"OriginId": 10, "Rank": rank},
+                }
+                hero = editor.summary(new_character(1, 20))
+                self.assertEqual((hero["stars"], hero["starStyle"]), (stars, style))
+
     def seed_hero_upgrades(self):
         api = "/api/game/heroes"
         self.assertEqual(self.call(api)["heroes"], [])

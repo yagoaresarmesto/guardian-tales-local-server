@@ -210,6 +210,10 @@ MEDIA = {
         f"/elements/{element}.png": (partial(UI.read, frame=frame), "image/png")
         for element, frame in ELEMENT_FRAMES.items()
     },
+    **{
+        f"/heroes/stars/{style}.png": (partial(UI.read, frame=f"herostar_{style}_on"), "image/png")
+        for style in ("bronze", "silver", "gold", "promote_silver", "myth_red", "collab")
+    },
 }
 
 

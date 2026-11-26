@@ -61,6 +61,37 @@ function sprite(hero, className) {
   return box;
 }
 
+function rarityLabel(hero) {
+  switch (hero.starStyle) {
+    case "collab": return hero.form ? "Collaboration " + hero.form : "Collaboration";
+    case "promote_silver": return hero.form === "Myth" ? "Ascended Myth" : "Ascended";
+    case "bronze": return "Normal";
+    case "silver": return "Rare";
+    case "gold": return "Unique";
+    default: return hero.form;
+  }
+}
+
+function rankStars(hero) {
+  const row = el("span", "rank-stars");
+  if (!hero.stars) return row;
+  row.dataset.starStyle = hero.starStyle || "";
+  row.title = [hero.stars + (hero.stars === 1 ? " star" : " stars"), rarityLabel(hero)].filter(Boolean).join(" · ");
+  row.setAttribute("role", "img");
+  row.setAttribute("aria-label", row.title);
+  const fallback = () => el("span", "rank-star fallback-star");
+  for (let i = 0; i < hero.stars; i++) {
+    if (hero.starStyle) {
+      const img = el("img", "rank-star");
+      img.alt = "";
+      img.onerror = () => img.replaceWith(fallback());
+      img.src = "/heroes/stars/" + hero.starStyle + ".png";
+      row.append(img);
+    } else row.append(fallback());
+  }
+  return row;
+}
+
 function draw() {
   const query = $("search").value.trim().toLowerCase();
   const element = $("element").value;
@@ -81,7 +112,13 @@ function draw() {
       icon.src = "/elements/" + h.element.toLowerCase() + ".png";
       card.querySelector(".tile-header").append(icon);
     }
-    if (h.form) card.querySelector(".tile-stars").textContent = h.form + " · " + h.stars + "★";
+    card.dataset.starStyle = h.starStyle || "";
+    card.querySelector(".tile-stars").replaceChildren(rankStars(h));
+    const rarity = rarityLabel(h);
+    if (rarity) {
+      card.title += " · " + rarity;
+      card.setAttribute("aria-label", card.title);
+    }
     card.disabled = applying;
     return card;
   });
@@ -106,8 +143,8 @@ function display(result, preferredAction) {
   $("hero-art").replaceChildren(...sprite(hero).childNodes);
   $("copy-id").textContent = "#" + hero.id;
   $("hero-name").textContent = hero.name;
-  $("hero-element").textContent = [hero.element, hero.form].filter(Boolean).join(" · ");
-  $("hero-stars").textContent = hero.stars ? "★".repeat(hero.stars) : "";
+  $("hero-element").textContent = [hero.element, rarityLabel(hero)].filter(Boolean).join(" · ");
+  $("hero-stars").replaceChildren(rankStars(hero));
   $("facts").replaceChildren(...Object.entries(result.stats).map(([label, value]) => {
     const row = el("div");
     row.append(el("dt", "", label), el("dd", "", value));
@@ -223,7 +260,7 @@ $("hero-reset").onclick = () => {
   pendingReset = { id: selected, version: detail.version, action: "reset" };
   $("reset-heading").textContent = "Reset " + detail.hero.name + "?";
   $("reset-name").textContent = target.name + " · #" + selected;
-  $("reset-result").textContent = "After reset · Level " + target.level + " · " + target.stars + "★";
+  $("reset-result").replaceChildren("After reset · Level " + target.level + " · ", rankStars(target));
   $("reset-art").replaceChildren(...sprite(target).childNodes);
   updateAccess(writable);
   $("reset-dialog").showModal();
