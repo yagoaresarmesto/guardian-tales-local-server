@@ -82,6 +82,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/charge-stamina-by-gem",
         "/user/claim-daily-attendance",
         "/user/evolve-character/v2",
+        "/user/expand-inventory",
         "/user/limitbreak-character/v2",
         "/user/myth-character/v2",
         "/user/open-awakening-node-all",

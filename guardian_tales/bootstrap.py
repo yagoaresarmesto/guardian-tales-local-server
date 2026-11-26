@@ -26,6 +26,7 @@ from . import (
     hero_limit_break,
     hero_myth,
     hero_reset,
+    inventory_expansion,
     jewel_socket,
     kamazone,
     kamazone_practice,
@@ -42,6 +43,7 @@ from . import (
     village_dispatch,
 )
 from .account import ACCOUNT_ROUTES, AccountStore, valid_name, valid_prologue_info
+from .account_costs_static import bootstrap_seed as account_costs_bootstrap_seed
 from .account_name import ROUTE as ACCOUNT_NAME_ROUTE
 from .campaign_complete import campaign_test_enabled
 from .guild_war_static import bootstrap_override as guild_war_bootstrap_override
@@ -53,7 +55,6 @@ from .item_sell import ROUTE as ITEM_SELL_ROUTE
 from .jewel_upgrade import ROUTES as JEWEL_UPGRADE_ROUTES
 from .lobby import LOBBY_ROUTES
 from .lobby import respond as lobby_response
-from .nickname_static import bootstrap_seed as nickname_bootstrap_seed
 from .orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE, ORBITAL_FORMATION_ROUTE
 from .orbital import end as end_orbital
 from .orbital import enter as enter_orbital
@@ -526,6 +527,15 @@ class BootstrapSession:
             if route == "/user/charge-stamina":
                 try:
                     return json_response(request, self.store.account.charge_stamina(body))
+                except ValueError as exc:
+                    raise PacketError(str(exc)) from exc
+            if route == inventory_expansion.ROUTE:
+                try:
+                    epoch = self.request_epoch or self.store.request_epoch(True)
+                    operation_id = epoch + ":" + str(request["sequence_id"])
+                    return json_response(
+                        request, inventory_expansion.expand(self.store.account, body, operation_id)
+                    )
                 except ValueError as exc:
                     raise PacketError(str(exc)) from exc
             if route in HERO_GROWTH_HANDLERS or route in hero_blessing.ROUTES:
@@ -1020,7 +1030,7 @@ class BootstrapSession:
             try:
 
                 def parent(references, name, value):
-                    return nickname_bootstrap_seed(references, name, value, static_seed)
+                    return account_costs_bootstrap_seed(references, name, value, static_seed)
 
                 def expedition_seed(references, name, value):
                     return expedition.bootstrap_seed(references, name, value, parent)

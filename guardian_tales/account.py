@@ -19,6 +19,7 @@ from . import (
     hero_limit_break,
     hero_myth,
     hero_reset,
+    inventory_expansion,
     multi_presets,
     story_interactions,
     story_loot,
@@ -220,6 +221,7 @@ ACCOUNT_ROUTES = (
     TRAINING_ROOM_ENTRY,
     REPRESENTATIVE_CHARACTER_ROUTE,
     ACCOUNT_NAME_ROUTE,
+    inventory_expansion.ROUTE,
     PORTRAIT_FRAME_ROUTE,
     PROFILE_BADGE_ROUTE,
     "/user/save-party-member/v2",
@@ -387,6 +389,7 @@ class AccountStore:
         create_weapon_engrave_tables(db)
         create_weapon_option_lock_tables(db)
         create_item_lock_tables(db)
+        inventory_expansion.create_tables(db)
         create_item_sell_tables(db)
         create_relic_option_tables(db)
         create_orbital_tables(db)

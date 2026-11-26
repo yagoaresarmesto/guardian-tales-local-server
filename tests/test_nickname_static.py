@@ -9,8 +9,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from guardian_tales.account_costs_static import prepare
 from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.nickname_static import prepare
 from guardian_tales.raid_static import compress, decode, digest, records
 from tests.test_snapshots import request
 

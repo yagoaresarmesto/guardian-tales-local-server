@@ -264,10 +264,9 @@ name and cannot restore an earlier choice. Original imports, prologue selections
 captured startup reads, inventory and other account progress are retained.
 
 The matching client checks paid gems before sending this request. The backend
-therefore overlays only `constants.ChangeNickCost=0` over its effective static
-data, after existing Raid, arena and Guild War overlays. It refreshes the record
-revision, content digest and aggregate checksum; static get/check responses share
-that checksum. Preserved bootstrap files stay unchanged.
+therefore serves `constants.ChangeNickCost=0` alongside the local inventory
+expansion prices, after existing Raid, arena and Guild War overlays. Static get
+and check responses share the updated checksum.
 
 The CDN serves an empty list for manifest-listed
 `media/banwords/kakao_<locale>_name.txt` resources with a distinct ETag, refreshing
@@ -751,6 +750,22 @@ or unrelated resource fields. Restart only the backend and fully reopen the game
 after updating. This contract covers the five individual routes above; costume,
 weapon-costume and bulk `change-characters-equipments` requests remain separate
 unimplemented contracts.
+
+## Inventory expansion
+
+The 3.57.0 client sends `/user/expand-inventory` with `TargetStep`. The local
+backend treats it as the desired total expansion step. Each valid
+`inventoryexpansion.InvenExpandCount` sets the target extra slots to that step
+times `constants.InvenExpandAmount`. The EU catalog has 800 base equipment
+slots and 50 steps of six, for a maximum of 1,100. The backend reads the
+installed catalog for these limits. Relic storage has its own fixed capacity.
+
+The local static response sets both the individual and cumulative gem prices
+to zero. A successful increase persists `User.InvenLimitAdj` and advances
+`User.Cas` once. Repeating a purchased step or selecting an earlier one returns
+the current capacity. Automated packet tests cover single and multi-step
+requests, the maximum, an empty wallet, stale requests, reconnects, and the
+static update that refreshes cached prices.
 
 ## Inventory item protection
 

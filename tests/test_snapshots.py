@@ -161,6 +161,7 @@ class SnapshotTests(unittest.TestCase):
                 "/user/charge-stamina-by-gem",
                 "/user/claim-daily-attendance",
                 "/user/evolve-character/v2",
+                "/user/expand-inventory",
                 "/user/guardian-mastery-level-up",
                 "/user/limitbreak-character/v2",
                 "/user/mark-tutorial",
