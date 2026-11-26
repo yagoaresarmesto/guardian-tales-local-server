@@ -535,11 +535,15 @@ class InventoryPanelTests(unittest.TestCase):
                 hero = editor.summary(new_character(1, 20))
                 self.assertEqual((hero["stars"], hero["starStyle"]), (stars, style))
 
-    def seed_collaboration_roster(self):
+    def seed_recruitment_roster(self):
         editor = self.server.inventory.heroes
-        editor.specs[1]["CollaborationId"] = 3
-        editor.specs[4]["CollaborationId"] = 3
+        editor.specs[1]["SummonCategory"] = "Unique"
+        editor.specs[4].update(SummonCategory="Unique", CollaborationId=3)
+        editor.specs[5].update(SummonCategory="Normal", Rank=0)
         editor.specs[14] = dict(editor.specs[4], Id=14, Rank=4)
+        editor.specs[15] = dict(editor.specs[5], Id=15, OriginId=15, Rank=1, SummonCategory="Story")
+        editor.specs[16] = dict(editor.specs[5], Id=16, OriginId=16, SummonCategory="None")
+        editor.specs[17] = dict(editor.specs[5], Id=17, OriginId=17, Playable=False)
         editor.specs[19] = dict(
             editor.specs[4], Id=19, OriginId=19, VersionFrom={"KakaoGlobal": "v999.0"}
         )
@@ -551,13 +555,16 @@ class InventoryPanelTests(unittest.TestCase):
             db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
         return editor, profile
 
-    def test_collaboration_grants_check_origin_and_serialize_competing_requests(self):
-        editor, profile = self.seed_collaboration_roster()
+    def test_hero_grants_check_origin_and_serialize_competing_requests(self):
+        editor, profile = self.seed_recruitment_roster()
         api = "/api/game/heroes"
         catalog = self.call(api + "/catalog")
-        self.assertEqual([(h["spec"], h["level"]) for h in catalog["heroes"]], [(4, 1)])
-        body = dict(spec=4, version=catalog["version"])
-        for spec in (1, 2, 3, 5, 14, 19, 27, True):
+        self.assertCountEqual(
+            [(h["spec"], h["level"], h["stars"]) for h in catalog["heroes"]],
+            [(4, 1, 3), (5, 1, 1), (15, 1, 2)],
+        )
+        body = dict(spec=5, version=catalog["version"])
+        for spec in (1, 2, 3, 14, 16, 17, 19, 27, True):
             with self.subTest(spec=spec), self.assertRaises(HTTPError) as rejected:
                 self.call(api + "/add", body | {"spec": spec})
             self.assertEqual(rejected.exception.code, 400)
@@ -579,23 +586,48 @@ class InventoryPanelTests(unittest.TestCase):
         with ThreadPoolExecutor(max_workers=2) as workers:
             results = [workers.submit(recruit) for _ in range(2)]
             outcomes = [future.result() for future in results]
-        self.assertIn({"id": 39, "spec": 4}, outcomes)
+        self.assertIn({"id": 39, "spec": 5}, outcomes)
         self.assertTrue(any(status in (409, 423) for status in outcomes))
         current = self.call(api + "/catalog")
-        self.assertEqual(current["heroes"], [])
+        self.assertCountEqual([h["spec"] for h in current["heroes"]], [4, 15])
         for version, code in ((body["version"], 409), (current["version"], 400)):
             with self.assertRaises(HTTPError) as replay:
                 self.call(api + "/add", body | {"version": version})
             self.assertEqual(replay.exception.code, code)
             replay.exception.close()
-        profile["User"]["Characters"].append(new_character(39, 4))
+        profile["User"]["Characters"].append(new_character(39, 5))
         profile["User"]["CharacterIdCounter"] = 39
         profile["User"]["Cas"] += 1
         with editor.reader() as db:
             self.assertEqual(editor.profile(db), profile)
+        for copy_id, spec in ((40, 4), (41, 15)):
+            self.assertEqual(
+                self.call(api + "/add", dict(spec=spec, version=current["version"])),
+                {"id": copy_id, "spec": spec},
+            )
+            current = self.call(api + "/catalog")
+        self.assertEqual(current["heroes"], [])
 
-    def test_collaboration_grant_fails_closed_for_unverifiable_rosters(self):
-        editor, profile = self.seed_collaboration_roster()
+    def test_owned_hero_is_excluded_at_every_evolution_rank(self):
+        editor, profile = self.seed_recruitment_roster()
+        editor.specs[18] = dict(editor.specs[1], Id=18, Rank=5)
+        api = "/api/game/heroes"
+        for form in (1, 3, 18, 2):
+            with self.subTest(form=form):
+                profile["User"]["Characters"] = [new_character(27, form)]
+                with closing(sqlite3.connect(editor.database)) as db, db:
+                    db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+                catalog = self.call(api + "/catalog")
+                self.assertCountEqual([h["spec"] for h in catalog["heroes"]], [4, 5, 15])
+                with self.assertRaises(HTTPError) as rejected:
+                    self.call(api + "/add", dict(spec=1, version=catalog["version"]))
+                self.assertEqual(rejected.exception.code, 400)
+                rejected.exception.close()
+                with editor.reader() as db:
+                    self.assertEqual(editor.profile(db), profile)
+
+    def test_hero_grant_fails_closed_for_unverifiable_rosters(self):
+        editor, profile = self.seed_recruitment_roster()
         api = "/api/game/heroes"
         body = dict(spec=4, version=self.call(api + "/catalog")["version"])
         for roster, counter in (

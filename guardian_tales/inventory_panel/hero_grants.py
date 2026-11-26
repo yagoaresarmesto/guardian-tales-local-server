@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Recruit a missing collaboration hero in its native starting form."""
+"""Recruit a missing roster hero in its native starting form."""
 
 from datetime import datetime, timezone
 
@@ -7,13 +7,14 @@ from guardian_tales.account import AccountStore
 from guardian_tales.admin_test_items import save_profile
 from guardian_tales.characters import new_character
 from guardian_tales.snapshots import CLIENT
+from guardian_tales.summon_draw import CATEGORIES
 from guardian_tales.village import INT_MAX, MAX_REVISION, integer
 
 from .equipment_ribbons import available_in_client
 from .game_save import GameSaveEditor
 
 
-class CollaborationHeroGrants(GameSaveEditor):
+class HeroGrants(GameSaveEditor):
     def __init__(self, editor):
         super().__init__(editor.database)
         self.editor = editor
@@ -48,7 +49,8 @@ class CollaborationHeroGrants(GameSaveEditor):
             spec["Id"]
             for spec in specs.values()
             if spec.get("Playable") is True
-            and integer(spec.get("CollaborationId"), minimum=1)
+            and spec.get("SummonCategory") in CATEGORIES
+            and integer(spec.get("Rank"), 4)
             and spec["Id"] == spec.get("OriginId")
             and spec["Id"] not in origins
             and available_in_client(spec, version, now)
@@ -72,13 +74,13 @@ class CollaborationHeroGrants(GameSaveEditor):
             or set(body) != {"spec", "version"}
             or not integer(body["spec"], minimum=1)
         ):
-            raise ValueError("Select a missing collaboration hero.")
+            raise ValueError("Select a missing hero.")
         profile = self.profile(db)
         user = profile["User"]
         if body["version"] != self.inventory_version(user):
             return 409, {"error": "The roster has changed."}
         if body["spec"] not in self.missing_origins(user):
-            raise ValueError("Only a missing collaboration hero in its starting form can be added.")
+            raise ValueError("Only a missing hero in its starting form can be added.")
         if AccountStore(db, self.editor.catalog.refs.directory, initialize=False).needs_prologue():
             raise ValueError("Complete the prologue before adding a hero.")
         if user["CharacterIdCounter"] == INT_MAX or user["Cas"] == MAX_REVISION:

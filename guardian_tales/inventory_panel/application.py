@@ -12,7 +12,7 @@ from .account_details import AccountEditor
 from .catalog import InventoryCatalog
 from .equipment_grants import EquipmentGrants
 from .equipment_options import EquipmentOptionEditor
-from .hero_grants import CollaborationHeroGrants
+from .hero_grants import HeroGrants
 from .hero_portraits import HeroPortraits
 from .heroes import HeroEditor
 from .mastery import MasteryEditor
@@ -45,7 +45,7 @@ class InventoryApplication:
             )
         self.mastery = MasteryEditor(database, references)
         self.heroes = HeroEditor(database, self.catalog, tables, body)
-        self.hero_grants = CollaborationHeroGrants(self.heroes)
+        self.hero_grants = HeroGrants(self.heroes)
         self.account_editor = AccountEditor(database, references, self.catalog, tables)
         self.relics = RelicEditor(database, self.catalog, tables)
         self.relic_grants = RelicGrants(database, self.catalog, self.relics.specs, tables)

@@ -1,11 +1,11 @@
 import { $, el, inventoryTile, watchGridPageSize } from "/inventory-dom.js";
-import { collaborationCatalog } from "/hero-add.js";
+import { heroCatalog } from "/hero-add.js";
 
 const api = "/api/game/heroes";
 let heroes = [], selected = null, detail = null, page = 0, pageSize = 24;
 let generation = 0, applying = false, writable = false;
 let pendingReset = null;
-const recruits = collaborationCatalog(json, heroTile, id => load(id));
+const recruits = heroCatalog(json, heroTile, id => load(id));
 
 async function json(url, body) {
   const options = { cache: "no-store" };
