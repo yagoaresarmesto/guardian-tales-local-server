@@ -11,10 +11,10 @@ import unittest
 from contextlib import contextmanager
 from pathlib import Path
 
-from guardian_tales.admin import MAX_GEMS, gem_history, grant_gems
-from guardian_tales.bootstrap import GuestStore
-from guardian_tales.server import LocalServer
-from guardian_tales.state_lock import StateLock
+from guardian_tales.administration.admin import MAX_GEMS, gem_history, grant_gems
+from guardian_tales.runtime.bootstrap import GuestStore
+from guardian_tales.runtime.server import LocalServer
+from guardian_tales.runtime.state_lock import StateLock
 
 
 class GemAdministrationTests(unittest.TestCase):

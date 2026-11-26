@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Expose the same Global season catalog and selection as the Kama-ZONE CLI."""
 
-from ... import kamazone
-from ...village import integer
+from guardian_tales.modes.kamazone import kamazone
+from guardian_tales.settlement.village import integer
+
 from ..artwork import KAMAZONE
 from .season_art import season_card
 

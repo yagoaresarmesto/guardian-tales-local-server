@@ -13,14 +13,24 @@ from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.admin import MAX_USER_REVISION
-from guardian_tales.admin_test_items import grant_test_pin, remove_test_pin, test_pin_history
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.items import inventory_item
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.snapshots import import_snapshot
-from guardian_tales.state_lock import StateLock
-from guardian_tales.test_item_static import PIN_ID, PIN_NAME, TABLE, pin_spec, prepare
+from guardian_tales.accounts.snapshots import import_snapshot
+from guardian_tales.administration.admin import MAX_USER_REVISION
+from guardian_tales.administration.admin_test_items import (
+    grant_test_pin,
+    remove_test_pin,
+    test_pin_history,
+)
+from guardian_tales.administration.test_item_static import (
+    PIN_ID,
+    PIN_NAME,
+    TABLE,
+    pin_spec,
+    prepare,
+)
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.state_lock import StateLock
 from tests.account.test_snapshots import request, synthetic_snapshot
 
 
@@ -301,7 +311,7 @@ class TestPinAdministrationTests(unittest.TestCase):
             extra = dict(Id=222, Name="mode-added", Type="misc")
             parent = source_body((extra,))
             with patch(
-                "guardian_tales.bootstrap.guild_war_bootstrap_override", return_value=parent
+                "guardian_tales.runtime.bootstrap.guild_war_bootstrap_override", return_value=parent
             ):
                 second = session.handle(request("/static-data/get", {})).body
         before, after = records(decode(first))[1], records(decode(second))[1]
@@ -430,14 +440,15 @@ class TestPinAdministrationTests(unittest.TestCase):
     def test_backup_failure_and_registry_capacity_prevent_account_changes(self):
         before = self.dump()
         with patch(
-            "guardian_tales.admin_test_items.backup_and_begin", side_effect=OSError("backup failed")
+            "guardian_tales.administration.admin_test_items.backup_and_begin",
+            side_effect=OSError("backup failed"),
         ):
             with self.assertRaises(OSError):
                 self.grant()
         self.assertEqual(self.dump(), before)
         self.grant()
         before = self.dump()
-        with patch("guardian_tales.admin_test_items.MAX_GRANTS", 1):
+        with patch("guardian_tales.administration.admin_test_items.MAX_GRANTS", 1):
             with self.assertRaises(ValueError):
                 self.grant(operation_id="pin-02")
         self.assertEqual(self.dump(), before)

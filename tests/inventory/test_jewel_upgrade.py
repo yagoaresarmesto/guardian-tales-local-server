@@ -6,12 +6,12 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.items import inventory_item
-from guardian_tales.jewel_upgrade import LOOSE, RELIC
-from guardian_tales.protocol import PacketError
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import INT_MAX, MAX_REVISION
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.inventory.jewel_upgrade import LOOSE, RELIC
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION
 from tests.account.test_snapshots import request as packet
 from tests.village.test_village_harvest import NOW, VillageFixture
 

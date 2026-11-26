@@ -13,7 +13,7 @@ PREFIX = "AssetBundles/Android/ondemand/"
 
 
 def build_archives(resource_roots, output, groups=None):
-    from guardian_tales.assets import ResourceLibrary
+    from guardian_tales.content.assets import ResourceLibrary
 
     roots = [Path(root).resolve() for root in resource_roots]
     output = Path(output).resolve()

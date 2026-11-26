@@ -6,12 +6,12 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.characters import new_character
-from guardian_tales.hero_equipment import EQUIP_COSTUME, ROUTES
-from guardian_tales.items import inventory_item
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.heroes.hero_equipment import EQUIP_COSTUME, ROUTES
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
 from tests.account.test_snapshots import request as packet
 from tests.village.test_village_harvest import NOW, VillageFixture
 

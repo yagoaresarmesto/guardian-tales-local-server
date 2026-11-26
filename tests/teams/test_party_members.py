@@ -6,11 +6,11 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.characters import new_character
-from guardian_tales.party_members import ROUTE
-from guardian_tales.protocol import PacketError
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
+from guardian_tales.teams.party_members import ROUTE
 from tests.account.test_snapshots import request as packet
 from tests.village.test_village_harvest import NOW, VillageFixture
 

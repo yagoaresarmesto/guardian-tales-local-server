@@ -8,12 +8,12 @@ import unittest
 from datetime import datetime, timezone
 from unittest.mock import patch
 
-from guardian_tales.basecamp import ROUTE as HARVEST
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.mastery import ROUTE as UPGRADE
-from guardian_tales.mastery_reset import MASTERY_POINTS, ROUTE
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import INT_MAX, MAX_REVISION, MAX_TIME, current_village
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.settlement.basecamp import ROUTE as HARVEST
+from guardian_tales.settlement.mastery import ROUTE as UPGRADE
+from guardian_tales.settlement.mastery_reset import MASTERY_POINTS, ROUTE
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION, MAX_TIME, current_village
 from tests.village.test_guardian_mastery import GuardianMasteryFixture
 from tests.village.test_village_harvest import NOW
 
@@ -40,7 +40,7 @@ class MasteryResetTests(GuardianMasteryFixture, unittest.TestCase):
         self.reset_path.write_text(json.dumps(self.reset_catalog))
 
     def call(self, body=None, route=ROUTE, sequence=81, now=NOW):
-        with patch("guardian_tales.mastery_reset.time.time", return_value=now):
+        with patch("guardian_tales.settlement.mastery_reset.time.time", return_value=now):
             return super().call(body, route, sequence, now)
 
     def mastery(self, profile):

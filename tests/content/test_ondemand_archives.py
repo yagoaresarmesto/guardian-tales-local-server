@@ -8,7 +8,7 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from guardian_tales.assets import ResourceLibrary
+from guardian_tales.content.assets import ResourceLibrary
 from scripts.build_ondemand_archives import build_archives
 
 

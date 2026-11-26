@@ -5,11 +5,11 @@ import json
 from bisect import bisect_right
 from datetime import datetime, timezone
 
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.jewel_upgrade import owned_inventory, target_row
-from guardian_tales.merch_enhance import level_thresholds
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import MAX_REVISION, integer
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.administration.admin_test_items import save_profile
+from guardian_tales.inventory.jewel_upgrade import owned_inventory, target_row
+from guardian_tales.inventory.merch_enhance import level_thresholds
+from guardian_tales.settlement.village import MAX_REVISION, integer
 
 from .catalog_grants import CatalogGrants
 from .equipment_ribbons import available_in_client

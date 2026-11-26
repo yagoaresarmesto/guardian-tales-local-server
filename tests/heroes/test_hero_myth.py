@@ -6,10 +6,10 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.characters import new_character
-from guardian_tales.hero_myth import ROUTE
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, digest
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.heroes.hero_myth import ROUTE
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.protocol import PacketError
 from tests.village.test_village_harvest import VillageFixture
 
 

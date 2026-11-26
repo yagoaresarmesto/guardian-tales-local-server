@@ -9,9 +9,9 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.packet_reader import PacketError, parse_packet
-from guardian_tales.protocol import Packet, encode_packet
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import PacketError, parse_packet
+from guardian_tales.runtime.protocol import Packet, encode_packet
 from tests import FIXTURES
 
 NOW = datetime(2026, 11, 17, 9, 0, tzinfo=timezone.utc)

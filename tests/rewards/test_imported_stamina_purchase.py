@@ -8,8 +8,8 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.village import MAX_REVISION, current_village
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.settlement.village import MAX_REVISION, current_village
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 ROUTE = "/user/charge-stamina-by-gem"
@@ -52,7 +52,7 @@ class ImportedStaminaPurchaseTests(VillageFixture, unittest.TestCase):
         self.save_profile(profile)
 
     def call(self, body=None, route=ROUTE, sequence=101, now=NOW):
-        with patch("guardian_tales.stamina_purchase.datetime", PurchaseClock):
+        with patch("guardian_tales.rewards.stamina_purchase.datetime", PurchaseClock):
             return super().call(body, route, sequence, now)
 
     def test_imported_native_purchase_changes_only_free_gems_reserve_counter_and_revision(self):

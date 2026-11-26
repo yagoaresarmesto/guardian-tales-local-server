@@ -8,12 +8,12 @@ import time
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from guardian_tales.account import AccountStore
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.lobby import LOBBY_ROUTES, READ_RESPONSES
-from guardian_tales.packet_reader import lz4_block, parse_packet
-from guardian_tales.platform import dispatch
-from guardian_tales.protocol import Packet, PacketError, encode_packet
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.lobby_ui.lobby import LOBBY_ROUTES, READ_RESPONSES
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import lz4_block, parse_packet
+from guardian_tales.runtime.platform import dispatch
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests import FIXTURES
 
 REFERENCE_DIR = FIXTURES / "reference"

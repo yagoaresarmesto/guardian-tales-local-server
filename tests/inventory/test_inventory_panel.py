@@ -21,11 +21,11 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from guardian_tales import raid_static
-from guardian_tales.andras_trial_static import pack_rows
-from guardian_tales.awakening_catalog import Node, Tree
-from guardian_tales.basecamp import MASTERY_POINTS
-from guardian_tales.characters import new_character
+from guardian_tales.accounts.snapshots import CLIENT, preserved_read
+from guardian_tales.administration.andras_trial_static import pack_rows
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.heroes.awakening_catalog import Node, Tree
+from guardian_tales.heroes.characters import new_character
 from guardian_tales.inventory_panel import server
 from guardian_tales.inventory_panel.application import InventoryApplication
 from guardian_tales.inventory_panel.equipment import english_inventory_names
@@ -34,13 +34,13 @@ from guardian_tales.inventory_panel.equipment_ribbons import (
     equipment_ribbons,
 )
 from guardian_tales.inventory_panel.server import InventoryServer
+from guardian_tales.modes.guild import raid_static
+from guardian_tales.modes.guild.raid_static import compress, digest
 from guardian_tales.panel_common import labels as panel_labels
 from guardian_tales.panel_common.art_cache import cached_art
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.reference import ReferenceData
-from guardian_tales.service_control import register
-from guardian_tales.snapshots import CLIENT, preserved_read
-from guardian_tales.state_lock import StateLock
+from guardian_tales.runtime.service_control import register
+from guardian_tales.runtime.state_lock import StateLock
+from guardian_tales.settlement.basecamp import MASTERY_POINTS
 from guardian_tales.web_panel.server import WebPanel
 
 
@@ -1004,7 +1004,7 @@ class InventoryPanelTests(unittest.TestCase):
         }
         rules["hero_awakening.catalog"] = rules["awakening_catalog.catalog"]
         for name, values in rules.items():
-            self.enterContext(patch("guardian_tales." + name, return_value=values))
+            self.enterContext(patch("guardian_tales.heroes." + name, return_value=values))
         policy = dict(
             client=CLIENT,
             free_experience=True,
@@ -1148,7 +1148,9 @@ class InventoryPanelTests(unittest.TestCase):
         body = dict(id=1, action="max", version=self.call(api + "/1")["version"])
         with editor.reader() as db:
             original = editor.profile(db)
-        with patch("guardian_tales.hero_awakening.awaken", side_effect=ValueError("invalid tree")):
+        with patch(
+            "guardian_tales.heroes.hero_awakening.awaken", side_effect=ValueError("invalid tree")
+        ):
             with self.assertRaises(HTTPError) as aborted:
                 self.call(api, body)
             self.assertEqual(aborted.exception.code, 400)
@@ -1175,7 +1177,7 @@ class InventoryPanelTests(unittest.TestCase):
             user = editor.profile(db)["User"]
         self.assertEqual(user["Characters"][1], other)
         self.assertEqual((user["Assets"], user["ItemStackables"]), ([], []))
-        with patch("guardian_tales.hero_myth.rules", return_value=({}, 1, 94, 1)):
+        with patch("guardian_tales.heroes.hero_myth.rules", return_value=({}, 1, 94, 1)):
             ordinary = self.call(api, body | {"id": 2, "version": myth["version"]})
         self.assertEqual(ordinary["hero"]["spec"], 32)
         self.assertEqual(ordinary["stats"]["Level"], "5 / 5")
@@ -1192,7 +1194,9 @@ class InventoryPanelTests(unittest.TestCase):
         editor.specs[34] = dict(
             Id=34, OriginId=31, Name="archer_ascent", SummonCategory="Story", Rank=5, Playable=True
         )
-        with patch("guardian_tales.hero_myth.rules", return_value=({34: (33, 93, 400)}, 1, 94, 1)):
+        with patch(
+            "guardian_tales.heroes.hero_myth.rules", return_value=({34: (33, 93, 400)}, 1, 94, 1)
+        ):
             completed = self.call(
                 api, dict(id=1, action="max", version=self.call(api + "/1")["version"])
             )

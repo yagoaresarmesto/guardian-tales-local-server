@@ -6,8 +6,8 @@ import json
 import sqlite3
 from contextlib import closing, contextmanager
 
-from guardian_tales.state_lock import StateLock
-from guardian_tales.village import MAX_REVISION, integer
+from guardian_tales.runtime.state_lock import StateLock
+from guardian_tales.settlement.village import MAX_REVISION, integer
 
 
 class GameSaveEditor:

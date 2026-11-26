@@ -7,14 +7,14 @@ import sqlite3
 import unittest
 from unittest.mock import patch
 
-from guardian_tales.account import AccountStore
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.items import inventory_item
-from guardian_tales.protocol import PacketError
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import MAX_REVISION, current_village
-from guardian_tales.weapon_option_lock import ROUTE
-from guardian_tales.weapon_options import APPLY, CHANGE
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.inventory.weapon_option_lock import ROUTE
+from guardian_tales.inventory.weapon_options import APPLY, CHANGE
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION, current_village
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 
@@ -58,7 +58,7 @@ class WeaponOptionLockTests(VillageFixture, unittest.TestCase):
         self.assertEqual(list(self.db.iterdump()), dump)
 
     def proposal(self, item=1, sequence=181):
-        with patch("guardian_tales.weapon_options.randbelow", return_value=0):
+        with patch("guardian_tales.inventory.weapon_options.randbelow", return_value=0):
             return self.call({"ItemId": item}, CHANGE, sequence)
 
     def test_lock_changes_only_selected_flags_and_revision_preserving_all_resources_and_seed(self):

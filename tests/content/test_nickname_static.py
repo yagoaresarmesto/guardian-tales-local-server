@@ -9,9 +9,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.account_costs_static import prepare
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.accounts.account_costs_static import prepare
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
 from tests.account.test_snapshots import request
 
 
@@ -90,7 +90,7 @@ class NicknameStaticTests(unittest.TestCase):
             parent = static_body(checksum=mode, revision=100 + index)
             patches = [
                 patch(
-                    "guardian_tales.bootstrap." + key + "_bootstrap_override",
+                    "guardian_tales.runtime.bootstrap." + key + "_bootstrap_override",
                     return_value=parent if key == mode else None,
                 )
                 for key in parent_names

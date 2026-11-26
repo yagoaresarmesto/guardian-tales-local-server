@@ -10,7 +10,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from guardian_tales import (
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.modes.kamazone import (
     kamazone,
     kamazone_battle,
     kamazone_events,
@@ -18,7 +19,6 @@ from guardian_tales import (
     kamazone_shelter,
     kamazone_shop,
 )
-from guardian_tales.reference import ReferenceData
 
 
 @unittest.skipUnless(os.environ.get("GT_KAMAZONE_TEST_STATIC"), "requires matching EU static data")

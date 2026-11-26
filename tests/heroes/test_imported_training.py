@@ -8,10 +8,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import PacketError, encode_packet
-from guardian_tales.snapshots import CLIENT
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import PacketError, encode_packet
 from tests.account.test_snapshots import request
 
 

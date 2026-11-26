@@ -4,9 +4,9 @@
 import uuid
 from threading import Lock
 
-from guardian_tales.account import AccountStore
-from guardian_tales.item_lock import INVENTORIES, LOCK, UNLOCK
-from guardian_tales.item_sell import gear_references
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.inventory.item_lock import INVENTORIES, LOCK, UNLOCK
+from guardian_tales.inventory.item_sell import gear_references
 
 GROUPS = dict(zip(INVENTORIES, ("Equipment", "Miscellaneous", "Stackables")))
 

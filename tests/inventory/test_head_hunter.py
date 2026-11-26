@@ -11,10 +11,11 @@ from contextlib import closing, redirect_stderr, redirect_stdout
 from unittest.mock import patch
 
 from guardian_tales.__main__ import main
-from guardian_tales.admin_test_items import grant_test_pin
-from guardian_tales.andras_trial_growth import LEADER
-from guardian_tales.head_hunter import grant, history, remove
-from guardian_tales.head_hunter_static import (
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.administration.admin_test_items import grant_test_pin
+from guardian_tales.administration.andras_trial_growth import LEADER
+from guardian_tales.administration.head_hunter import grant, history, remove
+from guardian_tales.administration.head_hunter_static import (
     ACTION,
     CLASS,
     OPTION,
@@ -23,12 +24,11 @@ from guardian_tales.head_hunter_static import (
     VARIANT,
     active_spec,
 )
-from guardian_tales.items import inventory_item
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import decode, records
-from guardian_tales.reference import ReferenceData
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.state_lock import StateLock
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.modes.guild.raid_static import decode, records
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.runtime.state_lock import StateLock
 from tests.account import test_andras_trial as fixture
 from tests.account.test_admin_test_items import source_body
 from tests.account.test_snapshots import request
@@ -44,7 +44,7 @@ class HeadHunterTests(unittest.TestCase):
         self.source = self.refs / "static_data_get.bin"
         self.enterContext(
             patch(
-                "guardian_tales.head_hunter_static.binary_name_hash",
+                "guardian_tales.administration.head_hunter_static.binary_name_hash",
                 side_effect=lambda s: int.from_bytes(
                     hashlib.sha256(s.encode()).digest()[:8], "little"
                 ),

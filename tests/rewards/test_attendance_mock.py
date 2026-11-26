@@ -7,10 +7,10 @@ import sqlite3
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from guardian_tales.attendance import ROUTE
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import INT_MAX, MAX_REVISION, current_village
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.rewards.attendance import ROUTE
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION, current_village
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 DAY = 86400

@@ -8,11 +8,11 @@ import sqlite3
 import struct
 import unittest
 
-from guardian_tales.characters import new_character
-from guardian_tales.hero_awakening import ROUTE
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.village import GOLD
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.heroes.hero_awakening import ROUTE
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import GOLD
 from tests.village.test_village_harvest import VillageFixture
 
 

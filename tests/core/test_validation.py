@@ -11,7 +11,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.validation import (
+from guardian_tales.runtime.validation import (
     catalog_suite,
     load_groups,
     main,
@@ -113,11 +113,12 @@ class ValidationTests(unittest.TestCase):
     def test_cli_lists_counts_without_running_tests(self):
         output = io.StringIO()
         with (
-            patch("guardian_tales.validation.Path.cwd", return_value=self.root),
+            patch("guardian_tales.runtime.validation.Path.cwd", return_value=self.root),
             patch(
-                "guardian_tales.validation.unittest.TestLoader.discover", return_value=self.suite()
+                "guardian_tales.runtime.validation.unittest.TestLoader.discover",
+                return_value=self.suite(),
             ),
-            patch("guardian_tales.validation.unittest.TextTestRunner") as runner,
+            patch("guardian_tales.runtime.validation.unittest.TextTestRunner") as runner,
             patch.dict(os.environ, {"GT_EXPECT_NO_NETWORK": "0"}),
             redirect_stdout(output),
             self.assertRaises(SystemExit) as stopped,
@@ -130,8 +131,8 @@ class ValidationTests(unittest.TestCase):
 
     def test_cli_rejects_unknown_group_before_discovery_or_execution(self):
         with (
-            patch("guardian_tales.validation.Path.cwd", return_value=self.root),
-            patch("guardian_tales.validation.unittest.TestLoader.discover") as discover,
+            patch("guardian_tales.runtime.validation.Path.cwd", return_value=self.root),
+            patch("guardian_tales.runtime.validation.unittest.TestLoader.discover") as discover,
             redirect_stderr(io.StringIO()),
             self.assertRaises(SystemExit) as stopped,
         ):

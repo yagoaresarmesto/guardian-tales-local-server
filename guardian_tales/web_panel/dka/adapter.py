@@ -4,9 +4,9 @@
 from importlib.util import find_spec
 from io import BytesIO
 
+from guardian_tales.modes.guild import punchking, punchking_static
 from guardian_tales.panel_common.art_cache import cached_art
 
-from ... import punchking, punchking_static
 from ..artwork import BOSSES, UI
 
 

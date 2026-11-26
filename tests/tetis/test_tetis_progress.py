@@ -7,9 +7,14 @@ from contextlib import closing
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from guardian_tales.tetis_catalog import TetisCatalog
-from guardian_tales.tetis_progress import edit_progress, editor_view, read_progress, save_progress
-from guardian_tales.tetis_sweep import counter, exchange, sweep
+from guardian_tales.modes.tetis.tetis_catalog import TetisCatalog
+from guardian_tales.modes.tetis.tetis_progress import (
+    edit_progress,
+    editor_view,
+    read_progress,
+    save_progress,
+)
+from guardian_tales.modes.tetis.tetis_sweep import counter, exchange, sweep
 
 
 def catalog_data():
@@ -156,7 +161,7 @@ class TetisProgressTests(unittest.TestCase):
         state["seasonData"]["2"]["Artifacts"] = {"8": 19}
         profile = {"User": {"Assets": [{"Id": 70003, "Amount": 7, "Spent": 4}]}}
         with patch(
-            "guardian_tales.tetis_sweep.grant",
+            "guardian_tales.modes.tetis.tetis_sweep.grant",
             side_effect=lambda account, profile, items: {"AddedItems": list(items)},
         ):
             with self.assertRaises(ValueError):
@@ -223,7 +228,7 @@ class TetisProgressTests(unittest.TestCase):
         cat.data["Constants"]["SeasonCoinExchangeMagnification"] = 10
         rows = [{"Id": 771, "Amount": 13, "Spent": 9}, {"Id": 772, "Amount": 21, "Spent": 0}]
         with patch(
-            "guardian_tales.tetis_sweep.grant",
+            "guardian_tales.modes.tetis.tetis_sweep.grant",
             side_effect=lambda account, profile, items: {"AddedItems": list(items)},
         ):
             result = exchange(None, {"User": {"Assets": rows}}, {}, cat)

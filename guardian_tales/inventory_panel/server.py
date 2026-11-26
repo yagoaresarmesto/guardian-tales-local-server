@@ -11,9 +11,9 @@ from importlib import import_module, invalidate_caches
 from pathlib import Path
 from threading import Event
 
+from guardian_tales.content.reference import ReferenceData
 from guardian_tales.panel_common.artwork import decoder_available
-from guardian_tales.reference import ReferenceData
-from guardian_tales.service_control import active_services, register, restart_worker
+from guardian_tales.runtime.service_control import active_services, register, restart_worker
 from guardian_tales.web_panel.server import WebPanel
 
 # Also declared by the panel-art extra. Bare checkouts lack installed package metadata.

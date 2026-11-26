@@ -12,8 +12,8 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.assets import ResourceLibrary, handler_for
-from guardian_tales.recommended_art import PREFIX, STORY_SCENERY
+from guardian_tales.content.assets import ResourceLibrary, handler_for
+from guardian_tales.lobby_ui.recommended_art import PREFIX, STORY_SCENERY
 
 
 class AssetTests(unittest.TestCase):
@@ -123,7 +123,9 @@ class AssetTests(unittest.TestCase):
         self.library.files["AssetBundles/Android/ui/backgrounds/rogue_chess"] = bundle
         short = "/" + PREFIX + "story_short_00.png"
         tetis = "/" + PREFIX + "rogue_chess_02.png"
-        with patch("guardian_tales.recommended_art._card", return_value=b"native-mode-art") as card:
+        with patch(
+            "guardian_tales.lobby_ui.recommended_art._card", return_value=b"native-mode-art"
+        ) as card:
             self.assertEqual(self.get(tetis)[2], b"native-mode-art")
             card.assert_called_once_with(*bundle, "bg_rogue_chess_perks_00")
             self.assertEqual(self.get(short)[2], b"supplement")
@@ -133,7 +135,7 @@ class AssetTests(unittest.TestCase):
             self.library.files[short[1:]] = bundle
             self.assertEqual(self.get(short)[2], self.large_payload)
             self.assertEqual(self.get("/" + PREFIX + "unknown.png")[0], 404)
-        with patch("guardian_tales.recommended_art._card", side_effect=ImportError()):
+        with patch("guardian_tales.lobby_ui.recommended_art._card", side_effect=ImportError()):
             self.assertEqual(self.get(tetis)[2], b"supplement")
 
     @unittest.skipUnless(find_spec("PIL"), "requires the panel-art extra")
@@ -157,7 +159,9 @@ class AssetTests(unittest.TestCase):
         scene = Image.new("RGB", (24, 18), (25, 180, 197))
         bundle = self.library.lookup("/media/large.bin")
         self.library.files["AssetBundles/Android/ondemand/roguechess/narrative/ep2"] = bundle
-        with patch("guardian_tales.tetis_art.bundle_texture", return_value=scene) as read:
+        with patch(
+            "guardian_tales.modes.tetis.tetis_art.bundle_texture", return_value=scene
+        ) as read:
             code, headers, body = self.get(prefix + "bg_rogue_chess_s2_00.png")
             self.assertEqual((code, headers["Content-Type"]), (200, "image/png"))
             with Image.open(BytesIO(body)) as replacement:

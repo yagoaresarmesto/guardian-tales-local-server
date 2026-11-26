@@ -3,9 +3,10 @@
 
 import json
 
+from guardian_tales.modes.orbital.orbital import LAST_SELECTABLE_FLOOR, load_entry_floors
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION, integer
+
 from ...inventory_panel.game_save import GameSaveEditor
-from ...orbital import LAST_SELECTABLE_FLOOR, load_entry_floors
-from ...village import INT_MAX, MAX_REVISION, integer
 
 
 class OrbitalChanged(ValueError):

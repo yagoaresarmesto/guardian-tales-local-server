@@ -7,10 +7,16 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales import lobby_notice as notice
-from guardian_tales import lobby_notice_art, lobby_notice_details, lobby_settings
-from guardian_tales.raid_static import compress, decode, digest, records, selected_static_seed
-from guardian_tales.reference import ReferenceData
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.lobby_ui import lobby_notice as notice
+from guardian_tales.lobby_ui import lobby_notice_art, lobby_notice_details, lobby_settings
+from guardian_tales.modes.guild.raid_static import (
+    compress,
+    decode,
+    digest,
+    records,
+    selected_static_seed,
+)
 
 
 class LobbyNoticeTests(unittest.TestCase):

@@ -5,9 +5,9 @@ import json
 import unittest
 from datetime import datetime, timedelta, timezone
 
-from guardian_tales.lobby import village_shop
-from guardian_tales.protocol import PacketError
-from guardian_tales.snapshots import preserved_read
+from guardian_tales.accounts.snapshots import preserved_read
+from guardian_tales.lobby_ui.lobby import village_shop
+from guardian_tales.runtime.protocol import PacketError
 from tests.village.test_village_harvest import VillageFixture
 
 SHOP = "/lobby-village/enter-shop"

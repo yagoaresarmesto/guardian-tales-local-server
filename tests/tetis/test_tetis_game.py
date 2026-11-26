@@ -8,12 +8,12 @@ import unittest
 from contextlib import closing
 from unittest.mock import patch
 
-from guardian_tales import tetis, tetis_map_trial
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.tetis_catalog import TetisCatalog
-from guardian_tales.tetis_progress import edit_progress, read_progress
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.modes.tetis import tetis, tetis_map_trial
+from guardian_tales.modes.tetis.tetis_catalog import TetisCatalog
+from guardian_tales.modes.tetis.tetis_progress import edit_progress, read_progress
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 
 
@@ -73,16 +73,18 @@ class TetisGameTests(unittest.TestCase):
         return self.call(route, {key: info}, sequence)
 
     def test_recommended_counts_use_saved_current_season(self):
-        from guardian_tales import lobby
-        from guardian_tales.tetis_progress import save_progress
-        from guardian_tales.tetis_sweep import counter
+        from guardian_tales.lobby_ui import lobby
+        from guardian_tales.modes.tetis.tetis_progress import save_progress
+        from guardian_tales.modes.tetis.tetis_sweep import counter
 
         with self.db:
             state = read_progress(self.db, self.catalog)
             state["floors"].update({"1": 2, "3": 1})
             state["sweepCounter"] = dict(counter(state, self.catalog), PlayCount=2)
             save_progress(self.db, state)
-        with patch("guardian_tales.tetis_progress.load_catalog", return_value=self.catalog):
+        with patch(
+            "guardian_tales.modes.tetis.tetis_progress.load_catalog", return_value=self.catalog
+        ):
             packet = lobby.respond(request("/content-book/recommend", {}), object(), self.db)
         body = json.loads(packet.body)
         self.assertEqual((body["RogueChessFloor"], body["RogueChessSweepCount"]), (1, 2))

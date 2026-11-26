@@ -6,10 +6,14 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.campaign import FIRST_CHAPTER_STAGES, FIRST_STAGE_ID, encode_stage_progress
-from guardian_tales.packet_reader import PacketError, parse_packet
-from guardian_tales.protocol import Packet, encode_packet
+from guardian_tales.campaigns.campaign import (
+    FIRST_CHAPTER_STAGES,
+    FIRST_STAGE_ID,
+    encode_stage_progress,
+)
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import PacketError, parse_packet
+from guardian_tales.runtime.protocol import Packet, encode_packet
 
 
 def request(route, body):

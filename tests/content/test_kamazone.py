@@ -16,14 +16,14 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from guardian_tales import kamazone, kamazone_preview
 from guardian_tales.__main__ import main
-from guardian_tales.assets import ResourceLibrary, handler_for
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.kamazone import FIELDS, INACTIVE, REGION, SELECTION, load
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.content.assets import ResourceLibrary, handler_for
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.modes.kamazone import kamazone, kamazone_preview
+from guardian_tales.modes.kamazone.kamazone import FIELDS, INACTIVE, REGION, SELECTION, load
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from guardian_tales.web_panel.server import WebPanel
 from tests.account import test_andras_trial as andras_fixture
 from tests.account.test_snapshots import request, synthetic_snapshot
@@ -37,7 +37,7 @@ class KamazoneTests(unittest.TestCase):
         self.db = self.enterContext(closing(sqlite3.connect(":memory:")))
         self.session = BootstrapSession(GuestStore(self.db, self.root))
         self.refs = self.session.store.references
-        self.enterContext(patch("guardian_tales.kamazone.utc_now", return_value=NOW))
+        self.enterContext(patch("guardian_tales.modes.kamazone.kamazone.utc_now", return_value=NOW))
         self.tables = {
             "kamazonland2": {
                 "Seasons": [
@@ -158,7 +158,7 @@ class KamazoneTests(unittest.TestCase):
             when = datetime.fromisoformat(selected["local_period"][key])
             with (
                 self.subTest(phase=phase),
-                patch("guardian_tales.kamazone.utc_now", return_value=when),
+                patch("guardian_tales.modes.kamazone.kamazone.utc_now", return_value=when),
             ):
                 status = self.cli("status")
                 self.assertEqual(status["calendar_phase"], phase)
@@ -210,7 +210,7 @@ class KamazoneTests(unittest.TestCase):
             reply = json.loads(self.fetch("/static-data/check-update", dict(Checksum=supplied)))
             self.assertEqual(reply["Checksum"], checksum)
             self.assertEqual(reply["UpToDate"], expected)
-        from guardian_tales.kamazone import bootstrap_seed
+        from guardian_tales.modes.kamazone.kamazone import bootstrap_seed
 
         def parent(refs, name, body):
             return b"unchanged resource URL"
@@ -243,7 +243,9 @@ class KamazoneTests(unittest.TestCase):
             self.cli("select", "--season-id", "41")["restart_backend_and_game_required"]
         )
         self.assertEqual(path.read_bytes(), before)
-        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=22)):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone.utc_now", return_value=NOW + timedelta(days=22)
+        ):
             self.assertFalse(self.cli("status")["menu_active_now"])
             self.assertTrue(self.cli("select", "--season-id", "41")["menu_active_now"])
         self.assertEqual(load(self.refs)["generation"], 2)
@@ -253,7 +255,7 @@ class KamazoneTests(unittest.TestCase):
         self.assertEqual(path.read_bytes(), before)
 
     def test_panel_previews_use_the_imported_banner_even_with_no_active_season(self):
-        from guardian_tales.reference import ReferenceData
+        from guardian_tales.content.reference import ReferenceData
         from guardian_tales.web_panel.kamazone.season_art import season_card
         from guardian_tales.web_panel.routes import media_resource
 
@@ -355,7 +357,7 @@ class KamazoneTests(unittest.TestCase):
         self.cli("select", "--season-id", "41")
         before = {p.name: p.read_bytes() for p in self.root.iterdir()}
         with patch(
-            "guardian_tales.punchking_static.atomic_replace",
+            "guardian_tales.modes.guild.punchking_static.atomic_replace",
             side_effect=OSError("synthetic failure"),
         ):
             self.reject("select", "--season-id", "42")
@@ -515,7 +517,7 @@ class KamazonePreviewTests(unittest.TestCase):
         before = list(self.db.iterdump()), self.db.total_changes
         files = {p.name: p.read_bytes() for p in self.fixture.root.iterdir()}
         kamazone.source_tables.cache_clear()
-        with patch("guardian_tales.raid_static.decode", wraps=decode) as decoding:
+        with patch("guardian_tales.modes.guild.raid_static.decode", wraps=decode) as decoding:
             first = self.call()
             original = copy.deepcopy(first)
             first["UserKamazonLand"]["Nodes"].append({"Id": 999})
@@ -572,7 +574,9 @@ class KamazonePreviewTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.call()
         self.fixture.cli("select", "--season-id", "43")
-        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=22)):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone.utc_now", return_value=NOW + timedelta(days=22)
+        ):
             with self.assertRaises(PacketError):
                 self.call()
         self.fixture.tables["untouched"]["value"].append(4)
@@ -651,7 +655,9 @@ class KamazonePreviewTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.ranking_packet(no_body=True)
         self.session.signed_in = True
-        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=22)):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone.utc_now", return_value=NOW + timedelta(days=22)
+        ):
             with self.assertRaises(PacketError):
                 self.ranking_packet(no_body=True)
         self.fixture.tables["untouched"]["value"].append(4)

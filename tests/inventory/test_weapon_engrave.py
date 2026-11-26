@@ -7,13 +7,13 @@ import sqlite3
 import unittest
 from unittest.mock import patch
 
-from guardian_tales.account import AccountStore
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.items import inventory_item
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import MAX_REVISION, current_village
-from guardian_tales.weapon_engrave import ROUTE
-from guardian_tales.weapon_options import APPLY, CHANGE
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.inventory.weapon_engrave import ROUTE
+from guardian_tales.inventory.weapon_options import APPLY, CHANGE
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.settlement.village import MAX_REVISION, current_village
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 
@@ -55,7 +55,9 @@ class WeaponEngraveTests(VillageFixture, unittest.TestCase):
         self.asset(profile, 70001).update(Amount=0, Spent=-42)
         self.save_profile(profile)
         self.request = {"TargetWeaponId": 1, "MaterialWeaponId": 50}
-        self.draw = patch("guardian_tales.weapon_engrave.randbelow", return_value=0).start()
+        self.draw = patch(
+            "guardian_tales.inventory.weapon_engrave.randbelow", return_value=0
+        ).start()
         self.addCleanup(patch.stopall)
 
     def write_engrave_catalog(self):
@@ -295,7 +297,7 @@ class WeaponEngraveTests(VillageFixture, unittest.TestCase):
 
     def test_normal_option_proposal_preceding_engraving_can_apply_and_replay_after_it(self):
         self.write_other_catalogs()
-        with patch("guardian_tales.weapon_options.randbelow", return_value=0):
+        with patch("guardian_tales.inventory.weapon_options.randbelow", return_value=0):
             self.call({"ItemId": 1}, CHANGE, 163)
         self.call(self.request)
         before = self.store.account.profile()

@@ -11,10 +11,10 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from guardian_tales.__main__ import main
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.kamazone_practice import CONFIG, SAVE, allocation_file
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import decode, records
+from guardian_tales.modes.guild.raid_static import decode, records
+from guardian_tales.modes.kamazone.kamazone_practice import CONFIG, SAVE, allocation_file
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.content import test_kamazone as fixtures
 
@@ -309,7 +309,8 @@ class KamazonePracticeTests(unittest.TestCase):
             self.save({"174": 1})
         self.session.signed_in = True
         with patch(
-            "guardian_tales.kamazone.utc_now", return_value=fixtures.NOW + timedelta(days=22)
+            "guardian_tales.modes.kamazone.kamazone.utc_now",
+            return_value=fixtures.NOW + timedelta(days=22),
         ):
             with self.assertRaises(PacketError):
                 self.save({"174": 1})
@@ -329,7 +330,7 @@ class KamazonePracticeTests(unittest.TestCase):
         self.save({"42": 1}, 705)
         before, config = list(self.db.iterdump()), self.allocation.read_bytes()
         with patch(
-            "guardian_tales.punchking_static.atomic_replace",
+            "guardian_tales.modes.guild.punchking_static.atomic_replace",
             side_effect=OSError("synthetic failure"),
         ):
             with self.assertRaises(PacketError):

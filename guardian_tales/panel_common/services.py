@@ -3,7 +3,12 @@
 
 import json
 
-from ..service_control import NAMES, active_services, service_certificate_expiry, service_state
+from guardian_tales.runtime.service_control import (
+    NAMES,
+    active_services,
+    service_certificate_expiry,
+    service_state,
+)
 
 
 def service_request(handler):

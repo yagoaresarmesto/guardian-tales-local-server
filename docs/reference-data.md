@@ -541,7 +541,7 @@ the legacy Co-op hero slot after each run. The prepared overlay's
 
 | Client file under `files/` | Build input |
 | --- | --- |
-| `AssetBundles/Android/ui/lobby` | Run `python -m guardian_tales.classic_coop_bundle SOURCE OUTPUT` with UnityPy installed and the preserved 3.57.0 lobby bundle as the source. |
+| `AssetBundles/Android/ui/lobby` | Run `python -m guardian_tales.modes.classic_coop_bundle SOURCE OUTPUT` with UnityPy installed and the preserved 3.57.0 lobby bundle as the source. |
 | `AssetBundles/Android/ui/stage/coop` | Run the same module with the preserved Co-op stage bundle as `SOURCE` and the preserved `ui/stage/base` bundle as `--result-from`. The archived Defense stage requests a missing results prefab. This registers the preserved common Co-op results panel under that name. |
 | `GameScript/Frontend/LocalClassicCoop.encrypted` | Pack `guardian_tales/templates/LocalClassicCoop.lua` with the matching external 3.57.0 script codec. |
 | `Android.index` | Replace both bundle rows and add the script row with their sizes and SHA-1 hashes. Pack the index using the matching external 3.57.0 index codec. |

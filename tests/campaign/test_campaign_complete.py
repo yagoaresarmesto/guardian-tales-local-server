@@ -8,15 +8,15 @@ import unittest
 from contextlib import closing
 from pathlib import Path
 
-from guardian_tales import campaign_cli, story_world_pass
-from guardian_tales.bootstrap import GuestStore
-from guardian_tales.campaign import encode_stage_progress
-from guardian_tales.campaign_complete import (
+from guardian_tales.campaigns import campaign_cli, story_world_pass
+from guardian_tales.campaigns.campaign import encode_stage_progress
+from guardian_tales.campaigns.campaign_complete import (
     campaign_test_enabled,
     complete_campaign,
     decode_progress,
 )
-from guardian_tales.raid_static import compress, digest
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.bootstrap import GuestStore
 
 
 class CompletedCampaignTests(unittest.TestCase):

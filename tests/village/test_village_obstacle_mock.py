@@ -6,11 +6,11 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.snapshots import CLIENT, preserved_read
-from guardian_tales.village import MAX_REVISION, MAX_TIME, current_village
-from guardian_tales.village import ROUTE as HARVEST
-from guardian_tales.village_obstacle import ROUTE
+from guardian_tales.accounts.snapshots import CLIENT, preserved_read
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.settlement.village import MAX_REVISION, MAX_TIME, current_village
+from guardian_tales.settlement.village import ROUTE as HARVEST
+from guardian_tales.settlement.village_obstacle import ROUTE
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

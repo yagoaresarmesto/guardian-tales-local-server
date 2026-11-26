@@ -7,11 +7,11 @@ import random
 import unittest
 from unittest.mock import patch
 
-from guardian_tales import kamazone_event_effects as effects
-from guardian_tales import kamazone_events as events
-from guardian_tales import kamazone_run as run
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.protocol import PacketError
+from guardian_tales.modes.kamazone import kamazone_event_effects as effects
+from guardian_tales.modes.kamazone import kamazone_events as events
+from guardian_tales.modes.kamazone import kamazone_run as run
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.content import test_kamazone_run as fixtures
 
@@ -364,7 +364,10 @@ class KamazoneEventTests(unittest.TestCase):
         self.session.signed_in = False
         self.reject(events.CHOOSE, dict(NodeId=110, ChoiceId=101))
         self.session.signed_in = True
-        with patch("guardian_tales.kamazone_run.atomic_write", side_effect=OSError("synthetic")):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone_run.atomic_write",
+            side_effect=OSError("synthetic"),
+        ):
             self.reject(events.CHOOSE, dict(NodeId=110, ChoiceId=101))
         self.assertEqual(self.entry()["SilverCoin"], 0)
         self.untouched()
@@ -469,7 +472,10 @@ class KamazoneEventTests(unittest.TestCase):
     def test_equivalent_empty_closures_retry_and_failed_confirm_never_publish_a_reward(self):
         self.open()
         self.choose(104)
-        with patch("guardian_tales.kamazone_run.atomic_write", side_effect=OSError("synthetic")):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone_run.atomic_write",
+            side_effect=OSError("synthetic"),
+        ):
             self.reject(
                 events.CLOSE, dict(NodeId=110, LootArtifactIds=[901], DiscardArtifactIndices=[None])
             )

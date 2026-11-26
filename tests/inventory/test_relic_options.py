@@ -7,13 +7,13 @@ import sqlite3
 import unittest
 from unittest.mock import patch
 
-from guardian_tales.account import AccountStore
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.items import inventory_item
-from guardian_tales.protocol import PacketError
-from guardian_tales.relic_options import APPLY, CHANGE
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import MAX_REVISION, current_village
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.inventory.relic_options import APPLY, CHANGE
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION, current_village
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 
@@ -47,7 +47,9 @@ class RelicOptionTests(VillageFixture, unittest.TestCase):
         self.asset(profile, 70001).update(Amount=0, Spent=-42)
         self.save_profile(profile)
         self.request = {"ItemId": 70, "OptionType": 2}
-        self.draw = patch("guardian_tales.relic_options.randbelow", return_value=0).start()
+        self.draw = patch(
+            "guardian_tales.inventory.relic_options.randbelow", return_value=0
+        ).start()
         self.addCleanup(patch.stopall)
 
     def write_relic_catalog(self):

@@ -3,8 +3,9 @@
 
 from io import BytesIO
 
-from ... import guild_war_static as war
-from ...guild_war import selection_status
+from guardian_tales.modes.guild import guild_war_static as war
+from guardian_tales.modes.guild.guild_war import selection_status
+
 from ..artwork import WAR
 
 

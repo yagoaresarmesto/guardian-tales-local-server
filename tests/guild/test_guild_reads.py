@@ -5,9 +5,9 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests.account.test_snapshots import synthetic_snapshot
 
 ROUTE = "/guild/red-dot"

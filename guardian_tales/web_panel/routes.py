@@ -8,14 +8,14 @@ from functools import partial
 from html import escape
 from pathlib import Path
 
+from guardian_tales.modes.expedition.expedition_levels import LevelSelectionChanged
+from guardian_tales.modes.guild.guild_raid import RaidSelectionChanged
+from guardian_tales.modes.guild.guild_war_static import WarSelectionChanged
+from guardian_tales.modes.guild.punchking_static import ArenaSelectionChanged
+from guardian_tales.modes.kamazone.kamazone import SeasonSelectionChanged
+from guardian_tales.modes.orbital import orbital_boards, orbital_levels
 from guardian_tales.panel_common.views import CSS, DASHBOARD, JS, render_layout
 
-from .. import orbital_boards, orbital_levels
-from ..expedition_levels import LevelSelectionChanged
-from ..guild_raid import RaidSelectionChanged
-from ..guild_war_static import WarSelectionChanged
-from ..kamazone import SeasonSelectionChanged
-from ..punchking_static import ArenaSelectionChanged
 from .artwork import (
     BOSSES,
     CHARACTERS,

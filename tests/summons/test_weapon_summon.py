@@ -10,17 +10,17 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.items import inventory_item
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.village import INT_MAX, MAX_REVISION
-from guardian_tales.weapon_summon import ROUTE, weapon_catalog
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION
+from guardian_tales.summons.weapon_summon import ROUTE, weapon_catalog
 from tests import FIXTURES
 from tests.account.test_snapshots import synthetic_snapshot
 
-RANDOM = "guardian_tales.weapon_summon.secrets.randbelow"
+RANDOM = "guardian_tales.summons.weapon_summon.secrets.randbelow"
 
 
 class WeaponSummonTests(unittest.TestCase):

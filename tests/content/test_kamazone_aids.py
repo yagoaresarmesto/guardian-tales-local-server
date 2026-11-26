@@ -7,10 +7,10 @@ from concurrent.futures import ThreadPoolExecutor
 from threading import Barrier
 from types import SimpleNamespace
 
-from guardian_tales import kamazone_aids as aids
-from guardian_tales import kamazone_run as run
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.protocol import PacketError
+from guardian_tales.modes.kamazone import kamazone_aids as aids
+from guardian_tales.modes.kamazone import kamazone_run as run
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.content import test_kamazone_run as fixtures
 
 

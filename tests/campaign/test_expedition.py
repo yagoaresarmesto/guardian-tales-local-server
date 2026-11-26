@@ -8,8 +8,7 @@ import unittest
 from contextlib import closing
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.expedition import (
+from guardian_tales.modes.expedition.expedition import (
     BEAT,
     CLEAR,
     END,
@@ -22,8 +21,9 @@ from guardian_tales.expedition import (
     TRIAL,
     play_time_ticks,
 )
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request, synthetic_snapshot
 
 

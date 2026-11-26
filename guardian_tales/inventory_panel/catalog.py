@@ -5,9 +5,9 @@ import json
 from functools import lru_cache
 from io import BytesIO
 
-from guardian_tales.head_hunter_static import SOURCE, VARIANT, active_spec
+from guardian_tales.administration.head_hunter_static import SOURCE, VARIANT, active_spec
+from guardian_tales.administration.test_item_static import PIN_ID, active_specs
 from guardian_tales.panel_common.artwork import UI, Atlas
-from guardian_tales.test_item_static import PIN_ID, active_specs
 
 from .equipment import EquipmentDisplay
 from .equipment_ribbons import read_completed_books

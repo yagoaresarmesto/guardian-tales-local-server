@@ -7,12 +7,12 @@ import sqlite3
 import unittest
 from unittest.mock import patch
 
-from guardian_tales.characters import new_character
-from guardian_tales.hero_catalog import growth_tables, warm_growth_tables
-from guardian_tales.hero_limit_break import ROUTE, rules
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, decode, digest
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.heroes.hero_catalog import growth_tables, warm_growth_tables
+from guardian_tales.heroes.hero_limit_break import ROUTE, rules
+from guardian_tales.modes.guild.raid_static import compress, decode, digest
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
 from tests.village.test_village_harvest import VillageFixture
 
 
@@ -63,7 +63,7 @@ class HeroLimitBreakTests(VillageFixture, unittest.TestCase):
     def test_warmed_tables_follow_pack_content_and_still_reject_invalid_records(self):
         growth_tables.cache_clear()
         rules.cache_clear()
-        with patch("guardian_tales.hero_catalog.decode", wraps=decode) as unpack:
+        with patch("guardian_tales.heroes.hero_catalog.decode", wraps=decode) as unpack:
             warm_growth_tables(self.store.references)
             self.assertEqual(self.run_break()["User"]["Assets"][0]["Amount"], 40)
             self.assertEqual(unpack.call_count, 1)

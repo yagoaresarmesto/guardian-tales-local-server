@@ -12,9 +12,9 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from guardian_tales import guild_war
-from guardian_tales import guild_war_static as war
-from guardian_tales.reference import ReferenceData
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.modes.guild import guild_war
+from guardian_tales.modes.guild import guild_war_static as war
 from guardian_tales.web_panel.artwork import WAR
 from guardian_tales.web_panel.server import WebPanel
 from tests.guild.test_guild_raid import synthetic_catalog

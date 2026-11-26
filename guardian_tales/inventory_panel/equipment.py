@@ -4,8 +4,8 @@
 import hashlib
 from bisect import bisect_right
 
+from guardian_tales.inventory.weapon_enhance import load_catalog
 from guardian_tales.panel_common.labels import english_labels
-from guardian_tales.weapon_enhance import load_catalog
 
 from .equipment_ribbons import equipment_ribbons
 from .stack_quantities import CONSUMABLES, HAMMERS

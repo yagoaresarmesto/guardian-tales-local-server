@@ -5,7 +5,8 @@ import hashlib
 import json
 from functools import lru_cache
 
-from ... import guild_raid, raid_custom, raid_static
+from guardian_tales.modes.guild import guild_raid, raid_custom, raid_static
+
 from ..artwork import BOSSES, UI
 
 BOSS_NAMES = {stage: name for name, stage in raid_custom.BOSS_STAGES.items()}

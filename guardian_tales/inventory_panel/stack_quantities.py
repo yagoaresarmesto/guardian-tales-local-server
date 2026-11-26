@@ -1,8 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """Quantity edits for owned stacks, restricted to the active section's catalog types."""
 
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.village import INT_MAX, MAX_REVISION, integer
+from guardian_tales.administration.admin_test_items import save_profile
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION, integer
 
 from .game_save import GameSaveEditor
 

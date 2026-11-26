@@ -7,9 +7,10 @@ import sqlite3
 from contextlib import closing
 from functools import cached_property
 
-from ... import tetis_progress
+from guardian_tales.modes.guild.raid_static import decode, records
+from guardian_tales.modes.tetis import tetis_progress
+
 from ...panel_common.labels import english_labels
-from ...raid_static import decode, records
 from ..artwork import TETIS
 
 

@@ -6,12 +6,12 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.characters import new_character
-from guardian_tales.hero_blessing import ALL, ONE
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.heroes.hero_blessing import ALL, ONE
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
 from tests.village.test_village_harvest import VillageFixture
 
 

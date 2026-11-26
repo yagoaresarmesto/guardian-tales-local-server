@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import GuestStore
+from guardian_tales.runtime.bootstrap import GuestStore
 from tests import FIXTURES
 
 FIXTURE = FIXTURES / "monster_catalog.json"

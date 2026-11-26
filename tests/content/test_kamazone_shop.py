@@ -6,10 +6,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from guardian_tales import kamazone_run as run
-from guardian_tales import kamazone_shop as shop
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.protocol import PacketError
+from guardian_tales.modes.kamazone import kamazone_run as run
+from guardian_tales.modes.kamazone import kamazone_shop as shop
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.content import test_kamazone_run as fixtures
 
@@ -213,7 +213,8 @@ class KamazoneShopTests(unittest.TestCase):
             self.reject(route, body)
             self.session.signed_in = True
             with patch(
-                "guardian_tales.kamazone_run.atomic_write", side_effect=OSError("synthetic")
+                "guardian_tales.modes.kamazone.kamazone_run.atomic_write",
+                side_effect=OSError("synthetic"),
             ):
                 self.reject(route, body)
             if route == run.START:
@@ -281,7 +282,10 @@ class KamazoneShopTests(unittest.TestCase):
         self.session.signed_in = False
         self.reject(shop.BUY, body)
         self.session.signed_in = True
-        with patch("guardian_tales.kamazone_run.atomic_write", side_effect=OSError("synthetic")):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone_run.atomic_write",
+            side_effect=OSError("synthetic"),
+        ):
             self.reject(shop.BUY, body)
         self.assertEqual(self.entry()["SilverCoin"], 1200)
 

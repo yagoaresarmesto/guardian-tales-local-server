@@ -6,10 +6,10 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.items import inventory_item
-from guardian_tales.jewel_socket import ATTACH, DETACH, ROUTE, create_tables
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, digest
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.inventory.jewel_socket import ATTACH, DETACH, ROUTE, create_tables
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.protocol import PacketError
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

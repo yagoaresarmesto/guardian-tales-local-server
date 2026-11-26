@@ -7,7 +7,7 @@ import unittest
 from datetime import timedelta
 from unittest.mock import patch
 
-from guardian_tales import kamazone
+from guardian_tales.modes.kamazone import kamazone
 from guardian_tales.web_panel.kamazone import adapter
 from tests.content import test_kamazone_run as fixtures
 from tests.content.test_kamazone import NOW
@@ -94,7 +94,9 @@ class OldKamazoneTests(unittest.TestCase):
             adapter.apply(self.refs, dict(action=action, revision=state["revision"], **kwargs))
             return adapter.state(self.refs)
 
-        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=2)):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone.utc_now", return_value=NOW + timedelta(days=2)
+        ):
             old = switch("select-old", seasonId=1)
             self.assertEqual((old["seasonId"], self.run.entry()["SeasonId"]), (1, 1))
             self.assertNotEqual(event["period"], old["period"])

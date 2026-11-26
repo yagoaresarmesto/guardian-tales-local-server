@@ -6,7 +6,7 @@ import sqlite3
 import unittest
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import GuestStore
+from guardian_tales.runtime.bootstrap import GuestStore
 from tests import FIXTURES
 
 REFERENCE_DIR = FIXTURES / "reference"

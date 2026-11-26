@@ -4,8 +4,8 @@
 import json
 from datetime import datetime, timezone
 
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import integer
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.settlement.village import integer
 
 from .catalog_grants import CatalogGrants
 from .equipment_options import roll_new_options

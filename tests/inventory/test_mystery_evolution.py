@@ -5,10 +5,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from guardian_tales.items import inventory_item
-from guardian_tales.mystery_evolution import AUTO, MANUAL
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.inventory.mystery_evolution import AUTO, MANUAL
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.village.test_village_harvest import VillageFixture
 
@@ -84,7 +84,7 @@ class MysteryEvolutionTests(VillageFixture, unittest.TestCase):
     def test_auto_evolves_all_four_ranks_in_one_request_and_replays_once(self):
         original = self.store.account.profile()["User"]
         groups = [[base, base + 1, base + 2] for base in (50, 53, 56, 59)]
-        with patch("guardian_tales.mystery_evolution.RANDOM.random", return_value=0.6):
+        with patch("guardian_tales.inventory.mystery_evolution.RANDOM.random", return_value=0.6):
             response = self.auto(groups)
         by_id = {row["Id"]: row for row in response["User"]["ItemWeapons"]}
         for rank, (target, *materials) in enumerate(groups):
@@ -106,7 +106,7 @@ class MysteryEvolutionTests(VillageFixture, unittest.TestCase):
             self.manual(50, [51, 52])
 
     def test_manual_four_star_can_roll_exclusive(self):
-        with patch("guardian_tales.mystery_evolution.RANDOM.random", return_value=0.01):
+        with patch("guardian_tales.inventory.mystery_evolution.RANDOM.random", return_value=0.01):
             response = self.manual(59, [60])
         self.assertTrue(response["Succeeded"])
         target = next(i for i in response["User"]["ItemWeapons"] if i["Id"] == 59)
@@ -116,13 +116,15 @@ class MysteryEvolutionTests(VillageFixture, unittest.TestCase):
 
     def test_failed_roll_is_replayed_even_after_another_request(self):
         original = self.store.account.profile()["User"]
-        with patch("guardian_tales.mystery_evolution.RANDOM.random", return_value=0.99):
+        with patch("guardian_tales.inventory.mystery_evolution.RANDOM.random", return_value=0.99):
             failed = self.manual(59, [60])
             self.assertFalse(failed["Succeeded"])
             self.assertEqual(failed["User"]["ItemWeapons"], original["ItemWeapons"])
             self.assertEqual(failed["User"]["Assets"], original["Assets"])
             later = self.manual(50, [51, 52], 52)
-        with patch("guardian_tales.mystery_evolution.RANDOM.random", side_effect=AssertionError):
+        with patch(
+            "guardian_tales.inventory.mystery_evolution.RANDOM.random", side_effect=AssertionError
+        ):
             replay = self.manual(59, [60])
         self.assertFalse(replay["Succeeded"])
         self.assertEqual(replay["User"], later["User"])

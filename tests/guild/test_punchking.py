@@ -14,17 +14,25 @@ from http.client import HTTPConnection
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.guild_raid import CATALOG as RAID_CATALOG
-from guardian_tales.guild_raid import SELECTION_LOCK, select_season
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.punchking import CATALOG, END, ENTRY, RANKINGS, SELECTION, START, main
-from guardian_tales.punchking_static import bootstrap_override, load_selection, select
-from guardian_tales.raid_panel import RaidPanel
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.snapshots import CLIENT, import_snapshot
-from guardian_tales.state_lock import StateLock
+from guardian_tales.accounts.snapshots import CLIENT, import_snapshot
+from guardian_tales.modes.guild.guild_raid import CATALOG as RAID_CATALOG
+from guardian_tales.modes.guild.guild_raid import SELECTION_LOCK, select_season
+from guardian_tales.modes.guild.punchking import (
+    CATALOG,
+    END,
+    ENTRY,
+    RANKINGS,
+    SELECTION,
+    START,
+    main,
+)
+from guardian_tales.modes.guild.punchking_static import bootstrap_override, load_selection, select
+from guardian_tales.modes.guild.raid_panel import RaidPanel
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
+from guardian_tales.runtime.state_lock import StateLock
 from tests.account.test_snapshots import synthetic_snapshot
 from tests.guild.test_guild_raid import synthetic_catalog, synthetic_static
 
@@ -36,8 +44,8 @@ class PunchkingTests(unittest.TestCase):
         self.root = Path(self.tmp.name)
         self.now = datetime(2026, 11, 18, 12, tzinfo=timezone.utc)
         for target in (
-            "guardian_tales.punchking.utc_now",
-            "guardian_tales.punchking_static.utc_now",
+            "guardian_tales.modes.guild.punchking.utc_now",
+            "guardian_tales.modes.guild.punchking_static.utc_now",
         ):
             clock = patch(target, return_value=self.now)
             clock.start()
@@ -370,8 +378,8 @@ class PunchkingTests(unittest.TestCase):
         selection = select(self.refs, 3, 7)
         tomorrow = self.now + timedelta(days=1)
         with (
-            patch("guardian_tales.punchking_static.utc_now", return_value=tomorrow),
-            patch("guardian_tales.punchking.utc_now", return_value=tomorrow),
+            patch("guardian_tales.modes.guild.punchking_static.utc_now", return_value=tomorrow),
+            patch("guardian_tales.modes.guild.punchking.utc_now", return_value=tomorrow),
         ):
             self.reject(ENTRY, {"IsPartial": True})
             reply = self.call(

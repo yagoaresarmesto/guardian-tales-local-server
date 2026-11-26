@@ -7,7 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import GuestStore
+from guardian_tales.runtime.bootstrap import GuestStore
 from tests import FIXTURES
 
 
@@ -152,7 +152,7 @@ class CompletionCatalogTests(unittest.TestCase):
 
 class NativeMapInteractionTests(unittest.TestCase):
     def setUp(self):
-        from guardian_tales.raid_static import compress, digest
+        from guardian_tales.modes.guild.raid_static import compress, digest
 
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

@@ -5,8 +5,8 @@ import hashlib
 from collections import OrderedDict
 from threading import Lock
 
-from guardian_tales.andras_trial_static import read_binary_rows
-from guardian_tales.raid_custom import binary_name_hash
+from guardian_tales.administration.andras_trial_static import read_binary_rows
+from guardian_tales.modes.guild.raid_custom import binary_name_hash
 
 _lookups = OrderedDict()
 _lock = Lock()

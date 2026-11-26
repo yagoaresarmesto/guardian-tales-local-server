@@ -6,8 +6,8 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.presets import MAX_REVISION, current_group
-from guardian_tales.snapshots import CLIENT, preserved_read
+from guardian_tales.accounts.snapshots import CLIENT, preserved_read
+from guardian_tales.teams.presets import MAX_REVISION, current_group
 from tests.teams.test_preset_edit import PresetFixture
 
 
@@ -179,7 +179,7 @@ class PresetCreateTests(PresetFixture, unittest.TestCase):
         self.assertEqual(list(self.db.iterdump()), before)
 
     def test_creation_requires_authentication_and_existing_order_cannot_be_changed(self):
-        from guardian_tales.bootstrap import BootstrapSession
+        from guardian_tales.runtime.bootstrap import BootstrapSession
 
         self.session = BootstrapSession(self.store)
         self.reject_without_writes(self.new_body())

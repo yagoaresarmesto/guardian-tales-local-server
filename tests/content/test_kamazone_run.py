@@ -7,9 +7,9 @@ import unittest
 from datetime import timedelta
 from unittest.mock import patch
 
-from guardian_tales import kamazone_run as run
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.protocol import PacketError
+from guardian_tales.modes.kamazone import kamazone_run as run
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.content import test_kamazone_practice as fixtures
 from tests.content.test_kamazone import NOW
@@ -345,7 +345,9 @@ class KamazoneRunTests(unittest.TestCase):
         with self.assertRaises(PacketError):
             self.challenge()
         self.session.signed_in = True
-        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=22)):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone.utc_now", return_value=NOW + timedelta(days=22)
+        ):
             with self.assertRaises(PacketError):
                 self.challenge()
         self.owner.command("disable")

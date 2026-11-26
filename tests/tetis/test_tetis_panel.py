@@ -10,8 +10,8 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from guardian_tales.raid_static import compress, digest, record_bytes
-from guardian_tales.reference import ReferenceData
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.modes.guild.raid_static import compress, digest, record_bytes
 from guardian_tales.web_panel.server import WebPanel
 from guardian_tales.web_panel.tetis import sprites
 from tests.tetis.test_tetis_progress import catalog_data

@@ -11,11 +11,11 @@ from urllib.parse import urlsplit
 
 from guardian_tales.inventory_panel.application import InventoryApplication
 from guardian_tales.inventory_panel.http import InventoryHandler
+from guardian_tales.modes.orbital import orbital_boards
+from guardian_tales.modes.orbital.orbital import LAST_SELECTABLE_FLOOR
 from guardian_tales.panel_common.services import service_request
 from guardian_tales.panel_common.views import HTML
 
-from .. import orbital_boards
-from ..orbital import LAST_SELECTABLE_FLOOR
 from .orbital_lift import tower
 from .orbital_lift.adapter import OrbitalEditor
 from .routes import API, FILES, PAGES, media_resource, render_page

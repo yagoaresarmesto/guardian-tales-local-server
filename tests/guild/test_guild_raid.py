@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.guild_raid import (
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.modes.guild.guild_raid import (
     BATTLE_STATUS,
     BOSS_RECORDS,
     CATALOG,
@@ -33,10 +33,10 @@ from guardian_tales.guild_raid import (
     select_season,
     selected_season,
 )
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.snapshots import CLIENT
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests.account.test_snapshots import request, synthetic_snapshot
 
 
@@ -204,7 +204,7 @@ class GuildRaidTests(unittest.TestCase):
             self.assert_rejected({"IsPartial": False})
 
     @patch(
-        "guardian_tales.guild_raid.utc_now",
+        "guardian_tales.modes.guild.guild_raid.utc_now",
         return_value=datetime(2026, 11, 18, 23, 59, tzinfo=timezone.utc),
     )
     def test_native_menu_reply_has_scalar_score_no_rewards_and_only_partial_raid_resource(
@@ -329,7 +329,7 @@ class GuildRaidTests(unittest.TestCase):
                 raise OSError("synthetic selection publication failure")
             return original_replace(source, destination)
 
-        with patch("guardian_tales.guild_raid.os.replace", side_effect=fail_selection):
+        with patch("guardian_tales.modes.guild.guild_raid.os.replace", side_effect=fail_selection):
             with self.assertRaises(OSError):
                 select_season(self.references, 2)
         self.assertEqual((self.root / SELECTION).read_bytes(), original)

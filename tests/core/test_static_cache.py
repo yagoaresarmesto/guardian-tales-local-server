@@ -12,10 +12,12 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from guardian_tales import account_costs_static, expedition
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.static_cache import StaticCache, prepare_static
+from guardian_tales.accounts import account_costs_static
+from guardian_tales.content import static_cache
+from guardian_tales.content.static_cache import StaticCache, prepare_static
+from guardian_tales.modes.expedition import expedition
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
 from tests.account.test_snapshots import request
 
 
@@ -91,12 +93,29 @@ class StaticCacheTests(unittest.TestCase):
             )
 
     def test_builder_revision_invalidates_disk_entry(self):
-        with patch("guardian_tales.static_cache._implementation", return_value=b"previous"):
-            initial = self.prepare(b"base")
-        with patch("guardian_tales.static_cache._implementation", return_value=b"current"):
-            self.assertEqual(self.prepare(b"base"), initial)
-            self.assertEqual(self.prepare(b"base"), initial)
+        package = self.root / "package"
+        mode = package / "modes" / "guild"
+        mode.mkdir(parents=True)
+        builder = mode / "rules.py"
+        builder.write_text("LIMIT = 1\n")
+        self.enterContext(patch.object(static_cache, "PACKAGE_ROOT", package))
+        self.addCleanup(static_cache._implementation.cache_clear)
+
+        def restart():
+            static_cache._implementation.cache_clear()
+            return self.prepare(b"base")
+
+        initial = restart()
+        (mode / "panel.css").write_text("body {}")
+        self.assertEqual(restart(), initial)
+        self.assertEqual(self.calls, 1)
+        builder.write_text("LIMIT = 2\n")
+        self.assertEqual(restart(), initial)
         self.assertEqual(self.calls, 2)
+        builder.rename(mode.parent / builder.name)
+        self.assertEqual(restart(), initial)
+        self.assertEqual(restart(), initial)
+        self.assertEqual(self.calls, 3)
 
     def test_unavailable_cache_is_optional_and_render_errors_propagate(self):
         self.cache.write_bytes(b"occupied")

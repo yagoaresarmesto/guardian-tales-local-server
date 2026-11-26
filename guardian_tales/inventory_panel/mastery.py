@@ -5,16 +5,16 @@ import hashlib
 import json
 from functools import cached_property
 
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.mastery import (
+from guardian_tales.administration.admin_test_items import save_profile
+from guardian_tales.modes.guild.raid_static import decode, records
+from guardian_tales.settlement.mastery import (
     MASTERY_POINTS,
     class_limits,
     invested_points,
     load_catalog,
     saved_mastery,
 )
-from guardian_tales.raid_static import decode, records
-from guardian_tales.village import INT_MAX, MAX_REVISION, current_village, integer
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION, current_village, integer
 
 from .game_save import GameSaveEditor
 

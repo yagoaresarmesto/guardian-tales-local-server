@@ -10,11 +10,18 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.snapshots import CLIENT, import_snapshot, preserved_read
-from guardian_tales.village import GOLD, INT_MAX, MAX_REVISION, ROUTE, SOUL_POINTS, current_village
+from guardian_tales.accounts.snapshots import CLIENT, import_snapshot, preserved_read
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
+from guardian_tales.settlement.village import (
+    GOLD,
+    INT_MAX,
+    MAX_REVISION,
+    ROUTE,
+    SOUL_POINTS,
+    current_village,
+)
 from tests.account.test_snapshots import synthetic_snapshot
 
 NOW = 1800000000
@@ -126,7 +133,7 @@ class VillageFixture:
                 Packet(0, json.dumps(body).encode(), body_type=1, api=route, sequence_id=sequence)
             )
         )
-        with patch("guardian_tales.village.time.time", return_value=now):
+        with patch("guardian_tales.settlement.village.time.time", return_value=now):
             return read_json_body(parse_packet(encode_packet(self.session.handle(request))))
 
     def asset(self, profile, item):

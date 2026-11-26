@@ -11,9 +11,9 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.admin import MAX_USER_REVISION, gem_history, grant_gems
-from guardian_tales.bootstrap import GuestStore
-from guardian_tales.snapshots import import_snapshot
+from guardian_tales.accounts.snapshots import import_snapshot
+from guardian_tales.administration.admin import MAX_USER_REVISION, gem_history, grant_gems
+from guardian_tales.runtime.bootstrap import GuestStore
 from tests.account.test_snapshots import synthetic_snapshot
 
 

@@ -3,11 +3,11 @@
 
 import json
 
-from guardian_tales.item_lock import set_item_protection
-from guardian_tales.item_sell import EQUIPMENT_FIELDS, gear_slots, remove_owned_items
-from guardian_tales.jewel_upgrade import owned_inventory, return_one_jewel
-from guardian_tales.snapshots import PRESET_OVERLAYS, preserved_read
-from guardian_tales.village import MAX_REVISION, integer
+from guardian_tales.accounts.snapshots import PRESET_OVERLAYS, preserved_read
+from guardian_tales.inventory.item_lock import set_item_protection
+from guardian_tales.inventory.item_sell import EQUIPMENT_FIELDS, gear_slots, remove_owned_items
+from guardian_tales.inventory.jewel_upgrade import owned_inventory, return_one_jewel
+from guardian_tales.settlement.village import MAX_REVISION, integer
 
 from .game_save import GameSaveEditor
 

@@ -6,9 +6,9 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import read_json_body
-from guardian_tales.presets import current_group
-from guardian_tales.protocol import Packet, decode_frame, encode_wire
+from guardian_tales.runtime.bootstrap import read_json_body
+from guardian_tales.runtime.protocol import Packet, decode_frame, encode_wire
+from guardian_tales.teams.presets import current_group
 from tests.teams.test_preset_edit import PresetFixture
 
 

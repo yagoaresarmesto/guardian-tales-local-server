@@ -12,12 +12,12 @@ from contextlib import closing
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.account import AccountStore
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.snapshots import CLIENT, FORMAT, import_snapshot, load_snapshot
-from guardian_tales.state_lock import StateLock
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.accounts.snapshots import CLIENT, FORMAT, import_snapshot, load_snapshot
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
+from guardian_tales.runtime.state_lock import StateLock
 from tests import FIXTURES
 
 
@@ -265,9 +265,11 @@ class SnapshotTests(unittest.TestCase):
     def test_catalog_startup_does_not_unlock_or_change_an_imported_profile(self):
         import_snapshot(self.source, self.state)
         with closing(sqlite3.connect(self.state / "server.sqlite3")) as db:
-            with patch("guardian_tales.account.load_story_catalog", return_value={"synthetic": {}}):
+            with patch(
+                "guardian_tales.accounts.account.load_story_catalog", return_value={"synthetic": {}}
+            ):
                 with patch(
-                    "guardian_tales.account.open_eligible_stages",
+                    "guardian_tales.accounts.account.open_eligible_stages",
                     side_effect=AssertionError("unexpected progress mutation"),
                 ):
                     store = GuestStore(db)
@@ -489,7 +491,8 @@ class SnapshotTests(unittest.TestCase):
 
     def test_failed_publication_does_not_leave_a_partial_account(self):
         with patch(
-            "guardian_tales.snapshots.os.link", side_effect=OSError("synthetic publication failure")
+            "guardian_tales.accounts.snapshots.os.link",
+            side_effect=OSError("synthetic publication failure"),
         ):
             with self.assertRaises(OSError):
                 import_snapshot(self.source, self.state)

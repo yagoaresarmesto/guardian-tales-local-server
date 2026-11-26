@@ -9,11 +9,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.snapshots import CLIENT, import_snapshot
+from guardian_tales.accounts.snapshots import CLIENT, import_snapshot
+from guardian_tales.modes.orbital.orbital import ORBITAL_ENTRY_ROUTE, ORBITAL_EXIT_ROUTE
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests.account.test_snapshots import synthetic_snapshot
 
 

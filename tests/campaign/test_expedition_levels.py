@@ -15,17 +15,17 @@ from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 from guardian_tales.__main__ import main
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.expedition import TRIAL
-from guardian_tales.expedition_levels import (
+from guardian_tales.modes.expedition.expedition import TRIAL
+from guardian_tales.modes.expedition.expedition_levels import (
     MAX_CONFIG_BYTES,
     SELECTION,
     catalog,
     load_levels,
     prepare,
 )
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.protocol import PacketError
 from guardian_tales.web_panel.expedition import artwork, world_map
 from guardian_tales.web_panel.routes import media_resource
 from guardian_tales.web_panel.server import WebPanel
@@ -334,7 +334,7 @@ class ExpeditionLevelTests(unittest.TestCase):
         before, changes = list(self.db.iterdump()), self.db.total_changes
         self.db.execute("PRAGMA query_only=ON")
         with patch(
-            "guardian_tales.test_item_static.active_specs",
+            "guardian_tales.administration.test_item_static.active_specs",
             return_value=(
                 json.dumps({"Id": 9990003, "Name": "existing_private_pin", "Defense": 10000}),
             ),
@@ -423,7 +423,8 @@ class ExpeditionLevelTests(unittest.TestCase):
         self.cli("set-level", "--stage", str(STAGE), "--level", "130")
         before = {p.name: p.read_bytes() for p in self.root.iterdir()}
         with patch(
-            "guardian_tales.expedition_levels.atomic_replace", side_effect=OSError("disk failure")
+            "guardian_tales.modes.expedition.expedition_levels.atomic_replace",
+            side_effect=OSError("disk failure"),
         ):
             self.reject_cli("set-level", "--stage", str(STAGE), "--level", "120")
         self.assertEqual({p.name: p.read_bytes() for p in self.root.iterdir()}, before)
@@ -531,7 +532,8 @@ class ExpeditionLevelTests(unittest.TestCase):
             self.reject_cli(*args)
         self.assertEqual((self.root / SELECTION).read_bytes(), before)
         with patch(
-            "guardian_tales.expedition_levels.atomic_replace", side_effect=OSError("disk failure")
+            "guardian_tales.modes.expedition.expedition_levels.atomic_replace",
+            side_effect=OSError("disk failure"),
         ):
             self.reject_cli("set-level", "--all", "--level", "220")
         self.assertEqual((self.root / SELECTION).read_bytes(), before)

@@ -8,8 +8,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.colosseum import (
+from guardian_tales.modes.colosseum import (
     BATTLE_INFOS,
     BATTLE_RECORDS,
     DEFENSE_PARTY,
@@ -26,9 +25,10 @@ from guardian_tales.colosseum import (
     SET_DEFENSE_PRESET,
     START,
 )
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.raid_static import compress, digest
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests.account.test_snapshots import synthetic_snapshot
 
 

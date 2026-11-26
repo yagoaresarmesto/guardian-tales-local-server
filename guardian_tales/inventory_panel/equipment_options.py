@@ -6,11 +6,11 @@ import json
 import math
 from random import SystemRandom
 
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.item_sell import gear_references
-from guardian_tales.village import MAX_REVISION, integer
-from guardian_tales.weapon_enhance import unlocked_weapon_level
-from guardian_tales.weapon_options import valid_options
+from guardian_tales.administration.admin_test_items import save_profile
+from guardian_tales.inventory.item_sell import gear_references
+from guardian_tales.inventory.weapon_enhance import unlocked_weapon_level
+from guardian_tales.inventory.weapon_options import valid_options
+from guardian_tales.settlement.village import MAX_REVISION, integer
 
 from .game_save import GameSaveEditor
 from .stack_quantities import HAMMERS, StackQuantityEditor

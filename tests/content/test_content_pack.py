@@ -9,7 +9,13 @@ import zipfile
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.content_pack import CORE_REFERENCES, INITIAL_ZIP, build, check, import_pack
+from guardian_tales.content.content_pack import (
+    CORE_REFERENCES,
+    INITIAL_ZIP,
+    build,
+    check,
+    import_pack,
+)
 
 
 class ContentPackTests(unittest.TestCase):
@@ -61,7 +67,7 @@ class ContentPackTests(unittest.TestCase):
         return build(self.reference, [self.root], self.release, "synthetic-content")
 
     def test_build_import_and_check_expand_archives_without_private_state(self):
-        with patch("guardian_tales.content_pack.MAX_PART_BYTES", 1600):
+        with patch("guardian_tales.content.content_pack.MAX_PART_BYTES", 1600):
             manifest = self.prepare()
         self.assertGreater(len(manifest["parts"]), 1)
         self.assertNotIn("reference/new_guest_profile.json", manifest["payload"])

@@ -4,10 +4,10 @@
 import json
 from threading import Lock
 
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.item_sell import gear_references
-from guardian_tales.relic_options import target_item
-from guardian_tales.village import MAX_REVISION, integer
+from guardian_tales.administration.admin_test_items import save_profile
+from guardian_tales.inventory.item_sell import gear_references
+from guardian_tales.inventory.relic_options import target_item
+from guardian_tales.settlement.village import MAX_REVISION, integer
 
 from .game_save import GameSaveEditor
 

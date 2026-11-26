@@ -8,7 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from guardian_tales.android_bridge import (
+from guardian_tales.runtime.android_bridge import (
     Bridge,
     Device,
     identity,
@@ -16,7 +16,7 @@ from guardian_tales.android_bridge import (
     serial,
     staging_path,
 )
-from guardian_tales.client_cert import generate
+from guardian_tales.runtime.client_cert import generate
 
 
 class AndroidBridgeTests(unittest.TestCase):
@@ -45,7 +45,7 @@ class AndroidBridgeTests(unittest.TestCase):
             device = Device("synthetic.exe", 4, "Synthetic test")
         with (
             patch.object(device, "info", return_value={**info, "created_timestamp": 456}),
-            patch("guardian_tales.android_bridge.command") as run,
+            patch("guardian_tales.runtime.android_bridge.command") as run,
         ):
             with self.assertRaises(ValueError):
                 device.adb("shell", "id")
@@ -69,7 +69,7 @@ class AndroidBridgeTests(unittest.TestCase):
             with (
                 self.subTest(value=value),
                 patch.object(Device, "info", return_value=self.info()),
-                patch("guardian_tales.android_bridge.command", return_value=result) as run,
+                patch("guardian_tales.runtime.android_bridge.command", return_value=result) as run,
             ):
                 device = Device("synthetic.exe", 4, "Synthetic test")
                 if value in ("true", "false"):
@@ -161,7 +161,7 @@ class AndroidBridgeTests(unittest.TestCase):
                     bridge = Bridge(device, folder, folder, 18081)
                     with (
                         patch(
-                            "guardian_tales.android_bridge.command", side_effect=adb_command
+                            "guardian_tales.runtime.android_bridge.command", side_effect=adb_command
                         ) as run,
                         patch.object(device, "set_root") as setting,
                     ):
@@ -200,7 +200,7 @@ class AndroidBridgeTests(unittest.TestCase):
                 bridge = Bridge(device, folder, folder, 18081)
                 with (
                     patch(
-                        "guardian_tales.android_bridge.command",
+                        "guardian_tales.runtime.android_bridge.command",
                         side_effect=RuntimeError("ADB unavailable"),
                     ),
                     patch.object(device, "set_root") as setting,

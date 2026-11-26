@@ -6,12 +6,12 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.expedition import TRIAL
-from guardian_tales.items import inventory_item
-from guardian_tales.multi_presets import DELETE, REORDER, SAVE, current_group, delete
-from guardian_tales.presets import GEAR_FIELDS, MAX_REVISION
-from guardian_tales.protocol import PacketError
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.modes.expedition.expedition import TRIAL
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.teams.multi_presets import DELETE, REORDER, SAVE, current_group, delete
+from guardian_tales.teams.presets import GEAR_FIELDS, MAX_REVISION
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

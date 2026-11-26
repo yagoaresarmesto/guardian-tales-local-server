@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.classic_coop import CREATE, END, LEAVE, MARKER, STAGE_ID, START
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
+from guardian_tales.modes.classic_coop import CREATE, END, LEAVE, MARKER, STAGE_ID, START
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 
 
 class ClassicCoopTests(unittest.TestCase):

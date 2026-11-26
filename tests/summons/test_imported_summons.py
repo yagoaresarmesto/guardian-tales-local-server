@@ -10,12 +10,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.characters import new_character
-from guardian_tales.items import inventory_item
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.snapshots import import_snapshot
+from guardian_tales.accounts.snapshots import import_snapshot
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests import FIXTURES
 from tests.account.test_snapshots import synthetic_snapshot
 
@@ -96,7 +96,7 @@ class ImportedSummonTests(unittest.TestCase):
 
     def draw_unique(self, body, sequence=31):
         with patch(
-            "guardian_tales.summon_draw.secrets.randbelow",
+            "guardian_tales.summons.summon_draw.secrets.randbelow",
             side_effect=lambda bound: 99 if bound == 100 else 0,
         ):
             return self.call("/summon/select-character", body, sequence)
@@ -136,7 +136,7 @@ class ImportedSummonTests(unittest.TestCase):
         before = self.store.account.profile()
         before["User"]["ItemStackables"][0]["Amount"] = 10
         self.save(before)
-        with patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0):
             response = self.call("/summon/select-character", {"Count": 10, "SummonCostType": 3})
         after = self.store.account.profile()
         self.assertEqual(after["User"]["ItemStackables"], before["User"]["ItemStackables"][1:])

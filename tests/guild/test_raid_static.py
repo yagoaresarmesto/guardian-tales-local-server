@@ -14,23 +14,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.guild_raid import (
+from guardian_tales.modes.guild.guild_raid import (
     CATALOG,
     SELECTION,
     load_selection,
     select_season,
     selected_season,
 )
-from guardian_tales.packet_reader import MAX_PACKET, PacketError, lz4_block
-from guardian_tales.raid_custom import (
+from guardian_tales.modes.guild.raid_custom import (
     SANDY_CARRYOVER_EVENT,
     SANDY_CARRYOVER_MARKER,
     append_binary_monsters,
     parse_lineup,
     use_local_presentation,
 )
-from guardian_tales.raid_static import (
+from guardian_tales.modes.guild.raid_static import (
     LOCAL_FROM,
     LOCAL_TO,
     MAX_STATIC,
@@ -42,6 +40,8 @@ from guardian_tales.raid_static import (
     records,
     source_tables,
 )
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.packet_reader import MAX_PACKET, PacketError, lz4_block
 from tests.account.test_snapshots import request
 from tests.guild.test_guild_raid import synthetic_catalog, synthetic_static
 
@@ -78,7 +78,7 @@ class RaidStaticTests(unittest.TestCase):
     def test_stock_readers_share_only_verified_immutable_tables_for_identical_bytes(self):
         source_tables.cache_clear()
         self.addCleanup(source_tables.cache_clear)
-        with patch("guardian_tales.raid_static.decode", wraps=decode) as unpack:
+        with patch("guardian_tales.modes.guild.raid_static.decode", wraps=decode) as unpack:
             tables = source_tables(self.original)
             self.assertIs(tables, source_tables(self.source.read_bytes()))
             unpack.assert_called_once()
@@ -115,8 +115,10 @@ class RaidStaticTests(unittest.TestCase):
             return original_replace(source, destination)
 
         with (
-            patch("guardian_tales.raid_static.os.replace", side_effect=temporarily_locked),
-            patch("guardian_tales.raid_static.time.sleep"),
+            patch(
+                "guardian_tales.modes.guild.raid_static.os.replace", side_effect=temporarily_locked
+            ),
+            patch("guardian_tales.modes.guild.raid_static.time.sleep"),
         ):
             atomic_replace(staged, target)
         self.assertEqual(len(attempts), 3)
@@ -131,8 +133,10 @@ class RaidStaticTests(unittest.TestCase):
             error = PermissionError("synthetic filesystem refusal")
             error.winerror = winerror
             with (
-                patch("guardian_tales.raid_static.os.replace", side_effect=error) as replace,
-                patch("guardian_tales.raid_static.time.sleep"),
+                patch(
+                    "guardian_tales.modes.guild.raid_static.os.replace", side_effect=error
+                ) as replace,
+                patch("guardian_tales.modes.guild.raid_static.time.sleep"),
             ):
                 with self.assertRaises(PermissionError):
                     atomic_replace(staged, target)
@@ -355,7 +359,9 @@ class RaidStaticTests(unittest.TestCase):
         first = struct.pack("<IQHH", 100627, 15360224650640053314, 0, len(original))
         source = header + first + struct.pack("<H", len(stock_block)) + b"\0\0" + stock_block
         variant = {"Id": 799999, "Name": "boss_sandmonster_guild_0", "ElementalType": "Light"}
-        with patch("guardian_tales.raid_custom.binary_name_hash", return_value=42) as hash_name:
+        with patch(
+            "guardian_tales.modes.guild.raid_custom.binary_name_hash", return_value=42
+        ) as hash_name:
             updated = base64.b64decode(append_binary_monsters(base64.b64encode(source), [variant]))
         hash_name.assert_called_once_with(variant["Name"])
         self.assertEqual(struct.unpack_from("<4sIII", updated), (b"k1ng", 1, 2, 2))
@@ -463,7 +469,7 @@ class RaidStaticTests(unittest.TestCase):
     def test_static_native_decoder_obeys_the_same_validation_and_legacy_fallback(self):
         codec = Mock(LZ4BlockError=ValueError)
         literal = compress(b"plain")
-        with patch("guardian_tales.raid_static.native_lz4", codec):
+        with patch("guardian_tales.modes.guild.raid_static.native_lz4", codec):
             codec.decompress.return_value = b"plain"
             self.assertEqual(decode(literal), b"plain")
             codec.decompress.assert_called_once_with(literal[:-4], uncompressed_size=5)
@@ -480,7 +486,7 @@ class RaidStaticTests(unittest.TestCase):
             # A distance-one match at EOF is accepted by the original reader.
             legacy = b"\x10a\x01\x00" + struct.pack("<I", 5)
             self.assertEqual(decode(legacy), b"aaaaa")
-        with patch("guardian_tales.raid_static.native_lz4", None):
+        with patch("guardian_tales.modes.guild.raid_static.native_lz4", None):
             self.assertEqual(decode(legacy), b"aaaaa")
             self.assertEqual(decode(literal), b"plain")
 
@@ -497,7 +503,8 @@ class RaidStaticTests(unittest.TestCase):
         self.assertIsNotNone(bootstrap_override(self.ref, "static_data_get.bin", {}))
         selected = (self.root / SELECTION).read_bytes()
         with patch(
-            "guardian_tales.raid_static.os.replace", side_effect=OSError("synthetic failure")
+            "guardian_tales.modes.guild.raid_static.os.replace",
+            side_effect=OSError("synthetic failure"),
         ):
             with self.assertRaises(OSError):
                 select_season(self.ref, 2)

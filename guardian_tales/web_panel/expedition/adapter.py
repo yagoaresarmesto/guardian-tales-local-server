@@ -1,8 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
 """Expose the solo Expedition level commands to the local panel."""
 
-from ...expedition_levels import level_settings
-from ...village import integer
+from guardian_tales.modes.expedition.expedition_levels import level_settings
+from guardian_tales.settlement.village import integer
+
 from ..artwork import EXPEDITION
 from .world_map import WORLD
 

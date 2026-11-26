@@ -10,12 +10,12 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.village import MAX_REVISION
-from guardian_tales.weapon_selection import ROUTE
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
+from guardian_tales.settlement.village import MAX_REVISION
+from guardian_tales.summons.weapon_selection import ROUTE
 from tests import FIXTURES
 from tests.account.test_snapshots import synthetic_snapshot
 
@@ -294,7 +294,9 @@ class WeaponSelectionTests(unittest.TestCase):
     def test_wishlist_drives_subsequent_draws_and_selection_itself_spends_nothing(self):
         self.call({"RequestItemIds": [501, 502, 503, 504, 506]})
         before = self.store.account.profile()
-        with patch("guardian_tales.weapon_summon.secrets.randbelow", side_effect=lambda n: n - 1):
+        with patch(
+            "guardian_tales.summons.weapon_summon.secrets.randbelow", side_effect=lambda n: n - 1
+        ):
             reply = self.call(
                 {"Count": 1, "SummonCostType": 5}, route="/summon/select-weapon", sequence=1002
             )

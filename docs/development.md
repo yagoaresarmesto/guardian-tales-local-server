@@ -1,5 +1,8 @@
 # Development and GitHub preparation
 
+Use the [package map](architecture.md#package-map) to find the backend code for a
+feature and the [test guide](../tests/README.md) to find its regression tests.
+
 ## Run tests
 
 Generate local TLS files once, then run from the repository root:

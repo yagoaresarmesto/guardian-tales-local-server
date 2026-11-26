@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.characters import new_character
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests import FIXTURES
 
 FIXTURE = FIXTURES / "summon_draw_catalog.json"
@@ -61,7 +61,7 @@ class SummonDrawTests(unittest.TestCase):
 
     def test_ticket_ten_draws_commit_one_new_hero_duplicates_mileage_and_free_retry(self):
         expected = self.account.profile()
-        with patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0):
             response = self.draw()
         expected["User"]["ItemStackables"][0]["Amount"] = 10
         expected["User"]["Characters"].append(new_character(2, 301))
@@ -99,7 +99,8 @@ class SummonDrawTests(unittest.TestCase):
 
     def test_free_gem_one_and_ten_costs_unique_wishlist_pool_and_duplicate_crystals(self):
         with patch(
-            "guardian_tales.summon_draw.secrets.randbelow", side_effect=lambda bound: bound - 1
+            "guardian_tales.summons.summon_draw.secrets.randbelow",
+            side_effect=lambda bound: bound - 1,
         ):
             one = self.draw({"Count": 1, "SummonCostType": 0}, "one")
             ten = self.draw({"Count": 10, "SummonCostType": 0}, "ten")
@@ -123,7 +124,7 @@ class SummonDrawTests(unittest.TestCase):
         def choose(bound):
             return 99 if bound == 100 else 0
 
-        with patch("guardian_tales.summon_draw.secrets.randbelow", side_effect=choose):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", side_effect=choose):
             response = self.draw({"Count": 1, "SummonCostType": 3})
         r = response["Summons"][0]
         self.assertEqual((r["ItemId"], r["SpecId"], r["State"], r["StateValue"]), (2, 101, 2, 50))
@@ -180,7 +181,7 @@ class SummonDrawTests(unittest.TestCase):
         next(a for a in before["User"]["Assets"] if a["Id"] == 70009)["Amount"] = 0x7FFFFFFF
         self.save(before)
         with (
-            patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0),
+            patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0),
             self.assertRaises(ValueError),
         ):
             self.draw()
@@ -193,7 +194,7 @@ class SummonDrawTests(unittest.TestCase):
         )
         self.db.commit()
         with (
-            patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0),
+            patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0),
             self.assertRaises(sqlite3.IntegrityError),
         ):
             self.draw()
@@ -204,7 +205,7 @@ class SummonDrawTests(unittest.TestCase):
 
     def test_receipt_conflicts_and_replays_return_current_state_without_restoring_it(self):
         body = {"Count": 1, "SummonCostType": 3}
-        with patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0):
             original = self.draw(body)
         p = self.account.profile()
         next(a for a in p["User"]["Assets"] if a["Id"] == 70003)["Amount"] -= 1
@@ -222,7 +223,7 @@ class SummonDrawTests(unittest.TestCase):
         p["User"]["ItemStackables"].append({"Id": 5, "ItemId": 110007, "Amount": 6})
         p["User"]["ItemIdCounter"] = 5
         self.save(p)
-        with patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0):
             self.draw()
         self.assertEqual(
             self.account.profile()["User"]["ItemStackables"],
@@ -232,7 +233,7 @@ class SummonDrawTests(unittest.TestCase):
     def test_selectable_ticket_single_uses_only_its_own_stack_and_retries_for_free(self):
         before = self.account.profile()
         body = {"Count": 1, "SummonCostType": 5}
-        with patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0):
             response = self.draw(body)
         saved = self.account.profile()
         self.assertEqual(saved["User"]["ItemStackables"][0], before["User"]["ItemStackables"][0])
@@ -261,7 +262,7 @@ class SummonDrawTests(unittest.TestCase):
                 {"AuthKind": 0, "AccessToken": "local-test", "Reconnect": False}, "/auth/sign-in", 3
             )
         )
-        with patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0):
             first = read_json_body(parse_packet(encode_packet(session.handle(request))))
         saved = self.account.profile()
         reconnected = BootstrapSession(self.store)
@@ -279,7 +280,7 @@ class SummonDrawTests(unittest.TestCase):
                 {"AuthKind": 0, "AccessToken": "local-test", "Reconnect": False}, "/auth/sign-in", 3
             )
         )
-        with patch("guardian_tales.summon_draw.secrets.randbelow", return_value=0):
+        with patch("guardian_tales.summons.summon_draw.secrets.randbelow", return_value=0):
             reconnected.handle(request)
         self.assertEqual(self.account.profile()["User"]["ItemStackables"][0]["Amount"], 18)
         self.assertEqual(

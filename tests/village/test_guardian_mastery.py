@@ -6,10 +6,10 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.mastery import MASTERY_POINTS, ROUTE
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import INT_MAX, MAX_REVISION, current_village
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.settlement.mastery import MASTERY_POINTS, ROUTE
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION, current_village
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

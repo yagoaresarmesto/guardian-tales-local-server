@@ -10,13 +10,13 @@ from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.orbital_levels import SELECTION
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.reference import ReferenceData
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.state_lock import StateLock
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.modes.orbital.orbital_levels import SELECTION
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.state_lock import StateLock
+from guardian_tales.settlement.village import MAX_REVISION
 from guardian_tales.web_panel.server import WebPanel
 from tests.account.test_snapshots import request as packet_request
 from tests.inventory.test_inventory_panel import prepare_inventory

@@ -8,11 +8,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import PacketError, encode_packet
-from guardian_tales.raid_static import compress, digest
-from guardian_tales.story import load_story_catalog, open_eligible_stages
+from guardian_tales.campaigns.story import load_story_catalog, open_eligible_stages
+from guardian_tales.modes.guild.raid_static import compress, digest
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import PacketError, encode_packet
 from tests import FIXTURES
 from tests.account.test_snapshots import request
 

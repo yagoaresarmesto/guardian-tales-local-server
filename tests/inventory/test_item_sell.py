@@ -6,13 +6,13 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.account import AccountStore
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.item_lock import INVENTORIES, MAX_BATCH
-from guardian_tales.item_sell import EQUIPMENT_FIELDS, ROUTE
-from guardian_tales.items import inventory_item
-from guardian_tales.protocol import PacketError
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.inventory.item_lock import INVENTORIES, MAX_BATCH
+from guardian_tales.inventory.item_sell import EQUIPMENT_FIELDS, ROUTE
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

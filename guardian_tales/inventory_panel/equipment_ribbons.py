@@ -4,7 +4,7 @@
 import json
 from datetime import datetime, timezone
 
-from guardian_tales.snapshots import CLIENT, preserved_read
+from guardian_tales.accounts.snapshots import CLIENT, preserved_read
 
 
 def available_in_client(row, version, now):

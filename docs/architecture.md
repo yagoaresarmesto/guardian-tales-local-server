@@ -46,48 +46,34 @@ stock evolution chains even when the save has local item variants.
 
 ## Package map
 
-| Module | Responsibility |
+The backend lives in [guardian_tales/](../guardian_tales/). Use the package that
+owns a feature when writing new code. For example, import `ReferenceData` from
+`guardian_tales.content.reference`. Existing code can import the same class
+from `guardian_tales.reference`.
+Both `python -m guardian_tales` and the installed `gt-local` command expose the
+same subcommands.
+
+| Package | What belongs here |
 |---|---|
-| `server.py` | Asyncio listeners, connection lifecycle, counters and status |
-| `protocol.py` | Packet construction, frame encoding, response framing and Pong |
-| `packet_reader.py` | Bounded frame decoding, checksums, raw LZ4 and packet parsing |
-| `platform.py` | Platform HTTPS route bodies and local endpoint configuration |
-| `bootstrap.py` | Connection sign-in state, guest identity/credentials and game API dispatch |
-| `account.py` | SQLite profile, campaign receipts, prologue completion, migrations and attendance claims |
-| `profile_card.py` | Read-only own-user card from current local account/records, with empty uncaptured decorations/social fields |
-| `guild_menu.py` | Own-member local guild view, stable cache hash, inactive notices, empty attendance mock and non-mutating raid-entry preparation |
-| `guild_meteor.py` | Fresh meteor menu, latest started catalog season and native empty progress without account writes |
-| `guild_war.py`, `guild_war_static.py` | Opt-in season-1 menu entry, reversible Global War/Raid calendar overlay composed above existing Raid/arena selections |
-| `guild_raid.py` | Fresh raid menus, empty history/rankings, combat entry/exit trial and season selector; no account writes, persistent raid progress or rewards |
-| `expedition_levels.py` | Optional per-stage Global enemy-level CLI and reversible static overlay, without account or preserved-file writes |
-| `andras_trial.py`, `andras_trial_static.py`, `andras_trial_training.py`, `andras_trial_growth.py`, `andras_trial_labels.py` | Owner-bound Andras view, separate transactional XP, activated extra awakening, stock Eunha leader, optional in-memory English CDN title, reversible static composition and unchanged saved hero |
-| `raid_static.py` | Bounded external static-table preparation, LZ4 encoding and immutable raid-only calendar overrides for historical selection |
-| `campaign.py` | First chapter identifiers, stage flags, reward constants and native progress encoding |
-| `missions.py` | Supported beginner reward IDs and amounts from the pinned client catalog |
-| `beginner.py` | Eligibility, atomic multi-mission rewards, claim bits and persistent retry receipts |
-| `challenges.py`, `challenge_progress.py` | Catalog challenge progress, imported official baselines, contiguous next/all-step claims and atomic rewards/receipts |
-| `punchking.py`, `punchking_static.py` | Dungeon Kingdom Arena practice, rotation/day calendar composition and battle-session receipts |
-| `party_members.py` | Ordered normal-party roster saves, compact current Party resources and atomic profile/request receipts |
-| `hero_knowledge.py` | Initial acquisition knowledge for untrained base heroes, asset rewards and atomic hero/request receipts |
-| `imported_hero_knowledge.py` | Eight native hero-book progress rules, nonpaying official flags, awakening bit decoding and atomic per-objective/request receipts |
-| `items.py` | Shared persistent inventory-row defaults |
-| `hero_equipment.py` | Catalog-backed weapon/accessory/card/merch/relic changes, exact holder detachment and atomic route-bound retry receipts |
-| `multi_presets.py` | Expedition three-party preset persistence, selection clearing, slot ordering and atomic route-bound receipts |
-| `item_lock.py` | Owned inventory protection batches with atomic profile/retry receipts, independent of option locks |
-| `item_sell.py` | Shared protected removal, no-gold sales, proposal cleanup and route-bound sale/extraction receipts |
-| `item_extract.py` | Native equipment-ID batches for zero-reward extraction through the shared removal path |
-| `jewel_decompose.py` | Explicit source-preserving jewel batches, public per-grade powder yields and atomic reward/request receipts |
-| `jewel_upgrade.py` | Guaranteed free one-grade upgrades for owned loose/socket jewels, stack allocation/merging and atomic result receipts |
-| `stamina_purchase.py` | Catalog prices, stored-stamina limits, UTC daily purchase quota and atomic payment receipts |
-| `festival_shop.py` | Local shop exclusions, catalog point prices and atomic asset/stackable redemptions |
-| `live_events.py` | Authenticated read of preserved temporal-event progress without initialization, rewards or account writes |
-| `admin.py`, `admin_festival.py` | Exclusive audited grants of gems and active-season Festival points |
-| `admin_test_items.py`, `test_item_static.py` | Backed-up offline test-pin grants/retirement and account-specific static composition |
-| `tutorials.py` | Passive help IDs and post-Inn acknowledgment IDs from the pinned client catalog |
-| `lobby.py` | Empty initial lobby/catalog read responses with correct body encoding |
-| `reference.py` | External reference input, built-in templates and local certificate defaults |
-| `assets.py` | Separate manifest-backed HTTP resource server |
-| `probe.py`, `demo.py`, `validation.py` | Developer checks, synthetic demo and regression runner |
+| [runtime](../guardian_tales/runtime/) | Game and platform listeners, packet framing, sign-in dispatch, service control, Android bridge, TLS certificates and developer commands |
+| [accounts](../guardian_tales/accounts/) | SQLite account persistence, snapshot import, profile cards, portraits and badges |
+| [administration](../guardian_tales/administration/) | Audited grants, optional test items, Andras trial and Head Hunter |
+| [content](../guardian_tales/content/) | Content packs, reference data, prepared static-data cache and the manifest-backed HTTP resource server |
+| [campaigns](../guardian_tales/campaigns/) | Story stages, interactions, unlocks, quest rewards and campaign completion |
+| [heroes](../guardian_tales/heroes/) | Hero equipment slots, evolution, Myth, awakening, blessings, resets and training |
+| [inventory](../guardian_tales/inventory/) | Inventory capacity, item protection and removal, weapons, relics, jewels and merch |
+| [teams](../guardian_tales/teams/) | Party members, formations, presets and slot ordering |
+| [rewards](../guardian_tales/rewards/) | Mission claims, challenges, hero knowledge, passes, festivals, stamina and attendance |
+| [summons](../guardian_tales/summons/) | Hero and weapon draws, wishlists, selection and payments |
+| [settlement](../guardian_tales/settlement/) | Village activities, basecamp harvest and guardian mastery |
+| [lobby_ui](../guardian_tales/lobby_ui/) | Lobby reads, notices, artwork and the active configuration report |
+| [modes](../guardian_tales/modes/) | Classic Co-op and Colosseum, plus dedicated packages for [guild modes](../guardian_tales/modes/guild/) (Raid, DKA and Guild War), [Expedition](../guardian_tales/modes/expedition/), [Kama-ZONE](../guardian_tales/modes/kamazone/), [Orbital Lift](../guardian_tales/modes/orbital/) and [Tetis](../guardian_tales/modes/tetis/) |
+
+The web dashboard uses [web_panel](../guardian_tales/web_panel/) for game modes,
+[inventory_panel](../guardian_tales/inventory_panel/) for the inventory editor
+and [panel_common](../guardian_tales/panel_common/) for shared HTML, HTTP
+handling and artwork. Packaged account templates and scripts live in
+[templates/](../guardian_tales/templates/).
 
 ## Account lifecycle
 

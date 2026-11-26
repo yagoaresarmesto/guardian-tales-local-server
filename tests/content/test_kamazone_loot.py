@@ -5,10 +5,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from guardian_tales import kamazone_battle as battle
-from guardian_tales import kamazone_run as run
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.protocol import PacketError
+from guardian_tales.modes.kamazone import kamazone_battle as battle
+from guardian_tales.modes.kamazone import kamazone_run as run
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.content import test_kamazone_run as fixtures
 
@@ -133,7 +133,10 @@ class KamazoneLootTests(unittest.TestCase):
         self.assertEqual(self.reopen(), first)
         boss = self.fight(120)
         loot = dict(NodeId=120, LootArtifactId=boss["LootArtifacts"][0][0])
-        with patch("guardian_tales.kamazone_run.atomic_write", side_effect=OSError("unavailable")):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone_run.atomic_write",
+            side_effect=OSError("unavailable"),
+        ):
             self.reject(battle.CLOSE, loot)
         current = self.call(battle.CLOSE, loot, 701)
         self.assertEqual(
@@ -171,7 +174,7 @@ class KamazoneLootTests(unittest.TestCase):
     def test_empty_boss_offer_pays_and_advances_even_if_the_client_skips_close(self):
         self.fight(110)
         self.call(battle.CLOSE, dict(NodeId=110))
-        with patch("guardian_tales.kamazone_loot.offer", return_value=[]):
+        with patch("guardian_tales.modes.kamazone.kamazone_loot.offer", return_value=[]):
             self.call(run.START, {"NodeId": 120})
             user = self.call(run.BATTLE, dict(NodeId=120, Formation=[12, 3, 19, 9]))
             boss = next(row for row in user["Nodes"] if row["Id"] == 120)

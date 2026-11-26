@@ -6,16 +6,16 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.account import AccountStore
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.item_extract import ROUTE
-from guardian_tales.item_lock import MAX_BATCH
-from guardian_tales.item_sell import ROUTE as SELL
-from guardian_tales.items import inventory_item
-from guardian_tales.protocol import PacketError
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import MAX_REVISION
-from guardian_tales.weapon_summon import MAGIC_METAL
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.inventory.item_extract import ROUTE
+from guardian_tales.inventory.item_lock import MAX_BATCH
+from guardian_tales.inventory.item_sell import ROUTE as SELL
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
+from guardian_tales.summons.weapon_summon import MAGIC_METAL
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

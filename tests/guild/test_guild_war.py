@@ -14,11 +14,10 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.guild_raid import CATALOG as RAID_CATALOG
-from guardian_tales.guild_raid import SELECTION as RAID_SELECTION
-from guardian_tales.guild_raid import select_season
-from guardian_tales.guild_war import (
+from guardian_tales.modes.guild.guild_raid import CATALOG as RAID_CATALOG
+from guardian_tales.modes.guild.guild_raid import SELECTION as RAID_SELECTION
+from guardian_tales.modes.guild.guild_raid import select_season
+from guardian_tales.modes.guild.guild_war import (
     ABANDON,
     CASTLE_DETAIL,
     CASTLES,
@@ -35,7 +34,7 @@ from guardian_tales.guild_war import (
     UNLOCK,
     main,
 )
-from guardian_tales.guild_war_static import (
+from guardian_tales.modes.guild.guild_war_static import (
     OVERLAY_POLICY,
     PHASES,
     SELECTION,
@@ -48,9 +47,10 @@ from guardian_tales.guild_war_static import (
     load_selection,
     offense_stage_ids,
 )
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.raid_static import compress, decode, digest, records
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
 from tests.account.test_snapshots import request, synthetic_snapshot
 from tests.guild.test_guild_raid import synthetic_catalog, synthetic_static
 
@@ -166,8 +166,8 @@ class GuildWarTests(unittest.TestCase):
         self.session = BootstrapSession(self.store)
         self.now = datetime(2026, 11, 18, 12, tzinfo=timezone.utc)
         for target in (
-            "guardian_tales.guild_war.utc_now",
-            "guardian_tales.guild_war_static.utc_now",
+            "guardian_tales.modes.guild.guild_war.utc_now",
+            "guardian_tales.modes.guild.guild_war_static.utc_now",
         ):
             clock = patch(target, side_effect=lambda: self.now)
             clock.start()
@@ -556,7 +556,9 @@ class GuildWarTests(unittest.TestCase):
         )
         select_season(self.ref, 2)
         parent = base_body(self.ref)
-        with patch("guardian_tales.guild_war_static.arena_override", return_value=parent) as arena:
+        with patch(
+            "guardian_tales.modes.guild.guild_war_static.arena_override", return_value=parent
+        ) as arena:
             body = bootstrap_override(self.ref, "static_data_get.bin", None)
             self.assertTrue(arena.called)
         second = load_selection(self.ref)
@@ -932,7 +934,7 @@ class GuildWarTests(unittest.TestCase):
             rows[at + 1], rows[at + 3] = raw + "\n", digest(raw.encode()) + "\n"
             with (
                 patch(
-                    "guardian_tales.guild_war_static.prepared_body",
+                    "guardian_tales.modes.guild.guild_war_static.prepared_body",
                     return_value=compress("".join(rows).encode()),
                 ),
                 self.assertRaises(ValueError),
@@ -940,13 +942,13 @@ class GuildWarTests(unittest.TestCase):
                 offense_stage_ids(self.ref, selection)
 
     def test_fortress_siege_catalog_cache_reuses_content_and_retains_phase_and_season_guards(self):
-        from guardian_tales import guild_war_static
+        from guardian_tales.modes.guild import guild_war_static
 
         selection = enable(self.ref, phase=3)
         castle_specs(self.ref, selection)
         guild_war_static._offense_stage_ids.cache_clear()
         self.addCleanup(guild_war_static._offense_stage_ids.cache_clear)
-        with patch("guardian_tales.guild_war_static.decode", wraps=decode) as decoder:
+        with patch("guardian_tales.modes.guild.guild_war_static.decode", wraps=decode) as decoder:
             first = offense_stage_ids(self.ref, selection)
             self.assertEqual(offense_stage_ids(self.ref, selection), first)
             self.assertEqual(decoder.call_count, 1)
@@ -1093,7 +1095,7 @@ class GuildWarTests(unittest.TestCase):
             rows[items["guildwar"][0] + 1] = json.dumps(changed) + "\n"
             with (
                 patch(
-                    "guardian_tales.guild_war_static.prepared_body",
+                    "guardian_tales.modes.guild.guild_war_static.prepared_body",
                     return_value=compress("".join(rows).encode()),
                 ),
                 self.assertRaises(ValueError),
@@ -1338,7 +1340,7 @@ class GuildWarTests(unittest.TestCase):
             rows[items["guildwar"][0] + 1] = json.dumps(changed) + "\n"
             with (
                 patch(
-                    "guardian_tales.guild_war_static.prepared_body",
+                    "guardian_tales.modes.guild.guild_war_static.prepared_body",
                     return_value=compress("".join(rows).encode()),
                 ),
                 self.assertRaises(ValueError),
@@ -1347,10 +1349,10 @@ class GuildWarTests(unittest.TestCase):
 
     def test_castle_catalog_cache_keeps_responses_isolated_and_decodes_matching_body_once(self):
         selection = enable(self.ref, phase=3)
-        from guardian_tales import guild_war_static
+        from guardian_tales.modes.guild import guild_war_static
 
         guild_war_static._castle_specs.cache_clear()
-        with patch("guardian_tales.guild_war_static.decode", wraps=decode) as decoder:
+        with patch("guardian_tales.modes.guild.guild_war_static.decode", wraps=decode) as decoder:
             first = castle_specs(self.ref, selection)
             first[1]["Grade"] = 99
             first.pop(2)
@@ -1680,7 +1682,7 @@ class GuildWarTests(unittest.TestCase):
             rows[items["guildwar"][0] + 1] = json.dumps(changed) + "\n"
             with (
                 patch(
-                    "guardian_tales.guild_war_static.prepared_body",
+                    "guardian_tales.modes.guild.guild_war_static.prepared_body",
                     return_value=compress("".join(rows).encode()),
                 ),
                 self.assertRaises(ValueError),
@@ -1690,7 +1692,7 @@ class GuildWarTests(unittest.TestCase):
     def test_cooperative_catalog_reuses_decoding_across_battles_without_sharing_mutable_results(
         self,
     ):
-        from guardian_tales import guild_war_static
+        from guardian_tales.modes.guild import guild_war_static
 
         profile = self.install()
         selection = enable(self.ref, phase=2)
@@ -1698,7 +1700,7 @@ class GuildWarTests(unittest.TestCase):
         self.addCleanup(guild_war_static._cooperative_stage_ids.cache_clear)
         self.db.execute("PRAGMA query_only=ON")
         before, writes = list(self.db.iterdump()), self.db.total_changes
-        with patch("guardian_tales.guild_war_static.decode", wraps=decode) as decoder:
+        with patch("guardian_tales.modes.guild.guild_war_static.decode", wraps=decode) as decoder:
             stages = cooperative_stage_ids(self.ref, selection)
             stages.clear()
             stages.add(850010002)
@@ -1718,7 +1720,7 @@ class GuildWarTests(unittest.TestCase):
         self.assertEqual(self.db.total_changes, writes)
 
     def test_cooperative_catalog_refreshes_for_new_content_and_validates_season_on_cache_hits(self):
-        from guardian_tales import guild_war_static
+        from guardian_tales.modes.guild import guild_war_static
 
         selection = enable(self.ref)
         guild_war_static._cooperative_stage_ids.cache_clear()

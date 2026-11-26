@@ -7,16 +7,16 @@ import sqlite3
 import unittest
 from contextlib import closing
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.orbital import (
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.modes.orbital.orbital import (
     ORBITAL_ENTRY_ROUTE,
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
     save_formation,
 )
-from guardian_tales.protocol import PacketError
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

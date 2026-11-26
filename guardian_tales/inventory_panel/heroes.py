@@ -5,7 +5,10 @@ import json
 from bisect import bisect_right
 from uuid import uuid4
 
-from guardian_tales import (
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.accounts.snapshots import is_imported
+from guardian_tales.campaigns.campaign import FIRST_STAGE_ID, STAGE_CLEARED
+from guardian_tales.heroes import (
     awakening_catalog,
     hero_awakening,
     hero_blessing,
@@ -15,11 +18,8 @@ from guardian_tales import (
     hero_reset,
     imported_training,
 )
-from guardian_tales.account import AccountStore
-from guardian_tales.campaign import FIRST_STAGE_ID, STAGE_CLEARED
-from guardian_tales.characters import owned_character
-from guardian_tales.snapshots import is_imported
-from guardian_tales.village import MAX_REVISION, integer
+from guardian_tales.heroes.characters import owned_character
+from guardian_tales.settlement.village import MAX_REVISION, integer
 
 from .game_save import GameSaveEditor
 

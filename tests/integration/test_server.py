@@ -17,9 +17,10 @@ from pathlib import Path
 from unittest.mock import patch
 from urllib.request import Request, urlopen
 
-from guardian_tales.bootstrap import read_json_body
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import (
+from guardian_tales.content.reference import default_cert_dir
+from guardian_tales.runtime.bootstrap import read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import (
     Packet,
     PacketError,
     decode_frame,
@@ -28,9 +29,8 @@ from guardian_tales.protocol import (
     frame_length,
     make_pong,
 )
-from guardian_tales.reference import default_cert_dir
-from guardian_tales.server import LocalServer, run
-from guardian_tales.state_lock import StateLock
+from guardian_tales.runtime.server import LocalServer, run
+from guardian_tales.runtime.state_lock import StateLock
 from guardian_tales.web_panel.server import WebPanel
 from tests import FIXTURES
 
@@ -167,7 +167,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             # how each Python version schedules wait_for's internal timer.
             return await wait_for(awaitable, 0.03 if timeout >= 60 else timeout)
 
-        with patch("guardian_tales.server.asyncio.wait_for", new=accelerated_long_deadline):
+        with patch("guardian_tales.runtime.server.asyncio.wait_for", new=accelerated_long_deadline):
             reader, writer = await self.connect()
             seed = struct.unpack("<I", await reader.readexactly(4))[0]
             body = {"AuthKind": 0, "AccessToken": "TEST_IDLE_GUEST", "Reconnect": False}
@@ -214,7 +214,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
         async def accelerated_io_deadline(awaitable, timeout):
             return await wait_for(awaitable, 0.03 if timeout >= 10 else timeout)
 
-        with patch("guardian_tales.server.asyncio.wait_for", new=accelerated_io_deadline):
+        with patch("guardian_tales.runtime.server.asyncio.wait_for", new=accelerated_io_deadline):
             frame = encode_wire(Packet(3, struct.pack("<q", 123), body_type=2), seed)
             writer.write(frame[:1])
             await writer.drain()
@@ -425,7 +425,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             self.fail("Game service did not reach its expected state")
 
         with (
-            patch("guardian_tales.server.WebPanel", side_effect=panel_factory),
+            patch("guardian_tales.runtime.server.WebPanel", side_effect=panel_factory),
             patch.dict(os.environ, {"LOCALAPPDATA": str(data_dir / "cache")}),
             redirect_stdout(StringIO()),
         ):

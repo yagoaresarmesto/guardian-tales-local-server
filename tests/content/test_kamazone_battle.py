@@ -6,10 +6,10 @@ import json
 import unittest
 from unittest.mock import patch
 
-from guardian_tales import kamazone_battle as battle
-from guardian_tales import kamazone_run as run
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.protocol import PacketError
+from guardian_tales.modes.kamazone import kamazone_battle as battle
+from guardian_tales.modes.kamazone import kamazone_run as run
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.content import test_kamazone_run as fixtures
 
@@ -120,7 +120,7 @@ class KamazoneBattleTests(unittest.TestCase):
         source = self.session.store.references.read_bytes("static_data_get.bin")
         nodes = copy.deepcopy(run.floor_nodes(source, value["season_id"], value["seed"]))
         next(n for n in nodes if n["Id"] == self.node["Id"])["LootArtifacts"] = [[900]]
-        with patch("guardian_tales.kamazone_run.floor_nodes", return_value=nodes):
+        with patch("guardian_tales.modes.kamazone.kamazone_run.floor_nodes", return_value=nodes):
             ended = self.finish()["UserKamazonLand"]
             self.assertEqual(
                 next(n for n in ended["Nodes"] if n["Id"] == self.node["Id"])["State"], 3
@@ -278,7 +278,8 @@ class KamazoneBattleTests(unittest.TestCase):
             self.session.signed_in = True
         for route, body in ((battle.END, self.result), (battle.CLOSE, self.closing)):
             with patch(
-                "guardian_tales.kamazone_run.atomic_write", side_effect=OSError("synthetic")
+                "guardian_tales.modes.kamazone.kamazone_run.atomic_write",
+                side_effect=OSError("synthetic"),
             ):
                 self.reject(route, body)
             if route == battle.END:

@@ -6,11 +6,11 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.orbital import ORBITAL_EXIT_ROUTE, end
-from guardian_tales.protocol import PacketError
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.village import MAX_REVISION, current_village
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.modes.orbital.orbital import ORBITAL_EXIT_ROUTE, end
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION, current_village
 from tests.village.test_village_harvest import NOW, VillageFixture
 
 

@@ -4,10 +4,10 @@
 import json
 import unittest
 
-from guardian_tales.items import inventory_item
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.weapon_evolution import MYTH_ROUTE, ROUTE
+from guardian_tales.inventory.items import inventory_item
+from guardian_tales.inventory.weapon_evolution import MYTH_ROUTE, ROUTE
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.village.test_village_harvest import VillageFixture
 

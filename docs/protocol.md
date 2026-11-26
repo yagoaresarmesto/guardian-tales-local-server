@@ -1,8 +1,10 @@
 # Observed 3.57.0 packet protocol
 
 This describes the implemented client-version path, not an official specification.
-See `protocol.py`, `packet_reader.py`, and the regression fixtures for the exact
-byte operations. [API response schemas](reference/api-contracts.json) record
+The [packet writer](../guardian_tales/runtime/protocol.py),
+[packet reader](../guardian_tales/runtime/packet_reader.py) and
+[regression fixtures](../tests/fixtures/) document the exact byte operations.
+[API response schemas](reference/api-contracts.json) record
 observed property names and types without account values. Observed presence alone
 does not establish that a property is required.
 

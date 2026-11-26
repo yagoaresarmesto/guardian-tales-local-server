@@ -3,13 +3,13 @@
 
 import re
 
-from guardian_tales.account_name import owned_member, sync_member, valid_name
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.campaign import FREE_GEMS, RESERVE_STAMINA
-from guardian_tales.challenges import allocate_reward_item
-from guardian_tales.stamina_purchase import load_purchase_catalog
-from guardian_tales.summon_payment import PAID_GEMS, spend_tickets
-from guardian_tales.village import GOLD, MAX_REVISION, integer
+from guardian_tales.accounts.account_name import owned_member, sync_member, valid_name
+from guardian_tales.administration.admin_test_items import save_profile
+from guardian_tales.campaigns.campaign import FREE_GEMS, RESERVE_STAMINA
+from guardian_tales.rewards.challenges import allocate_reward_item
+from guardian_tales.rewards.stamina_purchase import load_purchase_catalog
+from guardian_tales.settlement.village import GOLD, MAX_REVISION, integer
+from guardian_tales.summons.summon_payment import PAID_GEMS, spend_tickets
 
 from .account_materials import account_materials, item_balance_limit
 from .game_save import GameSaveEditor

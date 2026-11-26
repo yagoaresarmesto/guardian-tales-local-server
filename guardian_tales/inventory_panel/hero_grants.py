@@ -3,12 +3,12 @@
 
 from datetime import datetime, timezone
 
-from guardian_tales.account import AccountStore
-from guardian_tales.admin_test_items import save_profile
-from guardian_tales.characters import new_character
-from guardian_tales.snapshots import CLIENT
-from guardian_tales.summon_draw import CATEGORIES
-from guardian_tales.village import INT_MAX, MAX_REVISION, integer
+from guardian_tales.accounts.account import AccountStore
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.administration.admin_test_items import save_profile
+from guardian_tales.heroes.characters import new_character
+from guardian_tales.settlement.village import INT_MAX, MAX_REVISION, integer
+from guardian_tales.summons.summon_draw import CATEGORIES
 
 from .equipment_ribbons import available_in_client
 from .game_save import GameSaveEditor

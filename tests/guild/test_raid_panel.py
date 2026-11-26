@@ -13,9 +13,9 @@ from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
-from guardian_tales import guild_raid, raid_custom, raid_panel, raid_static
-from guardian_tales.reference import ReferenceData
-from guardian_tales.service_control import active_services, directory, register
+from guardian_tales.content.reference import ReferenceData
+from guardian_tales.modes.guild import guild_raid, raid_custom, raid_panel, raid_static
+from guardian_tales.runtime.service_control import active_services, directory, register
 from guardian_tales.web_panel.artwork import BOSSES, UI, frame_png
 from tests.guild.test_guild_raid import synthetic_catalog, synthetic_static
 

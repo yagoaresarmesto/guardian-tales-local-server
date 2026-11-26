@@ -7,32 +7,56 @@ import sys
 
 COMMANDS = {
     "inventory-panel": ("inventory_panel.server", "Open the local inventory editor"),
-    "serve": ("server", "Run the local game and platform server"),
-    "admin": ("admin", "Manage audited local currency grants and optional test pins"),
-    "raid-season": ("guild_raid", "List, select or customize local Raid seasons"),
-    "dka-season": ("punchking", "List/select Dungeon Kingdom Arena variants and days"),
-    "guild-war": ("guild_war", "Enable/disable an experimental local Guild War season"),
-    "expedition": ("expedition_levels", "List, set or restore per-stage Expedition enemy levels"),
-    "tetis-map-trial": ("tetis_map_trial", "Try or restore the preserved map on Tetis S1 floor 1"),
-    "kamazone": ("kamazone", "Select an optional Kama-ZONE season for Events menu visibility"),
-    "andras-trial": ("andras_trial", "Toggle the response-only experimental Andras Myth variant"),
+    "serve": ("runtime.server", "Run the local game and platform server"),
+    "admin": (
+        "administration.admin",
+        "Manage audited local currency grants and optional test pins",
+    ),
+    "raid-season": ("modes.guild.guild_raid", "List, select or customize local Raid seasons"),
+    "dka-season": ("modes.guild.punchking", "List/select Dungeon Kingdom Arena variants and days"),
+    "guild-war": ("modes.guild.guild_war", "Enable/disable an experimental local Guild War season"),
+    "expedition": (
+        "modes.expedition.expedition_levels",
+        "List, set or restore per-stage Expedition enemy levels",
+    ),
+    "tetis-map-trial": (
+        "modes.tetis.tetis_map_trial",
+        "Try or restore the preserved map on Tetis S1 floor 1",
+    ),
+    "kamazone": (
+        "modes.kamazone.kamazone",
+        "Select an optional Kama-ZONE season for Events menu visibility",
+    ),
+    "andras-trial": (
+        "administration.andras_trial",
+        "Toggle the response-only experimental Andras Myth variant",
+    ),
     "head-hunter": (
-        "head_hunter",
+        "administration.head_hunter",
         "Grant, list or retire additional level-150 Head Hunter Myth copies",
     ),
-    "assets": ("assets", "Serve manifest-listed local resources"),
+    "assets": ("content.assets", "Serve manifest-listed local resources"),
     "content": (
-        "content_pack",
+        "content.content_pack",
         "Import/check versioned offline content releases or build release parts",
     ),
-    "probe": ("probe", "Check an already running local transport"),
-    "client-cert": ("client_cert", "Generate local certificates for the pinned APK hostnames"),
-    "android-bridge": ("android_bridge", "Connect a dedicated MuMu Android 12 test instance"),
-    "demo": ("demo", "Run a temporary synthetic loopback demonstration"),
-    "validate": ("validation", "Run the repository regression suite"),
-    "read-packet": ("packet_reader", "Decode a local packet file"),
-    "campaign": ("campaign_cli", "Prepare or preview a fully completed local story test save"),
-    "snapshot": ("snapshots", "Inspect/import a private experimental account snapshot"),
+    "probe": ("runtime.probe", "Check an already running local transport"),
+    "client-cert": (
+        "runtime.client_cert",
+        "Generate local certificates for the pinned APK hostnames",
+    ),
+    "android-bridge": (
+        "runtime.android_bridge",
+        "Connect a dedicated MuMu Android 12 test instance",
+    ),
+    "demo": ("runtime.demo", "Run a temporary synthetic loopback demonstration"),
+    "validate": ("runtime.validation", "Run the repository regression suite"),
+    "read-packet": ("runtime.packet_reader", "Decode a local packet file"),
+    "campaign": (
+        "campaigns.campaign_cli",
+        "Prepare or preview a fully completed local story test save",
+    ),
+    "snapshot": ("accounts.snapshots", "Inspect/import a private experimental account snapshot"),
 }
 
 

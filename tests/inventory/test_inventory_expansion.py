@@ -5,10 +5,10 @@ import json
 import sqlite3
 import unittest
 
-from guardian_tales.inventory_expansion import ROUTE
-from guardian_tales.protocol import PacketError
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.inventory.inventory_expansion import ROUTE
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.protocol import PacketError
+from guardian_tales.settlement.village import MAX_REVISION
 from tests.account.test_snapshots import request
 from tests.village.test_village_harvest import VillageFixture
 

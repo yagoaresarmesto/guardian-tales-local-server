@@ -10,7 +10,7 @@ from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
-from guardian_tales.client_cert import HOSTS, generate, openssl_path, prepare_server_tls
+from guardian_tales.runtime.client_cert import HOSTS, generate, openssl_path, prepare_server_tls
 
 
 class ClientCertificateTests(unittest.TestCase):
@@ -65,8 +65,10 @@ class ClientCertificateTests(unittest.TestCase):
         for seconds in (48 * 3600 + 1, 48 * 3600):
             with (
                 self.subTest(seconds=seconds),
-                patch("guardian_tales.client_cert.time.time", return_value=end - seconds),
-                patch("guardian_tales.client_cert.subprocess.run", side_effect=AssertionError),
+                patch("guardian_tales.runtime.client_cert.time.time", return_value=end - seconds),
+                patch(
+                    "guardian_tales.runtime.client_cert.subprocess.run", side_effect=AssertionError
+                ),
             ):
                 context, dates = prepare_server_tls(self.directory)
                 self.assertIsInstance(context, ssl.SSLContext)
@@ -81,7 +83,9 @@ class ClientCertificateTests(unittest.TestCase):
                 end = self.expiry(self.cert)
                 original = self.cert.read_bytes()
                 unchanged = {p: p.read_bytes() for p in self.directory.iterdir() if p != self.cert}
-                with patch("guardian_tales.client_cert.time.time", return_value=end - seconds_left):
+                with patch(
+                    "guardian_tales.runtime.client_cert.time.time", return_value=end - seconds_left
+                ):
                     _, dates = prepare_server_tls(self.directory)
                     renewed = self.cert.read_bytes()
                     self.assertNotEqual(renewed, original)
@@ -179,7 +183,7 @@ class ClientCertificateTests(unittest.TestCase):
         for now in (ca_end - 3600, ca_end + 1):
             with (
                 self.subTest(now=now),
-                patch("guardian_tales.client_cert.time.time", return_value=now),
+                patch("guardian_tales.runtime.client_cert.time.time", return_value=now),
             ):
                 context, dates = prepare_server_tls(self.directory)
                 self.assertIsInstance(context, ssl.SSLContext)

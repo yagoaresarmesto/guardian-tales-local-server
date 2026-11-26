@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.packet_reader import PacketError, parse_packet
-from guardian_tales.protocol import Packet, encode_packet
-from guardian_tales.reference import ReferenceData, compressed_empty_list
+from guardian_tales.content.reference import ReferenceData, compressed_empty_list
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import PacketError, parse_packet
+from guardian_tales.runtime.protocol import Packet, encode_packet
 
 
 class ReferenceTests(unittest.TestCase):

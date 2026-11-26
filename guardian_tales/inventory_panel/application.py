@@ -6,8 +6,8 @@ from contextlib import closing
 from functools import partial
 from threading import Lock
 
-from guardian_tales.raid_static import decode, records
-from guardian_tales.test_item_static import item_definitions_from_tables
+from guardian_tales.administration.test_item_static import item_definitions_from_tables
+from guardian_tales.modes.guild.raid_static import decode, records
 
 from .account_details import AccountEditor
 from .catalog import InventoryCatalog

@@ -10,9 +10,13 @@ import unittest
 from contextlib import contextmanager
 from pathlib import Path
 
-from guardian_tales.admin_festival import MAX_POINTS, festival_point_history, grant_festival_points
-from guardian_tales.bootstrap import GuestStore
-from guardian_tales.state_lock import StateLock
+from guardian_tales.administration.admin_festival import (
+    MAX_POINTS,
+    festival_point_history,
+    grant_festival_points,
+)
+from guardian_tales.runtime.bootstrap import GuestStore
+from guardian_tales.runtime.state_lock import StateLock
 
 
 class FestivalPointAdministrationTests(unittest.TestCase):

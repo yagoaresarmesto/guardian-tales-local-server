@@ -7,10 +7,10 @@ import unittest
 from datetime import timedelta
 from unittest.mock import patch
 
-from guardian_tales import kamazone_battle as battle
-from guardian_tales import kamazone_run as run
-from guardian_tales.bootstrap import BootstrapSession
-from guardian_tales.protocol import PacketError
+from guardian_tales.modes.kamazone import kamazone_battle as battle
+from guardian_tales.modes.kamazone import kamazone_run as run
+from guardian_tales.runtime.bootstrap import BootstrapSession
+from guardian_tales.runtime.protocol import PacketError
 from tests.account.test_snapshots import request
 from tests.content import test_kamazone_run as fixtures
 from tests.content.test_kamazone import NOW
@@ -173,7 +173,7 @@ class KamazoneConcludeTests(unittest.TestCase):
         state = run.load(self.session.store.references)
         nodes = copy.deepcopy(run.floor_nodes(source, 43, state["seed"]))
         next(n for n in nodes if n["Id"] == self.node)["LootArtifacts"] = [[900]]
-        with patch("guardian_tales.kamazone_run.floor_nodes", return_value=nodes):
+        with patch("guardian_tales.modes.kamazone.kamazone_run.floor_nodes", return_value=nodes):
             self.call(battle.END, self.result)
             self.reject(run.CONCLUDE, self.body)
         self.owner.assert_untouched()
@@ -189,9 +189,14 @@ class KamazoneConcludeTests(unittest.TestCase):
         self.session.signed_in = False
         self.reject(run.CONCLUDE, self.body)
         self.session.signed_in = True
-        with patch("guardian_tales.kamazone.utc_now", return_value=NOW + timedelta(days=22)):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone.utc_now", return_value=NOW + timedelta(days=22)
+        ):
             self.reject(run.CONCLUDE, self.body)
-        with patch("guardian_tales.kamazone_run.atomic_write", side_effect=OSError("synthetic")):
+        with patch(
+            "guardian_tales.modes.kamazone.kamazone_run.atomic_write",
+            side_effect=OSError("synthetic"),
+        ):
             self.reject(run.CONCLUDE, self.body)
         saved = self.path.read_bytes()
         value = json.loads(saved)

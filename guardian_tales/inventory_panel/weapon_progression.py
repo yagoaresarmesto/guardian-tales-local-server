@@ -3,9 +3,9 @@
 
 import json
 
-from guardian_tales.village import integer
-from guardian_tales.weapon_engrave import saved_option_pair, valid_option
-from guardian_tales.weapon_enhance import level_cap
+from guardian_tales.inventory.weapon_engrave import saved_option_pair, valid_option
+from guardian_tales.inventory.weapon_enhance import level_cap
+from guardian_tales.settlement.village import integer
 
 LIMIT_BREAK_TYPES = {
     "onehandsword",

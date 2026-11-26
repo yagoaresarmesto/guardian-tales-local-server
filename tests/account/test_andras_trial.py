@@ -15,9 +15,10 @@ from pathlib import Path
 from unittest.mock import patch
 
 from guardian_tales.__main__ import main
-from guardian_tales.andras_trial import SELECTION, load, project_response
-from guardian_tales.andras_trial_growth import LEADER, LEADER_ACTION
-from guardian_tales.andras_trial_static import (
+from guardian_tales.accounts.snapshots import CLIENT
+from guardian_tales.administration.andras_trial import SELECTION, load, project_response
+from guardian_tales.administration.andras_trial_growth import LEADER, LEADER_ACTION
+from guardian_tales.administration.andras_trial_static import (
     SOURCE,
     STONE,
     VARIANT,
@@ -25,10 +26,9 @@ from guardian_tales.andras_trial_static import (
     pack_rows,
     prepare,
 )
-from guardian_tales.bootstrap import BootstrapSession, GuestStore
-from guardian_tales.protocol import Packet, PacketError
-from guardian_tales.raid_static import compress, decode, digest, records
-from guardian_tales.snapshots import CLIENT
+from guardian_tales.modes.guild.raid_static import compress, decode, digest, records
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore
+from guardian_tales.runtime.protocol import Packet, PacketError
 from tests.account.test_snapshots import request, synthetic_snapshot
 
 
@@ -93,7 +93,7 @@ class AndrasTrialTests(unittest.TestCase):
         # checked separately with native xxh3 hashes, never this synthetic hash.
         self.enterContext(
             patch(
-                "guardian_tales.andras_trial_static.binary_name_hash",
+                "guardian_tales.administration.andras_trial_static.binary_name_hash",
                 side_effect=lambda name: int.from_bytes(
                     hashlib.sha256(name.encode()).digest()[:8], "little"
                 ),
@@ -269,7 +269,7 @@ class AndrasTrialTests(unittest.TestCase):
         before, changes = list(self.db.iterdump()), self.db.total_changes
         expected = copy.deepcopy(self.store.account.profile())
         expected["User"]["Characters"][0]["CharacterId"] = VARIANT
-        from guardian_tales.andras_trial_growth import activated_tree
+        from guardian_tales.administration.andras_trial_growth import activated_tree
 
         expected["User"]["Characters"][0]["AwakeningTree"] = activated_tree(
             expected["User"]["Characters"][0]["AwakeningTree"]
@@ -348,7 +348,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(json.loads(tables["options"][1])[0], self.tables["options"][0])
 
     def test_growth_tree_retains_original_indices_and_adds_six_owned_special_centers(self):
-        from guardian_tales.andras_trial_growth import MARKERS, SPECIALS, TREE
+        from guardian_tales.administration.andras_trial_growth import MARKERS, SPECIALS, TREE
 
         body, _ = prepare(self.original, 1, True)
         tables = records(decode(body))[1]
@@ -496,7 +496,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.write_source()
 
     def test_growth_mask_preserves_original_prefix_bits_and_reserved_bits(self):
-        from guardian_tales.andras_trial_growth import activated_tree
+        from guardian_tales.administration.andras_trial_growth import activated_tree
 
         for original in (b"", b"\x81" * 31, b"\x55" * 50):
             prefix = b"old!"
@@ -517,7 +517,7 @@ class AndrasTrialTests(unittest.TestCase):
     def test_growth_partial_awakening_reply_does_not_invent_other_fields_or_touch_other_owners(
         self,
     ):
-        from guardian_tales.andras_trial_growth import activated_tree
+        from guardian_tales.administration.andras_trial_growth import activated_tree
 
         self.cli("enable")
         hero = {"Id": self.target, "AwakeningTree": ""}
@@ -564,7 +564,7 @@ class AndrasTrialTests(unittest.TestCase):
                 self.assertEqual(old, new)
 
     def test_growth_markers_display_matching_values_without_consuming_source_resources(self):
-        from guardian_tales.andras_trial_growth import MARKERS
+        from guardian_tales.administration.andras_trial_growth import MARKERS
 
         before = list(self.db.iterdump())
         self.cli("enable")
@@ -581,7 +581,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertFalse((self.state / "andras-myth-trial.sqlite3").exists())
 
     def test_growth_bad_awakening_encodings_reject_before_training_or_other_handler_writes(self):
-        from guardian_tales.andras_trial_growth import activated_tree
+        from guardian_tales.administration.andras_trial_growth import activated_tree
 
         for value in (
             True,
@@ -682,7 +682,7 @@ class AndrasTrialTests(unittest.TestCase):
             self.assertIs(project_response(packet, selection), packet)
 
     def string_source(self):
-        from guardian_tales import andras_trial_labels
+        from guardian_tales.administration import andras_trial_labels
 
         def hashed(key):
             return int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], "little")
@@ -702,7 +702,12 @@ class AndrasTrialTests(unittest.TestCase):
     def test_native_string_overlay_adds_only_requested_title_and_retains_every_original_record(
         self,
     ):
-        from guardian_tales.andras_trial_labels import KEY, TITLE, WEAPON_KEY, string_table
+        from guardian_tales.administration.andras_trial_labels import (
+            KEY,
+            TITLE,
+            WEAPON_KEY,
+            string_table,
+        )
 
         source = self.string_source()
         result = string_table(source, True)
@@ -717,7 +722,7 @@ class AndrasTrialTests(unittest.TestCase):
     def title_resource(self):
         import zlib
 
-        from guardian_tales.andras_trial_labels import cipher, filename
+        from guardian_tales.administration.andras_trial_labels import cipher, filename
 
         try:
             import cryptography  # noqa: F401
@@ -740,7 +745,11 @@ class AndrasTrialTests(unittest.TestCase):
         return source, key, path, key_path
 
     def test_cdn_title_native_envelope_retains_original_records_and_content_version(self):
-        from guardian_tales.andras_trial_labels import decode_resource, resource, string_table
+        from guardian_tales.administration.andras_trial_labels import (
+            decode_resource,
+            resource,
+            string_table,
+        )
 
         source, key, path, _ = self.title_resource()
         original = path.read_bytes()
@@ -752,7 +761,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(decode_resource(original, key), source)
 
     def test_cdn_title_disable_restores_original_without_database_or_resource_writes(self):
-        from guardian_tales.andras_trial_labels import cdn_override
+        from guardian_tales.administration.andras_trial_labels import cdn_override
 
         _, _, path, key_path = self.title_resource()
         original = path.read_bytes()
@@ -773,7 +782,7 @@ class AndrasTrialTests(unittest.TestCase):
                 self.assertEqual(p.read_bytes(), content)
 
     def test_title_source_rejects_wrong_language_duplicate_hash_and_already_patched_input(self):
-        from guardian_tales.andras_trial_labels import string_table
+        from guardian_tales.administration.andras_trial_labels import string_table
 
         source = self.string_source()
         modified = [*self.string_rows]
@@ -787,7 +796,7 @@ class AndrasTrialTests(unittest.TestCase):
                 string_table(value, True)
 
     def test_optional_title_never_adds_language_tables_discarded_by_native_api_parser(self):
-        from guardian_tales.andras_trial_labels import filename
+        from guardian_tales.administration.andras_trial_labels import filename
 
         self.cli("enable")
         key_path = self.refs / filename(load(self.store.references)["source_sha256"])
@@ -803,7 +812,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(check["Checksum"], checksum)
 
     def test_cdn_title_gates_language_explicit_opt_in_and_matching_pack(self):
-        from guardian_tales.andras_trial_labels import cdn_override, filename
+        from guardian_tales.administration.andras_trial_labels import cdn_override, filename
 
         _, _, path, key_path = self.title_resource()
         sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -819,7 +828,11 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertIsNone(cdn_override(self.refs, path, sha))
 
     def test_cdn_title_invalid_inputs_fail_without_secret_values_or_source_writes(self):
-        from guardian_tales.andras_trial_labels import cdn_override, decode_resource, resource
+        from guardian_tales.administration.andras_trial_labels import (
+            cdn_override,
+            decode_resource,
+            resource,
+        )
 
         _, key, path, key_path = self.title_resource()
         original = path.read_bytes()
@@ -846,7 +859,7 @@ class AndrasTrialTests(unittest.TestCase):
         import threading
         from http.server import ThreadingHTTPServer
 
-        from guardian_tales.assets import ResourceLibrary, handler_for
+        from guardian_tales.content.assets import ResourceLibrary, handler_for
 
         _, _, path, key_path = self.title_resource()
         original = path.read_bytes()
@@ -905,8 +918,8 @@ class AndrasTrialTests(unittest.TestCase):
             thread.join(timeout=2)
 
     def test_equipment_change_preserves_saved_andras_and_projects_active_myth_development(self):
-        from guardian_tales.andras_trial_growth import activated_tree
-        from guardian_tales.items import inventory_item
+        from guardian_tales.administration.andras_trial_growth import activated_tree
+        from guardian_tales.inventory.items import inventory_item
 
         self.tables["items"].append(
             {
@@ -972,7 +985,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(list(self.db.iterdump()), before)
 
     def training_catalog(self):
-        from guardian_tales.campaign import FIRST_STAGE_ID
+        from guardian_tales.campaigns.campaign import FIRST_STAGE_ID
 
         profile = self.store.account.profile()
         profile["UserProgress"]["StageStates"][str(FIRST_STAGE_ID)] = 7
@@ -1001,7 +1014,7 @@ class AndrasTrialTests(unittest.TestCase):
         return json.loads(self.session.handle(packet).body)
 
     def test_trial_hero_training_leaves_the_original_save_unchanged(self):
-        from guardian_tales.andras_trial_training import state_path
+        from guardian_tales.administration.andras_trial_training import state_path
 
         self.training_catalog()
         self.cli("enable")
@@ -1017,7 +1030,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(self.db.total_changes, changes)
 
     def test_trial_training_retries_and_old_replays_return_current_virtual_progress(self):
-        from guardian_tales.andras_trial_training import state_path
+        from guardian_tales.administration.andras_trial_training import state_path
 
         self.training_catalog()
         self.cli("enable")
@@ -1055,7 +1068,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 700)
 
     def test_trial_training_enforces_myth_cap_and_rejects_invalid_deltas_without_new_state(self):
-        from guardian_tales.andras_trial_training import state_path
+        from guardian_tales.administration.andras_trial_training import state_path
 
         self.training_catalog()
         self.cli("enable")
@@ -1107,7 +1120,7 @@ class AndrasTrialTests(unittest.TestCase):
     def test_trial_training_mixed_targets_and_unauthenticated_or_malformed_packets_cannot_write(
         self,
     ):
-        from guardian_tales.andras_trial_training import state_path
+        from guardian_tales.administration.andras_trial_training import state_path
 
         self.training_catalog()
         self.cli("enable")
@@ -1171,7 +1184,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(self.fetch()["User"]["Characters"][0]["Experience"], 50)
 
     def test_trial_training_receipt_failure_rolls_back_sidecar_progress_and_revision(self):
-        from guardian_tales.andras_trial_training import state_path
+        from guardian_tales.administration.andras_trial_training import state_path
 
         self.training_catalog()
         self.cli("enable")
@@ -1191,7 +1204,7 @@ class AndrasTrialTests(unittest.TestCase):
         self.assertEqual(list(self.db.iterdump()), original)
 
     def test_invalid_sidecar_can_be_disabled_without_touching_original_hero(self):
-        from guardian_tales.andras_trial_training import state_path
+        from guardian_tales.administration.andras_trial_training import state_path
 
         self.training_catalog()
         self.cli("enable")
@@ -1216,7 +1229,8 @@ class AndrasTrialTests(unittest.TestCase):
         self.cli("enable")
         before = {p.name: p.read_bytes() for p in self.refs.iterdir()}
         with patch(
-            "guardian_tales.raid_static.atomic_replace", side_effect=OSError("disk failure")
+            "guardian_tales.modes.guild.raid_static.atomic_replace",
+            side_effect=OSError("disk failure"),
         ):
             self.reject("disable")
         self.assertEqual({p.name: p.read_bytes() for p in self.refs.iterdir()}, before)

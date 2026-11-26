@@ -9,11 +9,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from guardian_tales.account_name import ROUTE, valid_name
-from guardian_tales.bootstrap import BootstrapSession, GuestStore, read_json_body
-from guardian_tales.packet_reader import parse_packet
-from guardian_tales.protocol import Packet, PacketError, encode_packet
-from guardian_tales.village import MAX_REVISION
+from guardian_tales.accounts.account_name import ROUTE, valid_name
+from guardian_tales.runtime.bootstrap import BootstrapSession, GuestStore, read_json_body
+from guardian_tales.runtime.packet_reader import parse_packet
+from guardian_tales.runtime.protocol import Packet, PacketError, encode_packet
+from guardian_tales.settlement.village import MAX_REVISION
 from tests.account.test_snapshots import synthetic_snapshot
 
 
