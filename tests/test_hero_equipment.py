@@ -7,7 +7,7 @@ import sqlite3
 import unittest
 
 from guardian_tales.characters import new_character
-from guardian_tales.hero_equipment import ROUTES
+from guardian_tales.hero_equipment import EQUIP_COSTUME, ROUTES
 from guardian_tales.items import inventory_item
 from guardian_tales.protocol import PacketError
 from guardian_tales.raid_static import compress, digest
@@ -62,6 +62,9 @@ class HeroEquipmentTests(VillageFixture, unittest.TestCase):
                 {"Id": 501, "Type": "costume", "TargetCharacterIds": [7]},
                 {"Id": 502, "Type": "supercostume", "TargetCharacterIds": [7, 1002]},
                 {"Id": 503, "Type": "equipcostume", "TargetWeaponType": "staff"},
+                {"Id": 504, "Type": "equipcostume", "TargetWeaponType": "onehandsword"},
+                {"Id": 505, "Type": "equipcostume", "TargetWeaponType": "onehandsword"},
+                {"Id": 506, "Type": "equipcostume", "TargetWeaponType": "shield"},
             ]
         )
         self.write_static()
@@ -89,6 +92,9 @@ class HeroEquipmentTests(VillageFixture, unittest.TestCase):
                 (50, 501),
                 (51, 502),
                 (52, 503),
+                (53, 504),
+                (54, 505),
+                (55, 506),
             )
         ]
         user["ItemStackables"] = [inventory_item(90, 901)]
@@ -196,12 +202,66 @@ class HeroEquipmentTests(VillageFixture, unittest.TestCase):
             with self.subTest(hero=hero, costume=costume):
                 self.reject_without_writes({"CharacterId": hero, "Costume": costume}, route=COSTUME)
 
+    def test_weapon_costumes_swap_transfer_clear_and_replay_independently_per_type(self):
+        expected = self.store.account.profile()
+        user = expected["User"]
+        first, second, _ = user["Characters"]
+        first["EquipCostumes"] = None
+        del second["EquipCostumes"]
+        self.save_profile(expected)
+        for seq, (character, kind, item, first_skins, second_skins) in enumerate(
+            (
+                (1, 8, 55, {"8": 55}, None),
+                (1, 1, 53, {"8": 55, "1": 53}, None),
+                (1, 1, 54, {"8": 55, "1": 54}, None),
+                (2, 1, 54, {"8": 55}, {"1": 54}),
+                (1, 8, 0, {}, {"1": 54}),
+                (2, 1, None, {}, {}),
+            ),
+            910,
+        ):
+            first["EquipCostumes"] = first_skins
+            if second_skins is not None:
+                second["EquipCostumes"] = second_skins
+            user["Cas"] += 1
+            body = {"CharacterId": character, "WeaponType": kind, "EquipCostume": item}
+            self.assertEqual(self.call(body, EQUIP_COSTUME, seq), self.expected_response(expected))
+            self.assertEqual(self.store.account.profile(), expected)
+        self.open_session(reconnect=True)
+        changes = self.db.total_changes
+        retry = {"CharacterId": 1, "WeaponType": 1, "EquipCostume": 54}
+        self.assertEqual(self.call(retry, EQUIP_COSTUME, 912), self.expected_response(expected))
+        self.assertEqual(self.db.total_changes, changes)
+        with self.assertRaises(PacketError):
+            self.call(dict(retry, EquipCostume=53), EQUIP_COSTUME, 912)
+        self.assertEqual(self.store.account.profile(), expected)
+
+    def test_weapon_costume_checks_weapon_family_hero_and_owned_instance(self):
+        for hero, kind, item in (
+            (1, 6, 52),
+            (1, 8, 53),
+            (1, 1, 50),
+            (1, 1, 504),
+            (1, 1, 1),
+            (1, True, 53),
+            (1, 9, None),
+            (1, [], 53),
+            (3, 6, -1),
+        ):
+            with self.subTest(hero=hero, kind=kind, item=item):
+                self.reject_without_writes(
+                    {"CharacterId": hero, "WeaponType": kind, "EquipCostume": item},
+                    route=EQUIP_COSTUME,
+                )
+
     def test_null_and_zero_clear_slots_without_removing_owned_items(self):
         original = self.store.account.profile()
         for sequence, (route, fields) in enumerate(ROUTES.items(), 830):
             body = {"CharacterId": 1, **{field: None for field in fields}}
             if route == CARDS:
                 body.update(Orb=0, Slot=1)
+            if route == EQUIP_COSTUME:
+                body.update(EquipCostume=0, WeaponType=1)
             self.call(body, route, sequence)
         profile = self.store.account.profile()
         for field in ("Weapon1", "Weapon2", "Accessory1", "Orb1", "Merch", "Relic"):

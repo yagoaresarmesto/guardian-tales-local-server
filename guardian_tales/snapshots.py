@@ -97,6 +97,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/change-weapons",
         "/user/change-accessory",
         "/user/change-costume",
+        "/user/change-equip-costume",
         "/user/change-orb",
         "/user/change-merch",
         "/user/change-relic",

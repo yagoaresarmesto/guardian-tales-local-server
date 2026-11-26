@@ -153,6 +153,7 @@ class SnapshotTests(unittest.TestCase):
                 "/user/bless-character-all",
                 "/user/change-accessory",
                 "/user/change-costume",
+                "/user/change-equip-costume",
                 "/user/change-merch",
                 "/user/change-name",
                 "/user/change-orb",

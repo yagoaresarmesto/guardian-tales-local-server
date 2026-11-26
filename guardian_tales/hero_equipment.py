@@ -10,10 +10,24 @@ from .raid_static import decode, records
 from .test_item_static import active_specs
 from .village import MAX_REVISION, integer
 
+EQUIP_COSTUME = "/user/change-equip-costume"
+# The character's EquipCostumes map uses the numeric client weapon type as its key.
+COSTUME_WEAPON_TYPES = {
+    1: "onehandsword",
+    2: "twohandsword",
+    3: "assaultrifle",
+    4: "bow",
+    5: "basket",
+    6: "staff",
+    7: "gauntlet",
+    8: "shield",
+    10: "claw",
+}
 ROUTES = {
     "/user/change-weapons": ("Weapon1", "Weapon2"),
     "/user/change-accessory": ("Accessory1",),
     "/user/change-costume": ("Costume",),
+    EQUIP_COSTUME: ("EquipCostume", "WeaponType"),
     "/user/change-orb": ("Orb", "Slot"),
     "/user/change-merch": ("Merch",),
     "/user/change-relic": ("Relic",),
@@ -58,6 +72,10 @@ def selection(route, body):
         if not integer(body["Slot"], 2, 1):
             raise ValueError("Select card slot one or two")
         changes = {"Orb" + str(body["Slot"]): body["Orb"]}
+    elif route == EQUIP_COSTUME:
+        if not integer(body["WeaponType"]) or body["WeaponType"] not in COSTUME_WEAPON_TYPES:
+            raise ValueError("Select a weapon type with equipment costumes")
+        changes = {"EquipCostume": body["EquipCostume"]}
     else:
         changes = {field: body[field] for field in fields}
     if any(value is not None and not integer(value) for value in changes.values()):
@@ -69,13 +87,15 @@ def selection(route, body):
     return changes
 
 
-def validate_item(field, row, kind, item, hero):
+def validate_item(field, row, kind, item, hero, costume_weapon_type=None):
     if not integer(row.get("Amount"), minimum=1):
         raise ValueError("Equip an available owned item")
     expected = "ItemWeapons" if field in ("Weapon1", "Weapon2", "Accessory1") else "ItemMiscs"
     if kind != expected:
         raise ValueError("Equipment is in the wrong inventory")
     item_type = item.get("Type")
+    compatible = hero.get("CompatibleWeapons")
+    allowed = compatible.get("default") if isinstance(compatible, dict) else None
     if field in ("Weapon1", "Weapon2", "Accessory1"):
         weapon_type = item.get("WeaponType")
         if item_type != "weapon" or not isinstance(weapon_type, str):
@@ -84,8 +104,6 @@ def validate_item(field, row, kind, item, hero):
             if weapon_type != "accessory":
                 raise ValueError("The accessory slot requires an accessory")
             return
-        compatible = hero.get("CompatibleWeapons")
-        allowed = compatible.get("default") if isinstance(compatible, dict) else None
         if (
             not isinstance(allowed, list)
             or weapon_type not in allowed
@@ -95,6 +113,14 @@ def validate_item(field, row, kind, item, hero):
             and weapon_type != "shield"
         ):
             raise ValueError("Weapon type is incompatible with this hero or hand")
+    elif field == "EquipCostume":
+        if (
+            item_type != "equipcostume"
+            or item.get("TargetWeaponType") != costume_weapon_type
+            or not isinstance(allowed, list)
+            or costume_weapon_type not in allowed
+        ):
+            raise ValueError("Choose a skin for a compatible weapon type")
     elif field == "Costume":
         targets = item.get("TargetCharacterIds")
         origin = hero.get("OriginId", hero["Id"])
@@ -110,7 +136,55 @@ def validate_item(field, row, kind, item, hero):
         raise ValueError("Equipment type does not match the selected slot")
 
 
+def set_weapon_costume(characters, target, weapon_type, costume):
+    key = str(weapon_type)
+    changed = False
+    for character in characters:
+        slots = character.get("EquipCostumes")
+        if slots is None:
+            slots = {}
+        if not isinstance(slots, dict):
+            raise ValueError("Invalid saved weapon costume slots")
+        if character is target and costume is not None:
+            if slots.get(key) == costume:
+                continue
+            slots[key] = costume
+        elif key in slots and (
+            character is target or costume is not None and slots[key] == costume
+        ):
+            del slots[key]
+        else:
+            continue
+        character["EquipCostumes"] = slots
+        changed = True
+    return changed
+
+
+def set_equipment_slots(characters, target, changes):
+    selected = {ident for ident in changes.values() if ident is not None}
+    changed = False
+    for character in characters:
+        for field in SLOTS:
+            if character.get(field) in selected and not (
+                character is target and changes.get(field) == character[field]
+            ):
+                character[field] = None
+                changed = True
+    for field, ident in changes.items():
+        if field not in target or target[field] != ident:
+            target[field] = ident
+            changed = True
+    return changed
+
+
 def change(account, body, operation_id, route):
+    # Serialize transfers and their receipts, including retries from another connection.
+    with account.db:
+        account.db.execute("BEGIN IMMEDIATE")
+        return _change_in_transaction(account, body, operation_id, route)
+
+
+def _change_in_transaction(account, body, operation_id, route):
     changes = selection(route, body)
     if (
         not isinstance(operation_id, str)
@@ -188,31 +262,24 @@ def change(account, body, operation_id, route):
         spec = items.get(row.get("ItemId"))
         if spec is None:
             raise ValueError("Equipment must identify an owned catalog item")
-        validate_item(field, row, kind, spec, hero)
-    selected = {ident for ident in changes.values() if ident is not None}
-    changed = False
-    for character in characters:
-        for field in SLOTS:
-            if character.get(field) in selected and not (
-                character is target and changes.get(field) == character[field]
-            ):
-                character[field] = None
-                changed = True
-    for field, ident in changes.items():
-        if field not in target or target[field] != ident:
-            target[field] = ident
-            changed = True
+        validate_item(
+            field, row, kind, spec, hero, COSTUME_WEAPON_TYPES.get(body.get("WeaponType"))
+        )
+    if route == EQUIP_COSTUME:
+        changed = set_weapon_costume(
+            characters, target, body["WeaponType"], changes["EquipCostume"]
+        )
+    else:
+        changed = set_equipment_slots(characters, target, changes)
     if changed:
         if user["Cas"] == MAX_REVISION:
             raise ValueError("Hero equipment revision overflow")
         user["Cas"] += 1
-    with account.db:
-        if changed:
-            account.db.execute(
-                "UPDATE local_account SET profile=? WHERE id=1",
-                (json.dumps(profile, separators=(",", ":")),),
-            )
         account.db.execute(
-            "INSERT INTO hero_equipment_requests VALUES(?,?,?)", (operation_id, route, encoded)
+            "UPDATE local_account SET profile=? WHERE id=1",
+            (json.dumps(profile, separators=(",", ":")),),
         )
+    account.db.execute(
+        "INSERT INTO hero_equipment_requests VALUES(?,?,?)", (operation_id, route, encoded)
+    )
     return {"User": resource(user)}
