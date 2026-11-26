@@ -108,7 +108,7 @@ def handler_for(library, journal=None, reference_dir=None):
             if entry is None and override is None and banner_reference is not None:
                 try:
                     override = lobby_notice.image(banner_reference, relative)
-                except (OSError, ValueError):
+                except (OSError, ValueError, ImportError):
                     self.send_error(503, "Local lobby notice is not ready")
                     return
             if entry is None and override is None and banner_reference is not None:

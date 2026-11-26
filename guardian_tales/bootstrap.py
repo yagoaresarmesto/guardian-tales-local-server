@@ -1116,7 +1116,7 @@ class BootstrapSession:
                         name,
                         value,
                         tetis_seed,
-                        lobby_notice.selection,
+                        lambda refs: lobby_notice.selection(refs, self.store.db),
                         lobby_notice.prepare,
                     )
 

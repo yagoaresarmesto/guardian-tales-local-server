@@ -12,6 +12,18 @@ earlier private laboratory observations below.
 
 ## Local lobby notice
 
+For a live game mode summary, install the `lobby-notice` extra in the local
+CDN environment and set `lobby_notice.json` in the active reference directory to
+`{"enabled": true, "mode": "settings", "generation": 2}`. Use the next generation
+when switching from an existing image. On a fresh login, the backend reads the
+applied mode selections and the local save, then publishes a read-only snapshot.
+Changes in those values automatically receive a new banner URL. **Move** links
+to its full settings, including the Raid lineup, DKA rotation and individual
+Expedition overrides. The optional `panel-art` extra and matching content
+provide the Raid sprites. A missing mode reports its settings as unavailable.
+To turn off this notice, keep its mode, set `enabled` to `false`, and increase
+the generation.
+
 The test backend can show a local PNG in the native lobby notice window. Place
 `lobby_notice_1.png` in the active reference directory, then create
 `lobby_notice.json` there with `{"enabled": true, "generation": 1}`. The standard
