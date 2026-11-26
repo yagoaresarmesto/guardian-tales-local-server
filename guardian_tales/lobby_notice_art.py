@@ -8,6 +8,16 @@ from io import BytesIO
 
 from .reference import ReferenceData
 
+# Registered web-panel resources, with the horizontal focal point for each scene.
+MODE_ART = {
+    "Dungeon Kingdom Arena": ("/dka/arena-backdrop.jpg", None, 0.5),
+    "Kama-ZONE": ("/kamazone/lobby.jpg", None, 0.82),
+    "Expedition": ("/expedition/world-map.webp", "/expedition/emblem.png", 0.64),
+    "Guild Wars": (None, "/guild-war/fortress.png", 0.5),
+    "Orbital Lift": ("/orbital-lift/elevator.jpg", None, 0.93),
+    "Tetis": ("/tetis/skill-tree.jpg", None, 0.78),
+}
+
 
 @lru_cache(maxsize=64)
 def font(size, bold=False):
@@ -39,6 +49,48 @@ main{max-width:980px;margin:auto;padding:22px}h1{color:#ffe0a1}section{border-to
 h2{margin:4px 0;color:#98d9ed;font-size:1.2rem}p{margin:5px 0}dl{margin:7px 0}dl div{display:flex;gap:1em;
 justify-content:space-between;padding:5px 0;border-bottom:1px solid #26384a}dd{margin:0;text-align:right;overflow-wrap:anywhere}
 </style><main><h1>Game mode settings</h1>""" + "".join(sections) + "</main></html>").encode()
+
+
+def panel_image(refs, path):
+    from PIL import Image
+
+    from .web_panel.routes import media_resource
+
+    if path:
+        source = media_resource(path)
+        if source and source[1].startswith("image/"):
+            try:
+                with Image.open(BytesIO(source[0](refs))) as image:
+                    return image.convert("RGBA")
+            except (OSError, ValueError, KeyError, ImportError):
+                pass
+    return None
+
+
+def mode_illustration(refs, mode):
+    from PIL import Image, ImageDraw, ImageOps
+
+    background, sprite, focus = MODE_ART.get(mode["name"], (None, None, 0.5))
+    scene = panel_image(refs, mode.get("backdrop"))
+    if scene is None:
+        scene = panel_image(refs, background)
+    actor = panel_image(refs, mode.get("sprite") or sprite)
+    width, height = 489, 165
+    tile = Image.new("RGB", (width, height), "#1c2e41")
+    if scene is not None:
+        # Let the illustration show on the right while preserving contrast under the labels.
+        fitted = ImageOps.fit(
+            scene.convert("RGB"), tile.size, Image.Resampling.LANCZOS, centering=(focus, 0.5)
+        )
+        ramp = bytes(round(244 * min(1, max(0, (x - 100) / 305)) ** 1.9) for x in range(width))
+        tile.paste(fitted, mask=Image.frombytes("L", (width, 1), ramp).resize(tile.size))
+    if actor is not None and (bounds := actor.getbbox()):
+        actor = ImageOps.contain(actor.crop(bounds), (126, 132), Image.Resampling.NEAREST)
+        tile.paste(actor, (width - 77 - actor.width // 2, (height - actor.height) // 2), actor)
+    mask = Image.new("L", tile.size)
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, width - 1, height - 1), radius=14, fill=255)
+    tile.putalpha(mask)
+    return tile, scene is not None or actor is not None
 
 
 def banner(directory, cards):
@@ -95,12 +147,13 @@ def banner(directory, cards):
     for i, mode in enumerate(modes):
         col, row = i % 2, i // 2
         x, y = 526 + 504 * col, 122 + 180 * row
-        draw.rounded_rectangle(
-            (x, y, x + 488, y + 164), radius=14, fill="#1c2e41", outline="#3d5468", width=2
-        )
-        label(x + 23, y + 19, mode["name"], 24, "#8ed8ea", 443, True)
-        label(x + 23, y + 62, mode["summary"], 34, white, 443, True)
-        label(x + 23, y + 117, mode["caption"], 25, light, 443)
+        tile, illustrated = mode_illustration(refs, mode)
+        image.paste(tile, (x, y), tile)
+        draw.rounded_rectangle((x, y, x + 488, y + 164), radius=14, outline="#465c72", width=2)
+        text_width = 315 if illustrated else 443
+        label(x + 23, y + 19, mode["name"], 24, "#a1e3f4", text_width, True)
+        label(x + 23, y + 62, mode["summary"], 34, white, text_width, True)
+        label(x + 23, y + 117, mode["caption"], 25, light, text_width)
     out = BytesIO()
     image.save(out, format="PNG")
     return out.getvalue()

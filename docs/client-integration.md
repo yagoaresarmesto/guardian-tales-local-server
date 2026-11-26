@@ -19,8 +19,13 @@ when switching from an existing image. On a fresh login, the backend reads the
 applied mode selections and the local save, then publishes a read-only snapshot.
 Changes in those values automatically receive a new banner URL. **Move** links
 to its full settings, including the Raid lineup, DKA rotation and individual
-Expedition overrides. The optional `panel-art` extra and matching content
-provide the Raid sprites. A missing mode reports its settings as unavailable.
+Expedition overrides. With the optional `panel-art` extra and matching content,
+the banner reuses the web panel's local illustrations. DKA shows the slime for
+the selected day, Kama-ZONE uses the season artwork when available, and Guild
+Wars uses the saved phase icon. Expedition shows its district map, Orbital
+Lift switches to the descent scenery at floor 1001, and Tetis uses the
+skill-tree backdrop. The client downloads one composed PNG. Missing artwork
+leaves the mode's settings readable.
 To turn off this notice, keep its mode, set `enabled` to `false`, and increase
 the generation.
 

@@ -47,9 +47,10 @@ def selection(references, db=None):
     with _publish_lock:
         history = json.loads(path.read_bytes()) if path.is_file() else []
         rows = report(references, db) if enabled and mode == "settings" else []
-        signature = hashlib.sha256(
-            json.dumps([enabled, mode, generation, rows], sort_keys=True).encode()
-        ).hexdigest()
+        contents = [enabled, mode, generation, rows]
+        if rows:
+            contents.append("illustrated-banner-v1")
+        signature = hashlib.sha256(json.dumps(contents, sort_keys=True).encode()).hexdigest()
         if history and history[0]["signature"] == signature:
             revision = history[0]["revision"]
         else:

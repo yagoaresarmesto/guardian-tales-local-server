@@ -21,6 +21,8 @@ from . import (
 )
 from .orbital import LAST_SELECTABLE_FLOOR
 from .panel_common.labels import english_labels
+from .web_panel.dka.sprites import FRAMES as SLIME_FRAMES
+from .web_panel.kamazone.season_art import SEASONS as SEASON_ART
 from .web_panel.raid import adapter as raid
 
 
@@ -55,20 +57,21 @@ def dka_card(refs):
         v for v in punchking.load_catalog(refs)["variants"] if v["id"] == saved["variant"]
     )
     days = []
+    elements = {"None": "Basic", "Darkness": "Dark", "Ice": "Water", "Nebula": "Space"}
     for day in variant["days"]:
-        element = {"None": "Basic", "Darkness": "Dark", "Ice": "Water"}.get(
-            day["element"], day["element"]
-        )
-        slime = "Void Slime" if element == "Nebula" else f"{element} Slime"
+        element = elements.get(day["element"], day["element"])
+        slime = "Void Slime" if element == "Space" else f"{element} Slime"
         weakness = {"Down": "Downed", "Poison": "Injured", "Aerial": "Airborne"}.get(
             day["weak_point"], day["weak_point"]
         )
-        days.append((slime, weakness))
+        days.append((element.lower(), slime, weakness))
     number = saved["day"]
+    element, slime, _ = days[number - 1]
     return card(
         f"Rotation {variant['id']} · Day {number}",
-        f"Season {variant['season_id']} · {days[number-1][0]}",
-        [(f"Day {i}", f"{slime} · {weakness}") for i, (slime, weakness) in enumerate(days, 1)],
+        f"Season {variant['season_id']} · {slime}",
+        [(f"Day {i}", f"{name} · {weakness}") for i, (_, name, weakness) in enumerate(days, 1)],
+        sprite=f"/dka/slimes/{element}.png" if element in SLIME_FRAMES else None,
     )
 
 
@@ -79,7 +82,9 @@ def kama_card(refs):
         return card("Original calendar")
     archived = status["old_active"]
     seasons = status["old_seasons"] if archived else status["seasons"]
-    name = next((s["name"] for s in seasons if s["season_id"] == ident), f"Season {ident}")
+    season = next((s for s in seasons if s["season_id"] == ident), {})
+    name = season.get("name", f"Season {ident}")
+    art = SEASON_ART.get(season.get("name_key")) if not archived else None
     phase = status["calendar_phase"].replace("-", " ").capitalize()
     window = status["local_period"]
     details = [
@@ -95,7 +100,12 @@ def kama_card(refs):
             )
             details.append(("Benefit points allocated", f"{used:,} / {kamazone_practice.BUDGET:,}"))
             details.extend((f"Benefit {k}", f"Level {v}") for k, v in sorted(benefits.items()) if v)
-    return card(f"{'Old season' if archived else 'Season'} {ident}", f"{name} · {phase}", details)
+    return card(
+        f"{'Old season' if archived else 'Season'} {ident}",
+        f"{name} · {phase}",
+        details,
+        backdrop=f"/kamazone/seasons/{art.hero}.png" if art else None,
+    )
 
 
 def expedition_card(refs):
@@ -133,11 +143,11 @@ def war_card(refs):
     saved = guild_war.selection_status(guild_war_static.load_selection(refs))
     if not saved["enabled"]:
         return card("Practice disabled")
-    phase = {
-        "coop-offense": "Cooperative attack",
-        "coop-defense": "Cooperative defense",
-        "multi-offense": "Fortress siege",
-        "multi-defense": "Fortress defense",
+    phase, icon = {
+        "coop-offense": ("Cooperative attack", "attack"),
+        "coop-defense": ("Cooperative defense", "defense"),
+        "multi-offense": ("Fortress siege", "outpost"),
+        "multi-defense": ("Fortress defense", "fortress"),
     }[saved["phase_name"]]
     details = [("Basic course", "Skipped" if saved["skip_basic_requirement"] else "Required")]
     if saved["phase_name"].startswith("multi-"):
@@ -152,7 +162,7 @@ def war_card(refs):
         details.append(
             ("Castle", str(saved["local_attack_castle"] or saved["local_defense_castle"] or "None"))
         )
-    return card(phase, f"Season {saved['season_id']}", details)
+    return card(phase, f"Season {saved['season_id']}", details, sprite=f"/guild-war/{icon}.png")
 
 
 def orbital_card(refs, db):
@@ -187,6 +197,14 @@ def orbital_card(refs, db):
             ]
             description += " · " + (", ".join(placements) or "Empty formation")
         details.append((f"Floor {key}", description))
+    if floor and floor >= 1001:
+        return card(
+            summary,
+            caption,
+            details,
+            backdrop="/orbital-lift/scenery/mars-bg.webp",
+            sprite="/orbital-lift/scenery/ic_tower1000_clear_00.webp",
+        )
     return card(summary, caption, details)
 
 

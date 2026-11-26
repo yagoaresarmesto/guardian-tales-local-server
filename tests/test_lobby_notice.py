@@ -2,11 +2,13 @@
 import json
 import tempfile
 import unittest
+from importlib.util import find_spec
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
 from guardian_tales import lobby_notice as notice
-from guardian_tales import lobby_settings
+from guardian_tales import lobby_notice_art, lobby_settings
 from guardian_tales.raid_static import compress, decode, digest, records, selected_static_seed
 from guardian_tales.reference import ReferenceData
 
@@ -139,3 +141,53 @@ class LobbyNoticeTests(unittest.TestCase):
         self.assertEqual(card["summary"], "Enemy levels 110–140")
         self.assertEqual(card["caption"], "2 of 3 stages")
         self.assertEqual(len(card["details"]), 2)
+
+    def test_dka_uses_the_slime_sprite_for_the_saved_day_and_variant(self):
+        elements = ("None", "Ice", "Light", "Earth", "Darkness", "Fire", "Nebula")
+        expected = ("basic", "water", "light", "earth", "dark", "fire", "space")
+        days = [{"element": element, "weak_point": "Down"} for element in elements]
+        options = {
+            "variants": [
+                {"id": 1, "season_id": 36, "days": list(reversed(days))},
+                {"id": 2, "season_id": 37, "days": days},
+            ]
+        }
+        with (
+            patch.object(lobby_settings.punchking, "load_catalog", return_value=options),
+            patch.object(lobby_settings.punchking_static, "load_selection") as selection,
+        ):
+            for day, element in enumerate(expected, 1):
+                selection.return_value = {"variant": 2, "day": day}
+                card = lobby_settings.dka_card(self.refs)
+                self.assertEqual(card["sprite"], f"/dka/slimes/{element}.png")
+            self.assertEqual(card["caption"], "Season 37 · Void Slime")
+            selection.return_value = None
+            self.assertIsNone(lobby_settings.dka_card(self.refs).get("sprite"))
+
+    @unittest.skipUnless(find_spec("PIL"), "Lobby rendering requires Pillow")
+    def test_optional_scenery_and_sprites_are_composed_independently(self):
+        from PIL import Image
+
+        image = Image.new("RGBA", (50, 50), "red")
+        buffer = BytesIO()
+        image.save(buffer, format="PNG")
+        tile_card = {"name": "Dungeon Kingdom Arena", "sprite": "/dka/slimes/space.png"}
+
+        def resource(path):
+            def read(refs):
+                if path == tile_card["sprite"]:
+                    return buffer.getvalue()
+                raise FileNotFoundError(path)
+
+            return read, "image/png"
+
+        with patch("guardian_tales.web_panel.routes.media_resource", side_effect=resource):
+            tile, illustrated = lobby_notice_art.mode_illustration(self.refs, tile_card)
+            self.assertTrue(illustrated)
+            self.assertEqual(tile.getpixel((412, 82)), (255, 0, 0, 255))
+            self.assertEqual(tile.getpixel((23, 82)), (28, 46, 65, 255))
+            tile, illustrated = lobby_notice_art.mode_illustration(
+                self.refs, {"name": "Expedition"}
+            )
+            self.assertFalse(illustrated)
+            self.assertEqual(tile.getpixel((412, 82)), (28, 46, 65, 255))
