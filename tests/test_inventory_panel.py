@@ -493,7 +493,7 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertTrue(self.call("/equipment-add.js"))
         self.assertTrue(self.call("/catalog-picker.js"))
 
-    def test_owned_hero_upgrades_are_free_versioned_and_limited_to_the_current_form(self):
+    def seed_hero_upgrades(self):
         api = "/api/game/heroes"
         self.assertEqual(self.call(api)["heroes"], [])
         editor = self.server.inventory.heroes
@@ -551,6 +551,11 @@ class InventoryPanelTests(unittest.TestCase):
             db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY)")
             db.execute("INSERT INTO imported_account VALUES (1)")
             db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        return editor, other
+
+    def test_owned_hero_upgrades_are_free_versioned_and_limited_to_the_current_form(self):
+        api = "/api/game/heroes"
+        editor, other = self.seed_hero_upgrades()
         roster = self.call(api)["heroes"]
         self.assertEqual([h["id"] for h in roster], [1, 2])
         self.assertTrue(all(h["upgradable"] for h in roster))
@@ -592,6 +597,73 @@ class InventoryPanelTests(unittest.TestCase):
         self.assertEqual((user["Assets"], user["ItemStackables"]), ([], []))
         self.assertEqual(user["Characters"][1], other)
         self.assertEqual(user["Characters"][0]["AwakeningTreeGold"], 0)
+
+    def test_max_hero_is_atomic_and_stops_at_the_selected_heros_available_form(self):
+        api = "/api/game/heroes"
+        editor, other = self.seed_hero_upgrades()
+        body = dict(id=1, action="max", version=self.call(api + "/1")["version"])
+        with editor.reader() as db:
+            original = editor.profile(db)
+        with patch("guardian_tales.hero_awakening.awaken", side_effect=ValueError("invalid tree")):
+            with self.assertRaises(HTTPError) as aborted:
+                self.call(api, body)
+            self.assertEqual(aborted.exception.code, 400)
+            aborted.exception.close()
+        with editor.reader() as db:
+            self.assertEqual(editor.profile(db), original)
+            self.assertIsNone(
+                db.execute(
+                    "SELECT name FROM sqlite_master WHERE name='hero_myth_requests'"
+                ).fetchone()
+            )
+
+        myth = self.call(api, body)
+        self.assertEqual(myth["hero"]["form"], "Myth")
+        self.assertEqual(myth["stats"]["Level"], "6 / 6")
+        self.assertEqual(myth["stats"]["Awakening"], "2 / 2")
+        self.assertEqual(myth["actions"], {})
+        self.assertEqual(self.call(api, body | {"version": myth["version"]}), myth)
+        with self.assertRaises(HTTPError) as stale:
+            self.call(api, body)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        with editor.reader() as db:
+            user = editor.profile(db)["User"]
+        self.assertEqual(user["Characters"][1], other)
+        self.assertEqual((user["Assets"], user["ItemStackables"]), ([], []))
+        with patch("guardian_tales.hero_myth.rules", return_value=({}, 1, 94, 1)):
+            ordinary = self.call(api, body | {"id": 2, "version": myth["version"]})
+        self.assertEqual(ordinary["hero"]["spec"], 32)
+        self.assertEqual(ordinary["stats"]["Level"], "5 / 5")
+        self.assertEqual(ordinary["stats"]["Awakening"], "2 / 2")
+        self.assertEqual(ordinary["actions"], {})
+
+    def test_max_hero_follows_regional_ascent_before_myth_and_respects_training_locks(self):
+        api = "/api/game/heroes"
+        editor, _ = self.seed_hero_upgrades()
+        editor.ascent_rank, editor.ascent_categories = 5, {"Story"}
+        editor.specs[32].update(
+            OriginId=31, SummonCategory="Story", AscendTo={"KakaoGlobal": 34, "Default": 99}
+        )
+        editor.specs[34] = dict(
+            Id=34, OriginId=31, Name="archer_ascent", SummonCategory="Story", Rank=5, Playable=True
+        )
+        with patch("guardian_tales.hero_myth.rules", return_value=({34: (33, 93, 400)}, 1, 94, 1)):
+            completed = self.call(
+                api, dict(id=1, action="max", version=self.call(api + "/1")["version"])
+            )
+        self.assertEqual(completed["hero"]["form"], "Myth")
+        self.assertEqual(completed["actions"], {})
+        with closing(sqlite3.connect(editor.database)) as db, db:
+            profile = editor.profile(db)
+            profile["User"]["TrainingSlots"] = {"1": {"CharacterId": 2, "IsAwakening": True}}
+            db.execute("UPDATE local_account SET profile=? WHERE id=1", (json.dumps(profile),))
+        restricted = self.call(api, dict(id=2, action="max", version=completed["version"]))
+        self.assertTrue(restricted["trainingRoom"])
+        self.assertEqual(restricted["hero"]["spec"], 32)
+        self.assertEqual(restricted["stats"]["Awakening"], "0 / 2")
+        self.assertEqual(restricted["stats"]["Level"], "5 / 5")
+        self.assertEqual(restricted["actions"], {})
 
     def test_add_relic_uses_native_star_slots_and_separate_capacity(self):
         original = self.seed_wallet()["User"]

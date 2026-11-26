@@ -4,6 +4,7 @@
 import json
 
 from .campaign import FIRST_STAGE_ID, STAGE_CLEARED
+from .characters import hero_transaction
 
 
 def train_characters(account, request, operation_id, *, free=False):
@@ -118,7 +119,7 @@ def train_characters(account, request, operation_id, *, free=False):
     record["AddCharacterExperienceAmount"] += spent
     record["Cas"] += 1
     user["Cas"] += 1
-    with account.db:
+    with hero_transaction(account.db):
         account.db.execute(
             "INSERT INTO character_training_requests VALUES(?,?,?)",
             (operation_id, canonical, json.dumps(targets, sort_keys=True)),

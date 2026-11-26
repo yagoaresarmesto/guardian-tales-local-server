@@ -1,7 +1,27 @@
 # SPDX-License-Identifier: Apache-2.0
 """Look up owned heroes and construct their initial progression and equipment."""
 
+from contextlib import contextmanager
+
 from .village import integer
+
+
+@contextmanager
+def hero_transaction(db):
+    """Commit a standalone upgrade, or keep it inside a larger atomic hero edit."""
+    if not db.in_transaction:
+        with db:
+            db.execute("BEGIN IMMEDIATE")
+            yield
+        return
+    db.execute("SAVEPOINT hero_upgrade")
+    try:
+        yield
+    except BaseException:
+        db.execute("ROLLBACK TO hero_upgrade")
+        raise
+    finally:
+        db.execute("RELEASE hero_upgrade")
 
 
 def hero_resource(user, *payment_fields):

@@ -4,6 +4,7 @@
 import json
 
 from .campaign import FIRST_STAGE_ID, STAGE_CLEARED
+from .characters import hero_transaction
 from .snapshots import CLIENT
 
 MAX_INT = 0x7FFFFFFF
@@ -164,7 +165,7 @@ def train(account, body, operation_id):
     record["AddCharacterExperienceAmount"] += applied
     record["Cas"] += 1
     user["Cas"] += 1
-    with account.db:
+    with hero_transaction(account.db):
         account.db.execute(
             "INSERT INTO imported_character_training_requests VALUES(?,?,?)",
             (operation_id, encoded, json.dumps(targets, sort_keys=True)),

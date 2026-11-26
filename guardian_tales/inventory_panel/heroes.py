@@ -18,7 +18,7 @@ from guardian_tales.account import AccountStore
 from guardian_tales.campaign import FIRST_STAGE_ID, STAGE_CLEARED
 from guardian_tales.characters import owned_character
 from guardian_tales.snapshots import is_imported
-from guardian_tales.village import integer
+from guardian_tales.village import MAX_REVISION, integer
 
 from .game_save import GameSaveEditor
 
@@ -37,9 +37,15 @@ class HeroEditor(GameSaveEditor):
         self.specs = (
             {h["Id"]: h for h in json.loads(tables["heroes"][1])} if "heroes" in tables else {}
         )
-        experience = (
-            json.loads(tables["exps2"][1]).get("LevelExps", []) if "exps2" in tables else []
-        )
+        growth = json.loads(tables["exps2"][1]) if "exps2" in tables else {}
+        constants = json.loads(tables["constants"][1]) if "constants" in tables else {}
+        self.ascent_rank = constants.get("AscentCharacterRank")
+        self.ascent_categories = {
+            row["SummonCategory"]
+            for row in growth.get("AscendCosts", [])
+            if row["Rank"] == self.ascent_rank
+        }
+        experience = growth.get("LevelExps", [])
         self.levels = [0, *(row["TotalExps"] for row in experience if "TotalExps" in row)]
 
     def summary(self, hero):
@@ -200,6 +206,24 @@ class HeroEditor(GameSaveEditor):
                 }
 
         myth, required, _, _ = hero_myth.rules(self.body)
+        source = self.specs[spec]
+        link = source.get("AscendTo") or {}
+        ascend_to = link.get("KakaoGlobal", link.get("Default"))
+        ascended = self.specs.get(ascend_to)
+        if (
+            ascended
+            and ascended.get("Playable") is True
+            and source.get("SummonCategory") in self.ascent_categories
+            and source["SummonCategory"] == ascended.get("SummonCategory")
+            and source["OriginId"] == ascended.get("OriginId")
+            and source["Rank"] + 1 == self.ascent_rank == ascended["Rank"]
+            and breaks == required
+            and not slots
+        ):
+            actions["ascend"] = {
+                "label": "Ascension",
+                "choices": [choice(ascend_to, "Ascend hero")],
+            }
         if spec in myth and breaks == required and not slots:
             actions["myth"] = {"label": "Myth", "choices": [choice(1, "Promote to Myth")]}
 
@@ -228,13 +252,17 @@ class HeroEditor(GameSaveEditor):
                 profile, owned_character(profile["User"], ident), self.training_policy(db)
             )
 
-    def write_transaction(self, db, body):
-        # Native progression handlers own their transactions. For real writes
-        # GameSaveEditor holds the same exclusive state lock as the game backend.
-        if not isinstance(body, dict) or set(body) != {"id", "version", "action", "value"}:
+    def apply_locked(self, db, body):
+        if not isinstance(body, dict):
             raise ValueError("Choose a hero and an upgrade")
-        ident, action, value = (body[k] for k in ("id", "action", "value"))
-        if not integer(ident, minimum=1) or not isinstance(action, str) or type(value) is not int:
+        max_hero = body.get("action") == "max"
+        fields = {"id", "version", "action"}
+        if not max_hero:
+            fields.add("value")
+        if set(body) != fields:
+            raise ValueError("Choose a hero and an upgrade")
+        ident, action = body["id"], body["action"]
+        if not integer(ident, minimum=1) or not isinstance(action, str):
             raise ValueError("Invalid hero upgrade")
         profile = self.profile(db)
         if body["version"] != self.inventory_version(profile["User"]):
@@ -242,11 +270,36 @@ class HeroEditor(GameSaveEditor):
         policy = self.training_policy(db)
         hero = owned_character(profile["User"], ident)
         detail = self.inspect(profile, hero, policy)
-        option = detail["actions"].get(action, {})
-        selected = next((c for c in option.get("choices", []) if c["value"] == value), None)
-        if selected is None:
-            raise ValueError("Choose an available upgrade for this hero")
         account = AccountStore(db, self.catalog.refs.directory, initialize=False)
+        if not max_hero:
+            value = body["value"]
+            options = detail["actions"].get(action, {}).get("choices", [])
+            if type(value) is not int or not any(c["value"] == value for c in options):
+                raise ValueError("Choose an available upgrade for this hero")
+        # A guest knight can train only in its starting form. On imported saves
+        # train after promotion so the final level cap is reached in one step.
+        order = ("evolve", "break", "ascend", "myth", "bless", "level", "awaken")
+        if not policy[0]:
+            order = ("level", "evolve", "break", "ascend", "myth", "bless", "awaken")
+        while detail["actions"]:
+            if max_hero:
+                action = next(key for key in order if key in detail["actions"])
+                value = detail["actions"][action]["choices"][-1]["value"]
+            before = hero.copy()
+            self.apply_upgrade(account, profile, hero, policy, detail, action, value)
+            profile = account.profile()
+            updated = owned_character(profile["User"], ident)
+            if updated == before:
+                raise ValueError("The selected hero upgrade did not advance its progress")
+            hero = updated
+            detail = self.inspect(profile, hero, policy)
+            if not max_hero:
+                break
+        return 200, detail
+
+    def apply_upgrade(self, account, profile, hero, policy, detail, action, value):
+        db = account.db
+        ident = hero["Id"]
         operation = "panel-" + uuid4().hex
         request = {"CharacterId": ident}
         if action == "level":
@@ -271,6 +324,15 @@ class HeroEditor(GameSaveEditor):
             hero_myth.create_tables(db)
             request["DreamMythStoneUsageAmount"] = 0
             hero_myth.promote(account, request, operation, free=True)
+        elif action == "ascend":
+            if account.needs_prologue() or not integer(profile["User"]["Cas"], MAX_REVISION - 1):
+                raise ValueError("Cannot ascend this hero on the current save")
+            hero.update(CharacterId=value, RankUpgrade=0)
+            profile["User"]["Cas"] += 1
+            db.execute(
+                "UPDATE local_account SET profile=? WHERE id=1",
+                (json.dumps(profile, separators=(",", ":")),),
+            )
         elif action == "break":
             hero_limit_break.create_tables(db)
             request["LimitBreakCount"] = value
@@ -284,5 +346,3 @@ class HeroEditor(GameSaveEditor):
                 operation,
                 free=True,
             )
-        updated = account.profile()
-        return 200, self.inspect(updated, owned_character(updated["User"], ident), policy)

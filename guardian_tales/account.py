@@ -53,7 +53,7 @@ from .campaign import (
 )
 from .challenges import claim_challenges
 from .challenges import create_tables as create_challenge_tables
-from .characters import new_character
+from .characters import hero_transaction, new_character
 from .completion import complete_catalog_stage, completion_custom
 from .discovery import discover_substage
 from .festival_shop import check_not_redeemable, redeem_points
@@ -1071,7 +1071,7 @@ class AccountStore:
         record["AddCharacterExperienceAmount"] += 37
         record["Cas"] += 1
         user["Cas"] += 1
-        with self.db:
+        with hero_transaction(self.db):
             self.db.execute("INSERT INTO first_knight_training VALUES(1,37)")
             self.db.execute(
                 "UPDATE local_account SET profile=? WHERE id=1",

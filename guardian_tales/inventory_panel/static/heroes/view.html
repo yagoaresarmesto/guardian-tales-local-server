@@ -13,11 +13,12 @@
         <div class="item-info">
           <dl id="facts" class="inspector-facts"></dl>
           <p id="training" class="editor-note" hidden>Assigned to the Training Room.</p>
+          <div class="hero-max"><button type="button" class="apply-button" id="max-hero" aria-describedby="max-hint" disabled>Max hero</button>
+            <small id="max-hint">All available upgrades, including Myth when eligible. Free.</small></div>
           <p id="unavailable" class="editor-note" hidden>No further upgrades are available for this hero right now.</p>
           <form id="upgrade" hidden>
             <label>Upgrade<select id="action"></select></label>
             <label>Target<select id="target"></select></label>
-            <small>Panel upgrades are free.</small>
             <button type="submit" class="apply-button" id="apply" disabled>Apply upgrade</button>
           </form>
           <p role="status" id="message" hidden></p>

@@ -5,6 +5,8 @@
 #facts { margin-inline:calc(-1 * var(--inspector-inset)); }
 #refresh { border:1px solid #59738d; border-radius:5px; background:#263e55; color:#eaf6ff; padding:6px 12px; font-weight:650; }
 #placeholder { min-height:160px; }
+.hero-max { display:grid; gap:6px; margin-top:14px; }
+.hero-max small { color:var(--muted); font-size:.8rem; line-height:1.4; }
 .tile-art img { --art-size:86%; }
 .tile-header .element-icon { width:17px; height:17px; margin-left:auto; }
 #upgrade { display:grid; gap:10px; border-top:1px solid var(--line); margin-top:12px; padding-top:14px; }

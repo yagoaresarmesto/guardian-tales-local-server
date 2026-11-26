@@ -72,10 +72,7 @@ class GameSaveEditor:
             }
         try:
             with closing(sqlite3.connect(self.database.as_uri() + "?mode=rw", uri=True)) as db, db:
-                return self.write_transaction(db, body)
+                db.execute("BEGIN IMMEDIATE")
+                return self.apply_locked(db, body)
         finally:
             lock.release()
-
-    def write_transaction(self, db, body):
-        db.execute("BEGIN IMMEDIATE")
-        return self.apply_locked(db, body)

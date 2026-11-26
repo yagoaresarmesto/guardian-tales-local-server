@@ -4,7 +4,7 @@
 import json
 from functools import lru_cache
 
-from .characters import hero_resource, owned_character
+from .characters import hero_resource, hero_transaction, owned_character
 from .hero_catalog import growth_tables
 from .hero_stones import spend_hero_stones
 from .village import INT_MAX, MAX_REVISION, integer
@@ -86,8 +86,7 @@ def promote(account, body, operation_id, *, free=False):
         raise ValueError("Select an owned hero and a Dream Myth Stone amount")
     ident, budget = body["CharacterId"], body["DreamMythStoneUsageAmount"]
     db = account.db
-    with db:
-        db.execute("BEGIN IMMEDIATE")
+    with hero_transaction(db):
         profile = account.profile()
         user, record = profile["User"], profile["UserRecord"]
         previous = db.execute(

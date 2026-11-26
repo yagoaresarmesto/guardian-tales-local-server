@@ -8,7 +8,7 @@ from collections import Counter
 from datetime import datetime, timezone
 
 from .awakening_catalog import catalog
-from .characters import hero_resource, owned_character
+from .characters import hero_resource, hero_transaction, owned_character
 from .summon_payment import spend_tickets as spend_stackables
 from .village import GOLD, INT_MAX, MAX_REVISION, integer
 
@@ -108,8 +108,7 @@ def awaken(account, body, operation_id, *, free=False):
     ident, indices, requested = body["CharacterId"], body["NodeIndices"], body["discountBuff"]
     selection = json.dumps([ident, sorted(indices), requested], separators=(",", ":"))
     db = account.db
-    with db:
-        db.execute("BEGIN IMMEDIATE")
+    with hero_transaction(db):
         profile = account.profile()
         user = profile["User"]
         prior = db.execute(

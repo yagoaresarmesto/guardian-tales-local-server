@@ -30,6 +30,7 @@ function updateAccess(allowed) {
   $("access").hidden = writable;
   $("access").textContent = "Close Guardian Tales and stop the game backend to apply hero upgrades.";
   $("apply").disabled = applying || !writable || !detail?.actions[$("action").value];
+  $("max-hero").disabled = applying || !writable || !detail || !Object.keys(detail.actions).length;
 }
 
 async function checkAccess() {
@@ -142,7 +143,7 @@ async function load() {
   const ticket = ++generation;
   const prior = selected;
   detail = null;
-  $("apply").disabled = true;
+  updateAccess(writable);
   try {
     const data = await json(api);
     if (ticket !== generation) return;
@@ -171,16 +172,19 @@ $("tiles").onclick = event => {
   const card = event.target.closest("button[data-id]");
   if (card) selectHero(Number(card.dataset.id), true);
 };
-$("upgrade").onsubmit = async event => {
-  event.preventDefault();
+async function applyUpgrade(maxHero) {
   if (applying || !writable || !detail) return;
-  const action = $("action").value;
-  const target = $("target").selectedOptions[0];
-  const message = detail.hero.name + " · " + target.text + " applied.";
-  const body = { id: selected, version: detail.version, action, value: Number(target.value) };
+  const action = maxHero ? "max" : $("action").value;
+  const body = { id: selected, version: detail.version, action };
+  let message = detail.hero.name + " · All available upgrades applied.";
+  if (!maxHero) {
+    const target = $("target").selectedOptions[0];
+    body.value = Number(target.value);
+    message = detail.hero.name + " · " + target.text + " applied.";
+  }
   applying = true;
   $("action").disabled = $("target").disabled = $("refresh").disabled = true;
-  tell();
+  tell(maxHero ? "Applying all available upgrades…" : "");
   updateAccess(writable);
   draw();
   try {
@@ -199,7 +203,9 @@ $("upgrade").onsubmit = async event => {
     updateAccess(writable);
     draw();
   }
-};
+}
+$("upgrade").onsubmit = event => { event.preventDefault(); applyUpgrade(false); };
+$("max-hero").onclick = () => applyUpgrade(true);
 $("search").oninput = $("element").onchange = $("sort").onchange = $("upgradable").onchange = () => { page = 0; draw(); };
 $("action").onchange = () => { targets(); tell(); };
 $("previous").onclick = () => { page--; draw(); };
