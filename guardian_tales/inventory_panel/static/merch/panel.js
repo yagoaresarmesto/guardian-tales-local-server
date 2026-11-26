@@ -1,9 +1,18 @@
-import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, watchGridPageSize } from "/inventory-dom.js";
+import { $, el, image, inventoryTile, renderTypeFilters, selectTypeFilter, sizeItemSprite, watchGridPageSize } from "/inventory-dom.js";
+import { bulkSelection } from "/bulk-selection.js";
 import { itemCatalog } from "/catalog-picker.js";
 
 let copies = [], visible = [], selected, rarity = "", page = 0, size = 24;
 let version, limits = {}, writable = false, saving = false, accessRequest = 0;
 const api = "/api/game/merch";
+const bulk = bulkSelection({
+  api, version: () => version, focusId: () => selected?.id, describe: row => row,
+  onProtection(result) {
+    version = result.inventoryVersion;
+    filter(selected?.id);
+  },
+  reload: () => load(selected?.id),
+});
 
 function drawStars(target, row) {
   target.dataset.baseStars = row.kind;
@@ -52,6 +61,7 @@ function setAccess(allowed) {
   writable = allowed === true;
   $("access").hidden = writable;
   picker.setWritable(writable);
+  bulk.setWritable(writable);
   updateMax();
 }
 
@@ -69,6 +79,7 @@ async function checkAccess() {
 
 function sprite(row) {
   const img = image("/icon/" + row.spec + ".png");
+  img.onload = () => sizeItemSprite(img, 0.8);
   img.onerror = () => img.replaceWith(el("span", "fallback", row.name.slice(0, 2)));
   return img;
 }
@@ -90,7 +101,9 @@ function drawDetails() {
 
 function drawGrid() {
   const start = page * size, end = Math.min(start + size, visible.length);
-  $("tiles").replaceChildren(...visible.slice(start, end).map(row => tile(row, row === selected)));
+  const rows = visible.slice(start, end);
+  $("tiles").replaceChildren(...rows.map(row => tile(row, row === selected)));
+  bulk.page(rows);
   $("empty").hidden = !!visible.length;
   $("empty").textContent = copies.length ? "No merch matches these filters." : "You have no merch yet.";
   $("range").textContent = visible.length ? (start + 1) + "–" + end + " of " + visible.length : "0 items";
@@ -126,7 +139,7 @@ $("mobile-types").onchange = event => setRarity(event.target.value);
 $("search").oninput = $("show").onchange = () => filter();
 $("tiles").onclick = event => {
   const button = event.target.closest("button[data-id]");
-  if (!button) return;
+  if (!button || bulk.toggle(Number(button.dataset.id))) return;
   selected = visible.find(row => row.id === Number(button.dataset.id));
   for (const tile of $("tiles").children) tile.setAttribute("aria-pressed", String(tile === button));
   drawDetails();
@@ -152,6 +165,7 @@ async function load(focusId) {
   const response = await fetch(api, {cache: "no-store"});
   if (!response.ok) throw new Error("Could not load merch from the game save.");
   const data = await response.json();
+  bulk.reset();
   version = data.version;
   limits = data.limits;
   ++accessRequest;
@@ -160,6 +174,7 @@ async function load(focusId) {
     a.name.localeCompare(b.name) || a.id - b.id);
   const counts = new Map();
   for (const row of copies) counts.set(row.stars, (counts.get(row.stars) || 0) + 1);
+  if (rarity && !counts.has(Number(rarity))) rarity = "";
   renderTypeFilters($("types"), $("mobile-types"), [
     {key: "", name: "All rarities", count: copies.length, iconUrl: "/type-icon/all.png"},
     ...Array.from(counts, ([stars, count]) => ({

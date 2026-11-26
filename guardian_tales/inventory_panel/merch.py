@@ -101,6 +101,7 @@ class MerchInventory(GameSaveEditor):
     def info(self):
         with self.reader() as db:
             user = self.profile(db)["User"]
+        training = {slot.get("ItemId") for slot in user.get("TrainingSlots", {}).values()}
         holders = {
             hero["Merch"]: hero.get("CharacterId")
             for hero in user["Characters"]
@@ -127,6 +128,7 @@ class MerchInventory(GameSaveEditor):
                     level=level,
                     locked=bool(item.get("Locked")),
                     equipped=ident in holders,
+                    training=ident in training,
                     hero=self.catalog.equipment.hero_names.get(holders.get(ident)),
                 )
             )

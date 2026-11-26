@@ -78,12 +78,6 @@ class InventoryApplication:
             "/api/game/consumables": self.consumables.write,
             "/api/game/equipment": self.equipment.request,
             "/api/game/equipment/add": self.equipment_grants.write,
-            "/api/game/equipment/delete": CopyRemoval(database, "ItemWeapons").write,
-            "/api/game/equipment/force-delete": ForcedCopyRemoval(database, "ItemWeapons").write,
-            "/api/game/equipment/lock": CopyProtection(database, "ItemWeapons", locked=True).write,
-            "/api/game/equipment/unlock": CopyProtection(
-                database, "ItemWeapons", locked=False
-            ).write,
             "/api/game/equipment/roll": partial(self.equipment.request, roll=True),
             "/api/game/equipment/hammers": self.equipment.hammers.write,
             "/api/game/mastery": self.mastery.write,
@@ -92,20 +86,24 @@ class InventoryApplication:
             "/api/game/mastery/preview": self.mastery.preview,
             "/api/game/relics": self.relics.apply,
             "/api/game/relics/add": self.relic_grants.write,
-            "/api/game/relics/lock": CopyProtection(
-                database, "ItemMiscs", self.relics.specs, locked=True
-            ).write,
-            "/api/game/relics/unlock": CopyProtection(
-                database, "ItemMiscs", self.relics.specs, locked=False
-            ).write,
-            "/api/game/relics/force-delete": ForcedCopyRemoval(
-                database,
-                "ItemMiscs",
-                self.relics.specs,
-                {spec for spec, row in self.catalog.specs.items() if row.get("Type") == "jewel"},
-            ).write,
-            "/api/game/relics/delete": CopyRemoval(database, "ItemMiscs", self.relics.specs).write,
         }
+        jewels = {spec for spec, row in self.catalog.specs.items() if row.get("Type") == "jewel"}
+        for tab, inventory, specs, jewel_specs in (
+            ("equipment", "ItemWeapons", None, ()),
+            ("relics", "ItemMiscs", self.relics.specs, jewels),
+            ("merch", "ItemMiscs", self.merch.grants.merch, ()),
+        ):
+            api = f"/api/game/{tab}"
+            self.edits[api + "/lock"] = CopyProtection(
+                database, inventory, specs, locked=True
+            ).write
+            self.edits[api + "/unlock"] = CopyProtection(
+                database, inventory, specs, locked=False
+            ).write
+            self.edits[api + "/delete"] = CopyRemoval(database, inventory, specs).write
+            self.edits[api + "/force-delete"] = ForcedCopyRemoval(
+                database, inventory, specs, jewel_specs
+            ).write
 
     def _preview(self):
         if self._sandbox is None:

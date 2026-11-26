@@ -44,6 +44,8 @@ The star count shows the current evolution. Merch with an original grade of 1★
 
 Choose **Add merch**, select a catalog variant and press **Add to inventory** for a level-1 copy at the selected rarity. Select an owned copy and choose **Max merch** to apply its full evolution and level in one step. The inspector shows the maximum for that family. Both actions are free. Equipped and locked copies retain their assignments and protection.
 
+Use **Select items** to mark individual merch copies across pages and filters, or **Select page** to mark a whole page. Choose **Lock**, **Unlock** or **Delete** for the selection. Review the copy IDs before confirming deletion. **Force delete** also clears locks and any preset or Training Room assignments on those copies.
+
 ### Account, Consumables and Mastery
 
 - **Account** edits nickname, five-character player tag, gems, gold, reserve coffee and materials. Wallet entries add the amount shown. Material entries use **Set total**. Review **After applying** before saving. Free gems, paid gems and gold each have a panel limit of 100,000,000. Reserve coffee follows the catalog cap (3,000 in the EU pack).

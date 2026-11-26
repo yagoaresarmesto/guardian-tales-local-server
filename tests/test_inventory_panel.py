@@ -579,6 +579,7 @@ class InventoryPanelTests(unittest.TestCase):
             )
             user["ItemStackables"].append(dict(Id=23, ItemId=89, Amount=4))
             user["Characters"] = [dict(CharacterId=4, Merch=22)]
+            user["TrainingSlots"] = {"3": {"ItemId": 21}}
             db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
         with StateLock(self.root):
             copies = self.call(api)["copies"]
@@ -594,6 +595,7 @@ class InventoryPanelTests(unittest.TestCase):
                     level=1,
                     locked=False,
                     equipped=False,
+                    training=True,
                     hero=None,
                 ),
                 dict(
@@ -605,6 +607,7 @@ class InventoryPanelTests(unittest.TestCase):
                     level=2,
                     locked=True,
                     equipped=True,
+                    training=False,
                     hero=None,
                 ),
             ],
@@ -613,6 +616,54 @@ class InventoryPanelTests(unittest.TestCase):
             self.call(api, {})
         self.assertEqual(rejected.exception.code, 404)
         rejected.exception.close()
+
+    def test_merch_bulk_actions_preserve_relics_and_unselected_merch_copies(self):
+        api = "/api/game/merch"
+        profile = self.seed_wallet()
+        user = profile["User"]
+        user.update(
+            TrainingSlots={"3": {"ItemId": 22}},
+            Characters=[{"Merch": 21, "Relic": 12}],
+            ItemIdCounter=23,
+        )
+        merch = dict(Id=21, ItemId=88, Amount=1, Locked=False)
+        user["ItemMiscs"].extend([merch, dict(merch, Id=22), dict(merch, Id=23)])
+        db = self.enterContext(closing(sqlite3.connect(self.root / "server.sqlite3")))
+        with db:
+            db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            db.execute("CREATE TABLE imported_account (id INTEGER PRIMARY KEY, startup_reads TEXT)")
+        copies = [dict(id=i, spec=88) for i in (21, 22)]
+        body = dict(copies=copies, version=self.call(api)["version"])
+        relic = user["ItemMiscs"][0]
+        mixed = dict(body, copies=[copies[0], dict(id=relic["Id"], spec=relic["ItemId"])])
+
+        def saved():
+            return json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+
+        for action in ("lock", "unlock", "delete", "force-delete"):
+            with self.subTest(action=action), self.assertRaises(HTTPError) as error:
+                self.call(api + "/" + action, mixed)
+            self.assertEqual(error.exception.code, 400)
+            error.exception.close()
+            self.assertEqual(saved(), profile)
+        for action, locked in (("lock", True), ("unlock", False)):
+            body["version"] = self.call(api + "/" + action, body)["inventoryVersion"]
+            for row in user["ItemMiscs"]:
+                if row["Id"] in (21, 22):
+                    row["Locked"] = locked
+            user["Cas"] += 1
+            self.assertEqual(saved(), profile)
+        with self.assertRaises(HTTPError) as training:
+            self.call(api + "/delete", body)
+        self.assertEqual(training.exception.code, 400)
+        training.exception.close()
+        self.assertEqual(saved(), profile)
+        self.assertEqual(self.call(api + "/force-delete", body)["ids"], [21, 22])
+        user["Cas"] += 1
+        user["ItemMiscs"] = [row for row in user["ItemMiscs"] if row["Id"] not in (21, 22)]
+        user["TrainingSlots"]["3"]["ItemId"] = 0
+        user["Characters"][0]["Merch"] = None
+        self.assertEqual(saved(), profile)
 
     def test_free_merch_grants_and_max_respect_the_family_copy_and_slot_limit(self):
         api = "/api/game/merch"

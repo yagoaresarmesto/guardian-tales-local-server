@@ -40,6 +40,8 @@
 }
 .tile-level { top: 0; left: 0; border-bottom-right-radius: 3px; }
 .tile-badge[title="Equipped"] { bottom: 0; right: 0; border-top-left-radius: 3px; }
+.tile-badge[title="Training Room"] { bottom: 0; left: 0; border-top-right-radius: 3px; }
+.selecting-copies #tiles .tile-header::before { position: absolute; top: 4%; right: 4%; z-index: 3; }
 .tile-lock {
   position: absolute;
   z-index: 1;

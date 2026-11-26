@@ -55,9 +55,12 @@ def render_page(slug):
                 "merch": "Base rarity",
             }[slug],
         )
-    if slug in ("equipment", "relics"):
-        dialog += (STATIC / "shared/delete-copy.html").read_text(encoding="utf-8")
-        dialog += (STATIC / "shared/bulk-selection.html").read_text(encoding="utf-8")
+        if slug in ("equipment", "relics"):
+            dialog += (STATIC / "shared/delete-copy.html").read_text(encoding="utf-8")
+        bulk_toolbar = (STATIC / "shared/bulk-selection.html").read_text(encoding="utf-8")
+        dialog += Template(bulk_toolbar).substitute(
+            jewel_note=" Socketed jewels return to inventory." if slug == "relics" else ""
+        )
     return render_layout(
         directory / "view.html",
         tabs=(("/" + key, key.capitalize()) for key in TITLES),

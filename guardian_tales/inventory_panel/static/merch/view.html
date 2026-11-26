@@ -1,6 +1,6 @@
   <main>
     <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
-    <p id="access" class="save-access" role="status" hidden>Close Guardian Tales and stop the game backend to add or upgrade merch.</p>
+    <p id="access" class="save-access" role="status" hidden>Close Guardian Tales and stop the game backend to edit merch.</p>
     <div class="workspace">
       <section class="inspector" aria-labelledby="details-title">
         <div class="section-bar"><h2 id="details-title">Merch details</h2><span id="copy-id"></span></div>
@@ -23,6 +23,7 @@
       </section>
       <section class="collection" aria-labelledby="collection-heading">
         <header class="collection-bar"><h2 id="collection-heading">Merch</h2>
+          <button type="button" id="bulk-toggle" aria-pressed="false" aria-controls="bulk-toolbar" hidden>Select items</button>
           <button type="button" class="open-item-catalog" id="open-merch-catalog" aria-haspopup="dialog" disabled>Add merch</button>
         </header>
         <div class="collection-body"><div class="rack">

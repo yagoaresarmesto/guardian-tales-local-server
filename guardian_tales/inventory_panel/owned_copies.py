@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Panel actions on selected equipment or relic copies."""
+"""Panel actions on selected equipment, relic or merch copies."""
 
 import json
 
