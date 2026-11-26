@@ -14,6 +14,7 @@ import time
 from pathlib import Path
 
 from .bootstrap import BOOTSTRAP_ROUTES, BootstrapSession, GuestStore
+from .client_cert import prepare_server_tls
 from .hero_catalog import warm_growth_tables
 from .platform import PLATFORM_ROUTES
 from .platform import dispatch as dispatch_platform
@@ -109,11 +110,7 @@ class LocalServer:
 
     async def start(self):
         try:
-            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
-            context.minimum_version = ssl.TLSVersion.TLSv1_2
-            context.load_cert_chain(
-                self.cert_dir / "localhost-cert.pem", self.cert_dir / "localhost-key.pem"
-            )
+            context, self.certificate_expiry = prepare_server_tls(self.cert_dir)
             context.set_servername_callback(
                 lambda connection, name, ctx: self.bump("tls_client_hellos")
             )
@@ -390,6 +387,7 @@ async def run(args):
                 server.ports["api"],
                 lambda: loop.call_soon_threadsafe(restart.set),
                 request_stop=lambda: loop.call_soon_threadsafe(stop.set),
+                certificate_expiry=server.certificate_expiry,
             ) as mark_stopped:
 
                 async def wait_for_control():

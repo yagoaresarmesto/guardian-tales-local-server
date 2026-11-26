@@ -48,10 +48,29 @@ The server certificate covers `localhost`, `127.0.0.1`,
 `eu-api.live.guardiantales.com` and `eu-auth.live.guardiantales.com`.
 The basic quick-start certificate does not cover those game hostnames.
 
-Existing keys are never overwritten. To renew, choose another empty directory
-using `--output`, then pass it as `--cert-dir` to both server and bridge. Keep
-these files local; only the public CA is sent to Android. This command installs
-no certificates in Windows or Android.
+At each start or restart, the game backend checks the server certificate. If
+it has expired or has less than 48 hours left, the backend renews it using the
+same CA and server key. Android can keep using its trusted CA. In **Services**,
+you can see when the server certificate and CA expire in your local time zone.
+The connection is valid only until the earlier of those dates. If the server
+certificate already covers the remaining lifetime of the CA, replace the CA
+before it expires.
+
+### Replace an expiring or expired CA
+
+The development CA lasts 30 days. To replace it, close the game, stop the bridge
+with **Ctrl+C**, wait for **BRIDGE INACTIVE**, then stop the game backend. Generate
+a new CA and server certificate in an empty directory.
+
+```sh
+python -m guardian_tales client-cert --output local/client-tls-next
+```
+
+Restart the backend and the bridge with `--cert-dir local/client-tls-next` on
+both commands. Use your usual backend `--data-dir` to keep the same save. On
+startup the bridge checks the certificate and installs the new public CA in its
+temporary Android trust overlay. Open the game after **BRIDGE READY**. Keep the
+CA and server private keys on the host.
 
 ## 3. Start the two host services
 

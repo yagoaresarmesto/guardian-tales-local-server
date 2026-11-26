@@ -4,12 +4,23 @@
 import argparse
 import os
 import re
+import secrets
 import shutil
+import ssl
 import subprocess
+import sys
+import tempfile
+import time
 import uuid
+from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
+from .state_lock import StateLock
+
 HOSTS = ("localhost", "eu-api.live.guardiantales.com", "eu-auth.live.guardiantales.com")
+RENEW_BEFORE = 48 * 60 * 60
+LEAF_DAYS = 7
 
 
 def openssl_path(override=None):
@@ -22,6 +33,133 @@ def openssl_path(override=None):
     return executable
 
 
+def _openssl(executable, directory, *args):
+    result = subprocess.run(
+        [executable, *args],
+        cwd=directory,
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        timeout=30,
+    )
+    if result.returncode:
+        raise ValueError(result.stderr.decode(errors="replace").strip() or "OpenSSL failed")
+    return result.stdout.decode().strip()
+
+
+def _issue_leaf(directory, executable, target):
+    _openssl(
+        executable,
+        directory,
+        "x509",
+        "-req",
+        "-in",
+        "server.csr",
+        "-CA",
+        "ca.pem",
+        "-CAkey",
+        "ca-key.pem",
+        "-set_serial",
+        "0x" + secrets.token_hex(16),
+        "-days",
+        str(LEAF_DAYS),
+        "-sha256",
+        "-extfile",
+        "server.ext",
+        "-out",
+        str(target),
+    )
+    with target.open("ab") as output:
+        output.write((directory / "ca.pem").read_bytes())
+
+
+def _expires_at(path):
+    # CPython's OpenSSL decoder reads the first certificate of a PEM chain.
+    return ssl.cert_time_to_seconds(ssl._ssl._test_decode_cert(str(path))["notAfter"])
+
+
+def _server_context(leaf, key):
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.minimum_version = ssl.TLSVersion.TLSv1_2
+    context.load_cert_chain(leaf, key)
+    return context
+
+
+@contextmanager
+def _renewal_lock(directory):
+    # Independent game instances can share one TLS directory.
+    lock = StateLock(directory, filename=".leaf-renewal.lock")
+    deadline = time.monotonic() + 10
+    while True:
+        try:
+            lock.acquire()
+            break
+        except RuntimeError:
+            if time.monotonic() >= deadline:
+                raise RuntimeError("Another backend is renewing the TLS certificate.") from None
+            time.sleep(0.1)
+    try:
+        yield
+    finally:
+        lock.release()
+
+
+def _renew_leaf(directory, leaf, key):
+    executable = openssl_path()
+    verify = ("verify", "-CAfile", "ca.pem", "-purpose", "sslserver")
+    _openssl(executable, directory, *verify, "-no_check_time", str(leaf))
+    with tempfile.TemporaryDirectory(prefix=".renew-", dir=directory) as tmp:
+        candidate = Path(tmp) / leaf.name
+        _issue_leaf(directory, executable, candidate)
+        for host in HOSTS:
+            _openssl(executable, directory, *verify, "-verify_hostname", host, str(candidate))
+        _openssl(executable, directory, *verify, "-verify_ip", "127.0.0.1", str(candidate))
+        _server_context(candidate, key)
+        candidate.replace(leaf)
+
+
+def prepare_server_tls(directory):
+    """Load the configured chain; only a locally provisioned client CA can renew it."""
+    directory = Path(directory).resolve()
+    leaf, key = directory / "localhost-cert.pem", directory / "localhost-key.pem"
+    ca = directory / "ca.pem"
+    if not leaf.is_file():
+        raise FileNotFoundError(leaf)
+    expiry = _expires_at(leaf)
+    try:
+        ca_expiry = _expires_at(ca) if ca.is_file() else None
+    except OSError as error:
+        print(f"Could not read the TLS authority expiry: {error}", file=sys.stderr)
+        ca_expiry = None
+
+    def due(leaf_expiry):
+        now = time.time()
+        return (
+            leaf_expiry - now < RENEW_BEFORE
+            and ca_expiry is not None
+            and ca_expiry > max(now, leaf_expiry)
+        )
+
+    if due(expiry) and all(
+        (directory / f).is_file() for f in ("ca-key.pem", "server.csr", "server.ext")
+    ):
+        try:
+            with _renewal_lock(directory):
+                if due(_expires_at(leaf)):
+                    _renew_leaf(directory, leaf, key)
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+            print(f"TLS certificate renewal failed: {error}", file=sys.stderr)
+        expiry = _expires_at(leaf)
+
+    return _server_context(leaf, key), {
+        "server": datetime.fromtimestamp(expiry, timezone.utc).isoformat(),
+        "authority": (
+            datetime.fromtimestamp(ca_expiry, timezone.utc).isoformat()
+            if ca_expiry is not None
+            else None
+        ),
+    }
+
+
 def generate(directory, executable=None):
     directory = Path(directory).resolve()
     if directory.exists() and any(directory.iterdir()):
@@ -32,10 +170,7 @@ def generate(directory, executable=None):
     directory.mkdir(parents=True, exist_ok=True)
 
     def run(*args):
-        result = subprocess.run(
-            [executable, *args], cwd=directory, capture_output=True, timeout=30, check=True
-        )
-        return result.stdout.decode().strip()
+        return _openssl(executable, directory, *args)
 
     run(
         "req",
@@ -78,27 +213,8 @@ def generate(directory, executable=None):
         "subjectAltName=" + ",".join("DNS:" + host for host in HOSTS) + ",IP:127.0.0.1\n",
         encoding="ascii",
     )
-    run(
-        "x509",
-        "-req",
-        "-in",
-        "server.csr",
-        "-CA",
-        "ca.pem",
-        "-CAkey",
-        "ca-key.pem",
-        "-CAcreateserial",
-        "-days",
-        "7",
-        "-sha256",
-        "-extfile",
-        "server.ext",
-        "-out",
-        "localhost-cert.pem",
-    )
+    _issue_leaf(directory, executable, directory / "localhost-cert.pem")
     ca = (directory / "ca.pem").read_bytes()
-    with (directory / "localhost-cert.pem").open("ab") as output:
-        output.write(ca)
     subject_hash = run("x509", "-in", "ca.pem", "-subject_hash_old", "-noout")
     if not re.fullmatch(r"[0-9a-f]{8}", subject_hash):
         raise ValueError("OpenSSL returned an invalid Android CA hash")

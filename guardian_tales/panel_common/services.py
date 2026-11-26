@@ -3,7 +3,7 @@
 
 import json
 
-from ..service_control import NAMES, active_services, service_state
+from ..service_control import NAMES, active_services, service_certificate_expiry, service_state
 
 
 def service_request(handler):
@@ -39,16 +39,17 @@ def service_request(handler):
                     )
                 for port, instance, marker in workers:
                     state = service_state(marker)
-                    rows.append(
-                        {
-                            "id": kind,
-                            "label": label,
-                            "instance": instance,
-                            "port": port,
-                            "canStop": kind == "game" and state == "running",
-                            "stopped": state == "stopped",
-                        }
-                    )
+                    row = {
+                        "id": kind,
+                        "label": label,
+                        "instance": instance,
+                        "port": port,
+                        "canStop": kind == "game" and state == "running",
+                        "stopped": state == "stopped",
+                    }
+                    if kind == "game":
+                        row["certificateExpiry"] = service_certificate_expiry(marker)
+                    rows.append(row)
             handler.json(200, {"services": rows})
         elif handler.headers.get_content_type() != "application/json":
             handler.json(415, {"error": "Expected a JSON service request."})

@@ -238,10 +238,40 @@ class RaidPanelTests(unittest.TestCase):
             folder = directory(scope)
             folder.mkdir(parents=True)
             marker = folder / ("game-12345-" + "0" * 32 + ".ready")
-            for suffix in (".ready", ".lock", ".restart", ".stop"):
+            for suffix in (".ready", ".lock", ".restart", ".stop", ".expiry"):
                 marker.with_suffix(suffix).touch()
             self.assertEqual(active_services("game", scope), [])
             self.assertEqual(list(folder.iterdir()), [])
+
+    def test_certificate_dates_belong_to_each_game_instance(self):
+        db = self.root / "save.sqlite3"
+        self.server.database = db
+        expiry = {"server": "2026-12-03T20:50:51Z", "authority": "2026-12-19T20:08:05Z"}
+        standalone = {"server": "2027-01-02T19:08:05Z", "authority": None}
+        with patch.dict(os.environ, {"LOCALAPPDATA": str(self.root / "cache")}):
+            with (
+                register(
+                    "game", db, 12345, self.fail, self.fail, certificate_expiry=expiry
+                ) as stop,
+                register("game", db, 12346, self.fail, certificate_expiry=standalone),
+                register("inventory", db, 12347, self.fail),
+            ):
+
+                def rows():
+                    return {
+                        row["port"]: row
+                        for row in json.loads(self.call("/api/services"))["services"]
+                    }
+
+                running = rows()
+                self.assertEqual(running[12345]["certificateExpiry"], expiry)
+                self.assertEqual(running[12346]["certificateExpiry"], standalone)
+                self.assertNotIn("certificateExpiry", running[12347])
+                stop()
+                stopped = rows()[12345]
+                self.assertTrue(stopped["stopped"])
+                self.assertEqual(stopped["certificateExpiry"], expiry)
+            self.assertEqual(list(directory(db).iterdir()), [])
 
     def test_game_stop_keeps_restart_control_and_rejects_foreign_or_stale_requests(self):
         db = self.root / "save.sqlite3"
@@ -320,6 +350,7 @@ class RaidPanelTests(unittest.TestCase):
                 if row["id"] == "game"
             )
             self.assertFalse(row["canStop"])
+            self.assertIsNone(row["certificateExpiry"])
             with self.assertRaises(HTTPError) as old:
                 self.call("/api/services/stop", {"id": "game", "instance": row["instance"]})
             self.assertEqual(old.exception.code, 409)

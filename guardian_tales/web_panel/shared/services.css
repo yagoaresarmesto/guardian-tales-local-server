@@ -2,8 +2,11 @@
 .service-menu summary { cursor: pointer; padding: .46rem .8rem; color: #e4edfb; background: #172539; border: 1px solid #42566c; border-radius: 5px; }
 .service-menu[open] summary, .service-menu summary:hover { border-color: #ffcb66; }
 .service-popover { position: absolute; right: 0; top: calc(100% + .35rem); z-index: 50; width: min(360px, 88vw); padding: .45rem .85rem; border: 1px solid #546981; border-radius: 8px; background: #172539; box-shadow: 0 10px 32px #080e19aa; }
-.service-row { display: flex; align-items: center; justify-content: space-between; gap: .8rem; min-height: 2.8rem; }
+.service-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: .8rem; min-height: 2.8rem; padding-block: .3rem; box-sizing: border-box; }
 .service-row + .service-row { border-top: 1px solid #334559; }
+.service-certificates { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: .25rem .65rem; margin: .4rem 0 .2rem; font-size: .79rem; line-height: 1.35; }
+.service-certificates dt { color: #b8c7d7; }
+.service-certificates dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .service-actions { display: flex; gap: .4rem; flex-shrink: 0; }
 .service-row button { font: inherit; font-weight: 650; padding: .32rem .75rem; border-radius: 4px; border: 1px solid #667c91; color: #eff5ff; background: #25374c; cursor: pointer; }
 .service-row button:enabled:hover { border-color: #ffd05f; }

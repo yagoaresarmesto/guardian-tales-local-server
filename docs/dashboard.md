@@ -98,6 +98,8 @@ Select one of three chapters to edit its highest cleared floor. Seasons 2 and 3 
 
 **Services** controls the game backend, content CDN and inventory server individually. After updating the project, restart the inventory server and reload the dashboard. When upgrading from an older version with no service registration, relaunch each service once in its usual terminal.
 
+**Services** shows the expiration dates for the game backend’s server certificate and its signing CA in your local time zone. Starting or restarting the backend renews the server certificate if it has expired or has less than 48 hours left. When the CA itself expires, generate a new CA and restart the bridge so Android trusts it. [Replace the development CA](mumu-client.md#replace-an-expiring-or-expired-ca)
+
 The panel uses sprites, UI atlases and scenery from your imported game resources. The standalone command installs missing readers with its own Python interpreter. If installation fails, it opens with placeholders and retries on the next launch. To install them explicitly, use the checkout’s virtual environment.
 
 ```powershell

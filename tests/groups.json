@@ -57,6 +57,6 @@
   },
   "integration": {
     "description": "Loopback transport/TLS, packet codec and resource serving",
-    "modules": ["test_server", "test_assets", "test_lobby_notice"]
+    "modules": ["test_server", "test_client_cert", "test_assets", "test_lobby_notice"]
   }
 }

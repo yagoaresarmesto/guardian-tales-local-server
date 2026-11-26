@@ -89,11 +89,13 @@ The working database stays on the PC. If you choose a different state or referen
 
 ### 3. Start the local game
 
-Generate the client certificates once from the checkout.
+Generate the client certificates from the checkout on first setup.
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales client-cert
 ```
+
+The backend checks the server certificate at startup and renews it when less than 48 hours remain or it has expired. Open **Services** for the server and CA expiration dates in your local time zone. [Replace an expiring CA](docs/mumu-client.md#replace-an-expiring-or-expired-ca)
 
 Start the **game backend** and **resource CDN** in separate PowerShell terminals. Keep both running during play.
 

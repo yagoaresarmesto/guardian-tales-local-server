@@ -6,6 +6,31 @@ async function services() {
   return (await response.json()).services;
 }
 
+const expiryFormat = new Intl.DateTimeFormat(undefined, {
+  year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short",
+});
+
+function certificateDates(expiry) {
+  const dates = document.createElement("dl");
+  dates.className = "service-certificates";
+  for (const [key, label] of [["server", "Server certificate expires"], ["authority", "Certificate authority expires"]]) {
+    const term = document.createElement("dt");
+    term.textContent = label;
+    const value = document.createElement("dd");
+    const timestamp = Date.parse(expiry?.[key]);
+    if (Number.isFinite(timestamp)) {
+      const time = document.createElement("time");
+      time.dateTime = expiry[key];
+      time.textContent = expiryFormat.format(timestamp);
+      value.append(time);
+    } else {
+      value.textContent = "Unavailable";
+    }
+    dates.append(term, value);
+  }
+  return dates;
+}
+
 if (root) {
   const menu = document.createElement("details");
   menu.className = "service-menu";
@@ -50,6 +75,7 @@ if (root) {
       action.onclick = () => control(row, "restart");
       actions.append(action);
       line.append(label, actions);
+      if (row.id === "game" && row.instance) line.append(certificateDates(row.certificateExpiry));
       list.append(line);
     }
   }

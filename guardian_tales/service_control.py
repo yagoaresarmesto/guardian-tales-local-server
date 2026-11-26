@@ -2,6 +2,7 @@
 """Cooperative lifecycle controls for local game, inventory and content services."""
 
 import hashlib
+import json
 import os
 import re
 import subprocess
@@ -25,6 +26,14 @@ def directory(scope):
     return Path(cache) / "guardian-tales-local" / "services" / key
 
 
+def _remove_registration(marker):
+    # Retain the marker and lease for a later cleanup if a reader still has
+    # the certificate dates open on Windows.
+    with suppress(PermissionError):
+        for suffix in (".expiry", ".restart", ".stop", ".ready", ".lock"):
+            marker.with_suffix(suffix).unlink(missing_ok=True)
+
+
 def active_services(kind, scope):
     if scope is None:
         return []
@@ -42,9 +51,7 @@ def active_services(kind, scope):
             # The unique marker was published after acquiring the lease. A free
             # lease here means that worker exited without finishing its cleanup.
             lock.release()
-            for suffix in (".ready", ".restart", ".stop", ".lock"):
-                with suppress(PermissionError):
-                    marker.with_suffix(suffix).unlink(missing_ok=True)
+            _remove_registration(marker)
     return sorted(running)
 
 
@@ -55,8 +62,18 @@ def service_state(marker):
         return ""
 
 
+def service_certificate_expiry(marker):
+    try:
+        expiry = json.loads(marker.with_suffix(".expiry").read_text(encoding="ascii"))
+    except (OSError, ValueError):
+        return None
+    if not isinstance(expiry, dict) or not isinstance(expiry.get("server"), str):
+        return None
+    return {"server": expiry["server"], "authority": expiry.get("authority")}
+
+
 @contextmanager
-def register(kind, scope, port, request_restart, request_stop=None):
+def register(kind, scope, port, request_restart, request_stop=None, *, certificate_expiry=None):
     folder = directory(scope)
     marker = folder / f"{kind}-{port}-{uuid.uuid4().hex}.ready"
     signal = marker.with_suffix(".restart")
@@ -79,7 +96,16 @@ def register(kind, scope, port, request_restart, request_stop=None):
     with ExitStack() as resources:
         try:
             folder.mkdir(mode=0o700, parents=True, exist_ok=True)
-            resources.enter_context(StateLock(folder, filename=lock_path.name))
+            lease = StateLock(folder, filename=lock_path.name).acquire()
+            resources.callback(_remove_registration, marker)
+            resources.callback(lease.release)
+            if certificate_expiry is not None:
+                try:
+                    marker.with_suffix(".expiry").write_text(
+                        json.dumps(certificate_expiry), encoding="ascii"
+                    )
+                except OSError as error:
+                    print(f"Certificate expiry unavailable in dashboard: {error}", file=sys.stderr)
             with marker.open("x", encoding="ascii") as ready:
                 ready.write("running" if request_stop is not None else "")
         except (OSError, RuntimeError) as error:
@@ -91,13 +117,8 @@ def register(kind, scope, port, request_restart, request_stop=None):
         try:
             yield mark_stopped
         finally:
-            marker.unlink(missing_ok=True)
             done.set()
             thread.join()
-            signal.unlink(missing_ok=True)
-            stop_signal.unlink(missing_ok=True)
-    with suppress(PermissionError):
-        lock_path.unlink(missing_ok=True)
 
 
 def restart_worker(command, argv, ports, is_worker):

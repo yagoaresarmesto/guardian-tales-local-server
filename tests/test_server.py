@@ -431,6 +431,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
             task = asyncio.create_task(run(args))
             try:
                 running = await game_state(lambda row: row["canStop"])
+                self.assertEqual(running["certificateExpiry"], self.server.certificate_expiry)
                 with self.assertRaises(RuntimeError):
                     StateLock(data_dir).acquire()
                 body = {"id": "game", "instance": running["instance"]}
@@ -439,6 +440,7 @@ class IntegrationTests(unittest.IsolatedAsyncioTestCase):
                 )
                 stopped = await game_state(lambda row: row["stopped"])
                 self.assertEqual(stopped["instance"], running["instance"])
+                self.assertEqual(stopped["certificateExpiry"], running["certificateExpiry"])
                 self.assertFalse(stopped["canStop"])
                 with StateLock(data_dir):
                     import sqlite3
