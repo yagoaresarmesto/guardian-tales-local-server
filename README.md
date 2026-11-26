@@ -21,7 +21,7 @@ You can browse while playing. To save changes, close Guardian Tales, choose **Se
 | **Heroes** | Browse owned heroes by sprite, form and stars. Level, evolve, awaken or bless a hero for free. **Max hero** applies all eligible upgrades, including Ascension or Myth where supported. **Hero Reset** previews a return to level 1. |
 | **Equipment** | Browse standard weapons, shields and accessories by type or stars (1★–6★), including a dedicated collaboration weapon filter. Add an exact variant, raise its level, limit break it or engrave an eligible exclusive weapon. |
 | **Relics** | Choose a family and rarity (1★–5★), add a relic, or edit the basic options and sub-options on an owned copy. Both equipment and relics support **Max selected** within each slot’s catalog limits, plus individual or bulk lock, unlock and deletion. |
-| **Merch** | Browse each owned copy by its game sprite, stars and level. Select a copy to see who has it equipped and whether it is locked. |
+| **Merch** | Browse owned copies or use **Add merch** to choose a piece and its stars. **Max merch** raises the selected copy to its family's highest stars and level. Both actions are free. |
 | **Consumables** | Find an owned stack and change its quantity within the item limit. |
 | **Mastery** | Allocate Guardian Mastery points by class, preview the resulting bonuses and save the allocation. |
 | **Account** | Edit player identity, wallet and materials. Pick a hero for Evolution or Myth Stones, or a world for Purple Coins. Review pending balances before applying them together. |

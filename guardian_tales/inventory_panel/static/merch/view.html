@@ -1,5 +1,6 @@
   <main>
     <div class="title-row"><h1>Inventory</h1><span class="temporary">Game save · server.sqlite3</span></div>
+    <p id="access" class="save-access" role="status" hidden>Close Guardian Tales and stop the game backend to add or upgrade merch.</p>
     <div class="workspace">
       <section class="inspector" aria-labelledby="details-title">
         <div class="section-bar"><h2 id="details-title">Merch details</h2><span id="copy-id"></span></div>
@@ -14,10 +15,16 @@
             <div class="fact"><dt>Protection</dt><dd id="protection"></dd></div>
             <div class="fact"><dt>Item ID</dt><dd id="item-id"></dd></div>
           </dl>
+          <footer class="inspector-actions" id="upgrade" hidden>
+            <button type="button" class="apply-button" id="max-merch" aria-describedby="max-target access" disabled>Max merch</button>
+            <p class="editor-note" id="max-target"></p>
+          </footer>
         </div>
       </section>
       <section class="collection" aria-labelledby="collection-heading">
-        <header class="collection-bar"><h2 id="collection-heading">Merch</h2></header>
+        <header class="collection-bar"><h2 id="collection-heading">Merch</h2>
+          <button type="button" class="open-item-catalog" id="open-merch-catalog" aria-haspopup="dialog" disabled>Add merch</button>
+        </header>
         <div class="collection-body"><div class="rack">
           <div class="tools">
             <label class="search"><span class="search-icon" aria-hidden="true"></span><input type="search" id="search" aria-label="Search merch by name or ID" placeholder="Search by name or ID"></label>
@@ -31,4 +38,5 @@
         <p id="error" role="alert" hidden></p>
       </section>
     </div>
+    <p id="message" role="status" hidden></p>
   </main>

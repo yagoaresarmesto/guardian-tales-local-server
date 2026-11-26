@@ -9,13 +9,14 @@ export function itemCatalog({section, types = new Map(), tile, drawArt, onAdded}
   let items = [], filtered = [], version, writable, spaceAvailable, busy = false;
   let message = "", request = 0;
   let stars = 0, index = 0, pageSize = 10;
-  type.add(new Option(isRelic ? "All families" : "All types", "all"));
-  if (!isRelic) {
+  const allTypes = {equipment: "All types", relics: "All families", merch: "All base rarities"};
+  type.add(new Option(allTypes[section], "all"));
+  if (section === "equipment") {
     type.add(new Option("Collaboration weapons", "collaboration"));
     search.placeholder = "Name, hero or catalog ID";
   }
   for (const [key, label] of types) type.add(new Option(label, key));
-  for (let rating = 0; rating <= (isRelic ? 5 : 6); rating++) {
+  for (let rating = 0; rating <= (section === "equipment" ? 6 : 5); rating++) {
     const button = el("button", "", rating ? rating + "★" : "All stars");
     button.type = "button";
     button.setAttribute("aria-label", rating ? rating + (rating === 1 ? " star" : " stars") : "All stars");
@@ -41,7 +42,7 @@ export function itemCatalog({section, types = new Map(), tile, drawArt, onAdded}
       $("catalog-stars").setAttribute("aria-label", item.stars + " stars");
       $("catalog-facts").textContent = isRelic ? "#" + item.spec : "Lv. 1 · #" + item.spec;
       $("catalog-kind").textContent = types.get(item.kind);
-      const detail = isRelic ? item.basicSlots + " basic · " + item.bonusSlots + " sub-options" :
+      const detail = section === "merch" ? "Free" : isRelic ? item.basicSlots + " basic · " + item.bonusSlots + " sub-options" :
         item.exclusiveHero ? "Exclusive to " + (item.exclusiveHeroName || "hero #" + item.exclusiveHero) : "";
       $("catalog-extra").hidden = !detail;
       $("catalog-extra").textContent = detail;

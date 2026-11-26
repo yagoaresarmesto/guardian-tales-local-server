@@ -38,6 +38,10 @@ Search the roster by name or ID, or filter by element and **Upgrades available**
 
 Exclusive weapons show the linked hero’s portrait. The book ribbon reports weapon knowledge and collection completion. The engraving ribbon shows the current bonus, with a rainbow star when it reaches its maximum. In the 3.57.0 EU catalog, a base level of 100 and five limit breaks bring shields and accessories to 115. With eligible engraving, a 5★ weapon reaches 130 and a 6★ weapon reaches 150.
 
+### Merch
+
+Choose **Add merch**, select a catalog variant and press **Add to inventory** for a level-1 copy at the selected rarity. Select an owned copy and choose **Max merch** to apply its full evolution and level in one step. The inspector shows the maximum for that family. Both actions are free. Equipped and locked copies retain their assignments and protection.
+
 ### Account, Consumables and Mastery
 
 - **Account** edits nickname, five-character player tag, gems, gold, reserve coffee and materials. Wallet entries add the amount shown. Material entries use **Set total**. Review **After applying** before saving. Free gems, paid gems and gold each have a panel limit of 100,000,000. Reserve coffee follows the catalog cap (3,000 in the EU pack).

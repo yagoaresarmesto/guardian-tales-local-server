@@ -66,10 +66,13 @@ class InventoryApplication:
             "/api/game/heroes/catalog": self.hero_grants.info,
             "/api/game/mastery": self.mastery.info,
             "/api/game/merch": self.merch.info,
+            "/api/game/merch/catalog": self.merch.grants.info,
             "/api/game/relics": self.relics.info,
             "/api/game/relics/catalog": self.relic_grants.info,
         }
         self.edits = {
+            "/api/game/merch/add": self.merch.grants.write,
+            "/api/game/merch/max": self.merch.write,
             "/api/lock": self.preview_change,
             "/api/game/account": self.account_editor.write,
             "/api/game/consumables": self.consumables.write,

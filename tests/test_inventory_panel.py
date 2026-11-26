@@ -56,6 +56,28 @@ def prepare_inventory(root):
                 SpriteName={"default": "merch_figure"},
             ),
             dict(Id=89, Type="merchenhance", Name="merch_clay"),
+            dict(
+                Id=90,
+                Type="merch",
+                Name="merch_ship_rare",
+                NameWithoutRarity="merch_ship",
+                GroupId=90,
+                Rarity=1,
+                OriginRarity=1,
+                Craftable=True,
+                EvolveTo=91,
+            ),
+            dict(
+                Id=91,
+                Type="merch",
+                Name="merch_ship_unique",
+                NameWithoutRarity="merch_ship",
+                GroupId=90,
+                Rarity=2,
+                OriginRarity=1,
+                Craftable=False,
+                EvolveTo=0,
+            ),
             dict(Id=1, Name="test_ticket", Type="ticket", MaxCount=10),
             dict(Id=300, Name="test_jewel", Type="jewel"),
             dict(Id=2, Name="test_card", Type="card"),
@@ -179,10 +201,17 @@ def prepare_inventory(root):
         ],
         "buffs": [],
         "merch": {
+            "Constants": {"MaxMerchInventory": 3},
+            "MerchRecipes": [{"CraftProbabilities": [{"Probability": 1, "MerchIds": [90]}]}],
+            "MerchEvolves": [
+                dict(ProgressNeeded=[10, 0, 0]),
+                dict(ProgressNeeded=[20, 30, 0]),
+                dict(ProgressNeeded=[30, 40, 50]),
+            ],
             "MerchLevels": [
                 dict(Level=0, ExpNeeded=[10, 20, 40]),
                 dict(Level=1, ExpNeeded=[0, 0, 0]),
-            ]
+            ],
         },
         "constants": {"DefaultInventoryLimit": 8, "DefaultRelicInventoryLimit": 3},
         "options": [
@@ -582,6 +611,64 @@ class InventoryPanelTests(unittest.TestCase):
             self.call(api, {})
         self.assertEqual(rejected.exception.code, 404)
         rejected.exception.close()
+
+    def test_free_merch_grants_and_max_respect_the_family_copy_and_slot_limit(self):
+        api = "/api/game/merch"
+        profile = self.seed_wallet()
+        with closing(sqlite3.connect(self.root / "server.sqlite3")) as db:
+
+            def saved():
+                return json.loads(db.execute("SELECT profile FROM local_account").fetchone()[0])
+
+            user = profile["User"]
+            user["ItemStackables"].append(dict(Id=21, ItemId=89, Amount=500))
+            user["ItemIdCounter"] = 21
+            with db:
+                db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            catalog = self.call(api + "/catalog")
+            self.assertEqual({i["spec"] for i in catalog["items"]}, {90, 91})
+            first = dict(spec=90, version=catalog["version"])
+
+            def rejected(path, body, code):
+                with self.assertRaises(HTTPError) as err:
+                    self.call(api + path, body)
+                self.assertEqual(err.exception.code, code)
+                err.exception.close()
+
+            rejected("/add", dict(first, spec=88), 400)
+            with StateLock(self.root):
+                rejected("/add", first, 423)
+            self.assertEqual(saved(), profile)
+            self.assertEqual(self.call(api + "/add", first), dict(id=22, spec=90))
+            rejected("/add", first, 409)
+            second = dict(spec=91, version=self.call(api)["version"])
+            self.assertEqual(self.call(api + "/add", second), dict(id=23, spec=91))
+            self.assertFalse(self.call(api + "/catalog")["spaceAvailable"])
+            version = self.call(api)["version"]
+            rejected("/add", dict(spec=90, version=version), 400)
+            before = saved()
+            self.assertEqual(before["User"]["Assets"], user["Assets"])
+            self.assertEqual(before["User"]["ItemStackables"], user["ItemStackables"])
+            selected, other = before["User"]["ItemMiscs"][-2:]
+            self.assertEqual((other["Experience"], other["EvolveProgress"]), (0, 30))
+            selected["Locked"] = True
+            before["User"]["Characters"] = [dict(CharacterId=4, Merch=22)]
+            with db:
+                db.execute("UPDATE local_account SET profile=?", (json.dumps(before),))
+            upgrade = dict(id=22, spec=90, version=version)
+            rejected("/max", dict(upgrade, id=23), 400)
+            with StateLock(self.root):
+                rejected("/max", upgrade, 423)
+            self.assertEqual(saved(), before)
+            self.assertEqual(self.call(api + "/max", upgrade), dict(id=22, spec=91))
+            selected.update(ItemId=91, Experience=20, EvolveProgress=30)
+            before["User"]["Cas"] += 1
+            self.assertEqual(saved(), before)
+            rejected("/max", upgrade, 409)
+            listing = self.call(api)
+            self.assertEqual(listing["limits"]["90"], dict(level=2, stars=3))
+            self.call(api + "/max", dict(id=22, spec=91, version=listing["version"]))
+            self.assertEqual(saved(), before)
 
     def test_hero_stars_follow_current_form_and_family(self):
         editor = self.server.inventory.heroes

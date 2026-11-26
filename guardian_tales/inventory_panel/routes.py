@@ -44,13 +44,18 @@ for slug in TITLES:
 def render_page(slug):
     directory = STATIC / slug
     dialog = ""
-    if slug in ("equipment", "relics"):
+    if slug in ("equipment", "relics", "merch"):
         dialog = Template((STATIC / "shared/catalog.html").read_text(encoding="utf-8")).substitute(
             section=slug,
-            noun="relic" if slug == "relics" else "equipment",
+            noun="relic" if slug == "relics" else slug,
             plural=slug,
-            type_label="Relic family" if slug == "relics" else "Equipment type",
+            type_label={
+                "relics": "Relic family",
+                "equipment": "Equipment type",
+                "merch": "Base rarity",
+            }[slug],
         )
+    if slug in ("equipment", "relics"):
         dialog += (STATIC / "shared/delete-copy.html").read_text(encoding="utf-8")
         dialog += (STATIC / "shared/bulk-selection.html").read_text(encoding="utf-8")
     return render_layout(
