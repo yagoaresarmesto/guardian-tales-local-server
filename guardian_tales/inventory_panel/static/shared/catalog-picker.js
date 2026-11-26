@@ -1,6 +1,11 @@
 import { $, el, watchGridPageSize } from "/inventory-dom.js";
 
-export function itemCatalog({section, types = new Map(), tile, drawArt, onAdded}) {
+function textStars(target, item) {
+  target.textContent = "★".repeat(item.stars);
+  target.setAttribute("aria-label", item.stars + " stars");
+}
+
+export function itemCatalog({section, types = new Map(), tile, drawArt, drawStars = textStars, onAdded}) {
   const dialog = $(section + "-catalog"), choices = $("catalog-items");
   const api = "/api/game/" + section;
   const isRelic = section === "relics";
@@ -38,8 +43,7 @@ export function itemCatalog({section, types = new Map(), tile, drawArt, onAdded}
     if (item) {
       drawArt($("catalog-art"), item);
       $("catalog-name").textContent = item.name;
-      $("catalog-stars").textContent = "★".repeat(item.stars);
-      $("catalog-stars").setAttribute("aria-label", item.stars + " stars");
+      drawStars($("catalog-stars"), item);
       $("catalog-facts").textContent = isRelic ? "#" + item.spec : "Lv. 1 · #" + item.spec;
       $("catalog-kind").textContent = types.get(item.kind);
       const detail = section === "merch" ? "Free" : isRelic ? item.basicSlots + " basic · " + item.bonusSlots + " sub-options" :

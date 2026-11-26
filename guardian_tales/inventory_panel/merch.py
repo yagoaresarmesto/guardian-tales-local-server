@@ -122,6 +122,7 @@ class MerchInventory(GameSaveEditor):
                     id=ident,
                     spec=spec["Id"],
                     name=merch_name(self.catalog, spec),
+                    kind=str(spec["OriginRarity"] + 1),
                     stars=spec["Rarity"] + 1,
                     level=level,
                     locked=bool(item.get("Locked")),

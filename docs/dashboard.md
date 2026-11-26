@@ -40,6 +40,8 @@ Exclusive weapons show the linked hero’s portrait. The book ribbon reports wea
 
 ### Merch
 
+The star count shows the current evolution. Merch with an original grade of 1★, 2★ or 3★ keeps its silver, blue or copper stars and matching band through every evolution.
+
 Choose **Add merch**, select a catalog variant and press **Add to inventory** for a level-1 copy at the selected rarity. Select an owned copy and choose **Max merch** to apply its full evolution and level in one step. The inspector shows the maximum for that family. Both actions are free. Equipped and locked copies retain their assignments and protection.
 
 ### Account, Consumables and Mastery

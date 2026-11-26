@@ -5,10 +5,32 @@ let copies = [], visible = [], selected, rarity = "", page = 0, size = 24;
 let version, limits = {}, writable = false, saving = false, accessRequest = 0;
 const api = "/api/game/merch";
 
+function drawStars(target, row) {
+  target.dataset.baseStars = row.kind;
+  target.setAttribute("role", "img");
+  target.setAttribute("aria-label", row.stars === 1 ? "1 star" : row.stars + " stars");
+  target.replaceChildren(...Array.from({length: row.stars}, () => {
+    const img = image("/type-icon/merch-star-" + row.kind + ".png");
+    img.className = "merch-star";
+    img.onerror = () => img.replaceWith(el("span", "merch-star", "★"));
+    return img;
+  }));
+}
+
+function drawArt(target, row) {
+  target.dataset.baseStars = row.kind;
+  target.replaceChildren(sprite(row));
+}
+
 function tile(row, pressed, idLabel) {
   const art = el("span", "tile-art");
   art.append(sprite(row));
-  return inventoryTile({...row, idLabel, art, selected: pressed});
+  const card = inventoryTile({...row, idLabel, art, selected: pressed});
+  card.dataset.baseStars = row.kind;
+  card.classList.toggle("merch-equipped", !!row.equipped);
+  if (row.level != null) card.querySelector(".tile-level").textContent = row.level;
+  drawStars(card.querySelector(".tile-stars"), row);
+  return card;
 }
 
 function note(text, error = false) {
@@ -57,11 +79,10 @@ function drawDetails() {
   $("copy-id").textContent = selected ? "Copy #" + selected.id : "";
   updateMax();
   if (!selected) return;
-  $("portrait").replaceChildren(sprite(selected));
+  drawArt($("portrait"), selected);
   $("name").textContent = selected.name;
   $("level").textContent = selected.level == null ? "" : "Lv. " + selected.level;
-  $("stars").textContent = "★".repeat(selected.stars);
-  $("stars").setAttribute("aria-label", selected.stars + " stars");
+  drawStars($("stars"), selected);
   $("equipped").textContent = selected.equipped ? (selected.hero || "Yes") : "No";
   $("protection").textContent = selected.locked ? "Locked" : "Unlocked";
   $("item-id").textContent = selected.spec;
@@ -166,7 +187,7 @@ async function showSaved(id, message) {
 
 const picker = itemCatalog({
   section: "merch", types: new Map([["1", "1★ base"], ["2", "2★ base"], ["3", "3★ base"]]), tile,
-  drawArt: (target, item) => target.replaceChildren(sprite(item)),
+  drawArt, drawStars,
   onAdded: (id, item) => showSaved(id, item.name + " added to inventory."),
 });
 $("open-merch-catalog").onclick = () => picker.open(null, writable);
