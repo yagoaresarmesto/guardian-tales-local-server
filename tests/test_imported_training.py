@@ -125,6 +125,34 @@ class ImportedTrainingTests(unittest.TestCase):
             resumed.handle(request("/user/add-character-experience", {"Experiences": {"1": 200}}))
         self.assertEqual(self.account.profile(), current)
 
+    def test_lifetime_xp_crossing_int32_is_safe_on_training_retry_and_login(self):
+        limit = 2**31 - 1
+        self.profile["UserRecord"]["AddCharacterExperienceAmount"] = limit - 100
+        self.save()
+        session = BootstrapSession(self.store)
+        signin = {"AuthKind": 0, "AccessToken": "synthetic", "Reconnect": False}
+        session.handle(request("/auth/sign-in", signin))
+        for sequence, (delta, gained) in enumerate(((99, 99), (1, 100), (100, 200)), 51):
+            packet = request("/user/add-character-experience", {"Experiences": {"1": delta}})
+            packet["sequence_id"] = sequence
+            reply = json.loads(session.handle(packet).body)
+            total = limit - 100 + gained
+            saved = self.account.profile()
+            self.assertEqual(saved["User"]["Characters"][0]["Experience"], gained)
+            self.assertEqual(saved["UserRecord"]["AddCharacterExperienceAmount"], total)
+            self.assertEqual(
+                reply["UserRecord"],
+                {**saved["UserRecord"], "AddCharacterExperienceAmount": min(total, limit)},
+            )
+            self.assertEqual(reply["User"], saved["User"])
+
+        reopened = BootstrapSession(GuestStore(self.db, self.root))
+        reopened.handle(request("/auth/sign-in", {**signin, "Reconnect": True}))
+        self.assertEqual(json.loads(reopened.handle(packet).body), reply)
+        fetched = json.loads(reopened.handle(request("/auth/fetch-account")).body)
+        self.assertEqual(fetched, {**saved, "UserRecord": reply["UserRecord"]})
+        self.assertEqual(self.account.profile(), saved)
+
     def test_invalid_requests_unowned_heroes_and_batch_overcap_make_no_changes(self):
         for changes in (
             {},

@@ -86,6 +86,7 @@ from .story_quests import ROUTES as STORY_QUEST_ROUTES
 from .story_quests import handle as handle_story_quest
 from .summon_payment import CHARACTER_ROUTE, WEAPON_ROUTE
 from .test_item_static import bootstrap_seed as test_item_bootstrap_seed
+from .village import INT_MAX
 from .weapon_summon import ROUTE as WEAPON_SUMMON_ROUTE
 
 HERO_GROWTH_HANDLERS = {
@@ -255,6 +256,12 @@ def read_json_body(request):
 
 
 def json_response(request, value):
+    # Unity reads this lifetime statistic as Int32, while the save retains the full total.
+    record = value.get("UserRecord") if isinstance(value, dict) else None
+    if isinstance(record, dict):
+        total = record.get("AddCharacterExperienceAmount")
+        if type(total) is int and total > INT_MAX:
+            value = {**value, "UserRecord": {**record, "AddCharacterExperienceAmount": INT_MAX}}
     # Observed responses have an empty Api and echo the request SequenceId.
     return Packet(
         packet_type=1,

@@ -1656,6 +1656,13 @@ valid. One transaction saves targets and an epoch/sequence receipt. Reconnect
 replays return current resources without training again. The same delta with a
 new request identity is a new operation. A full fresh client launch has a new
 epoch and cannot identify an old request solely from an ambiguous XP delta.
+The save keeps the full lifetime XP total. The 3.57.0 client reads
+`UserRecord.AddCharacterExperienceAmount` as a signed 32-bit integer, so
+outgoing records report at most 2,147,483,647. This applies to training,
+retries and account fetches, including saves already above the limit.
+An Android client log showed an `OverflowException` while decoding the response
+after a saved level 100 to 130 upgrade crossed this boundary. The corrected
+training, retry and account-fetch packets were verified on a detached save.
 Missing policy, unknown/unowned heroes, invalid state, cap/record overflow or a
 failed batch rejects without profile or receipt changes. The older paid knight
 training and its receipts remain separate.
