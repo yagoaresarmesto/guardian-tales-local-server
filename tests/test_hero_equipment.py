@@ -17,6 +17,7 @@ from tests.test_village_harvest import NOW, VillageFixture
 
 WEAPONS = "/user/change-weapons"
 ACCESSORY = "/user/change-accessory"
+COSTUME = "/user/change-costume"
 CARDS = "/user/change-orb"
 MERCH = "/user/change-merch"
 RELIC = "/user/change-relic"
@@ -29,6 +30,7 @@ class HeroEquipmentTests(VillageFixture, unittest.TestCase):
             "heroes": [
                 {
                     "Id": 1001,
+                    "OriginId": 7,
                     "CompatibleWeapons": {"default": ["onehandsword", "shield", "accessory"]},
                 },
                 {"Id": 1002, "CompatibleWeapons": {"default": ["staff", "accessory"]}},
@@ -55,6 +57,13 @@ class HeroEquipmentTests(VillageFixture, unittest.TestCase):
             ],
             "__checksum__": "synthetic-equipment",
         }
+        self.tables["items"].extend(
+            [
+                {"Id": 501, "Type": "costume", "TargetCharacterIds": [7]},
+                {"Id": 502, "Type": "supercostume", "TargetCharacterIds": [7, 1002]},
+                {"Id": 503, "Type": "equipcostume", "TargetWeaponType": "staff"},
+            ]
+        )
         self.write_static()
         profile = self.store.account.profile()
         user = profile["User"]
@@ -72,7 +81,15 @@ class HeroEquipmentTests(VillageFixture, unittest.TestCase):
         user["ItemWeapons"][3].update(Locked=True, Experience=987, EngraveCeiling=4)
         user["ItemMiscs"] = [
             inventory_item(ident, spec)
-            for ident, spec in ((20, 201), (21, 202), (30, 301), (40, 401))
+            for ident, spec in (
+                (20, 201),
+                (21, 202),
+                (30, 301),
+                (40, 401),
+                (50, 501),
+                (51, 502),
+                (52, 503),
+            )
         ]
         user["ItemStackables"] = [inventory_item(90, 901)]
         user["CharacterIdCounter"], user["ItemIdCounter"] = 3, 90
@@ -148,6 +165,36 @@ class HeroEquipmentTests(VillageFixture, unittest.TestCase):
         self.call({"CharacterId": 1, "Orb": 21, "Slot": 1}, CARDS, sequence=821)
         heroes = self.store.account.profile()["User"]["Characters"]
         self.assertEqual((heroes[0]["Orb1"], heroes[0]["Orb2"]), (21, 20))
+
+    def test_costume_uses_origin_and_can_be_swapped_transferred_and_removed(self):
+        expected = self.store.account.profile()
+        roster = expected["User"]["Characters"]
+        for sequence, (hero, costume, worn) in enumerate(
+            (
+                (1, 50, [50, None, None]),
+                (1, 51, [51, None, None]),
+                (3, 51, [None, None, 51]),
+                (3, None, [None, None, None]),
+            ),
+            860,
+        ):
+            with self.subTest(hero=hero, costume=costume):
+                expected["User"]["Cas"] += 1
+                for character, item in zip(roster, worn):
+                    character["Costume"] = item
+                response = self.call({"CharacterId": hero, "Costume": costume}, COSTUME, sequence)
+                self.assertEqual(response, self.expected_response(expected))
+                self.assertEqual(self.store.account.profile(), expected)
+        self.open_session(reconnect=True)
+        self.assertEqual(
+            self.call({"CharacterId": 1, "Costume": 50}, COSTUME, 860),
+            self.expected_response(expected),
+        )
+
+    def test_wrong_hero_weapon_skin_and_unowned_costume_are_rejected(self):
+        for hero, costume in ((3, 50), (1, 52), (1, 501), (1, 20)):
+            with self.subTest(hero=hero, costume=costume):
+                self.reject_without_writes({"CharacterId": hero, "Costume": costume}, route=COSTUME)
 
     def test_null_and_zero_clear_slots_without_removing_owned_items(self):
         original = self.store.account.profile()

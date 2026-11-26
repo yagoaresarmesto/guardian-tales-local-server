@@ -13,11 +13,12 @@ from .village import MAX_REVISION, integer
 ROUTES = {
     "/user/change-weapons": ("Weapon1", "Weapon2"),
     "/user/change-accessory": ("Accessory1",),
+    "/user/change-costume": ("Costume",),
     "/user/change-orb": ("Orb", "Slot"),
     "/user/change-merch": ("Merch",),
     "/user/change-relic": ("Relic",),
 }
-SLOTS = ("Weapon1", "Weapon2", "Accessory1", "Orb1", "Orb2", "Merch", "Relic")
+SLOTS = ("Weapon1", "Weapon2", "Accessory1", "Orb1", "Orb2", "Merch", "Relic", "Costume")
 
 
 def create_tables(db):
@@ -94,6 +95,17 @@ def validate_item(field, row, kind, item, hero):
             and weapon_type != "shield"
         ):
             raise ValueError("Weapon type is incompatible with this hero or hand")
+    elif field == "Costume":
+        targets = item.get("TargetCharacterIds")
+        origin = hero.get("OriginId", hero["Id"])
+        if (
+            item_type not in ("costume", "supercostume")
+            or not isinstance(targets, list)
+            or not integer(origin, minimum=1)
+            or not all(integer(ident, minimum=1) for ident in targets)
+            or origin not in targets
+        ):
+            raise ValueError("Select an owned character costume compatible with this hero")
     elif item_type != ("orb" if field.startswith("Orb") else field.lower()):
         raise ValueError("Equipment type does not match the selected slot")
 

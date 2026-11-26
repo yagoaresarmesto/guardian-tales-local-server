@@ -96,6 +96,7 @@ IMPORTED_MUTATIONS = frozenset(
         "/user/save-party-member/v2",
         "/user/change-weapons",
         "/user/change-accessory",
+        "/user/change-costume",
         "/user/change-orb",
         "/user/change-merch",
         "/user/change-relic",

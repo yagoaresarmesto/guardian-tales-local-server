@@ -718,6 +718,7 @@ These individual Hero-screen routes use the matching external `heroes` and
 | --- | --- |
 | `/user/change-weapons` | `CharacterId`, `Weapon1`, `Weapon2` |
 | `/user/change-accessory` | `CharacterId`, `Accessory1` |
+| `/user/change-costume` | `CharacterId`, `Costume` |
 | `/user/change-orb` | `CharacterId`, `Orb`, `Slot` (1 or 2) |
 | `/user/change-merch` | `CharacterId`, `Merch` |
 | `/user/change-relic` | `CharacterId`, `Relic` |
@@ -730,6 +731,12 @@ selected slot and is saved/returned as explicit null. Slot types and inventory
 categories must match. Main-hand weapons must be compatible attack weapon types;
 the second hand accepts a compatible shield. Locked equipment can be equipped.
 Explicitly registered test-pin definitions remain available as accessories.
+
+Character costumes and super costumes use an owned `ItemMiscs` ID. The client
+catalog lists compatible hero origins in `TargetCharacterIds`, which also covers
+evolved and Myth forms. Clearing `Costume` restores the hero's usual appearance.
+Packet checks on a detached save covered swapping Popp's two costumes, taking
+one off, equipping a super costume on a Myth hero and reloading the selection.
 
 All validation completes before writing. Taking an item from another owned hero
 clears only that item's previous slot; moving a card between one hero's slots
@@ -747,9 +754,8 @@ equipment/development changes; reusing an identity for another body or route
 rejects. The response supplies owner ID, revision and the complete current roster,
 including explicit nulls for displaced holders. It does not replace inventories
 or unrelated resource fields. Restart only the backend and fully reopen the game
-after updating. This contract covers the five individual routes above; costume,
-weapon-costume and bulk `change-characters-equipments` requests remain separate
-unimplemented contracts.
+after updating. Weapon costumes and bulk `change-characters-equipments` use
+separate routes.
 
 ## Inventory expansion
 
