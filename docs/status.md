@@ -22,7 +22,8 @@ move. The castle creates a fresh client-side user before loading its avatar.
 Entry now includes the selected representative, their equipped gear and skins,
 and a single-hero party for this scene. If no representative is set, it uses
 the saved party leader. Host tests cover both choices without changing the
-saved party. Avatar rendering and movement still need an APK check.
+saved party. The player verified that the avatar appeared and could move in
+the castle after reopening the game with the corrected visitor data.
 
 ## Kama-ZONE shop purchases
 
