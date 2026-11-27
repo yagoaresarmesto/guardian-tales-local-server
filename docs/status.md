@@ -15,7 +15,14 @@ The player confirmed entry into the castle in the APK. The next request was
 for the scarecrow individual leaderboard. Both the individual and guild boards
 now return six elemental lists. The individual view includes the member's
 saved personal bests when available. Global placements and guild scores are
-unknown. Rendering these boards in the APK is pending.
+unknown. On the next APK visit the backend served both boards and the exit
+request. These counters verify the requests, while the visual layout remains
+unconfirmed. An identity-only visitor left the player invisible and unable to
+move. The castle creates a fresh client-side user before loading its avatar.
+Entry now includes the selected representative, their equipped gear and skins,
+and a single-hero party for this scene. If no representative is set, it uses
+the saved party leader. Host tests cover both choices without changing the
+saved party. Avatar rendering and movement still need an APK check.
 
 ## Kama-ZONE shop purchases
 

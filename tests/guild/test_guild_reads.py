@@ -71,9 +71,14 @@ class GuildReadTests(unittest.TestCase):
             before = self.db.total_changes
             for body, native in ((None, True), ({}, False)):
                 with self.subTest(reconnect=reconnect, native=native):
+                    reply = self.call(body, CASTLE_ENTER, native_empty=native)
+                    (visitor,) = reply["CastleUsers"]
+                    self.assertEqual(reply["HostUserId"], visitor["Id"])
+                    self.assertEqual((visitor["Id"], visitor["Name"]), (37, "Castle guest"))
+                    self.assertEqual(visitor["Characters"], profile["User"]["Characters"])
+                    self.assertEqual(visitor["ItemWeapons"], profile["User"]["ItemWeapons"])
                     self.assertEqual(
-                        self.call(body, CASTLE_ENTER, native_empty=native),
-                        {"CastleUsers": [{"Id": 37, "Name": "Castle guest"}], "HostUserId": 37},
+                        visitor["RepresentativeCharacterId"], visitor["Characters"][0]["Id"]
                     )
                     self.assertEqual(self.call(body, CASTLE_LEAVE, native_empty=native), {})
             self.assertEqual(self.db.total_changes, before)
@@ -104,6 +109,45 @@ class GuildReadTests(unittest.TestCase):
             for body in ([], False, {"HostUserId": 42}, {"CastleUsers": []}):
                 with self.subTest(route=route, body=body), self.assertRaises(PacketError):
                     self.call(body, route)
+
+    def test_castle_spawns_the_selected_hero_with_equipped_skins_or_falls_back_to_the_party_leader(
+        self,
+    ):
+        self.login()
+        profile = synthetic_snapshot()["profile"]
+        user = profile["User"]
+        leader = user["Characters"][0]
+        selected = dict(
+            leader,
+            Id=42,
+            CharacterId=55,
+            Weapon1=91,
+            Weapon2=None,
+            Costume=92,
+            EquipCostumes={"1": 93},
+        )
+        user["Characters"].append(selected)
+        user["ItemWeapons"].append(dict(user["ItemWeapons"][0], Id=91))
+        user["ItemMiscs"] = [{"Id": 92}, {"Id": 93}, {"Id": 94}]
+        profile["GuildMember"] = {"UserId": user["Id"], "GuildId": 7}
+        for preference, hero in ((42, selected), (0, leader), (None, leader)):
+            user["RepresentativeCharacterId"] = preference
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            self.db.execute("PRAGMA query_only=ON")
+            (visitor,) = self.call(route=CASTLE_ENTER, native_empty=True)["CastleUsers"]
+            self.assertEqual(visitor["Characters"], [hero])
+            self.assertEqual(visitor["RepresentativeCharacterId"], hero["Id"])
+            self.assertEqual(visitor["Party"]["Characters"], [hero["Id"]])
+            self.assertEqual(
+                [x["Id"] for x in visitor["ItemMiscs"]], [92, 93] if preference else []
+            )
+            self.assertEqual(
+                [x["Id"] for x in visitor["ItemWeapons"]], [91] if preference else [1, 2]
+            )
+            self.assertNotIn("Assets", visitor)
+            self.assertEqual(self.store.account.profile(), profile)
+            self.db.execute("PRAGMA query_only=OFF")
 
     def test_scarecrow_boards_return_all_six_elements_and_preserve_personal_bests(self):
         profile = synthetic_snapshot()["profile"]

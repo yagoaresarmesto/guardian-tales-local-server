@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from guardian_tales.content.reference import TEMPLATES
-from guardian_tales.modes.guild.guild_menu import GUILD_MENU_ROUTES
 from guardian_tales.runtime.state_lock import StateLock
 
 FORMAT = "guardian-tales-account-snapshot"
@@ -135,7 +134,14 @@ ACCOUNT_READS = frozenset(
         # The client persists its own badge preference; the server only validates it.
         "/user/set-profile-badge",
         "/guild/list-item-request",
-        *GUILD_MENU_ROUTES,
+        "/guild/get-my-guild",
+        "/guild/red-dot",
+        "/guild/claim-guild-daily-attendance",
+        "/guild-raid2/reset",
+        "/guild-castle/enter",
+        "/guild-castle/leave",
+        "/guild-castle/get-scarecrow-individual-rankings",
+        "/guild-castle/get-scarecrow-guild-rankings",
         "/guild-meteor/enter",
         "/guild-war/enter",
         "/guild-war/abandon-stage",

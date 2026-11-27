@@ -4,6 +4,11 @@
 import hashlib
 import json
 
+from guardian_tales.heroes.characters import owned_character
+from guardian_tales.inventory.item_lock import INVENTORIES
+from guardian_tales.inventory.item_sell import gear_references
+from guardian_tales.settlement.village import integer
+
 CASTLE_ENTER = "/guild-castle/enter"
 CASTLE_LEAVE = "/guild-castle/leave"
 SCARECROW_INDIVIDUAL = "/guild-castle/get-scarecrow-individual-rankings"
@@ -108,6 +113,30 @@ def own_guild(account, request):
     return result
 
 
+def _castle_visitor(user):
+    if not integer(user.get("Id"), minimum=1):
+        raise ValueError("Invalid Guild Castle host identity")
+    representative = user.get("RepresentativeCharacterId")
+    if representative is None or type(representative) is int and representative == 0:
+        party = user.get("Party")
+        members = party.get("Characters") if isinstance(party, dict) else None
+        representative = members[0] if isinstance(members, list) and members else None
+    if not integer(representative, minimum=1):
+        raise ValueError("Guild Castle needs a representative hero or party leader")
+    hero = owned_character(user, representative)
+    equipped = gear_references(hero)
+    visitor = {key: user[key] for key in ("Id", "Name", "Cas", "VoiceType") if key in user}
+    # The castle builds a fresh User and resolves the avatar from that user's own roster.
+    visitor.update(
+        RepresentativeCharacterId=representative,
+        Characters=[hero],
+        Party={"Id": 0, "Characters": [representative]},
+    )
+    for collection in INVENTORIES:
+        visitor[collection] = [row for row in user.get(collection, []) if row["Id"] in equipped]
+    return visitor
+
+
 def _scarecrow_rankings(records):
     if records is None:
         records = {}
@@ -137,14 +166,8 @@ def read(account, route, request):
             return _scarecrow_rankings(member.get("UserRecords"))
         if route == SCARECROW_GUILD:
             return _scarecrow_rankings(None)
-        user = profile["User"]
-        if type(user.get("Id")) is not int or not 1 <= user["Id"] <= 0x7FFFFFFF:
-            raise ValueError("Invalid Guild Castle host identity")
-        visitor = {"Id": user["Id"]}
-        if isinstance(user.get("Name"), str):
-            visitor["Name"] = user["Name"]
-        # The scene resolves the host from CastleUsers and uses its local player for this ID.
-        return {"CastleUsers": [visitor], "HostUserId": user["Id"]}
+        visitor = _castle_visitor(profile["User"])
+        return {"CastleUsers": [visitor], "HostUserId": visitor["Id"]}
     if route == "/guild/claim-guild-daily-attendance":
         if request is not None and (not isinstance(request, dict) or request):
             raise ValueError("Guild attendance mock accepts no parameters")
