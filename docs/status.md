@@ -30,7 +30,10 @@ entry. The local server now supplies the selected party, its equipped items
 and a UTC start time. A matching `/guild-castle/finish-scarecrow/v3` returns
 the previous personal best and updates the saved record for the chosen element
 when beaten. Protocol tests cover both party sources, all six elements, lost
-responses, reconnect and rollback. On-device battle completion is pending.
+responses, reconnect and rollback. After restarting the backend, the APK
+started and finished two Basic battles with the selected preset. The second
+finish returned the first score as the previous best and persisted the higher
+score. The other five elements have protocol coverage.
 
 ## Kama-ZONE shop purchases
 
