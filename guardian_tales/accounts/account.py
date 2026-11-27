@@ -149,6 +149,7 @@ from guardian_tales.modes.guild.guild_war import start_coop as start_guild_war_c
 from guardian_tales.modes.guild.guild_war import start_multi as start_guild_war_multi
 from guardian_tales.modes.guild.guild_war import unlock as unlock_guild_war
 from guardian_tales.modes.guild.punchking import create_tables as create_punchking_tables
+from guardian_tales.modes.guild.scarecrow import create_tables as create_scarecrow_tables
 from guardian_tales.modes.orbital.orbital import create_tables as create_orbital_tables
 from guardian_tales.modes.tetis import tetis_presets
 from guardian_tales.rewards import festival_missions
@@ -462,6 +463,7 @@ class AccountStore:
         create_imported_knowledge_tables(db)
         create_challenge_tables(db)
         create_punchking_tables(db)
+        create_scarecrow_tables(db)
         db.execute(
             "CREATE TABLE IF NOT EXISTS character_summon_requests (operation_id TEXT PRIMARY KEY, request TEXT NOT NULL, results TEXT NOT NULL, created_at TEXT NOT NULL)"
         )

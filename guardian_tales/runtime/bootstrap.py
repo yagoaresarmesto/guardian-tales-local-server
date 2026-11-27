@@ -74,6 +74,7 @@ from guardian_tales.lobby_ui.play_menu import PLAY_MENU_ROUTES
 from guardian_tales.lobby_ui.play_menu import read as play_menu_read
 from guardian_tales.modes import classic_coop, colosseum
 from guardian_tales.modes.expedition import expedition
+from guardian_tales.modes.guild import scarecrow
 from guardian_tales.modes.guild.guild_war_static import (
     bootstrap_override as guild_war_bootstrap_override,
 )
@@ -146,6 +147,7 @@ BOOTSTRAP_ROUTES = (
     ORBITAL_EXIT_ROUTE,
     ORBITAL_FORMATION_ROUTE,
     *PUNCHKING_ROUTES,
+    *scarecrow.ROUTES,
 )
 STATIC_SEEDS = {
     "/static-data/resource-url": ("resource_urls.bin", 2),
@@ -334,6 +336,14 @@ class BootstrapSession:
         if route not in BOOTSTRAP_ROUTES:
             raise PacketError("API operation not implemented")
         body = read_json_body(request)
+        if route in scarecrow.ROUTES:
+            if not self.signed_in:
+                raise PacketError("Local guest sign-in required")
+            epoch = self.request_epoch or self.store.request_epoch(True)
+            return json_response(
+                request,
+                scarecrow.handle(self.store.account, route, body, epoch, request["sequence_id"]),
+            )
         if route in tetis.ROUTES:
             if not self.signed_in:
                 raise PacketError("Local guest sign-in required")

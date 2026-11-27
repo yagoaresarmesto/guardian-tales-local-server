@@ -258,19 +258,23 @@ def start_stage(account, request):
     return {"Cancelled": False}
 
 
-def end_stage(account, request):
+def party_damage_total(damages):
     if (
-        not isinstance(request, dict)
-        or set(request) != {"Damages"}
-        or not isinstance(request["Damages"], list)
-        or len(request["Damages"]) > 4
-        or any(
-            type(value) is not int or not 0 <= value <= MAX_STAGE_DAMAGE
-            for value in request["Damages"]
-        )
-        or sum(request["Damages"]) > MAX_STAGE_DAMAGE
+        not isinstance(damages, list)
+        or len(damages) > 4
+        or any(type(value) is not int or not 0 <= value <= MAX_STAGE_DAMAGE for value in damages)
     ):
-        raise ValueError("Local raid completion requires up to four nonnegative int64 damages")
+        raise ValueError("Expected up to four nonnegative int64 damages")
+    total = sum(damages)
+    if total > MAX_STAGE_DAMAGE:
+        raise ValueError("Total party damage exceeds the score range")
+    return total
+
+
+def end_stage(account, request):
+    if not isinstance(request, dict) or set(request) != {"Damages"}:
+        raise ValueError("Local raid completion requires party damages")
+    party_damage_total(request["Damages"])
     selected_season(account.references, local_context(account))
     fresh_profile(account)
     # Native end success passes AddedItems to the result event. An empty list

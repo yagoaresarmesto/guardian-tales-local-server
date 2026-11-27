@@ -41,7 +41,7 @@
   },
   "guild": {
     "description": "Guild reads, Raid, Meteor, Dungeon Kingdom Arena and Guild War",
-    "modules": ["guild.test_guild_reads", "guild.test_guild_raid", "guild.test_raid_static", "guild.test_raid_panel", "guild.test_punchking", "guild.test_guild_meteor", "guild.test_guild_war", "guild.test_guild_war_panel"]
+    "modules": ["guild.test_guild_reads", "guild.test_scarecrow", "guild.test_guild_raid", "guild.test_raid_static", "guild.test_raid_panel", "guild.test_punchking", "guild.test_guild_meteor", "guild.test_guild_war", "guild.test_guild_war_panel"]
   },
   "tetis": {
     "description": "Offline Tetis battles, seasonal progression, sweeps and the web editor",

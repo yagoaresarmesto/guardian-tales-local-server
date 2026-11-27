@@ -25,6 +25,13 @@ the saved party leader. Host tests cover both choices without changing the
 saved party. The player verified that the avatar appeared and could move in
 the castle after reopening the game with the corrected visitor data.
 
+The APK subsequently requested `/guild-castle/start-scarecrow/v2` at battle
+entry. The local server now supplies the selected party, its equipped items
+and a UTC start time. A matching `/guild-castle/finish-scarecrow/v3` returns
+the previous personal best and updates the saved record for the chosen element
+when beaten. Protocol tests cover both party sources, all six elements, lost
+responses, reconnect and rollback. On-device battle completion is pending.
+
 ## Kama-ZONE shop purchases
 
 The floor 2 run and local request counter show a previously unhandled purchase

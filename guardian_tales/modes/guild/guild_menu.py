@@ -35,7 +35,7 @@ GUILD_MENU_ROUTES = (
 )
 
 
-def _saved_member(profile):
+def saved_member(profile):
     member = profile.get("GuildMember")
     if member is None:
         return None
@@ -67,7 +67,7 @@ def own_guild(account, request):
             )
         ):
             raise ValueError("Local guild reads accept only a nullable integer Hash")
-    member = _saved_member(account.profile())
+    member = saved_member(account.profile())
     if member is None:
         return {"Hash": 0, "Guild": None, "GuildMember": None, "GuildMembers": []}
     achievement = member.get("Achievement")
@@ -123,14 +123,17 @@ def _castle_visitor(user):
         representative = members[0] if isinstance(members, list) and members else None
     if not integer(representative, minimum=1):
         raise ValueError("Guild Castle needs a representative hero or party leader")
-    hero = owned_character(user, representative)
-    equipped = gear_references(hero)
+    return castle_user(user, [owned_character(user, representative)])
+
+
+def castle_user(user, heroes):
+    equipped = gear_references(heroes)
     visitor = {key: user[key] for key in ("Id", "Name", "Cas", "VoiceType") if key in user}
     # The castle builds a fresh User and resolves the avatar from that user's own roster.
     visitor.update(
-        RepresentativeCharacterId=representative,
-        Characters=[hero],
-        Party={"Id": 0, "Characters": [representative]},
+        RepresentativeCharacterId=heroes[0]["Id"],
+        Characters=heroes,
+        Party={"Id": 0, "Characters": [hero["Id"] for hero in heroes]},
     )
     for collection in INVENTORIES:
         visitor[collection] = [row for row in user.get(collection, []) if row["Id"] in equipped]
@@ -159,7 +162,7 @@ def read(account, route, request):
         if route == CASTLE_LEAVE:
             return {}
         profile = account.profile()
-        member = _saved_member(profile)
+        member = saved_member(profile)
         if member is None:
             raise ValueError("Guild Castle requires guild membership")
         if route == SCARECROW_INDIVIDUAL:
