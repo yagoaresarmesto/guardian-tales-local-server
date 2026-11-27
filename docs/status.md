@@ -11,7 +11,11 @@ castle. Entry now lists the signed-in guild member as the sole visitor and host.
 Leaving acknowledges `/guild-castle/leave`. Both operations are read-only.
 The response fields follow the client scene's participant and host handling.
 Protocol tests cover exit, re-entry and reconnect on a synthetic imported save.
-Rendering the scene in the APK and multiplayer activities are unverified.
+The player confirmed entry into the castle in the APK. The next request was
+for the scarecrow individual leaderboard. Both the individual and guild boards
+now return six elemental lists. The individual view includes the member's
+saved personal bests when available. Global placements and guild scores are
+unknown. Rendering these boards in the APK is pending.
 
 ## Kama-ZONE shop purchases
 

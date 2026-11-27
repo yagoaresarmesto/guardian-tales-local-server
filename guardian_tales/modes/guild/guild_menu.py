@@ -6,6 +6,17 @@ import json
 
 CASTLE_ENTER = "/guild-castle/enter"
 CASTLE_LEAVE = "/guild-castle/leave"
+SCARECROW_INDIVIDUAL = "/guild-castle/get-scarecrow-individual-rankings"
+SCARECROW_GUILD = "/guild-castle/get-scarecrow-guild-rankings"
+# The client indexes each response list by the bit position of its element.
+SCARECROW_RECORDS = (
+    "ScarecrowBasic",
+    "ScarecrowFire",
+    "ScarecrowIce",
+    "ScarecrowEarth",
+    "ScarecrowLight",
+    "ScarecrowDark",
+)
 
 GUILD_MENU_ROUTES = (
     "/guild/get-my-guild",
@@ -14,6 +25,8 @@ GUILD_MENU_ROUTES = (
     "/guild/claim-guild-daily-attendance",
     CASTLE_ENTER,
     CASTLE_LEAVE,
+    SCARECROW_INDIVIDUAL,
+    SCARECROW_GUILD,
 )
 
 
@@ -95,15 +108,35 @@ def own_guild(account, request):
     return result
 
 
+def _scarecrow_rankings(records):
+    if records is None:
+        records = {}
+    if not isinstance(records, dict):
+        raise ValueError("Invalid saved scarecrow records")
+    scores = [records.get(key) for key in SCARECROW_RECORDS]
+    if any(n is not None and (type(n) is not int or not 0 <= n < 2**63) for n in scores):
+        raise ValueError("Invalid saved scarecrow score")
+    return {
+        "Rankings": [[] for _ in SCARECROW_RECORDS],
+        "MyRanking": [None] * len(SCARECROW_RECORDS),
+        "MyScore": scores,
+    }
+
+
 def read(account, route, request):
-    if route in (CASTLE_ENTER, CASTLE_LEAVE):
+    if route in (CASTLE_ENTER, CASTLE_LEAVE, SCARECROW_INDIVIDUAL, SCARECROW_GUILD):
         if request is not None and request != {}:
-            raise ValueError("Guild Castle entry and exit accept no parameters")
+            raise ValueError("Guild Castle requests accept no parameters")
         if route == CASTLE_LEAVE:
             return {}
         profile = account.profile()
-        if _saved_member(profile) is None:
-            raise ValueError("Guild Castle entry requires guild membership")
+        member = _saved_member(profile)
+        if member is None:
+            raise ValueError("Guild Castle requires guild membership")
+        if route == SCARECROW_INDIVIDUAL:
+            return _scarecrow_rankings(member.get("UserRecords"))
+        if route == SCARECROW_GUILD:
+            return _scarecrow_rankings(None)
         user = profile["User"]
         if type(user.get("Id")) is not int or not 1 <= user["Id"] <= 0x7FFFFFFF:
             raise ValueError("Invalid Guild Castle host identity")

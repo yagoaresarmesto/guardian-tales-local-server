@@ -16,6 +16,8 @@ OWN_GUILD = "/guild/get-my-guild"
 ATTENDANCE_MOCK = "/guild/claim-guild-daily-attendance"
 CASTLE_ENTER = "/guild-castle/enter"
 CASTLE_LEAVE = "/guild-castle/leave"
+SCARECROW_INDIVIDUAL = "/guild-castle/get-scarecrow-individual-rankings"
+SCARECROW_GUILD = "/guild-castle/get-scarecrow-guild-rankings"
 
 
 class GuildReadTests(unittest.TestCase):
@@ -78,7 +80,7 @@ class GuildReadTests(unittest.TestCase):
             self.db.execute("PRAGMA query_only=OFF")
 
     def test_castle_requires_sign_in_and_rejects_injected_participants_and_nonmembers(self):
-        for route in (CASTLE_ENTER, CASTLE_LEAVE):
+        for route in (CASTLE_ENTER, CASTLE_LEAVE, SCARECROW_INDIVIDUAL, SCARECROW_GUILD):
             with self.subTest(route=route), self.assertRaises(PacketError):
                 self.call(route=route, native_empty=True)
         self.login()
@@ -91,16 +93,55 @@ class GuildReadTests(unittest.TestCase):
             profile["GuildMember"] = member
             with self.db:
                 self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
-            with self.subTest(member=member), self.assertRaises(PacketError):
-                self.call(route=CASTLE_ENTER, native_empty=True)
+            for route in (CASTLE_ENTER, SCARECROW_INDIVIDUAL, SCARECROW_GUILD):
+                with self.subTest(member=member, route=route), self.assertRaises(PacketError):
+                    self.call(route=route, native_empty=True)
         profile["GuildMember"] = {"UserId": profile["User"]["Id"], "GuildId": 7}
         with self.db:
             self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
         self.db.execute("PRAGMA query_only=ON")
-        for route in (CASTLE_ENTER, CASTLE_LEAVE):
+        for route in (CASTLE_ENTER, CASTLE_LEAVE, SCARECROW_INDIVIDUAL, SCARECROW_GUILD):
             for body in ([], False, {"HostUserId": 42}, {"CastleUsers": []}):
                 with self.subTest(route=route, body=body), self.assertRaises(PacketError):
                     self.call(body, route)
+
+    def test_scarecrow_boards_return_all_six_elements_and_preserve_personal_bests(self):
+        profile = synthetic_snapshot()["profile"]
+        member = {"UserId": profile["User"]["Id"], "GuildId": 8}
+        profile["GuildMember"] = member
+        self.login()
+        empty = {
+            "Rankings": [[], [], [], [], [], []],
+            "MyRanking": [None] * 6,
+            "MyScore": [None] * 6,
+        }
+        for records, expected in (
+            ({}, [None] * 6),
+            (
+                {
+                    "ScarecrowDark": 2**40,
+                    "ScarecrowEarth": 44,
+                    "ScarecrowBasic": 0,
+                    "ScarecrowFire": 22,
+                    "ScarecrowIce": 33,
+                    "ScarecrowLight": 55,
+                },
+                [0, 22, 33, 44, 55, 2**40],
+            ),
+            ({"ScarecrowLight": 8}, [None, None, None, None, 8, None]),
+        ):
+            member["UserRecords"] = records
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            self.db.execute("PRAGMA query_only=ON")
+            self.call(route=CASTLE_ENTER, native_empty=True)
+            for native in (True, False):
+                self.assertEqual(
+                    self.call({}, SCARECROW_INDIVIDUAL, native), dict(empty, MyScore=expected)
+                )
+                self.assertEqual(self.call({}, SCARECROW_GUILD, native), empty)
+            self.assertEqual(self.store.account.profile(), profile)
+            self.db.execute("PRAGMA query_only=OFF")
 
     def test_attendance_mock_empty_rewards_preserve_fresh_and_imported_state_on_retry_and_reconnect(
         self,
