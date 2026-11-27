@@ -115,6 +115,8 @@ Check the [backend health response](http://127.0.0.1:17657/health) and the [CDN 
 
 To finish, stop the bridge first with **Ctrl+C** and wait for **BRIDGE INACTIVE**. Then stop the other services. Stop the backend before making a plain file copy of `local/state/server.sqlite3`. [Shutdown and restoration](docs/mumu-client.md#5-stop-and-restore)
 
+On Apple Silicon, use the [Mac emulator connectivity check](docs/macos-bridge.md) to select a MuMuPlayer Pro instance and verify the backend from inside Android. BlueStacks Air can use the same transport when its instance exposes ADB. The Mac command provides loopback forwarding. Stock APK lobby access on macOS is pending.
+
 ## Current scope
 
 | Evidence | What it covers |

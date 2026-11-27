@@ -53,7 +53,7 @@
   },
   "android": {
     "description": "Temporary Android bridge routing and restoration",
-    "modules": ["android.test_android_bridge"]
+    "modules": ["android.test_android_bridge", "android.test_mac_bridge"]
   },
   "integration": {
     "description": "Loopback transport/TLS, packet codec and resource serving",

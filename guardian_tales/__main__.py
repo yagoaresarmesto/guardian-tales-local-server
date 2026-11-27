@@ -47,7 +47,7 @@ COMMANDS = {
     ),
     "android-bridge": (
         "runtime.android_bridge",
-        "Connect a dedicated MuMu Android 12 test instance",
+        "Connect a Windows MuMu test instance or check Mac emulator loopback forwarding",
     ),
     "demo": ("runtime.demo", "Run a temporary synthetic loopback demonstration"),
     "validate": ("runtime.validation", "Run the repository regression suite"),

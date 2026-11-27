@@ -1,5 +1,7 @@
 # Connect a dedicated MuMu test instance
 
+For MuMuPlayer Pro on Apple Silicon or a BlueStacks Air instance with ADB, see the [Mac loopback bridge](macos-bridge.md). The play-session procedure below applies to Windows.
+
 This experimental bridge connects **MuMu Player 12 on Windows, Android 12** to
 the backend running on the computer. It supplies temporary hostname routing,
 Android certificate trust, ADB reverse mappings and instance network isolation.

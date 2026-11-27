@@ -10,6 +10,7 @@ import shlex
 import socket
 import ssl
 import subprocess
+import sys
 import time
 import uuid
 from pathlib import Path
@@ -350,7 +351,15 @@ class Bridge:
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["mac"]:
+        from .mac_bridge import main as mac_main
+
+        return mac_main(argv[1:])
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog="For Mac emulator loopback forwarding, use android-bridge mac --help.",
+    )
     parser.add_argument("action", choices=("run", "restore"))
     parser.add_argument("--index", type=int, required=True)
     parser.add_argument("--name", required=True)
