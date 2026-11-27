@@ -14,6 +14,8 @@ ROUTE = "/guild/red-dot"
 RAID_PREPARATION = "/guild-raid2/reset"
 OWN_GUILD = "/guild/get-my-guild"
 ATTENDANCE_MOCK = "/guild/claim-guild-daily-attendance"
+CASTLE_ENTER = "/guild-castle/enter"
+CASTLE_LEAVE = "/guild-castle/leave"
 
 
 class GuildReadTests(unittest.TestCase):
@@ -48,6 +50,57 @@ class GuildReadTests(unittest.TestCase):
             {"AuthKind": 0, "AccessToken": "synthetic-only", "Reconnect": reconnect},
             "/auth/sign-in",
         )
+
+    def test_castle_entry_exit_and_reconnect_use_only_the_saved_local_player(self):
+        snapshot = synthetic_snapshot()
+        profile = snapshot["profile"]
+        profile["User"].update(Id=37, Name="Castle guest")
+        profile["GuildMember"] = {"UserId": 37, "GuildId": 8, "Name": "Old name"}
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            self.db.execute(
+                "INSERT INTO imported_account VALUES(1,?,?,?,?)",
+                ("0" * 64, "synthetic", json.dumps(snapshot["startup_reads"]), "{}"),
+            )
+        for reconnect in (False, True):
+            self.session = BootstrapSession(self.store)
+            self.login(reconnect)
+            self.db.execute("PRAGMA query_only=ON")
+            before = self.db.total_changes
+            for body, native in ((None, True), ({}, False)):
+                with self.subTest(reconnect=reconnect, native=native):
+                    self.assertEqual(
+                        self.call(body, CASTLE_ENTER, native_empty=native),
+                        {"CastleUsers": [{"Id": 37, "Name": "Castle guest"}], "HostUserId": 37},
+                    )
+                    self.assertEqual(self.call(body, CASTLE_LEAVE, native_empty=native), {})
+            self.assertEqual(self.db.total_changes, before)
+            self.db.execute("PRAGMA query_only=OFF")
+
+    def test_castle_requires_sign_in_and_rejects_injected_participants_and_nonmembers(self):
+        for route in (CASTLE_ENTER, CASTLE_LEAVE):
+            with self.subTest(route=route), self.assertRaises(PacketError):
+                self.call(route=route, native_empty=True)
+        self.login()
+        profile = self.store.account.profile()
+        for member in (
+            None,
+            {"UserId": profile["User"]["Id"], "GuildId": 0},
+            {"UserId": 999, "GuildId": 7},
+        ):
+            profile["GuildMember"] = member
+            with self.db:
+                self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+            with self.subTest(member=member), self.assertRaises(PacketError):
+                self.call(route=CASTLE_ENTER, native_empty=True)
+        profile["GuildMember"] = {"UserId": profile["User"]["Id"], "GuildId": 7}
+        with self.db:
+            self.db.execute("UPDATE local_account SET profile=?", (json.dumps(profile),))
+        self.db.execute("PRAGMA query_only=ON")
+        for route in (CASTLE_ENTER, CASTLE_LEAVE):
+            for body in ([], False, {"HostUserId": 42}, {"CastleUsers": []}):
+                with self.subTest(route=route, body=body), self.assertRaises(PacketError):
+                    self.call(body, route)
 
     def test_attendance_mock_empty_rewards_preserve_fresh_and_imported_state_on_retry_and_reconnect(
         self,

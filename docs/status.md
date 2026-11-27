@@ -4,6 +4,15 @@ Status recorded on **2026-11-23**. The public source tree reorganizes the workin
 prototype; preserved game data is distributed separately as versioned Release
 attachments. Test results and original-client observations have different scopes.
 
+## Guild Castle entry
+
+The Android 3.57.0 EU client requested `/guild-castle/enter` when opening the
+castle. Entry now lists the signed-in guild member as the sole visitor and host.
+Leaving acknowledges `/guild-castle/leave`. Both operations are read-only.
+The response fields follow the client scene's participant and host handling.
+Protocol tests cover exit, re-entry and reconnect on a synthetic imported save.
+Rendering the scene in the APK and multiplayer activities are unverified.
+
 ## Kama-ZONE shop purchases
 
 The floor 2 run and local request counter show a previously unhandled purchase

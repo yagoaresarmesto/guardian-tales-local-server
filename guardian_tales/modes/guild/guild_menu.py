@@ -4,12 +4,35 @@
 import hashlib
 import json
 
+CASTLE_ENTER = "/guild-castle/enter"
+CASTLE_LEAVE = "/guild-castle/leave"
+
 GUILD_MENU_ROUTES = (
     "/guild/get-my-guild",
     "/guild/red-dot",
     "/guild-raid2/reset",
     "/guild/claim-guild-daily-attendance",
+    CASTLE_ENTER,
+    CASTLE_LEAVE,
 )
+
+
+def _saved_member(profile):
+    member = profile.get("GuildMember")
+    if member is None:
+        return None
+    if (
+        not isinstance(member, dict)
+        or type(member.get("UserId")) is not int
+        or member["UserId"] != profile["User"]["Id"]
+    ):
+        raise ValueError("Saved guild membership must belong to the local user")
+    guild_id = member.get("GuildId")
+    if guild_id is None or type(guild_id) is int and guild_id == 0:
+        return None
+    if type(guild_id) is not int or not 1 <= guild_id <= 0x7FFFFFFF:
+        raise ValueError("Invalid saved guild identity")
+    return member
 
 
 def own_guild(account, request):
@@ -26,22 +49,9 @@ def own_guild(account, request):
             )
         ):
             raise ValueError("Local guild reads accept only a nullable integer Hash")
-    profile = account.profile()
-    member = profile.get("GuildMember")
-    empty = {"Hash": 0, "Guild": None, "GuildMember": None, "GuildMembers": []}
+    member = _saved_member(account.profile())
     if member is None:
-        return empty
-    if (
-        not isinstance(member, dict)
-        or type(member.get("UserId")) is not int
-        or member["UserId"] != profile["User"]["Id"]
-    ):
-        raise ValueError("Saved guild membership must belong to the local user")
-    guild_id = member.get("GuildId")
-    if guild_id is None or type(guild_id) is int and guild_id == 0:
-        return empty
-    if type(guild_id) is not int or not 1 <= guild_id <= 0x7FFFFFFF:
-        raise ValueError("Invalid saved guild identity")
+        return {"Hash": 0, "Guild": None, "GuildMember": None, "GuildMembers": []}
     achievement = member.get("Achievement")
     points = {"Id": 0, "Points": 0}
     if achievement is not None:
@@ -55,7 +65,7 @@ def own_guild(account, request):
     # named local view contains only the saved member and their achievement.
     # The ancient date, emblem and empty notices are display placeholders.
     guild = {
-        "Id": guild_id,
+        "Id": member["GuildId"],
         "Name": "Local guild",
         "CreatedAt": "2000-01-01T00:00:00+00:00",
         "Emblem": 0,
@@ -86,6 +96,22 @@ def own_guild(account, request):
 
 
 def read(account, route, request):
+    if route in (CASTLE_ENTER, CASTLE_LEAVE):
+        if request is not None and request != {}:
+            raise ValueError("Guild Castle entry and exit accept no parameters")
+        if route == CASTLE_LEAVE:
+            return {}
+        profile = account.profile()
+        if _saved_member(profile) is None:
+            raise ValueError("Guild Castle entry requires guild membership")
+        user = profile["User"]
+        if type(user.get("Id")) is not int or not 1 <= user["Id"] <= 0x7FFFFFFF:
+            raise ValueError("Invalid Guild Castle host identity")
+        visitor = {"Id": user["Id"]}
+        if isinstance(user.get("Name"), str):
+            visitor["Name"] = user["Name"]
+        # The scene resolves the host from CastleUsers and uses its local player for this ID.
+        return {"CastleUsers": [visitor], "HostUserId": user["Id"]}
     if route == "/guild/claim-guild-daily-attendance":
         if request is not None and (not isinstance(request, dict) or request):
             raise ValueError("Guild attendance mock accepts no parameters")
