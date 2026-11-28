@@ -5,6 +5,7 @@ import json
 from functools import lru_cache
 from io import BytesIO
 
+from guardian_tales.content.pixel_banner import PixelBanner
 from guardian_tales.content.reference import ReferenceData
 
 # Registered web-panel resources, with the horizontal focal point for each scene.
@@ -140,6 +141,42 @@ def banner(directory, cards):
     return out.getvalue()
 
 
+def text_banner(cards):
+    image = PixelBanner(1560, 680, (16, 28, 43))
+    white, light, gold = (244, 247, 250), (189, 208, 220), (255, 206, 114)
+    panel = (32, 54, 75)
+
+    def label(value, x, y, width, scale, color):
+        value = value.upper().replace("·", "/").replace("–", "-")
+        scale = max(2, min(scale, width // max(1, len(value) * 6 - 1)))
+        limit = width // (scale * 6)
+        if len(value) > limit:
+            value = value[: limit - 3] + "..."
+        image.text(value, y, scale, color, x=x)
+
+    image.box(0, 0, 1560, 8, gold)
+    label("Game mode settings", 44, 40, 1030, 6, white)
+    label("Move opens full settings", 1130, 62, 400, 2, light)
+    raid, *modes = cards
+    image.box(40, 122, 468, 524, panel)
+    label(raid["name"], 64, 149, 420, 4, gold)
+    label(raid["summary"], 64, 202, 420, 5, white)
+    label(raid["caption"], 64, 263, 420, 3, light)
+    for i, (name, element) in enumerate(raid["details"]):
+        y = 316 + i * 62
+        image.box(64, y, 415, 2, (64, 87, 106))
+        label(name, 64, y + 15, 415, 3, white)
+        label(element, 64, y + 41, 415, 2, light)
+    label(raid.get("hp", ""), 64, 588, 420, 3, gold)
+    for i, mode in enumerate(modes):
+        x, y = 526 + 504 * (i % 2), 122 + 180 * (i // 2)
+        image.box(x, y, 489, 165, panel)
+        label(mode["name"], x + 22, y + 21, 445, 3, (161, 227, 244))
+        label(mode["summary"], x + 22, y + 67, 445, 4, white)
+        label(mode["caption"], x + 22, y + 123, 445, 3, light)
+    return image.png()
+
+
 @lru_cache(maxsize=4)
 def render(directory, data, extension):
     cards = json.loads(data)
@@ -147,4 +184,7 @@ def render(directory, data, extension):
         from .lobby_notice_details import detail_page
 
         return detail_page(ReferenceData(directory), cards)
-    return banner(directory, cards)
+    try:
+        return banner(directory, cards)
+    except ImportError:
+        return text_banner(cards)

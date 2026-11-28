@@ -1,5 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 import json
+import sys
 import tempfile
 import unittest
 from importlib.util import find_spec
@@ -55,6 +56,55 @@ class LobbyNoticeTests(unittest.TestCase):
         (self.directory / notice.SETTINGS).write_text(
             json.dumps({"enabled": enabled, "generation": generation, **options}), encoding="utf-8"
         )
+
+    def test_clean_install_publishes_live_settings_without_optional_packages(self):
+        stock = self.directory / "static_data_get.bin"
+        stock.write_bytes(self.body)
+        cards = [
+            {"name": "Guild Raid", **lobby_settings.card("Season 1", "Original lineup")},
+            {"name": "Orbital Lift", **lobby_settings.card("Floor 52")},
+        ]
+        with (
+            patch.object(lobby_settings, "report", return_value=cards),
+            patch.dict(sys.modules, {"PIL": None}),
+        ):
+
+            def published_links():
+                overlay = records(decode(self.seed("static_data_get.bin")))[1]
+                row = json.loads(overlay["webnotice"][1])["WebNotice"][-1]
+                self.assertEqual(row["Id"], notice.NOTICE_ID)
+                self.assertTrue(
+                    json.loads(
+                        self.seed("static_data_check.bin", {"Checksum": overlay["__checksum__"][1]})
+                    )["UpToDate"]
+                )
+                return (
+                    json.loads(row["LobbyPopup"])["enUS"],
+                    row["NoticeUrl"]["Test"].split(":18080/")[1],
+                )
+
+            png, detail = published_links()
+            first = notice.image(self.directory, png)
+            self.assertTrue(first.startswith(b"\x89PNG\r\n\x1a\n"))
+            self.assertIn(b"Floor 52", notice.image(self.directory, detail))
+            cards[1]["summary"] = "Floor 53"
+            next_png, next_detail = published_links()
+            self.assertNotEqual(first, notice.image(self.directory, next_png))
+            self.assertIn(b"Floor 53", notice.image(self.directory, next_detail))
+            self.assertFalse((self.directory / notice.SETTINGS).exists())
+            self.assertEqual(stock.read_bytes(), self.body)
+            self.configure(False, 3)
+            self.assertFalse(notice.selection(self.refs)[0])
+            self.assertIsNone(notice.image(self.directory, next_png))
+
+    def test_automatic_notice_skips_an_incompatible_catalog(self):
+        path = self.directory / "static_data_get.bin"
+        self.stock["NoticeDate"].append({"Id": notice.NOTICE_ID})
+        for body in (compress(b"[]"), self.catalog_body()):
+            with self.subTest(size=len(body)):
+                path.write_bytes(body)
+                self.assertEqual(self.seed("static_data_check.bin"), b"parent-check")
+                self.assertFalse((self.directory / notice.REPORTS).exists())
 
     def test_entry_uses_the_local_image_in_each_language_and_restores(self):
         self.assertEqual(self.seed("static_data_check.bin"), b"parent-check")

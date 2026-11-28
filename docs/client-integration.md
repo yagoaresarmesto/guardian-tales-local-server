@@ -12,11 +12,11 @@ earlier private laboratory observations below.
 
 ## Local lobby notice
 
-For a live game mode summary, install the `lobby-notice` extra in the local
-CDN environment and set `lobby_notice.json` in the active reference directory to
-`{"enabled": true, "mode": "settings", "generation": 2}`. Use the next generation
-when switching from an existing image. On a fresh login, the backend reads the
-applied mode selections and the local save, then publishes a read-only snapshot.
+The game mode summary is enabled by default with the supported 3.57.0 content
+pack. For an existing setup, update the project, restart the local backend and
+CDN processes, then fully reopen the game and enter the local lobby. The existing
+content pack and save are sufficient. On login, the backend reads the applied
+mode selections and the local save, then publishes a read-only snapshot.
 Changes in those values automatically receive a new banner URL. **Move** opens
 an English, read-only guide to that snapshot. Select a mode to see the Raid
 encounters, the selected day and weaknesses in the DKA rotation, the Kama-ZONE
@@ -26,15 +26,18 @@ Tetis separates loadout, progress and specialties. Mode selection and expandable
 stage lists work without JavaScript. Images are embedded in the page, which
 also works without access to the web panel.
 
-With the optional `panel-art` extra and matching content,
+The standard Python installation can serve the summary as a text banner.
+With Pillow (the `lobby-notice` extra), the optional `panel-art` extra and matching content,
 the banner reuses the web panel's local illustrations. DKA shows the slime for
 the selected day, Kama-ZONE uses the season artwork when available, and Guild
 Wars uses the saved phase icon. Expedition shows its district map, Orbital
 Lift switches to the descent scenery at floor 1001, and Tetis uses the
 skill-tree backdrop. The client downloads one composed PNG. Missing artwork
 leaves the mode's settings readable.
-To turn off this notice, keep its mode, set `enabled` to `false`, and increase
-the generation.
+Existing custom images and explicit disable settings take precedence. To disable
+the default, create `lobby_notice.json` in the active reference directory with
+`{"enabled": false, "mode": "settings", "generation": 3}`. If it already exists,
+set `enabled` to `false` and increase its generation.
 
 The test backend can show a local PNG in the native lobby notice window. Place
 `lobby_notice_1.png` in the active reference directory, then create
@@ -48,8 +51,9 @@ the option to hide the notice for the day.
 To remove the notice, set `{"enabled": false, "generation": 2}` and reopen the
 game. Increase the generation on each change so the client refreshes its catalog.
 When enabling a new image, use the matching filename, such as
-`lobby_notice_3.png`. An installation without a settings file uses its original
-notice catalog. The test notice has no rewards.
+`lobby_notice_3.png`. To switch from a custom image to the live summary, set
+`enabled` to `true`, set `mode` to `"settings"`, and increase the generation.
+The notice has no rewards.
 
 ## Client version and content compatibility
 
