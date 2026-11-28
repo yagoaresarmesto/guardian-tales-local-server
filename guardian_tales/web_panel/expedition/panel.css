@@ -13,6 +13,10 @@
 .expedition-banner h1 { margin: 7px 0 18px; font-size: clamp(2.7rem, 4.5vw, 4.6rem); }
 .expedition-status { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: .88rem; }
 #trial { font-weight: 650; color: var(--mint); }
+#trial-toggle { width: max-content; min-height: 36px; padding: 6px 14px; }
+#trial-toggle:not(.primary-action) { color: var(--ink); background: #19283a; border: 1px solid #61798b; border-radius: 5px; }
+#trial-toggle:not(.primary-action):enabled:hover { border-color: var(--ice); }
+.expedition-banner #feedback { grid-column: 1 / -1; margin: 8px 0 0; }
 #overview { color: #d0e0e2; font-variant-numeric: tabular-nums; }
 .expedition-workspace {
   display: grid; grid-template-columns: minmax(0, 1fr) clamp(305px, 26vw, 385px);

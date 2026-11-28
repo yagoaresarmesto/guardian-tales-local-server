@@ -344,8 +344,11 @@ preserves the original quest and story requirements. It composes with the
 active Raid and other static overlays and leaves the imported content files
 intact.
 
-Create the empty file `expedition_trial.enabled` in the backend's external
-reference directory, then restart the backend and fully reopen the game.
+Solo Expedition is off by default. In **Game modes → Expedition**, click
+**Enable Expedition** in the header, then fully reopen the game. The backend
+reads the existing `expedition_trial.enabled` marker at login. The button manages it in
+the backend's external reference directory. **Disable Expedition** turns off
+practice and preserves custom enemy levels for the next activation.
 Open **Book of Contents → Challenge → Expedition**. Entry uses the account's
 saved Expedition map and stage progress. The map also reads the Heavenhold
 Farm resource, which uses an empty local view when the save has no farm data.

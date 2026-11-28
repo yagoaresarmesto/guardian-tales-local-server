@@ -80,6 +80,10 @@ Choose an event season and apply or renew its calendar, or enable **Old Kamazone
 
 ### Expedition
 
+From **Game modes → Expedition**, click **Enable Expedition** next to the trial status
+above the map. The trial is off on a fresh installation. **Disable Expedition**
+keeps your saved enemy levels. Fully reopen the game to load the selected mode.
+
 Use the Solo Expedition district map to select a gate and browse its stages. Drag or swipe to pan, use **+** to zoom and **Fit map** for the overview. Search the directory by stage name or ID to reach unexplored or event stages. **All stages** changes the full catalog even if you have filtered the list. Set a level (1–220 in the matching pack) or restore the original values. Close the game before editing, then restart the backend and reopen it. Practice entry in the game requires the trial and an unlocked stage. [Solo Expedition setup](reference-data.md#solo-expedition-practice) · [Enemy levels](reference-data.md#per-stage-enemy-levels)
 
 ### Orbital Lift

@@ -235,6 +235,61 @@ class ExpeditionLevelTests(unittest.TestCase):
         api(dict(action="restore-level", scope="stage", stage=STAGE, revision=state["revision"]))
         self.assertFalse(any(row["overridden"] for row in api()["stages"]))
 
+    def test_panel_can_enable_and_disable_practice_without_losing_level_settings(self):
+        marker = self.root / TRIAL
+        marker.unlink()
+        api = self.open_panel()
+        before = list(self.db.iterdump())
+        initial = api()
+        self.assertFalse(initial["trial_enabled"])
+        enable = {"action": "enable-trial", "revision": initial["revision"]}
+        api(enable)
+        api(enable)
+        self.assertTrue(self.cli("list")["trial_enabled"])
+        self.assertTrue(marker.is_file())
+        self.assertFalse((self.root / SELECTION).exists())
+        features = json.loads(records(decode(self.get()))[1]["unlockfeature"][1])
+        self.assertEqual(
+            [row["VersionFrom"]["KakaoGlobal"] for row in features if row["Id"] in (31, 110)],
+            ["v3.57", "v3.57"],
+        )
+        self.cli("set-level", "--stage", str(STAGE), "--level", "130")
+        saved = (self.root / SELECTION).read_bytes()
+        disable = {"action": "disable-trial", "revision": initial["revision"]}
+        with self.assertRaises(HTTPError) as stale:
+            api(disable)
+        self.assertEqual(stale.exception.code, 409)
+        stale.exception.close()
+        revision = api()["revision"]
+        api(dict(disable, revision=revision))
+        api(dict(disable, revision=revision))
+        self.assertFalse(api()["trial_enabled"])
+        self.assertFalse(marker.exists())
+        self.assertEqual(self.stage_rows(self.get()), self.tables["stages"])
+        api(dict(enable, revision=revision))
+        stages = self.stage_rows(self.get())
+        self.assertEqual(stages[0]["StandardLevel"]["KakaoGlobal"], 129)
+        self.assertEqual((self.root / SELECTION).read_bytes(), saved)
+        self.assertEqual((self.root / "static_data_get.bin").read_bytes(), self.source)
+        self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_panel_rejects_incompatible_trial_or_unexpected_fields_before_activation(self):
+        marker = self.root / TRIAL
+        marker.unlink()
+        api = self.open_panel()
+        enable = {"action": "enable-trial", "revision": 0}
+        with self.assertRaises(HTTPError) as fields:
+            api(dict(enable, scope="all"))
+        self.assertEqual(fields.exception.code, 400)
+        fields.exception.close()
+        self.tables["unlockfeature"] = []
+        self.write_source()
+        with self.assertRaises(HTTPError) as incompatible:
+            api(enable)
+        self.assertEqual(incompatible.exception.code, 400)
+        incompatible.exception.close()
+        self.assertFalse(marker.exists())
+
     def test_list_uses_original_global_levels_without_creating_configuration_or_save(self):
         files = {p.name: p.read_bytes() for p in self.root.iterdir()}
         before = list(self.db.iterdump())

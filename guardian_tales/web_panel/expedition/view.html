@@ -4,7 +4,12 @@
     <div class="banner-copy">
       <p class="season-status" id="expedition-kicker">Solo Expedition</p>
       <h1 id="page-title">Enemy <em>levels</em></h1>
-      <div class="expedition-status"><span id="trial" role="status"></span><span id="overview"></span></div>
+      <div class="expedition-status" id="trial-controls">
+        <span id="trial" role="status"></span>
+        <button type="button" id="trial-toggle" class="primary-action" disabled>Enable Expedition</button>
+        <span id="overview"></span>
+      </div>
+      <p id="feedback" role="status" hidden></p>
     </div>
   </section>
 
@@ -79,7 +84,6 @@
         </fieldset>
         <p class="hint">Close the game before changing levels. Restart the backend and reopen the game afterward.</p>
       </form>
-      <p id="feedback" role="status" hidden></p>
     </section>
   </div>
 </main>

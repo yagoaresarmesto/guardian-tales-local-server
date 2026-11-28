@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Expose the solo Expedition level commands to the local panel."""
 
-from guardian_tales.modes.expedition.expedition_levels import level_settings
+from guardian_tales.modes.expedition.expedition_levels import level_settings, set_trial_enabled
 from guardian_tales.settlement.village import integer
 
 from ..artwork import EXPEDITION
@@ -20,6 +20,11 @@ def apply(references, body):
     if not isinstance(body, dict) or not integer(body.get("revision")):
         raise ValueError("Reload the stage list before applying changes")
     action, scope = body.get("action"), body.get("scope")
+    if action in ("enable-trial", "disable-trial"):
+        if body.keys() != {"action", "revision"}:
+            raise ValueError("Invalid fields for this Expedition trial action")
+        set_trial_enabled(references, action == "enable-trial", expected_revision=body["revision"])
+        return
     if action not in ("set-level", "restore-level") or scope not in ("stage", "all"):
         raise ValueError("Choose a level action and its stage scope")
     fields = {"action", "scope", "revision"}

@@ -38,7 +38,7 @@ Open **Game modes** in the standalone dashboard, or use the dashboard served by 
 | **DKA** | Preview the slime and its weakness for any day in the three seven-day Dungeon Kingdom Arena rotations. |
 | **Guild Wars** | Preview cooperative attack, cooperative defense, fortress siege and castle defense. Use the siege and Castle 21 presets for practice. |
 | **Kama-ZONE** | Choose an event season or switch to **Old Kamazone** for one of the 40 preserved permanent rotations in the matching pack. |
-| **Expedition** | Pan and zoom the reconstructed ten-district Solo Expedition map. Select a gate and stage to edit enemy levels, or apply one level to every stage. |
+| **Expedition** | Enable Solo Expedition practice from the tab header. Pan and zoom the ten-district map, then select a stage to edit its enemy level or apply one level to every stage. |
 | **Orbital Lift** | Browse the ascending Tetis shaft (1–1,000) and descending Colony shaft (1,001–1,500). Select a cabin to load its enemy board. Edit formations, enemy levels and eligible elite modifiers, or set the next playable floor. |
 | **Tetis** | Edit cleared floors across the three chapters. Manage Guardian Tactic training and specialties in seasons 2 and 3, along with the spell and artifact loadout. |
 

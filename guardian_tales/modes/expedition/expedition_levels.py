@@ -20,9 +20,10 @@ from guardian_tales.modes.guild.raid_static import (
 from guardian_tales.runtime.state_lock import StateLock
 from guardian_tales.settlement.village import integer
 
-from .expedition import enabled
+from . import expedition
 
 SELECTION = "expedition_levels.json"
+SETTINGS_LOCK = ".expedition_levels.lock"
 MAX_CONFIG_BYTES = 32768
 MAX_OVERRIDES = 256
 
@@ -207,6 +208,28 @@ class LevelSelectionChanged(ValueError):
     """A newer level selection must be reloaded before saving."""
 
 
+def current_levels(references, expected_revision):
+    generation, overrides = load_levels(references) or (0, ())
+    if expected_revision is not None and expected_revision != generation:
+        raise LevelSelectionChanged("Enemy levels changed. Reload the stage list before saving.")
+    return generation, overrides
+
+
+def set_trial_enabled(references, active, *, expected_revision):
+    with StateLock(references.directory, filename=SETTINGS_LOCK):
+        _, overrides = current_levels(references, expected_revision)
+        if expedition.enabled(references) == active:
+            return
+        marker = references.directory / expedition.TRIAL
+        if active:
+            source = references.read_bytes("static_data_get.bin")
+            validate_levels(source, overrides)
+            expedition.prepare(source)
+            marker.touch()
+        else:
+            marker.unlink(missing_ok=True)
+
+
 def level_settings(
     references, action="list", *, stage=None, all_stages=False, level=None, expected_revision=None
 ):
@@ -221,21 +244,13 @@ def level_settings(
             "Use list [--stage ID], set-level --stage ID/--all --level N, or restore-level --stage ID/--all"
         )
     body = references.read_bytes("static_data_get.bin")
-    lock = (
-        StateLock(references.directory, filename=".expedition_levels.lock")
-        if editing
-        else nullcontext()
-    )
+    lock = StateLock(references.directory, filename=SETTINGS_LOCK) if editing else nullcontext()
     with lock:
-        generation, overrides = load_levels(references) or (0, ())
-        if expected_revision is not None and expected_revision != generation:
-            raise LevelSelectionChanged(
-                "Enemy levels changed. Reload the stage list before saving."
-            )
+        generation, overrides = current_levels(references, expected_revision)
         stages, maximum = validate_levels(body, overrides)
         if stage is not None and (not integer(stage, minimum=1) or stage not in stages):
             raise ValueError("Choose an Expedition stage ID from expedition list")
-        trial_enabled = enabled(references)
+        trial_enabled = expedition.enabled(references)
         chosen = dict(overrides)
         targets = stages if all_stages else (stage,)
         if action == "set-level":

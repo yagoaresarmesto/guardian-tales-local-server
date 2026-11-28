@@ -116,7 +116,9 @@ function display(next) {
   setArtwork($("journey"), state.hasArt ? "/expedition/journey.jpg" : null);
   const custom = state.stages.filter(row => row.overridden).length;
   $("overview").textContent = state.stages.length + " stages · " + custom + " customized";
-  $("trial").textContent = state.trial_enabled ? "Expedition trial enabled" : "Trial disabled · Enable the Expedition trial to apply levels.";
+  $("trial").textContent = state.trial_enabled ? "Expedition trial enabled" : "Expedition trial disabled";
+  $("trial-toggle").textContent = state.trial_enabled ? "Disable Expedition" : "Enable Expedition";
+  $("trial-toggle").classList.toggle("primary-action", !state.trial_enabled);
   renderAreas();
   renderRows();
   renderTarget();
@@ -124,13 +126,13 @@ function display(next) {
 }
 
 async function refresh(message = "") {
-  $("controls").disabled = $("reload").disabled = true;
+  $("trial-toggle").disabled = $("controls").disabled = $("reload").disabled = true;
   try {
     const response = await fetch(endpoint, {cache: "no-store"});
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "Could not load stage levels.");
     display(data);
-    $("controls").disabled = false;
+    $("trial-toggle").disabled = $("controls").disabled = false;
     feedback(message);
   } catch (error) {
     feedback([message, error.message].filter(Boolean).join(" "), true);
@@ -139,22 +141,27 @@ async function refresh(message = "") {
   }
 }
 
-async function save(action) {
-  const body = {action, revision: state.revision, scope: isGlobal() ? "all" : "stage"};
+function saveLevels(action) {
+  $("editor").after($("feedback"));
+  const body = {action, scope: isGlobal() ? "all" : "stage"};
   if (!isGlobal()) body.stage = Number($("stage").value);
   if (action === "set-level") body.level = $("level").valueAsNumber;
-  $("controls").disabled = $("reload").disabled = true;
-  feedback("Saving enemy levels…");
+  return save(body, "Levels saved. Restart the backend and reopen the game.");
+}
+
+async function save(body, message) {
+  $("trial-toggle").disabled = $("controls").disabled = $("reload").disabled = true;
+  feedback("Saving Expedition settings…");
   try {
     const response = await fetch(endpoint, {
-      method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body)
+      method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({...body, revision: state.revision})
     });
     if (!response.ok) {
-      if (response.status === 400) $("controls").disabled = false;
+      if (response.status === 400) $("trial-toggle").disabled = $("controls").disabled = false;
       const data = await response.json();
       throw new Error(data.error || "Reload the stage list and try again.");
     }
-    await refresh("Levels saved. Restart the backend and reopen the game.");
+    await refresh(message);
   } catch (error) {
     feedback(error.message, true);
   } finally {
@@ -177,9 +184,14 @@ $("editor").addEventListener("change", event => {
 });
 $("editor").addEventListener("submit", event => {
   event.preventDefault();
-  if (!$("controls").disabled && !$("apply").disabled) save("set-level");
+  if (!$("controls").disabled && !$("apply").disabled) saveLevels("set-level");
 });
-$("restore").addEventListener("click", () => save("restore-level"));
+$("restore").addEventListener("click", () => saveLevels("restore-level"));
+$("trial-toggle").addEventListener("click", () => {
+  $("trial-controls").after($("feedback"));
+  if (state.trial_enabled) save({action: "disable-trial"}, "Expedition disabled. Fully reopen the game.");
+  else save({action: "enable-trial"}, "Expedition enabled. Fully reopen the game.");
+});
 $("rows").addEventListener("click", event => {
   const pick = event.target.closest("button[data-stage]");
   if (!pick || $("controls").disabled) return;
