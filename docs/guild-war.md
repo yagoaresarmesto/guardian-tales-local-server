@@ -41,7 +41,7 @@ With the prepared backend/reference data, completed prologue and local guild
 membership, run this outside battle:
 
 ```powershell
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
 ```
 
 **Fully close and reopen the game**, then select a castle and use its practice
@@ -56,7 +56,7 @@ enumerated. This command is also highlighted in the repository README.
 > example.
 
 ```powershell
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --round prep --defend-castle 21 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-defense --round prep --defend-castle 21 --reference-dir local/client-data/reference
 ```
 
 Fully restart the game again and choose that castle. Defense retains the
@@ -95,16 +95,15 @@ Use the same reference directory as the backend:
 
 ```powershell
 .\.venv\Scripts\python.exe -m guardian_tales guild-war enable --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --attack-castle 21 --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round combat --attack-castle 21 --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-offense --round auto --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-offense --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase coop-defense --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --reference-dir local/client-data/reference
-.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --skip-basic --phase multi-defense --defend-castle 1 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-offense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-offense --attack-castle 21 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-offense --round prep --attack-castle 0 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-offense --round combat --attack-castle 21 --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-offense --round auto --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase coop-offense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase coop-defense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-defense --reference-dir local/client-data/reference
+.\.venv\Scripts\python.exe -m guardian_tales guild-war enable --phase multi-defense --defend-castle 1 --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war status --reference-dir local/client-data/reference
 .\.venv\Scripts\python.exe -m guardian_tales guild-war disable --reference-dir local/client-data/reference
 ```
@@ -113,15 +112,11 @@ Use the same reference directory as the backend:
 retains cached static objects. Reload the backend once when installing the new
 handlers. Keep the ordinary bridge and resource CDN running.
 
-`--skip-basic` is an explicit optional trial policy: it empties only
-`SiegeStageIds` and `DefenceStageIds` in the Single CastleStageSet referenced by
-`Constants.SingleStageSetId`, in the derived response. Native IsSingleModeCleared
-checks these two lists; it does not use the similarly named
-`Constants.SingleClearedStageIds`. Empty trial lists waive those prerequisites. It
-does not add stage clears or change UserProgress, and normal `enable` without
-the flag restores the source prerequisite. Automatic recomposition retains the
-chosen policy. The lab keeps this flag enabled while the basic-course button
-is unavailable, including when switching trial phases.
+Every practice phase skips the basic course because its entry button is unavailable.
+The practice overlay empties `SiegeStageIds` and `DefenceStageIds` in the Single
+CastleStageSet referenced by `Constants.SingleStageSetId`. These are the two
+lists the client checks on entry. Account progression is preserved. Older
+commands containing `--skip-basic` still work.
 
 `--phase` on `enable` selects a local native phase:
 
@@ -186,7 +181,7 @@ practice from **Guild → Guild Raid**.
 It preserves their selection files and composes above the existing Raid and
 Dungeon Kingdom Arena calendar preparation. The overlay changes Global calendars,
 adds one local unlock rule, suppresses cooperative and Multi participation rewards,
-empties the active season's shop group, optionally waives Single prerequisites
+empties the active season's shop group, waives Single prerequisites
 and optionally selects Multi preparation/combat round timing.
 Other shop groups, tables, modes and calendar services
 retain their parent content. Disabling removes only the War selection file, so
@@ -195,7 +190,8 @@ the parent Raid/arena bootstrap resumes. The original static source is immutable
 The selection stores checksums, revision, parent digest, selected period and
 `overlay_policy: 7`. Existing selections without a policy or at policy 3–6 remain
 readable and are re-prepared at bootstrap, retaining their valid window, phase
-and skip-basic/castle choices. Older selections default to automatic round timing.
+and castle choices. An active selection with the course skip missing or off is also
+refreshed on the next bootstrap. Older selections default to automatic round timing.
 Bootstrap also re-prepares the overlay if the parent changes or the period expires;
 a parent change within the window retains the window. Prepared bodies are
 immutable and digest checked. Static get/check responses share one checksum.
@@ -251,7 +247,7 @@ writes or profile differences occurred. The real composed War calendar check
 covered 47 affected rows; all Raid periods were inactive, War was valid, and all
 other parent rows/services/tables plus the original source were preserved, apart
 from appending the single explicit no-reward feature rule, zeroing cooperative
-participation coins, emptying the active shop group and the optional War
+participation coins, emptying the active shop group and the War
 prerequisite waiver. The basic-course
 button remains unresolved. With the corrected prerequisite waiver the APK
 completed `/guild-war/enter` and began loading the cooperative screen, then
@@ -308,9 +304,8 @@ castle matches GuildWarInfo.CapturedCastleId. IsCaptureGuild separately compares
 the detail's CaptureGuildId with the owned guild ID.
 
 `guild-war enable --phase multi-defense --defend-castle 1` explicitly presents
-native castle 1 as owned in the trial response. Keep `--skip-basic` enabled in
-the lab as shown above. The selector accepts only a positive ID in the matching
-season's deployment, or zero to restore the neutral map. Omission retains the
+native castle 1 as owned in the trial response. The selector accepts a positive ID
+in the matching season's deployment, or zero to restore the neutral map. Omission retains the
 choice in phase 4, including calendar/parent refresh; choosing another phase
 clears it. Legacy selections without the field stay neutral. Bad types, unknown
 IDs and an explicit positive selection in another phase reject before publication.
@@ -364,7 +359,7 @@ The callback actually reads GetPointPlay at offset 0xc4 for that medal, rather
 than the named medal field at 0x68. Policy 5 therefore zeros GetPointPlay too.
 Other constants, including PlayCoopBattleMedalReward, retain their source values.
 The full source War-table audit matched exactly these overrides, the empty shop
-and the optional basic-course waiver. The immutable source and real profile were
+and the basic-course waiver. The immutable source and real profile were
 unchanged, with zero writes in query-only/read-only start/end/retry checks.
 Existing policy-4 selections upgrade while retaining phase, owned castle, valid
 window and waiver. Fully restart the game after this update; reconnect retains

@@ -74,7 +74,7 @@
   gap: 14px; padding: 14px; margin-top: 14px; background: #142136; border: 1px solid var(--line); border-radius: 6px;
 }
 .war-fields label { min-width: 0; display: grid; gap: 5px; font-size: .86rem; font-weight: 650; }
-.basic-option { display: inline-flex; align-items: center; gap: 9px; margin-top: 17px; cursor: pointer; font-size: .9rem; }
+.basic-option { display: inline-flex; align-items: center; gap: 9px; margin-top: 17px; font-size: .9rem; }
 .basic-option input { width: 17px; height: 17px; margin: 0; accent-color: var(--gold); }
 .actions { margin: 0; padding: 12px var(--war-pad); justify-content: flex-end; }
 .actions p { margin-right: auto; font-size: .83rem; color: var(--muted); }

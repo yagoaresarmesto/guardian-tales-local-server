@@ -851,9 +851,9 @@ sequences passed against the real write-disabled source database without profile
 changes. The first APK War access reached the basic-course prerequisite popup
 and redirected to Play > Others; the missing feature rule was then identified
 and added. A further APK restart still showed no course; read-only runtime
-inspection confirmed its feature checker was loaded/open. Optional `--skip-basic`
-now waives only the source prerequisite without writing clears; the lab trial is
-enabled with this flag. The corrected waiver reached a completed War entry and
+inspection confirmed its feature checker was loaded/open. Guild War practice now
+waives the course prerequisite automatically without recording clears.
+The corrected waiver reached a completed War entry and
 partial cooperative screen load in the APK, then stopped at passive help 1037.
 Imported accounts now accept only built-in passive help acknowledgments; gameplay
 tutorials stay blocked. The actual packet passed on an in-memory source-account

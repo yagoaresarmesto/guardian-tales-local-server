@@ -2836,11 +2836,9 @@ acknowledgment retains all saved bits while setting bit 126 in the response.
 Neither acknowledgment nor activation writes progression or marks stages clear.
 The original source and database remain unchanged; disabling restores the parent
 feature table too. The course remained absent after restart, despite its native
-checker being present/open in read-only runtime inspection. An explicit optional
-`--skip-basic` now waives only the source clear-ID prerequisite in the derived War
-table, retaining every saved stage/progress field. Normal enable/disable restores
-the source rule; the flag is retained on parent/calendar refresh. This lab trial
-uses the flag to attempt War entry. The corrected native stage-list waiver
+checker being present/open in read-only runtime inspection. The lab used `--skip-basic` to waive the source clear-ID prerequisite
+in the derived War table while retaining every saved stage and progress field.
+The current practice overlay applies this automatically in every phase. The corrected native stage-list waiver
 completed one `/guild-war/enter` and began rendering the cooperative screen.
 The next rejected pending packet was `/user/mark-tutorial` with tutorialIds [1037],
 the already catalogued passive cooperative-help ID. Imported mutation gating

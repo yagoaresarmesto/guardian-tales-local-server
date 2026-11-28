@@ -33,16 +33,15 @@ function draft() {
   const phase = editor.elements.phase.value;
   const fortress = isFortress(phase);
   return {phase, round: fortress ? $("round").value : "auto",
-    castle: fortress ? Number($("castle").value) : 0, skipBasic: $("skip-basic").checked};
+    castle: fortress ? Number($("castle").value) : 0};
 }
 
 function preview() {
-  const {phase, round, castle, skipBasic} = draft();
+  const {phase, round, castle} = draft();
   const saved = state.selection;
   const matchesCastle = !isFortress(phase) || (saved.round_mode === round
     && (saved.local_attack_castle || saved.local_defense_castle || 0) === castle);
-  const active = saved.enabled && saved.phase_name === phase && matchesCastle
-    && saved.skip_basic_requirement === skipBasic;
+  const active = saved.enabled && saved.phase_name === phase && matchesCastle;
   $("preview-state").textContent = active ? "Active" : "Preview";
   $("preview").dataset.active = String(active);
   $("preview-phase").textContent = phaseLabel(phase);
@@ -89,7 +88,6 @@ function display(next) {
   const saved = state.selection;
   buildPhaseCards();
   $("round").replaceChildren(...state.rounds.map(key => new Option(roundLabels[key], key)));
-  $("skip-basic").checked = saved.skip_basic_requirement;
   const castle = saved.local_attack_castle || saved.local_defense_castle;
   showPhase(saved.phase_name || "coop-offense", saved.round_mode || "auto", castle);
   $("war-status").textContent = saved.enabled ? "Season " + saved.season_id + " enabled" : "Guild Wars disabled";
@@ -140,7 +138,7 @@ async function refresh(message = "") {
 
 async function submit(action) {
   const body = {action, revision: state.revision};
-  if (action === "enable") Object.assign(body, draft());
+  if (action === "enable") Object.assign(body, draft(), {skipBasic: true});
   lockControls();
   feedback("Saving Guild Wars settings…");
   try {
@@ -165,7 +163,6 @@ async function submit(action) {
 
 function preset(phase, castle) {
   showPhase(phase, "prep", castle);
-  $("skip-basic").checked = true;
   preview();
   feedback("Preset selected. Apply it to save.");
 }

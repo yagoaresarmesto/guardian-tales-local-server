@@ -72,7 +72,7 @@ The installed catalog determines available Raid seasons. The CLI and dashboard s
 
 ### Guild Wars
 
-Select a phase card to see cooperative or fortress practice. **Siege attack** selects Prep Round with no marked target, which allows entry across the castle map. **Castle 21 defense** selects one locally owned castle for defense practice. Configure the round, castle and basic-course option as needed. Apply the settings and reopen the game. **Disable Guild Wars** restores the parent Raid and DKA calendars. [Guild War presets, commands and prerequisites](guild-war.md#recommended-siege-practice-command)
+Select a phase card to see cooperative or fortress practice. **Siege attack** selects Prep Round with no marked target, which allows entry across the castle map. **Castle 21 defense** selects one locally owned castle for defense practice. Choose the round and castle as needed. Every practice phase skips the basic course automatically. Apply the settings and reopen the game. **Disable Guild Wars** restores the parent Raid and DKA calendars. [Guild War presets, commands and prerequisites](guild-war.md#recommended-siege-practice-command)
 
 ### Kama-ZONE
 

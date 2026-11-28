@@ -166,6 +166,9 @@ def enable(
     *,
     expected_revision=None,
 ):
+    # Older callers can still pass the former option. Every practice phase waives the course.
+    if skip_basic is not None and type(skip_basic) is not bool:
+        raise ValueError("Guild War skip-basic policy must be Boolean")
     with war_lock(references):
         previous = load_selection(references)
         check_revision(previous, expected_revision)
@@ -174,7 +177,6 @@ def enable(
             references,
             source,
             previous,
-            skip_basic=skip_basic,
             phase=phase,
             defend_castle=defend_castle,
             attack_castle=attack_castle,
@@ -187,7 +189,6 @@ def _publish(
     source,
     previous,
     *,
-    skip_basic=None,
     phase=None,
     defend_castle=None,
     attack_castle=None,
@@ -264,9 +265,6 @@ def _publish(
         and phase not in (3, 4)
     ):
         raise ValueError("Select auto round timing, or prep/combat for a native Multi phase")
-    skip_basic = (previous or {}).get("skip_basic", False) if skip_basic is None else skip_basic
-    if type(skip_basic) is not bool:
-        raise ValueError("Guild War skip-basic policy must be Boolean")
     shop_group = seasons[0].get("ShopGroupId")
     shops = war.get("ShopSet")
     if (
@@ -310,30 +308,28 @@ def _publish(
         # The native predicate compares server time with ContentToday plus this
         # many hours. Preserve the clock and calendar; select only the War round.
         constants["MultiBattleRoundStartTime"] = ROUND_MODES[round_mode]
-    if skip_basic:
-        stage_set_id = constants.get("SingleStageSetId")
-        stage_sets = war.get("CastleStageSet")
-        if (
-            type(stage_set_id) is not int
-            or not isinstance(stage_sets, list)
-            or any(not isinstance(row, dict) for row in stage_sets)
-        ):
-            raise ValueError("Missing native Guild War basic-course stage set")
-        matches = [row for row in stage_sets if row.get("Id") == stage_set_id]
-        if (
-            len(matches) != 1
-            or matches[0].get("StageSetType") != "Single"
-            or any(
-                not isinstance(matches[0].get(key), list)
-                for key in ("SiegeStageIds", "DefenceStageIds")
-            )
-        ):
-            raise ValueError("Invalid native Guild War basic-course stage lists")
-        # IsSingleModeCleared checks both lists in this set, not the similarly
-        # named Constants.SingleClearedStageIds. Empty trial lists waive entry
-        # prerequisites without recording any fictional player clears.
-        for key in ("SiegeStageIds", "DefenceStageIds"):
-            matches[0][key] = []
+    stage_set_id = constants.get("SingleStageSetId")
+    stage_sets = war.get("CastleStageSet")
+    if (
+        type(stage_set_id) is not int
+        or not isinstance(stage_sets, list)
+        or any(not isinstance(row, dict) for row in stage_sets)
+    ):
+        raise ValueError("Missing native Guild War basic-course stage set")
+    matches = [row for row in stage_sets if row.get("Id") == stage_set_id]
+    if (
+        len(matches) != 1
+        or matches[0].get("StageSetType") != "Single"
+        or any(
+            not isinstance(matches[0].get(key), list)
+            for key in ("SiegeStageIds", "DefenceStageIds")
+        )
+    ):
+        raise ValueError("Invalid native Guild War basic-course stage lists")
+    # IsSingleModeCleared checks both lists. Waive entry in the practice data
+    # without recording any clears in the account.
+    for key in ("SiegeStageIds", "DefenceStageIds"):
+        matches[0][key] = []
     now = utc_now()
     if now.utcoffset() != timedelta(0):
         raise ValueError("Guild War activation requires a UTC clock")
@@ -441,7 +437,7 @@ def _publish(
         "season_id": 1,
         "period": period,
         "base_sha256": hashlib.sha256(source).hexdigest(),
-        "skip_basic": skip_basic,
+        "skip_basic": True,
         "phase": phase,
         "defend_castle": defend_castle,
         "attack_castle": attack_castle,
@@ -664,6 +660,7 @@ def needs_refresh(selection, source):
     start, end = (datetime.fromisoformat(selection["period"][key]) for key in ("from", "to"))
     return (
         selection.get("overlay_policy") != OVERLAY_POLICY
+        or not selection.get("skip_basic")
         or selection["base_sha256"] != hashlib.sha256(source).hexdigest()
         or not start <= utc_now() < end
     )

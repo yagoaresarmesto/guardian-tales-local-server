@@ -364,7 +364,7 @@ def selection_status(selection):
     return {
         "enabled": selection is not None,
         "season_id": selection["season_id"] if selection else None,
-        "skip_basic_requirement": (selection.get("skip_basic", False) if selection else False),
+        "skip_basic_requirement": selection is not None,
         "period": selection["period"] if selection else None,
         "phase": selection.get("phase", 1) if selection else None,
         "phase_name": (
@@ -408,7 +408,7 @@ def main(argv=None):
     parser.add_argument(
         "--skip-basic",
         action="store_true",
-        help="Temporarily waive the basic-course prerequisite without recording stage clears",
+        help="Accepted for compatibility. Guild War practice always skips the basic course.",
     )
     args = parser.parse_args(argv)
     references = ReferenceData(args.reference_dir)
@@ -416,7 +416,6 @@ def main(argv=None):
         if args.action == "enable":
             selection = enable(
                 references,
-                skip_basic=args.skip_basic,
                 phase=PHASES[args.phase] if args.phase else None,
                 defend_castle=args.defend_castle,
                 attack_castle=args.attack_castle,

@@ -50,7 +50,7 @@ def apply(references, body):
         war.disable(references, expected_revision=revision)
         return
     if (
-        body.keys() != {"action", "revision", "phase", "round", "castle", "skipBasic"}
+        body.keys() - {"skipBasic"} != {"action", "revision", "phase", "round", "castle"}
         or body["action"] != "enable"
     ):
         raise ValueError("Choose a Guild Wars configuration to apply.")
@@ -58,18 +58,14 @@ def apply(references, body):
     castle = body["castle"]
     if phase is None or not isinstance(body["round"], str) or body["round"] not in war.ROUND_MODES:
         raise ValueError("Choose a Guild Wars phase and round.")
-    if (
-        type(body["skipBasic"]) is not bool
-        or type(castle) is not int
-        or castle < 0
-        or (castle and phase not in (3, 4))
-    ):
-        raise ValueError("Choose a valid basic-course setting and castle for this phase.")
+    if type(body.get("skipBasic", True)) is not bool:
+        raise ValueError("The legacy skipBasic setting must be Boolean.")
+    if type(castle) is not int or castle < 0 or (castle and phase not in (3, 4)):
+        raise ValueError("Choose a valid castle for this phase.")
     war.enable(
         references,
         phase=phase,
         round_mode=body["round"],
-        skip_basic=body["skipBasic"],
         attack_castle=castle if phase == 3 else 0,
         defend_castle=castle if phase == 4 else 0,
         expected_revision=revision,

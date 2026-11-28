@@ -230,6 +230,7 @@ class GuildWarTests(unittest.TestCase):
             GetPointPlay=0,
         )
         expected_war["ShopSet"] = [row for row in expected_war["ShopSet"] if row["GroupId"] != 4001]
+        expected_war["CastleStageSet"][0].update(SiegeStageIds=[], DefenceStageIds=[])
         self.assertEqual(json.loads(after["guildwar"][1]), expected_war)
         original_features = json.loads(before["unlockfeature"][1])
         features = json.loads(after["unlockfeature"][1])
@@ -681,15 +682,13 @@ class GuildWarTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             main(["enable", "--reference-dir", str(self.root)])
 
-    def test_optional_skip_basic_waives_only_source_prerequisite_and_is_reversible_without_clears(
-        self,
-    ):
+    def test_practice_always_waives_basic_course_without_recording_clears(self):
         profile = self.install()
         before = list(self.db.iterdump())
         original = json.loads(records(decode(self.original))[1]["guildwar"][1])
         out = io.StringIO()
         with redirect_stdout(out):
-            main(["enable", "--skip-basic", "--reference-dir", str(self.root)])
+            main(["enable", "--reference-dir", str(self.root)])
         self.assertTrue(json.loads(out.getvalue())["skip_basic_requirement"])
         altered = json.loads(
             records(decode(bootstrap_override(self.ref, "static_data_get.bin", None)))[1][
@@ -709,22 +708,40 @@ class GuildWarTests(unittest.TestCase):
         self.assertEqual(altered, expected)
         self.assertTrue(load_selection(self.ref)["skip_basic"])
         enable(self.ref, skip_basic=False)
-        restored = json.loads(
+        reapplied = json.loads(
             records(decode(bootstrap_override(self.ref, "static_data_get.bin", None)))[1][
                 "guildwar"
             ][1]
         )
-        expected = copy.deepcopy(original)
-        expected["Constants"].update(
-            PlayCoopCoinReward=0,
-            PlayMultiCoinReward=0,
-            PlayMultiBattleMedalReward=0,
-            GetPointPlay=0,
-        )
-        expected["ShopSet"] = [row for row in expected["ShopSet"] if row["GroupId"] != 4001]
-        self.assertEqual(restored, expected)
+        self.assertEqual(reapplied, expected)
+        self.assertTrue(load_selection(self.ref)["skip_basic"])
         self.assertEqual(self.store.account.profile(), profile)
         self.assertEqual(list(self.db.iterdump()), before)
+
+    def test_bootstrap_replaces_legacy_course_requirement_and_preserves_practice(self):
+        selection = enable(self.ref, phase=4, round_mode="prep", defend_castle=2)
+        for flag in ({"skip_basic": False}, {}):
+            with self.subTest(flag=flag):
+                legacy = {k: v for k, v in selection.items() if k != "skip_basic"}
+                legacy.update(flag, static_data_checksum=digest(b"legacy"))
+                (self.root / SELECTION).write_text(json.dumps(legacy))
+                check = json.loads(
+                    bootstrap_override(
+                        self.ref,
+                        "static_data_check.bin",
+                        {"Checksum": legacy["static_data_checksum"]},
+                    )
+                )
+                self.assertFalse(check["UpToDate"])
+                updated = load_selection(self.ref)
+                self.assertTrue(updated["skip_basic"])
+                self.assertGreater(updated["static_data_revision"], legacy["static_data_revision"])
+                for key in ("period", "phase", "defend_castle", "round_mode"):
+                    self.assertEqual(updated[key], selection[key])
+                body = bootstrap_override(self.ref, "static_data_get.bin", None)
+                course = json.loads(records(decode(body))[1]["guildwar"][1])["CastleStageSet"][0]
+                self.assertEqual((course["SiegeStageIds"], course["DefenceStageIds"]), ([], []))
+                self.assertEqual(load_selection(self.ref), updated)
 
     def test_legacy_overlay_upgrades_reward_decoration_without_resetting_window_waiver_or_account(
         self,

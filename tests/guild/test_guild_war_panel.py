@@ -64,9 +64,10 @@ class GuildWarPanelTests(unittest.TestCase):
         first = self.api()
         self.assertEqual(first["castles"], [{"id": 1, "grade": 1}, {"id": 2, "grade": 4}])
         self.assertEqual(list(self.root.iterdir()), [self.source])
-        edit = dict(action="enable", phase="multi-offense", round="prep", castle=0, skipBasic=True)
+        edit = dict(action="enable", phase="multi-offense", round="prep", castle=0)
         self.api(**edit, revision=first["revision"])
         active = self.api()
+        self.assertTrue(active["selection"]["skip_basic_requirement"])
         output = io.StringIO()
         with redirect_stdout(output):
             guild_war.main(["status", "--reference-dir", str(self.root)])
@@ -100,9 +101,11 @@ class GuildWarPanelTests(unittest.TestCase):
         self.assertIsNone(self.api()["catalogError"])
 
     def test_wrong_phase_castle_and_stale_revision_preserve_settings(self):
-        edit = dict(action="enable", phase="multi-defense", round="prep", castle=2, skipBasic=True)
+        edit = dict(action="enable", phase="multi-defense", round="prep", castle=2, skipBasic=False)
         self.api(**edit, revision="disabled")
         saved = self.api()
+        self.assertTrue(saved["selection"]["skip_basic_requirement"])
+        self.assertTrue(war.load_selection(self.refs)["skip_basic"])
         for changes in (
             dict(phase="coop-defense"),
             dict(castle=101),
